@@ -1,0 +1,2712 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 22,
+  "iteration": 1682062991983,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 3,
+        "w": 13,
+        "x": 0,
+        "y": 0
+      },
+      "id": 57,
+      "links": [],
+      "options": {
+        "content": "- Use Cases: This dashboard can be used to track bugs.\n- Data Source Required: GitHub ([transformation](https://devlake.apache.org/docs/UserManuals/ConfigUI/GitHub#step-3---adding-transformation-rules-optional) required. Additional settings are required to get version data).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 45,
+      "panels": [],
+      "title": "Quality",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 7,
+        "x": 0,
+        "y": 4
+      },
+      "id": 15,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug distribution in major versions */ WITH bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/tags/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.type, i.title, i.description FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND i.type = 'BUG') SELECT CONCAT(SUBSTRING_INDEX(biet.tag_name, '.', 3), '.x') AS minor_version, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1. Bug Distribution [Minor Versions]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Bug Count",
+            "axisPlacement": "left",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost_percentage(bugfixing commits/total commits)"
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Cost Percentage(%)"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 17,
+        "x": 7,
+        "y": 4
+      },
+      "id": 29,
+      "links": [],
+      "options": {
+        "barWidth": 0.7,
+        "groupWidth": 0.3,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the number of fixed bugs in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id /* distinct new_ref_id, old_ref_id */ FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), _bugs_of_tags AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'tags/', -1) AS tag_name, COUNT(*) AS bug_count /* SUBSTRING_INDEX(rid.new_ref_id,':', 3) as repo_id, */ FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG' GROUP BY 1), _combine_pr AS (SELECT pull_request_id AS id, commit_sha FROM pull_request_commits LEFT JOIN pull_requests AS p ON pull_request_commits.pull_request_id = p.id WHERE p.base_repo_id = ANY(ARRAY[${repo_id}]::text[]) UNION SELECT id, merge_commit_sha AS commit_sha FROM pull_requests WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[])), _commit_count_of_pr AS (SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'tags/', -1) AS tag_name, SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) AS repo_id, pr.id AS pull_request_id, COUNT(c.sha) AS commit_count FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha /* left join pull_request_commits prc on c.sha = prc.commit_sha */ LEFT JOIN _combine_pr AS pr ON c.sha = pr.commit_sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT SUBSTRING_INDEX(new_ref_id, ':', -1) FROM _last_5_tags) GROUP BY 1, 2, 3), _pr_worktype AS (SELECT DISTINCT pri.pull_request_id, i.type FROM pull_request_issues AS pri LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id LEFT JOIN issues AS i ON pri.issue_id = i.id WHERE i.issue_key <> 0), _pr_elco_and_worktype AS (SELECT ccop.tag_name, CAST(SUM(CASE WHEN pw.type = 'BUG' THEN commit_count ELSE 0 END) AS NUMERIC) / NULLIF(SUM(commit_count), 0) AS cost_percentage FROM _commit_count_of_pr AS ccop LEFT JOIN _pr_worktype AS pw ON ccop.pull_request_id = pw.pull_request_id GROUP BY 1) SELECT bot.tag_name, bot.bug_count, peaw.cost_percentage AS \"cost_percentage(bugfixing commits/total commits)\" FROM _bugs_of_tags AS bot JOIN _pr_elco_and_worktype AS peaw ON bot.tag_name = peaw.tag_name ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2.1 Ratio of Bug Fix Commits [Last 5 Tags]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 11
+      },
+      "id": 55,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the  severity distribution in bugs */ /* Get the work-type distribution in the last n tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_n_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1), bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/tags/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.type, i.title, i.description, i.severity FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_n_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_n_tags) AND i.type = 'BUG') SELECT CONCAT(biet.tag_name, \" \", CASE WHEN biet.severity <> '' THEN biet.severity ELSE 'UNKNOWN' END) AS severity, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2.2 Severity Distribution [Last Tag]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "dev_eq"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.3.2.2-lts UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.3.2.2-lts REQUIREMENT"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.3.2.2-lts BUG"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "id": 53,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the  severity distribution in bugs */ /* Get the work-type distribution in the last n tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_n_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1 OFFSET 1), bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/tags/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.type, i.title, i.description, i.severity FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_n_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_n_tags) AND i.type = 'BUG') SELECT CONCAT(biet.tag_name, \" \", CASE WHEN biet.severity <> '' THEN biet.severity ELSE 'UNKNOWN' END) AS severity, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2.3 Severity Distribution [The Tag before Last]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 11
+      },
+      "id": 51,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the  severity distribution in bugs */ /* Get the work-type distribution in the last n tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_n_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1 OFFSET 2), bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/tags/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.type, i.title, i.description, i.severity FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_n_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_n_tags) AND i.type = 'BUG') SELECT CONCAT(biet.tag_name, \" \", CASE WHEN biet.severity <> '' THEN biet.severity ELSE 'UNKNOWN' END) AS severity, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2.4 Severity Distribution [The 2nd Tag before Last]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost_percentage(bugfixing commits/total commits)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "issue_key"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 89
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 457
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "assignee_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 131
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lead_time_in_days"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 147
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tag_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 147
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "repo_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 43,
+      "links": [],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the number of fixed bugs in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5) SELECT DISTINCT b.name AS repo_name, SUBSTRING_INDEX(rid.new_ref_id, 'tags/', -1) AS tag_name, i.issue_key AS issue_key, i.title, i.assignee_name, CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0) AS lead_time_in_days, CONCAT(b.url, '/', i.issue_key) AS url FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id JOIN boards AS b ON SUBSTRING_INDEX(rid.new_ref_id, ':', 4) = b.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT SUBSTRING_INDEX(new_ref_id, ':', -1) FROM _last_5_tags) AND i.type = 'BUG' ORDER BY tag_name DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2.5 List of Fixed Bugs [Last 5 Tags]",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 11,
+        "x": 0,
+        "y": 25
+      },
+      "id": 30,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent",
+          "name"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Component distribution of bugs fixed in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.component, i.severity, i.title, i.description FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG') SELECT CASE WHEN component = '' THEN 'unlabeled' ELSE 'labeled' END AS component, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "3.1 Ratio of Issues with 'Component' Label [Last 5 Tags]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 13,
+        "x": 11,
+        "y": 25
+      },
+      "id": 31,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent",
+          "name"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Component distribution of bugs fixed in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), bugs_in_each_tag AS (SELECT SUBSTRING_INDEX(rid.new_ref_id, 'refs/', -1) AS tag_name, SUBSTRING_INDEX(rid.new_ref_id, ':', 4) AS repo_id, i.issue_key, i.component, i.severity, i.title, i.description FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG') SELECT component, COUNT(*) AS bug_count FROM bugs_in_each_tag AS biet WHERE component <> '' GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "3.2 Source of Bugs by Component [Last 5 Tags]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.25
+              },
+              {
+                "color": "green",
+                "value": 0.4
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 32
+      },
+      "id": 23,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the % of contributors who fixed 80% of bugs in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), _bugs AS (SELECT i.issue_key, i.type, i.severity, i.title, i.description, pr.id, pr.author_name AS pr_author, pr.created_date, RANK() OVER (PARTITION BY i.id ORDER BY pr.created_date ASC NULLS FIRST) AS pr_rank FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id LEFT JOIN pull_request_issues AS pri ON i.id = pri.issue_id LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG' ORDER BY i.issue_key NULLS FIRST), _bug_fixed_count AS (SELECT pr_author, COUNT(*) AS bug_fixed_count FROM _bugs WHERE pr_rank = 1 GROUP BY 1), _bug_fixed_count_running_total AS (SELECT *, SUM(bug_fixed_count) OVER (ORDER BY bug_fixed_count DESC NULLS LAST) AS running_total FROM _bug_fixed_count), _percentile AS (SELECT pr_author, bug_fixed_count, CAST(running_total AS NUMERIC) / NULLIF(SUM(bug_fixed_count) OVER (), 0) AS cumulative_percentage FROM _bug_fixed_count_running_total) SELECT CAST(COUNT(CASE WHEN cumulative_percentage <= 0.8 THEN pr_author ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"% of contributors who fixed 80% of the bugs\" FROM _percentile",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "4.1 Contributor Fixing 80%+ Bugs [Last 5 Tags]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Bug Fixed Count",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 18,
+        "x": 6,
+        "y": 32
+      },
+      "id": 18,
+      "links": [],
+      "options": {
+        "barWidth": 0.5,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug fixer distribution in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), _bugs AS (SELECT i.issue_key, i.type, i.severity, i.title, i.description, pr.id, pr.author_name AS pr_author, pr.created_date, RANK() OVER (PARTITION BY i.id ORDER BY pr.created_date ASC NULLS FIRST) AS pr_rank FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id LEFT JOIN pull_request_issues AS pri ON i.id = pri.issue_id LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG' ORDER BY i.issue_key NULLS FIRST) SELECT pr_author, COUNT(*) AS bug_fixed_count FROM _bugs WHERE pr_rank = 1 GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT 10",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "4.2 Top Bug Fixers [Last 5 Tags]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 39
+      },
+      "id": 33,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the avg bug age in history */ SELECT CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS average_bug_age FROM issues LEFT JOIN board_issues AS bi ON issues.id = bi.issue_id WHERE type = 'BUG' AND status = 'DONE' AND bi.board_id = ANY(ARRAY[${repo_id}]::text[])",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.1 Mean Bug Age in Days [All History]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Bug Fixed Count",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 20,
+        "x": 4,
+        "y": 39
+      },
+      "id": 32,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "barWidth": 0.7,
+        "groupWidth": 0.3,
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug age in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), _bugs AS (SELECT DISTINCT SUBSTRING_INDEX(rid.new_ref_id, 'tags/', -1) AS tag_name, i.id, i.lead_time_minutes FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id LEFT JOIN pull_request_issues AS pri ON i.id = pri.issue_id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG'), _bugs_percentile AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY tag_name ORDER BY lead_time_minutes NULLS FIRST) AS percentile FROM _bugs ORDER BY 1 NULLS FIRST), _avg_bug_age AS (SELECT tag_name, CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS average_bug_age FROM _bugs_percentile GROUP BY 1), _50th_bug_age AS (SELECT tag_name, CAST(MIN(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS \"50th_bug_age\" FROM _bugs_percentile WHERE percentile >= 0.5 GROUP BY 1) SELECT aba.*, eba.\"50th_bug_age\" FROM _avg_bug_age AS aba JOIN _50th_bug_age AS eba ON aba.tag_name = eba.tag_name",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.2 Mean + Median Bug Age Days [Last 5 Tags]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 45
+      },
+      "id": 34,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the 80th perccentile bug age in history */ WITH _bugs_percentile AS (SELECT id, lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes NULLS FIRST) AS percentile FROM issues WHERE type = 'BUG' AND status = 'DONE') SELECT CAST(MIN(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS \"80th_bug_age\" FROM _bugs_percentile WHERE percentile >= 0.5",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.3 Median Bug Age in Days [All History]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "key"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 109
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 725
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 182
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lead_time_in_days"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 136
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "issue_key"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 79
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 784
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tag_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 20,
+        "x": 4,
+        "y": 45
+      },
+      "id": 38,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug fixer distribution in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5), _bugs AS (SELECT DISTINCT b.name, SUBSTRING_INDEX(rid.new_ref_id, 'tags/', -1) AS tag_name, i.issue_key AS issue_key, i.title, CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0) AS lead_time_in_days, CONCAT(b.url, '/', i.issue_key) AS url FROM refs_issues_diffs AS rid LEFT JOIN issues AS i ON rid.issue_id = i.id LEFT JOIN pull_request_issues AS pri ON i.id = pri.issue_id JOIN boards AS b ON SUBSTRING_INDEX(rid.new_ref_id, ':', 4) = b.id WHERE SUBSTRING_INDEX(rid.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rid.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rid.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) AND i.type = 'BUG'), _bug_age_rank AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY tag_name ORDER BY lead_time_in_days DESC NULLS LAST) AS bug_age_rank FROM _bugs) SELECT name, tag_name, issue_key, title, lead_time_in_days, url FROM _bug_age_rank WHERE bug_age_rank <= 10 ORDER BY tag_name NULLS FIRST, lead_time_in_days DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.4 List of Long-Lead Bugs [Closed Bugs in Last 5  Tags]",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "bug_count"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "<avg_bug_age"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": ">=avg_bug_age"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 51
+      },
+      "id": 35,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "hidden",
+          "placement": "bottom",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the avg bug age in history */ WITH _avg_bug_age AS (SELECT type, AVG(lead_time_minutes) AS average_bug_age FROM issues LEFT JOIN board_issues AS bi ON issues.id = bi.issue_id WHERE type = 'BUG' AND status = 'DONE' AND bi.board_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1), _bug_queue_time AS (SELECT i.id, abg.average_bug_age, (EXTRACT(EPOCH FROM (NOW() - created_date))/60) AS queue_time, CASE WHEN (EXTRACT(EPOCH FROM (NOW() - created_date))/60) >= average_bug_age THEN \">=avg_bug_age\" ELSE \"<avg_bug_age\" END AS distribution FROM issues AS i LEFT JOIN _avg_bug_age AS abg ON i.type = abg.type WHERE i.type = 'BUG' AND status <> 'DONE') SELECT distribution, COUNT(*) AS bug_count FROM _bug_queue_time GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.5 Ratio of Outstanding Bugs [Queue Time > Mean]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "<avg_bug_age"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": ">=avg_bug_age"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "issue_key"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 81
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 535
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "created_date"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 149
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "queue_time_in_days"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 51
+      },
+      "id": 39,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the queue time of all backlog bugs */ SELECT b.name AS repo_name, i.issue_key AS issue_key, i.title, i.created_date, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(3600, 0) AS queue_time_in_days, CONCAT(b.url, '/', i.issue_key) AS url FROM issues AS i LEFT JOIN board_issues AS bi ON i.id = bi.issue_id LEFT JOIN boards AS b ON bi.board_id = b.id WHERE i.type = 'BUG' AND i.status <> 'DONE' AND b.id = ANY(ARRAY[${repo_id}]::text[]) ORDER BY queue_time_in_days DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "5.6 List of Outstanding Bugs [All Open Bugs]",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "id": 47,
+      "panels": [],
+      "title": "Contribution",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 58
+      },
+      "id": 41,
+      "links": [],
+      "options": {
+        "barWidth": 0.3,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug distribution in last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 10) SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'refs/tags/', -1) AS tag_name, SUBSTRING_INDEX(rcd.old_ref_id, 'refs/tags/', -1) AS old_tag_name, COUNT(*) AS commit_count FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (select new_ref_id from _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) GROUP BY 1, 2 ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "6.1 Number of New Commits Per Tag",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "message"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 395
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "additions"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "deletions"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 86
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 18,
+        "x": 6,
+        "y": 58
+      },
+      "id": 42,
+      "links": [],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/* Get the bug distribution in last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 10) SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'refs/tags/', -1) AS new_tag_name, SUBSTRING_INDEX(rcd.old_ref_id, 'refs/tags/', -1) AS compared_tag_name, c.sha, c.message, c.additions, c.deletions, c.author_name FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (select new_ref_id from _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) ORDER BY 1 DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "6.2 Commit List for Drill-Down [Last 5 Tags]",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.3.2.2-lts BUG"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.3.2.2-lts UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 65
+      },
+      "id": 26,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the work-type distribution in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1), _combine_pr AS (SELECT pull_request_id AS id, commit_sha, p.pull_request_key AS pull_request_key FROM pull_request_commits LEFT JOIN pull_requests AS p ON pull_request_commits.pull_request_id = p.id WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[]) UNION SELECT id, merge_commit_sha, pull_request_key AS commit_sha FROM pull_requests WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[])), _commit_count_of_pr AS (SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'tags/', -1) AS tag_name, pr.id AS pull_request_id, COUNT(c.sha) AS pr_commit_count FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha /* left join pull_request_commits prc on c.sha = prc.commit_sha */ LEFT JOIN _combine_pr AS pr ON c.sha = pr.commit_sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) GROUP BY 1, 2), _pr_issues AS (SELECT pri.pull_request_id, pri.issue_id, i.issue_key, i.type, ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY pr.created_date ASC NULLS FIRST) AS pr_rank FROM pull_request_issues AS pri LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id LEFT JOIN issues AS i ON pri.issue_id = i.id WHERE i.issue_key <> 0), _final_results AS (SELECT DISTINCT ccop.*, pi.type FROM _commit_count_of_pr AS ccop LEFT JOIN _pr_issues AS pi ON ccop.pull_request_id = pi.pull_request_id WHERE pi.pr_rank = 1 ORDER BY 1 NULLS FIRST) SELECT tag_name, CASE WHEN type <> '' THEN type ELSE 'UNKNOWN' END AS type, SUM(pr_commit_count) AS commit_count FROM _final_results GROUP BY 1, 2",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "7.1 Work-Type Distribution [Last Tag]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.2.3.5-stable UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.2.3.5-stable BUG"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 65
+      },
+      "id": 36,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the work-type distribution in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1 OFFSET 1), _combine_pr AS (SELECT pull_request_id AS id, commit_sha, p.pull_request_key AS pull_request_key FROM pull_request_commits LEFT JOIN pull_requests AS p ON pull_request_commits.pull_request_id = p.id WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[]) UNION SELECT id, merge_commit_sha, pull_request_key AS commit_sha FROM pull_requests WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[])), _commit_count_of_pr AS (SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'tags/', -1) AS tag_name, pr.id AS pull_request_id, COUNT(c.sha) AS pr_commit_count FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha /* left join pull_request_commits prc on c.sha = prc.commit_sha */ LEFT JOIN _combine_pr AS pr ON c.sha = pr.commit_sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) GROUP BY 1, 2), _pr_issues AS (SELECT pri.pull_request_id, pri.issue_id, i.issue_key, i.type, ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY pr.created_date ASC NULLS FIRST) AS pr_rank FROM pull_request_issues AS pri LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id LEFT JOIN issues AS i ON pri.issue_id = i.id WHERE i.issue_key <> 0), _final_results AS (SELECT DISTINCT ccop.*, pi.type FROM _commit_count_of_pr AS ccop LEFT JOIN _pr_issues AS pi ON ccop.pull_request_id = pi.pull_request_id WHERE pi.pr_rank = 1 ORDER BY 1 NULLS FIRST) SELECT tag_name, CASE WHEN type <> '' THEN type ELSE 'UNKNOWN' END AS type, SUM(pr_commit_count) AS commit_count FROM _final_results GROUP BY 1, 2",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "7.2 Work-Type Distribution [The Tag before Last]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.1.4.30-stable UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "v22.1.4.30-stable BUG"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 65
+      },
+      "id": 37,
+      "links": [],
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Get the work-type distribution in the last 5 tags */ WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 1 OFFSET 2), _combine_pr AS (SELECT pull_request_id AS id, commit_sha, p.pull_request_key AS pull_request_key FROM pull_request_commits LEFT JOIN pull_requests AS p ON pull_request_commits.pull_request_id = p.id WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[]) UNION SELECT id, merge_commit_sha, pull_request_key AS commit_sha FROM pull_requests WHERE base_repo_id = ANY(ARRAY[${repo_id}]::text[])), _commit_count_of_pr AS (SELECT SUBSTRING_INDEX(rcd.new_ref_id, 'tags/', -1) AS tag_name, pr.id AS pull_request_id, COUNT(c.sha) AS pr_commit_count FROM refs_commits_diffs AS rcd LEFT JOIN commits AS c ON rcd.commit_sha = c.sha /* left join pull_request_commits prc on c.sha = prc.commit_sha */ LEFT JOIN _combine_pr AS pr ON c.sha = pr.commit_sha WHERE SUBSTRING_INDEX(rcd.new_ref_id, ':', 4) IN (${repo_id}) AND /* and rcd.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ SUBSTRING_INDEX(rcd.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) GROUP BY 1, 2), _pr_issues AS (SELECT pri.pull_request_id, pri.issue_id, i.issue_key, i.type, ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY pr.created_date ASC NULLS FIRST) AS pr_rank FROM pull_request_issues AS pri LEFT JOIN pull_requests AS pr ON pri.pull_request_id = pr.id LEFT JOIN issues AS i ON pri.issue_id = i.id WHERE i.issue_key <> 0), _final_results AS (SELECT DISTINCT ccop.*, pi.type FROM _commit_count_of_pr AS ccop LEFT JOIN _pr_issues AS pi ON ccop.pull_request_id = pi.pull_request_id WHERE pi.pr_rank = 1 ORDER BY 1 NULLS FIRST) SELECT tag_name, CASE WHEN type <> '' THEN type ELSE 'UNKNOWN' END AS type, SUM(pr_commit_count) AS commit_count FROM _final_results GROUP BY 1, 2",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "7.3 Work-Type Distribution [The 2nd Tag before Last]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 0.25
+              },
+              {
+                "color": "green",
+                "value": 0.4
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 72
+      },
+      "id": 27,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "8.1 Committers Contributing 80%+ Commits [Last 5 Tags]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Dev Equivalent",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 18,
+        "x": 6,
+        "y": 72
+      },
+      "id": 3,
+      "links": [],
+      "options": {
+        "barWidth": 0.3,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {},
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH refs_commits_diffs AS (SELECT new_refs.id AS new_ref_id, old_refs.id AS old_ref_id, commits_diffs.commit_sha, new_commit_sha, old_commit_sha FROM commits_diffs LEFT JOIN refs AS new_refs ON new_refs.commit_sha = commits_diffs.new_commit_sha LEFT JOIN refs AS old_refs ON old_refs.commit_sha = commits_diffs.old_commit_sha), _last_5_tags AS (SELECT DISTINCT /* distinct new_ref_id, old_ref_id */ SUBSTRING_INDEX(new_ref_id, ':', -1) AS new_ref_id, SUBSTRING_INDEX(old_ref_id, ':', -1) AS old_ref_id FROM refs_commits_diffs WHERE SUBSTRING_INDEX(new_ref_id, ':', 4) IN (${repo_id}) ORDER BY 1 DESC NULLS LAST LIMIT 5) SELECT c.author_name, COUNT(c.sha) AS total_dev_eq FROM refs_commits_diffs AS rcf LEFT JOIN commits AS c ON rcf.commit_sha = c.sha WHERE SUBSTRING_INDEX(rcf.new_ref_id, ':', 4) /* rcf.new_ref_id in (SELECT new_ref_id FROM _last_5_tags) */ IN (${repo_id}) AND SUBSTRING_INDEX(rcf.new_ref_id, ':', -1) IN (SELECT new_ref_id FROM _last_5_tags) GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT 10",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "8.2 Top Contributors [Last 5 Tags]",
+      "type": "barchart"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 79
+      },
+      "id": 59,
+      "options": {
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [
+    "OSS Maintainer Dashboard"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "select concat(name, '--', id) as text from repos",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Repo",
+        "multi": true,
+        "name": "repo_id",
+        "options": [],
+        "query": "select concat(name, '--', id) as text from repos",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)--(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "GitHub_Release_Quality_and_Contribution_Analysis (PostgreSQL)",
+  "uid": "2xuOaQUnk4-pg",
+  "version": 3
+}

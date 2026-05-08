@@ -1,0 +1,2322 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "postgresql",
+      "description": "Latest daily active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT daily_active_users AS \"Daily Active Users\" FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY day DESC NULLS LAST LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Active Users",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Code acceptance rate across the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 40
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Acceptance Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total lines of code added by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(loc_added_sum) AS \"Lines Added\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Lines of Code Added",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total pull requests created by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(pr_total_created_by_copilot) AS \"PRs by Copilot\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Created by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Latest weekly active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Weekly Active Users\" FROM _tool_copilot_user_daily_metrics WHERE day >= CURRENT_DATE - INTERVAL '7 DAY' AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users (WAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Latest monthly active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Monthly Active Users\" FROM _tool_copilot_user_daily_metrics WHERE day >= CURRENT_DATE - INTERVAL '28 DAY' AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Active Users (MAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total pull requests reviewed by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(pr_total_reviewed_by_copilot) AS \"PRs Reviewed by Copilot\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Reviewed by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total user-initiated interactions in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(user_initiated_interaction_count) AS \"User-Initiated Interactions\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "User-Initiated Interactions",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Daily and monthly active users over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, daily_active_users AS \"Daily Active\", monthly_active_users AS \"Monthly Active\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Users Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Code suggestions generated vs accepted over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, code_generation_activity_count AS \"Suggestions\", code_acceptance_activity_count AS \"Acceptances\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Suggestions & Acceptances",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Lines of code suggested to add versus lines added over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Lines of Code",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, loc_suggested_to_add_sum AS \"LOC Suggested\", loc_added_sum AS \"LOC Added\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Suggested vs LOC Added Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Pull request activity over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Pull Requests",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, pr_total_created AS \"PRs Created\", pr_total_created_by_copilot AS \"PRs Created by Copilot\", pr_total_reviewed AS \"PRs Reviewed\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "PR Activity Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly user-initiated interactions by top Copilot features",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "stacking": {
+          "mode": "normal",
+          "group": "A"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(day - INTERVAL 'WEEKDAY DAY' AS DATE) AS time, CASE WHEN feature IN (SELECT feature FROM (SELECT feature FROM _tool_copilot_metrics_by_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY feature HAVING SUM(user_initiated_interaction_count) > 0 ORDER BY SUM(user_initiated_interaction_count) DESC NULLS LAST LIMIT 4) AS top_features) THEN REPLACE(REPLACE(feature, 'chat_panel_', ''), '_mode', '') ELSE 'Other' END AS metric, SUM(user_initiated_interaction_count) AS value FROM _tool_copilot_metrics_by_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY time, metric ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature Mix Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly user-initiated interactions by top IDEs (Top 5 + Other)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Weekly Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "stacking": {
+          "mode": "normal",
+          "group": "A"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(day - INTERVAL 'WEEKDAY DAY' AS DATE) AS time, CASE WHEN ide IN (SELECT ide FROM (SELECT ide FROM _tool_copilot_metrics_by_ide WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY ide HAVING SUM(user_initiated_interaction_count) > 0 ORDER BY SUM(user_initiated_interaction_count) DESC NULLS LAST LIMIT 4) AS top_ides) THEN ide ELSE 'Other' END AS metric, SUM(user_initiated_interaction_count) AS value FROM _tool_copilot_metrics_by_ide WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY time, metric ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "IDE Adoption Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Top languages ranked by code acceptance rate",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language AS \"Language\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_metrics_by_language_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY language HAVING SUM(code_generation_activity_count) > 0 ORDER BY ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) DESC NULLS LAST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Languages by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Top models ranked by code acceptance rate",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model AS \"Model\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_metrics_by_model_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY model HAVING SUM(code_generation_activity_count) > 0 ORDER BY ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) DESC NULLS LAST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Models by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Matrix-style breakdown of suggestions and acceptances by language and feature",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 21,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language AS \"Language\", feature AS \"Feature\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\" FROM _tool_copilot_metrics_by_language_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY language, feature HAVING SUM(code_generation_activity_count) > 0 ORDER BY language NULLS FIRST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature x Language Matrix",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Count of distinct users active in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 56
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Unique Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Unique Users (Period)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Users who have used Copilot agent mode",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 56
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Agent Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_agent = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Mode Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Users who have used Copilot chat",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 56
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_chat = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Percentage of seats with recorded activity",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 56
+      },
+      "id": 14,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(COUNT(CASE WHEN NOT last_activity_at IS NULL THEN 1 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(*), 0), 0) AS \"Utilization %\" FROM _tool_copilot_seats WHERE connection_id = ${connection_id}",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Utilization",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "id": 22,
+      "panels": [],
+      "title": "Quality & Efficiency Ratios",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Daily acceptance rate trend computed as acceptances divided by suggestions",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 61
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, CAST(code_acceptance_activity_count AS NUMERIC) / NULLIF(NULLIF(code_generation_activity_count, 0), 0) AS \"Acceptance Rate\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Acceptance Rate Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Daily LOC yield trend computed as added LOC divided by suggested LOC",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 61
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, ROUND(CAST(loc_added_sum AS NUMERIC) / NULLIF(NULLIF(loc_suggested_to_add_sum, 0), 0), 2) AS \"LOC Yield\" FROM _tool_copilot_enterprise_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Yield Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Acceptance ratio by Copilot feature",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 69
+      },
+      "id": 25,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT feature AS \"Feature\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_metrics_by_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY feature HAVING SUM(code_generation_activity_count) > 0 ORDER BY ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) DESC NULLS LAST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Feature",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Acceptance ratio by programming language",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 69
+      },
+      "id": 26,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language AS \"Language\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_metrics_by_language_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY language HAVING SUM(code_generation_activity_count) > 0 ORDER BY ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) DESC NULLS LAST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Language",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Acceptance ratio by model",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 69
+      },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model AS \"Model\", SUM(code_generation_activity_count) AS \"Suggestions\", SUM(code_acceptance_activity_count) AS \"Acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate %\" FROM _tool_copilot_metrics_by_model_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY model HAVING SUM(code_generation_activity_count) > 0 ORDER BY ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) DESC NULLS LAST, SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Model",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 77
+      },
+      "id": 28,
+      "panels": [],
+      "title": "User Behavior",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Top users ranked by code generation activity in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 78
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_login AS \"user_login\", SUM(code_generation_activity_count) AS \"suggestions\", SUM(code_acceptance_activity_count) AS \"acceptances\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"acceptance %\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY user_login HAVING SUM(code_generation_activity_count) > 0 ORDER BY SUM(code_generation_activity_count) DESC NULLS LAST LIMIT 25",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Users by Code Generations",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Daily trend of distinct users engaging with agent mode versus chat",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 78
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day AS time, COUNT(DISTINCT CASE WHEN used_agent = 1 THEN user_login END) AS \"Agent Users\", COUNT(DISTINCT CASE WHEN used_chat = 1 THEN user_login END) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY day ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Users vs Chat Users Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "First-seen daily trend of users becoming active for the first time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 86
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT first_day AS time, COUNT(*) AS \"New Active Users\" FROM (SELECT user_login, MIN(day) AS first_day FROM _tool_copilot_user_daily_metrics WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' GROUP BY user_login) AS first_seen WHERE $__timeFilter(first_day) GROUP BY first_day ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "New Active Users per Day",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "id": 32,
+      "panels": [],
+      "title": "Seat Effectiveness",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Distribution of seat activity by last recorded editor",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 95
+      },
+      "id": 33,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(NULLIF(last_activity_editor, ''), 'unknown') AS \"Editor\", COUNT(*) AS \"Seats\" FROM _tool_copilot_seats WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '') GROUP BY COALESCE(NULLIF(last_activity_editor, ''), 'unknown') ORDER BY COUNT(*) DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Activity by Editor",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total, active (last 30 days), and inactive seats for the selected scope",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 95
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"total_seats\", SUM(CASE WHEN NOT last_activity_at IS NULL AND last_activity_at >= UTC_TIMESTAMP() - INTERVAL '30 DAY' THEN 1 ELSE 0 END) AS \"active_seats\", SUM(CASE WHEN last_activity_at IS NULL OR last_activity_at < UTC_TIMESTAMP() - INTERVAL '30 DAY' THEN 1 ELSE 0 END) AS \"inactive_seats\" FROM _tool_copilot_seats WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')",
+          "refId": "A"
+        }
+      ],
+      "title": "Seats Summary",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Seats with no activity or activity older than 30 days",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 95
+      },
+      "id": 35,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_login AS \"user_login\", last_activity_at AS \"last_activity_at\", plan_type AS \"plan_type\" FROM _tool_copilot_seats WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '') AND (last_activity_at IS NULL OR last_activity_at < UTC_TIMESTAMP() - INTERVAL '30 DAY') ORDER BY last_activity_at IS NULL DESC NULLS LAST, last_activity_at ASC NULLS FIRST LIMIT 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Inactive Seats",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 103
+      },
+      "id": 36,
+      "panels": [],
+      "title": "Diagnostics",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Latest available day in enterprise-level Copilot metrics",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 104
+      },
+      "id": 37,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE((EXTRACT(EPOCH FROM (UTC_DATE() - MAX(day)))/86400), 9999) AS \"Days Since Latest Data\" FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Freshness",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Share of generated suggestions tied to unknown model/feature taxonomy",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 104
+      },
+      "id": 38,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(CASE WHEN LOWER(COALESCE(model, '')) = 'unknown' OR LOWER(COALESCE(feature, '')) LIKE '%unknown%' THEN code_generation_activity_count ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 2) AS \"Unknown Taxonomy %\" FROM _tool_copilot_metrics_by_model_feature WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Unknown Taxonomy Share",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Row counts for core Copilot metrics tables",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 104
+      },
+      "id": 39,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM (SELECT '_tool_copilot_enterprise_daily_metrics' AS table_name, COUNT(*) AS row_count FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_copilot_user_daily_metrics' AS table_name, COUNT(*) AS row_count FROM _tool_copilot_user_daily_metrics WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_copilot_metrics_by_feature' AS table_name, COUNT(*) AS row_count FROM _tool_copilot_metrics_by_feature WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_copilot_metrics_by_model_feature' AS table_name, COUNT(*) AS row_count FROM _tool_copilot_metrics_by_model_feature WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_copilot_seats' AS table_name, COUNT(*) AS row_count FROM _tool_copilot_seats WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')) AS data_volume ORDER BY row_count DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Volume by Table",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "copilot",
+    "devlake"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_copilot_enterprise_daily_metrics ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "multi": false,
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "multi": false,
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "GitHub Copilot Adoption (PostgreSQL)",
+  "uid": "copilot_adoption-pg",
+  "version": 1,
+  "weekStart": ""
+}

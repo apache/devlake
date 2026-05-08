@@ -1,0 +1,3863 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 44,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 63,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "This dashboard is designed to validate the [DORA dashboard](/grafana/d/qNo8_0M4z/dora?orgId=1).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 20,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Check \"Deployment Frequency\"",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 64,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- See the definition and calculation logic of [Deployment Frequency](https://devlake.apache.org/docs/Metrics/DeploymentFrequency)\n- Data Sources Required: \n  - `Deployments` from Jenkins, GitLab CI, GitHub Action, BitBucket Pipelines, or Webhook, etc. \n- Transformation Required: Define `deployments` in [data transformations](https://devlake.apache.org/docs/Configuration/Tutorial#step-3---add-transformations-optional) while configuring the blueprint of a project.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 1
+                },
+                "PRODUCTION": {
+                  "color": "green",
+                  "index": 0
+                },
+                "SUCCESS": {
+                  "color": "green",
+                  "index": 2
+                },
+                "This project is selected": {
+                  "color": "green",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 0,
+        "y": 6
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, result, environment, COUNT(DISTINCT cdc.id) AS deployment_commit_count, COUNT(DISTINCT cdc.cicd_deployment_id) AS deployment_count FROM cicd_deployment_commits AS cdc LEFT JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE $__timeFilter(cdc.finished_date) GROUP BY pm.project_name, select_status, _raw_data_table, result, environment",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 1. All cicd_deployment_commits (the rows with 3 green columns will be used in the following steps)",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Deployment Frequency$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 1: Deployment Frequency\nwith last_few_calendar_months as(\n-- construct the last few calendar months within the selected time period in the top-right corner\n\tSELECT CAST(($__timeTo()-INTERVAL (H+T+U) DAY) AS date) day\n\tFROM ( SELECT 0 H\n\t\t\tUNION ALL SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300\n\t\t) H CROSS JOIN ( SELECT 0 T\n\t\t\tUNION ALL SELECT  10 UNION ALL SELECT  20 UNION ALL SELECT  30\n\t\t\tUNION ALL SELECT  40 UNION ALL SELECT  50 UNION ALL SELECT  60\n\t\t\tUNION ALL SELECT  70 UNION ALL SELECT  80 UNION ALL SELECT  90\n\t\t) T CROSS JOIN ( SELECT 0 U\n\t\t\tUNION ALL SELECT   1 UNION ALL SELECT   2 UNION ALL SELECT   3\n\t\t\tUNION ALL SELECT   4 UNION ALL SELECT   5 UNION ALL SELECT   6\n\t\t\tUNION ALL SELECT   7 UNION ALL SELECT   8 UNION ALL SELECT   9\n\t\t) U\n\tWHERE\n\t\t($__timeTo()-INTERVAL (H+T+U) DAY) > $__timeFrom()\n),\n\n_production_deployment_days as(\n-- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last oneSTRING_LITERAL_0_PLACEHOLDERcicd_scopesSTRING_LITERAL_1_PLACEHOLDERSUCCESSSTRING_LITERAL_2_PLACEHOLDERPRODUCTIONSTRING_LITERAL_3_PLACEHOLDER%Y-%mSTRING_LITERAL_4_PLACEHOLDER$dora_reportSTRING_LITERAL_5_PLACEHOLDER2023STRING_LITERAL_6_PLACEHOLDEROn-demand(elite)STRING_LITERAL_7_PLACEHOLDERBetween once per day and once per week(high)STRING_LITERAL_8_PLACEHOLDERBetween once per week and once per month(medium)STRING_LITERAL_9_PLACEHOLDERFewer than once per month(low)STRING_LITERAL_10_PLACEHOLDER$dora_reportSTRING_LITERAL_11_PLACEHOLDER2021STRING_LITERAL_12_PLACEHOLDEROn-demand(elite)STRING_LITERAL_13_PLACEHOLDERBetween once per day and once per month(high)STRING_LITERAL_14_PLACEHOLDERBetween once per month and once every 6 months(medium)STRING_LITERAL_15_PLACEHOLDERFewer than once per six months(low)STRING_LITERAL_16_PLACEHOLDERInvalid dora reportSTRING_LITERAL_17_PLACEHOLDERDeployment FrequencySTRING_LITERAL_18_PLACEHOLDER",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 1 - Deployment Frequency",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 1
+                },
+                "PRODUCTION": {
+                  "color": "green",
+                  "index": 0
+                },
+                "SUCCESS": {
+                  "color": "green",
+                  "index": 2
+                },
+                "This project is selected": {
+                  "color": "green",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 0,
+        "y": 11
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, result, environment, COUNT(DISTINCT cdc.id) AS deployment_commit_count, COUNT(DISTINCT cdc.cicd_deployment_id) AS deployment_count FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(cdc.finished_date) GROUP BY 1, 2, 3, 4, 5",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 2. Find the number of successful  production deployments in this project (Last column)",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "id": 34,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 1: Number of deployments per month\nwith _deployments as(\n-- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last oneSTRING_LITERAL_0_PLACEHOLDER%y/%mSTRING_LITERAL_1_PLACEHOLDERcicd_scopesSTRING_LITERAL_2_PLACEHOLDERSUCCESSSTRING_LITERAL_3_PLACEHOLDERPRODUCTIONSTRING_LITERAL_4_PLACEHOLDERDeployment CountSTRING_LITERAL_5_PLACEHOLDER%Y-%m-01STRING_LITERAL_6_PLACEHOLDER%Y-%m-01STRING_LITERAL_7_PLACEHOLDER",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 2 - Monthly deployments",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 1
+                },
+                "PRODUCTION": {
+                  "color": "green",
+                  "index": 0
+                },
+                "SUCCESS": {
+                  "color": "green",
+                  "index": 2
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "deployment_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 0,
+        "y": 16
+      },
+      "id": 49,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _deployment_commit_rank AS (SELECT pm.project_name, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, cdc.id, cdc.cicd_deployment_id, cdc.cicd_scope_id, result, environment, finished_date, ROW_NUMBER() OVER (PARTITION BY cdc.cicd_deployment_id ORDER BY finished_date DESC NULLS LAST) AS _deployment_commit_rank FROM cicd_deployment_commits AS cdc LEFT JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND result = 'SUCCESS' AND environment = 'PRODUCTION') SELECT project_name, cicd_deployment_id AS deployment_id, id AS deployment_commit_id /* a deployment may have multiple deployment_commits */, result, environment, finished_date FROM _deployment_commit_rank WHERE _deployment_commit_rank = 1 AND $__timeFilter(finished_date)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 3. Use the last finished_date of deployment commits as the finished date of deployments in this project",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "Between once per month and once every 6 months": {
+                  "color": "yellow",
+                  "index": 1
+                },
+                "Between once per week and once per month": {
+                  "color": "green",
+                  "index": 2
+                },
+                "Fewer than once per six months": {
+                  "color": "red",
+                  "index": 0
+                },
+                "On-demand": {
+                  "color": "purple",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "day"
+            },
+            "properties": [
+              {
+                "id": "custom.width"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 21
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _deployment_commit_rank AS (SELECT pm.project_name, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, cdc.id, cdc.cicd_deployment_id, cdc.cicd_scope_id, result, environment, finished_date, ROW_NUMBER() OVER (PARTITION BY cdc.cicd_deployment_id ORDER BY finished_date DESC NULLS LAST) AS _deployment_commit_rank FROM cicd_deployment_commits AS cdc LEFT JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND result = 'SUCCESS' AND environment = 'PRODUCTION'), _deployments AS (SELECT project_name, cicd_deployment_id AS deployment_id, id AS deployment_commit_id /* a deployment may have multiple deployment_commits */, result, environment, finished_date FROM _deployment_commit_rank WHERE _deployment_commit_rank = 1 AND $__timeFilter(finished_date)) SELECT DISTINCT CAST(finished_date AS DATE) AS day, COUNT(1) AS deployment_count FROM _deployments GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4. Daily deployments in this project [To check Figure 1]",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "Between once per month and once every 6 months": {
+                  "color": "yellow",
+                  "index": 1
+                },
+                "Between once per week and once per month": {
+                  "color": "green",
+                  "index": 2
+                },
+                "Fewer than once per six months": {
+                  "color": "red",
+                  "index": 0
+                },
+                "On-demand": {
+                  "color": "purple",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "day"
+            },
+            "properties": [
+              {
+                "id": "custom.width"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      },
+      "id": 50,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _deployment_commit_rank AS (SELECT pm.project_name, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, cdc.id, cdc.cicd_deployment_id, cdc.cicd_scope_id, result, environment, finished_date, ROW_NUMBER() OVER (PARTITION BY cdc.cicd_deployment_id ORDER BY finished_date DESC NULLS LAST) AS _deployment_commit_rank FROM cicd_deployment_commits AS cdc LEFT JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND result = 'SUCCESS' AND environment = 'PRODUCTION'), _deployments AS (SELECT project_name, cicd_deployment_id AS deployment_id, id AS deployment_commit_id /* a deployment may have multiple deployment_commits */, result, environment, finished_date FROM _deployment_commit_rank WHERE _deployment_commit_rank = 1 AND $__timeFilter(finished_date)), _deployment_days AS (SELECT DISTINCT CAST(finished_date AS DATE) AS day, COUNT(1) AS deployment_count FROM _deployments GROUP BY 1) SELECT TO_CHAR(day, '%y/%m') AS month, SUM(deployment_count) AS monthly_deployment_counts FROM _deployment_days GROUP BY 1 ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 5. Monthly deployments in this project [To check Figure 2]",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 28,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Check \"Median Lead Time for Changes\"",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 72,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- See the definition and calculation logic of [Median Lead Time for Changes](https://devlake.apache.org/docs/Metrics/LeadTimeForChanges)\n- Data Sources Required: \n  - `Deployments` from Jenkins, GitLab CI, GitHub Action, BitBucket Pipelines, or Webhook, etc. \n  - `Pull Requests` from GitHub PRs, GitLab MRs, BitBucket PRs, Azure DevOps PRs, etc.\n- Transformation Required: Define `deployments` in [data transformations](https://devlake.apache.org/docs/Configuration/Tutorial#step-3---add-transformations-optional) while configuring the blueprint of a project.\n- Validatation Steps below:\n  - Step 1 - check the data integrity of PRs in table `pull_requests`\n  - Step 2 - check the data integrity of deployment_commit in table `cicd_deployment_commits`\n  - Step 3 - check if a deployment_commit is associated with the correct PR in table `project_pr_metrics`\n  - Step 4 - check if metrics like PR Coding/Pickup/Review/Deploy/cycle time are correct in table `project_pr_metrics`\n  - Step 5 - check if the median lead time for changes in each month is correct",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 254, 254, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "gradient",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 0,
+        "y": 34
+      },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, pr._raw_data_table, COUNT(*) AS total_number_of_PRs FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' WHERE pm.project_name IN ($project) AND /* \tand pr.merged_date is not null */ /* \tand prm.pr_cycle_time is not null */ $__timeFilter(pr.created_date) GROUP BY 1, 2",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 1-1. Check if the total PR number in the selected project(s) is correct",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^median_change_lead_time$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Metric 2: median lead time for changes */ WITH _pr_stats AS (/* get the cycle time of PRs deployed by the deployments finished in the selected period */ SELECT DISTINCT pr.id, ppm.pr_cycle_time FROM pull_requests AS pr JOIN project_pr_metrics AS ppm ON ppm.id = pr.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' JOIN cicd_deployment_commits AS cdc ON ppm.deployment_commit_id = cdc.id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND NOT pr.merged_date IS NULL AND NOT ppm.pr_cycle_time IS NULL AND $__timeFilter(cdc.finished_date)), _median_change_lead_time_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY pr_cycle_time NULLS FIRST) AS ranks FROM _pr_stats), _median_change_lead_time AS (/* use median PR cycle time as the median change lead time */ SELECT MAX(pr_cycle_time) AS median_change_lead_time FROM _median_change_lead_time_ranks WHERE ranks <= 0.5) SELECT CASE WHEN ('$dora_report') = '2023' THEN CASE WHEN median_change_lead_time < 24 * 60 THEN \"Less than one day(elite)\" WHEN median_change_lead_time < 7 * 24 * 60 THEN \"Between one day and one week(high)\" WHEN median_change_lead_time < 30 * 24 * 60 THEN \"Between one week and one month(medium)\" WHEN median_change_lead_time >= 30 * 24 * 60 THEN \"More than one month(low)\" ELSE \"N/A. Please check if you have collected deployments/pull_requests.\" END WHEN ('$dora_report') = '2021' THEN CASE WHEN median_change_lead_time < 60 THEN \"Less than one hour(elite)\" WHEN median_change_lead_time < 7 * 24 * 60 THEN \"Less than one week(high)\" WHEN median_change_lead_time < 180 * 24 * 60 THEN \"Between one week and six months(medium)\" WHEN median_change_lead_time >= 180 * 24 * 60 THEN \"More than six months(low)\" ELSE \"N/A. Please check if you have collected deployments/pull_requests.\" END ELSE 'Invalid dora report' END AS median_change_lead_time FROM _median_change_lead_time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 3 - Median Lead Time for Changes",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "This Project": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "merged_date"
+            },
+            "properties": [
+              {
+                "id": "color"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byType",
+              "options": "time"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "project_name"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 16,
+        "x": 0,
+        "y": 39
+      },
+      "id": 53,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, pr.title /* pr.status, */, pr.author_name, pr.url, pr.merged_date, pr.created_date FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' WHERE pr.id /* pm.project_name in ($project) */ = '$pr_id' AND $__timeFilter(pr.created_date)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 1-2. Check if the attributes of the selected pull request is correct (Use the Pull Request URL filter above)",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hours",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 40
+      },
+      "id": 38,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/* Metric 2: median change lead time per month */ WITH _pr_stats AS (/* get the cycle time of PRs deployed by the deployments finished each month */ SELECT DISTINCT pr.id, TO_CHAR(cdc.finished_date, '%y/%m') AS month, ppm.pr_cycle_time FROM pull_requests AS pr JOIN project_pr_metrics AS ppm ON ppm.id = pr.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' JOIN cicd_deployment_commits AS cdc ON ppm.deployment_commit_id = cdc.id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND NOT pr.merged_date IS NULL AND NOT ppm.pr_cycle_time IS NULL AND $__timeFilter(cdc.finished_date)), _find_median_clt_each_month_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY month ORDER BY pr_cycle_time NULLS FIRST) AS ranks FROM _pr_stats), _clt AS (SELECT month, MAX(pr_cycle_time) AS median_change_lead_time FROM _find_median_clt_each_month_ranks WHERE ranks <= 0.5 GROUP BY month) SELECT cm.month, CASE WHEN _clt.median_change_lead_time IS NULL THEN 0 ELSE CAST(_clt.median_change_lead_time AS NUMERIC) / NULLIF(60, 0) END AS 'Median Change Lead Time In Hour' FROM calendar_months AS cm LEFT JOIN _clt ON cm.month = _clt.month WHERE month_timestamp BETWEEN CAST(TO_CHAR($__timeFrom(), '%Y-%m-01') AS DATE) AND CAST(TO_CHAR($__timeTo(), '%Y-%m-01') AS DATE)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 4 - Median Lead Time for Changes",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 254, 254, 1)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "from": 1,
+                "result": {
+                  "color": "green",
+                  "index": 0
+                },
+                "to": 10000000
+              },
+              "type": "range"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 0,
+        "y": 42
+      },
+      "id": 12,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT pr.id) AS 'No. of merged PRs in table.pull_requests' FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' WHERE pm.project_name IN ($project) AND NOT pr.merged_date IS NULL",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT id) AS 'No. of PRs in table.project_pr_metrics' FROM project_pr_metrics WHERE project_name IN ($project)",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "blueprint_id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprint_labels",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 1-3. Check if the No. of records in project_pr_metrics is the same as the No. of MERGED PRs in the selected project(s)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 1
+                },
+                "PRODUCTION": {
+                  "color": "green",
+                  "index": 0
+                },
+                "SUCCESS": {
+                  "color": "green",
+                  "index": 2
+                },
+                "This project is selected": {
+                  "color": "green",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 0,
+        "y": 46
+      },
+      "id": 68,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, CASE WHEN cdc._raw_data_table <> '' THEN cdc._raw_data_table ELSE cdc.cicd_scope_id END AS _raw_data_table, result, environment, COUNT(DISTINCT cdc.id) AS deployment_commit_count, COUNT(DISTINCT cdc.cicd_deployment_id) AS deployment_count FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(cdc.finished_date) GROUP BY 1, 2, 3, 4, 5",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 2. Check if the number of successful  production deployments in the selected project(s) is correct",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "This Project": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "merged_date"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "select_status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "This project is selected": {
+                        "color": "green",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 47
+      },
+      "id": 51,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, pr.title /* pr.status, */, pr.url /* \tpr.author_name, */, pr.merged_date, pr.created_date FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' WHERE $__timeFilter(pr.created_date) /* pm.project_name in ($project) */",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Appendix 1 - All PRs in this project (Only the rows with 2 green columns should appear in project_pr_metrics)",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "NO": {
+                  "color": "red",
+                  "index": 1
+                },
+                "YES": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 0,
+        "y": 50
+      },
+      "id": 69,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* This query can be used to test if the column \"deployment_commit_id\" is associated with the correct PR */ WITH pr_merge_commits AS (SELECT ppm.id AS pr_id, ppm.deployment_commit_id AS id_1, pr.merge_commit_sha, ppm.project_name FROM project_pr_metrics AS ppm LEFT JOIN pull_requests AS pr ON ppm.id = pr.id WHERE ppm.project_name IN ($project) AND ppm.id = '$pr_id'), _deployment_commits AS (SELECT DISTINCT cdc1.id AS id_2, cdc1.prev_success_deployment_commit_id, cdc1.commit_sha AS new_commit_sha, cdc2.commit_sha AS old_commit_sha, cdc1.finished_date, cd.commit_sha AS deployed_commits FROM cicd_deployment_commits AS cdc1 LEFT JOIN cicd_deployment_commits AS cdc2 ON cdc1.prev_success_deployment_commit_id = cdc2.id JOIN commits_diffs AS cd ON cdc1.commit_sha = cd.new_commit_sha AND COALESCE(cdc2.commit_sha, '') = cd.old_commit_sha JOIN project_mapping AS pm ON cdc1.cicd_scope_id = pm.row_id WHERE cdc1.result = 'SUCCESS' AND cdc1.environment = 'PRODUCTION' AND pm.project_name IN ($project)), _find_deployment_commit_id_from_pr AS (SELECT pmc.pr_id, pmc.id_1, pmc.merge_commit_sha, pmc.project_name, dc.id_2, dc.prev_success_deployment_commit_id, dc.deployed_commits, RANK() OVER (PARTITION BY pr_id ORDER BY dc.finished_date NULLS FIRST) AS deployment_rank FROM pr_merge_commits AS pmc LEFT JOIN _deployment_commits AS dc ON pmc.merge_commit_sha = dc.deployed_commits) SELECT pr_id, id_1 AS deployment_commit_id /* If \"id_1\" equals \"id_2\", then pass */, CASE WHEN id_1 = COALESCE(id_2, '') THEN 'YES' ELSE 'NO' END AS if_the_mapping_logic_is_correct /* \tid_2, */ FROM _find_deployment_commit_id_from_pr WHERE deployment_rank = 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 3. Check if a `pull request` is associated with the correct `depoloyment commit` in table project_pr_metrics",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 54
+      },
+      "id": 52,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _pr_commit_ranks AS (SELECT pr.id, pr.created_date AS pr_created_date, prc.commit_sha, prc.commit_authored_date, ROW_NUMBER() OVER (PARTITION BY pr.id ORDER BY prc.commit_authored_date ASC NULLS FIRST) AS commit_rank FROM pull_requests AS pr LEFT JOIN pull_request_commits AS prc ON pr.id = prc.pull_request_id WHERE pr.id = '$pr_id') SELECT id, CEIL(CAST(EXTRACT(EPOCH FROM (pr_created_date - commit_authored_date)) AS NUMERIC) / NULLIF(60, 0)) AS 'PR coding time from PRs and commits' /* commit_sha as first_commit_sha, */ /* commit_authored_date as first_commit_authored_date, */ FROM _pr_commit_ranks WHERE commit_rank = 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT id, pr_coding_time AS 'PR coding time from project_pr_metrics' /* first_commit_sha, */ FROM project_pr_metrics WHERE id = '$pr_id'",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "blueprint_id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprint_labels",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4-1. Check if PR coding time in project_pr_metrics is correct (Adopt the Pull Request filter above)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 54
+      },
+      "id": 54,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _pr_comment_ranks AS (SELECT pr.id AS pr_id, pr.created_date AS pr_created_date, prc.id AS review_id, prc.created_date AS review_created_date, ROW_NUMBER() OVER (PARTITION BY pr.id ORDER BY prc.created_date ASC NULLS FIRST) AS comment_rank FROM pull_requests AS pr LEFT JOIN pull_request_comments AS prc ON pr.id = prc.pull_request_id WHERE pr.id = '$pr_id' AND prc.account_id <> pr.author_id) SELECT pr_id, review_id AS first_review_id, pr_created_date, review_created_date AS first_review_time, CEIL(CAST(EXTRACT(EPOCH FROM (review_created_date - pr_created_date)) AS NUMERIC) / NULLIF(60, 0)) AS 'PR pickup time from pr_comments' FROM _pr_comment_ranks WHERE comment_rank = 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT id, pr_pickup_time AS 'PR pickup time from project_pr_metrics' /* first_review_id, */ FROM project_pr_metrics WHERE id = '$pr_id' AND project_name IN ($project)",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "blueprint_id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprint_labels",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4-2. Check if PR pickup time in project_pr_metrics is correct (Adopt the Pull Request filter above)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "id": 55,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _pr_comment_ranks AS (SELECT pr.id AS pr_id, pr.merged_date AS pr_merged_date, prc.id AS review_id, prc.created_date AS review_created_date, ROW_NUMBER() OVER (PARTITION BY pr.id ORDER BY prc.created_date ASC NULLS FIRST) AS comment_rank_asc FROM pull_requests AS pr LEFT JOIN pull_request_comments AS prc ON pr.id = prc.pull_request_id WHERE pr.id = '$pr_id' AND prc.account_id <> pr.author_id) SELECT pr_id, review_id AS first_review_id, review_created_date AS first_review_time, CEIL(CAST(EXTRACT(EPOCH FROM (pr_merged_date - review_created_date)) AS NUMERIC) / NULLIF(60, 0)) AS 'PR review time from pr_comments' FROM _pr_comment_ranks WHERE comment_rank_asc = 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT id, pr_review_time AS 'PR review time from project_pr_metrics' /* first_review_id, */ FROM project_pr_metrics WHERE id = '$pr_id' AND project_name IN ($project)",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "blueprint_id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprint_labels",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4-3. Check if PR review time in project_pr_metrics is correct (Adopt the Pull Request filter above)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 56,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT ppm.id AS pr_id, ppm.deployment_commit_id, CEIL(CAST(EXTRACT(EPOCH FROM (cdc.finished_date - pr.merged_date)) AS NUMERIC) / NULLIF(60, 0)) AS 'PR deploy time from cicd_deployment_commits' FROM project_pr_metrics AS ppm LEFT JOIN cicd_deployment_commits AS cdc ON ppm.deployment_commit_id = cdc.id LEFT JOIN pull_requests AS pr ON ppm.id = pr.id WHERE project_name IN ($project) AND cdc.result = 'SUCCESS' AND cdc.\"environment\" = 'PRODUCTION' AND ppm.id = '$pr_id'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT id, pr_deploy_time AS 'PR deploy time from project_pr_metrics' FROM project_pr_metrics WHERE id = '$pr_id' AND project_name IN ($project)",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "blueprint_id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprint_labels",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4-4. Check if PR deploy time in project_pr_metrics is correct (Adopt the Pull Request filter above)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 62
+      },
+      "id": 57,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT ppm.id, (pr_coding_time + CEIL(CAST(EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date)) AS NUMERIC) / NULLIF(60, 0)) + pr_deploy_time) AS 'PR cycle time from lower-level metrics', ppm.\"pr_cycle_time\" AS 'PR cycle time from project_pr_metrics' FROM project_pr_metrics AS ppm LEFT JOIN pull_requests AS pr ON ppm.id = pr.id WHERE project_name IN ($project) AND pr.id = '$pr_id'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4-5. Check if PR cycle time in project_pr_metrics is correct (Adopt the Pull Request filter above)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ranks"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "from": 0,
+                      "result": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "to": 0.5
+                    },
+                    "type": "range"
+                  },
+                  {
+                    "options": {
+                      "from": 0.5,
+                      "result": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "to": 1
+                    },
+                    "type": "range"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "month"
+            },
+            "properties": [
+              {
+                "id": "custom.filterable",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 70,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _pr_stats AS (/* get the cycle time of PRs deployed by the deployments finished each month */ SELECT DISTINCT TO_CHAR(cdc.finished_date, '%y/%m') AS month, pr.id, ppm.pr_cycle_time FROM pull_requests AS pr JOIN project_pr_metrics AS ppm ON ppm.id = pr.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' JOIN cicd_deployment_commits AS cdc ON ppm.deployment_commit_id = cdc.id WHERE pm.project_name IN ($project) AND NOT pr.merged_date IS NULL AND NOT ppm.pr_cycle_time IS NULL AND $__timeFilter(cdc.finished_date)), _find_median_clt_each_month_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY month ORDER BY pr_cycle_time NULLS FIRST) AS ranks FROM _pr_stats) SELECT month, id, pr_cycle_time AS change_lead_time_in_minutes, CAST(pr_cycle_time AS NUMERIC) / NULLIF(60, 0) AS change_lead_time_in_hours, ranks FROM _find_median_clt_each_month_ranks",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 5 - check the median change lead time for each month in Figure 4 (Compare the change_lead_time with the max ranks in GREEN before the first occurrence of ORANGE in each month)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 74
+      },
+      "id": 26,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Check \"Change Failure Rate\" & \"${title_value}\"",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 66,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- See the definition and calculation logic of [${title_value}](https://devlake.apache.org/docs/Metrics/MTTR)\n- Data Sources Required: \n  - `Deployments` from Jenkins, GitLab CI, GitHub Action, BitBucket Pipelines, or Webhook, etc. \n  - `Incidents` from Jira issues, GitHub issues, TAPD issues, PagerDuty Incidents, etc. \n- Transformation Required: Define `deployments` and `incidents` in [data transformations](https://devlake.apache.org/docs/Configuration/Tutorial#step-3---add-transformations-optional) while configuring the blueprint of a project.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 79
+      },
+      "id": 67,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- See the definition and calculation logic of [Change Failure Rate](https://devlake.apache.org/docs/Metrics/CFR)\n- Data Sources Required: \n  - `Deployments` from Jenkins, GitLab CI, GitHub Action, BitBucket Pipelines, or Webhook, etc. \n  - `Incidents` from Jira issues, GitHub issues, TAPD issues, PagerDuty Incidents, etc. \n- Transformation Required: Define `deployments` and `incidents` in [data transformations](https://devlake.apache.org/docs/Configuration/Tutorial#step-3---add-transformations-optional) while configuring the blueprint of a project.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "gradient",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "INCIDENT": {
+                  "color": "green",
+                  "index": 0
+                },
+                "This project is selected": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 16,
+        "x": 0,
+        "y": 83
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* get the incident created within the selected time period in the top-right corner */ SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, i._raw_data_table, i.type, COUNT(1) AS issue_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id AND pm.\"table\" = 'boards' WHERE pm.project_name IN ($project) AND /* \tand i.type = 'INCIDENT' */ $__timeFilter(i.created_date) GROUP BY pm.project_name, select_status, i._raw_data_table, i.type",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 1. All types of issues in table.issues (rows with 2 green columns will be used to construct project_incident_deployment_relationships)",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 83
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING $__timeFilter(MAX(cdc.finished_date))), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(fd.deployment_finished_date, '%y/%m') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _recovery_time_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY (EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60) NULLS FIRST) AS ranks FROM _incidents_for_deployments), _median_recovery_time AS (SELECT MAX((EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60)) AS median_recovery_time FROM _recovery_time_ranks WHERE ranks <= 0.5), _is_collected_data AS (SELECT CASE WHEN EXISTS(SELECT COUNT(d.deployment_id) FROM _deployments) = 0 AND EXISTS(SELECT COUNT(i.incident_id) FROM incidents) = 0 THEN 'No deployments and incidents' WHEN EXISTS(SELECT COUNT(d.deployment_id) FROM _deployments) = 0 THEN 'No Deployments' WHEN EXISTS(SELECT COUNT(i.incident_id) FROM incidents) = 0 THEN 'No Incidents' ELSE 'No incidents are mapped to deployments' END AS is_collected FROM _deployments AS d, _incidents_for_deployments AS i), _metric_recovery_time_2023_report AS (SELECT CASE WHEN ('$dora_report') = '2023' THEN CASE WHEN is_collected = \"No deployments and incidents\" THEN \"N/A. Please check if you have collected deployments and incidents.\" WHEN is_collected = \"No Deployments\" THEN \"N/A. Please check if you have collected deployments.\" WHEN is_collected = \"No Incidents\" THEN \"N/A. Please check if you have collected incidents.\" WHEN median_recovery_time < 60 THEN CONCAT(ROUND(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0), 1), \"(elite)\") WHEN median_recovery_time < 24 * 60 THEN CONCAT(ROUND(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0), 1), \"(high)\") WHEN median_recovery_time < 7 * 24 * 60 THEN CONCAT(ROUND(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0), 1), \"(medium)\") WHEN median_recovery_time >= 7 * 24 * 60 THEN CONCAT(ROUND(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0), 1), \"(low)\") ELSE \"No data\" END END AS median_recovery_time FROM _median_recovery_time, _is_collected_data), _incidents /*  ***** 2021 report ***** -- */ /* Metric 4: Median time to restore service */ AS (/* get the incidents created within the selected time period in the top-right corner */ SELECT DISTINCT i.id, CAST(lead_time_minutes AS BIGINT) AS lead_time_minutes FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND pm.\"table\" = i.\"table\" WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND $__timeFilter(i.created_date)), _median_mttr_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY lead_time_minutes NULLS FIRST) AS ranks FROM _incidents), _median_mttr AS (SELECT MAX(lead_time_minutes) AS median_time_to_resolve FROM _median_mttr_ranks WHERE ranks <= 0.5), _metric_mttr_2021_report AS (SELECT CASE WHEN ('$dora_report') = '2021' THEN CASE WHEN median_time_to_resolve < 60 THEN \"Less than one hour(elite)\" WHEN median_time_to_resolve < 24 * 60 THEN \"Less than one day(high)\" WHEN median_time_to_resolve < 7 * 24 * 60 THEN \"Between one day and one week(medium)\" WHEN median_time_to_resolve >= 7 * 24 * 60 THEN \"More than one week(low)\" ELSE \"N/A. Please check if you have collected incidents.\" END END AS median_time_to_resolve FROM _median_mttr) SELECT median_recovery_time AS median_time_in_hour FROM _metric_recovery_time_2023_report WHERE ('$dora_report') = '2023' UNION SELECT median_time_to_resolve AS median_time_to_resolve FROM _metric_mttr_2021_report WHERE ('$dora_report') = '2021'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 5 - ${title_value}",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "gradient",
+              "type": "color-background"
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "INCIDENT": {
+                  "color": "green",
+                  "index": 0
+                },
+                "This project is selected": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 0,
+        "y": 89
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* get the incident created within the selected time period in the top-right corner */ SELECT pm.project_name, CASE WHEN pm.project_name IN ($project) THEN 'This project is selected' ELSE 'Not Selected' END AS select_status, i._raw_data_table, COUNT(1) AS issue_count FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND pm.\"table\" = i.\"table\" WHERE pm.project_name IN ($project) AND $__timeFilter(i.created_date) GROUP BY pm.project_name, select_status, i._raw_data_table",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 2. Number of Incidents in the selected project(s)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 16,
+        "x": 0,
+        "y": 93
+      },
+      "id": 61,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<img src = 'https://devlake.apache.org/assets/images/cfr-definition-94d92cc75f857f183443ad5390d31d65.png' />\n\nIn this case:\n\n- Deployment-1 maps to Incident-1\n- Deployment-3 maps to Incident-2 and Incident-3\n- Deployment-2,4,5 doesn't map to any Incident",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Deployment - Incident Mapping and CFR calculation logic",
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hours",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "median_time_to_resolve_in_hour"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 93
+      },
+      "id": 46,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING $__timeFilter(MAX(cdc.finished_date))), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(fd.deployment_finished_date, '%y/%m') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _recovery_time_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY deployment_finished_month ORDER BY (EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60) NULLS FIRST) AS ranks FROM _incidents_for_deployments), _median_recovery_time AS (SELECT deployment_finished_month, MAX((EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60)) AS median_recovery_time FROM _recovery_time_ranks WHERE ranks <= 0.5 GROUP BY deployment_finished_month), _metric_recovery_time_2023_report AS (SELECT cm.month, CASE WHEN m.median_recovery_time IS NULL THEN 0 ELSE CAST(m.median_recovery_time AS NUMERIC) / NULLIF(60, 0) END AS median_recovery_time_in_hour FROM calendar_months AS cm LEFT JOIN _median_recovery_time AS m ON cm.month = m.deployment_finished_month WHERE month_timestamp BETWEEN CAST(TO_CHAR($__timeFrom(), '%Y-%m-01') AS DATE) AND CAST(TO_CHAR($__timeTo(), '%Y-%m-01') AS DATE)), _incidents /*  ***** 2021 report ***** -- */ /* Metric 4: median time to restore service - MTTR */ AS (/* get the number of incidents created each month */ SELECT DISTINCT i.id, TO_CHAR(i.created_date, '%y/%m') AS month, CAST(lead_time_minutes AS BIGINT) AS lead_time_minutes FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND pm.\"table\" = i.\"table\" WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND NOT i.lead_time_minutes IS NULL), _find_median_mttr_each_month_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY month ORDER BY lead_time_minutes NULLS FIRST) AS ranks FROM _incidents), _mttr AS (SELECT month, MAX(lead_time_minutes) AS median_time_to_resolve FROM _find_median_mttr_each_month_ranks WHERE ranks <= 0.5 GROUP BY month), _metric_mttr_2021_report AS (SELECT cm.month, CASE WHEN m.median_time_to_resolve IS NULL THEN 0 ELSE CAST(m.median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) END AS median_time_to_resolve_in_hour FROM calendar_months AS cm LEFT JOIN _mttr AS m ON cm.month = m.month WHERE month_timestamp BETWEEN CAST(TO_CHAR($__timeFrom(), '%Y-%m-01') AS DATE) AND CAST(TO_CHAR($__timeTo(), '%Y-%m-01') AS DATE)) SELECT cm.month, CASE WHEN '${dora_report}' = '2023' THEN mrt.median_recovery_time_in_hour WHEN '${dora_report}' = '2021' THEN mm.median_time_to_resolve_in_hour END AS '${title_value} In Hours' FROM calendar_months AS cm LEFT JOIN _metric_recovery_time_2023_report AS mrt ON cm.month = mrt.month LEFT JOIN _metric_mttr_2021_report AS mm ON cm.month = mm.month WHERE month_timestamp BETWEEN CAST(TO_CHAR($__timeFrom(), '%Y-%m-01') AS DATE) AND CAST(TO_CHAR($__timeTo(), '%Y-%m-01') AS DATE)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 6 - ${title_value}",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 103
+      },
+      "id": 44,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 3: change failure rate\nwith _deployments as (\n  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last oneSTRING_LITERAL_0_PLACEHOLDERcicd_scopesSTRING_LITERAL_1_PLACEHOLDERSUCCESSSTRING_LITERAL_2_PLACEHOLDERPRODUCTIONSTRING_LITERAL_3_PLACEHOLDERNo AllSTRING_LITERAL_4_PLACEHOLDERNo IncidentsSTRING_LITERAL_5_PLACEHOLDERNo DeploymentsSTRING_LITERAL_6_PLACEHOLDER$dora_reportSTRING_LITERAL_7_PLACEHOLDER2023STRING_LITERAL_8_PLACEHOLDER$dora_reportSTRING_LITERAL_9_PLACEHOLDER2021STRING_LITERAL_10_PLACEHOLDERInvalid dora reportSTRING_LITERAL_11_PLACEHOLDER",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 7 - Change Failure Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 0
+                },
+                "INCIDENT": {
+                  "color": "red",
+                  "index": 1
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 8,
+        "x": 0,
+        "y": 108
+      },
+      "id": 58,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _deployments AS (SELECT DISTINCT d.cicd_deployment_id AS deployment_id, d.result, d.environment, d.finished_date, d.cicd_scope_id, pm.project_name FROM cicd_deployment_commits AS d JOIN project_mapping AS pm ON d.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE d.result /* only result needs to specified, not environment */ = 'SUCCESS' /* choose your project_name */ AND pm.project_name IN ($project)), _incidents AS (SELECT DISTINCT i.id AS issue_id, i.created_date, pm.project_name FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND i.\"table\" = pm.\"table\" WHERE pm.project_name /* choose your project_name */ IN ($project)) SELECT deployment_id AS id, 'DEPLOYMENT' AS type, finished_date AS time FROM _deployments UNION SELECT issue_id AS id, 'INCIDENT' AS type, created_date AS time FROM _incidents ORDER BY time NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 3. The sequence of DEPLOYMENTS and INCIDENTS",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "FALSE": {
+                  "color": "green",
+                  "index": 1
+                },
+                "TRUE": {
+                  "color": "red",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 8,
+        "x": 8,
+        "y": 108
+      },
+      "id": 59,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT cdc.cicd_deployment_id AS deployment_id /* in CFR we use deployment_commit_id as the deployment_id in a specific repo */, cdc.finished_date, pim.id AS incident_id, CASE WHEN NOT pim.id IS NULL THEN 'TRUE' ELSE 'FALSE' END AS has_failure FROM cicd_deployment_commits AS cdc LEFT JOIN project_incident_deployment_relationships AS pim ON cdc.cicd_deployment_id = pim.deployment_id LEFT JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE pm.project_name IN ($project) AND $__timeFilter(cdc.finished_date) ORDER BY 2 DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Step 4. Check if the DEPLOYMENT and INCIDENT mapping results are consistent with them in step 3 and figure 7&8",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "change_failure_rate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 111
+      },
+      "id": 48,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "-- Metric 3: change failure rate per month\nwith _deployments as (\n  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last oneSTRING_LITERAL_0_PLACEHOLDERcicd_scopesSTRING_LITERAL_1_PLACEHOLDERSUCCESSSTRING_LITERAL_2_PLACEHOLDERPRODUCTIONSTRING_LITERAL_3_PLACEHOLDER%y/%mSTRING_LITERAL_4_PLACEHOLDERChange Failure RateSTRING_LITERAL_5_PLACEHOLDER%Y-%m-01STRING_LITERAL_6_PLACEHOLDER%Y-%m-01STRING_LITERAL_7_PLACEHOLDER",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Figure 8 - Change Failure Rate",
+      "type": "barchart"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "Engineering Leads Dashboard"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "postgresql",
+        "definition": "select distinct name from projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "select distinct name from projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "postgresql",
+        "definition": "select concat(Url, '--', id) from pull_requests",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Pull Request Url",
+        "multi": false,
+        "name": "pr_id",
+        "options": [],
+        "query": "select concat(Url, '--', id) from pull_requests",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)--(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "2023",
+          "value": "2023"
+        },
+        "datasource": "postgresql",
+        "definition": "select dora_report from dora_benchmarks",
+        "hide": 0,
+        "includeAll": false,
+        "label": "DORA Report",
+        "multi": false,
+        "name": "dora_report",
+        "options": [],
+        "query": "select dora_report from dora_benchmarks",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Failed Deployment Recovery Time",
+          "value": "Failed Deployment Recovery Time"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT \n  CASE \n    WHEN dora_report = '2023' THEN \"Failed Deployment Recovery Time\"\n    WHEN dora_report = '2021' THEN \"Median Time to Restore Service\"\n    ELSE NULL \n  END AS title_value\nFROM dora_benchmarks\nWHERE dora_report = '${dora_report:raw}'",
+        "hide": 2,
+        "includeAll": false,
+        "label": "TitleValue",
+        "multi": false,
+        "name": "title_value",
+        "options": [],
+        "query": "SELECT \n  CASE \n    WHEN dora_report = '2023' THEN \"Failed Deployment Recovery Time\"\n    WHEN dora_report = '2021' THEN \"Median Time to Restore Service\"\n    ELSE NULL \n  END AS title_value\nFROM dora_benchmarks\nWHERE dora_report = '${dora_report:raw}'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timeRangeUpdatedDuringEditOrView": false,
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DORA Validation (PostgreSQL)",
+  "uid": "KGkUnV-Vz-pg",
+  "version": 3,
+  "weekStart": ""
+}

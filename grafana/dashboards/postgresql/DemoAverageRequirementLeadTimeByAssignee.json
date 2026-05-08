@@ -1,0 +1,250 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homepage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/0Rjxknc7z/demo-homepage?orgId=1"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Back to previous page",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/SupYz7c7z/demo-how-fast-do-we-respond-to-customer-requirements?orgId=1"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": "postgresql",
+      "description": "1. Compare the average time spent in each state of a requirement in the last 2 months.\n2. The requirements being calculated are the requirements delivered in the last 2 months.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Days",
+            "axisPlacement": "auto",
+            "axisSoftMax": 8,
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 98,
+      "options": {
+        "barWidth": 0.6,
+        "groupWidth": 0.5,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "vertical",
+        "showValue": "always",
+        "text": {
+          "valueSize": 16
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _requirements AS (SELECT CAST(resolution_date AS DATE) + INTERVAL '1 day' AS time, assignee_name AS assignee, CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS lead_time FROM issues AS i WHERE type = 'REQUIREMENT' AND assignee_id <> '' AND $__timeFilter(resolution_date) GROUP BY 1, 2), this_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' AS this_month), last_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' + INTERVAL '-1 MONTH' AS last_month), the_month_before_last AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' + INTERVAL '-2 MONTH' AS the_month_before_last), this_month_record AS (SELECT assignee, lead_time AS this_month_count, time AS this_month FROM _requirements WHERE time IN (SELECT this_month FROM this_month)), last_month_record AS (SELECT assignee, lead_time AS last_month_count, time AS last_month FROM _requirements WHERE time IN (SELECT last_month FROM last_month)), the_month_before_last_record AS (SELECT assignee, lead_time AS the_month_before_last_count, time AS the_month_before_last FROM _requirements WHERE time IN (SELECT the_month_before_last FROM the_month_before_last)) SELECT COALESCE(NULLIF(tmr.assignee, ''), NULLIF(lmr.assignee, ''), tmblr.assignee) AS 'Assignee', COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\", CASE WHEN lmr.last_month_count IS NULL OR tmr.this_month_count IS NULL THEN '-' ELSE CONCAT(ROUND(CAST(100 * (tmr.this_month_count - lmr.last_month_count) AS NUMERIC) / NULLIF(lmr.last_month_count, 0), 1), '%') END AS \"Changes in last 2 month\" FROM the_month_before_last_record AS tmblr LEFT JOIN last_month_record AS lmr ON tmblr.assignee = lmr.assignee LEFT JOIN this_month_record AS tmr ON tmblr.assignee = tmr.assignee ORDER BY 2 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Requirement Lead Time by Assignee (day)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 100,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _requirements AS (SELECT CAST(resolution_date AS DATE) + INTERVAL '1 day' AS time, assignee_name AS assignee, CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS lead_time FROM issues AS i WHERE type = 'REQUIREMENT' AND assignee_id <> '' AND $__timeFilter(resolution_date) GROUP BY 1, 2), this_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' AS this_month), last_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' + INTERVAL '-1 MONTH' AS last_month), the_month_before_last AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 day' + INTERVAL '-2 MONTH' AS the_month_before_last), this_month_record AS (SELECT assignee, lead_time AS this_month_count, time AS this_month FROM _requirements WHERE time IN (SELECT this_month FROM this_month)), last_month_record AS (SELECT assignee, lead_time AS last_month_count, time AS last_month FROM _requirements WHERE time IN (SELECT last_month FROM last_month)), the_month_before_last_record AS (SELECT assignee, lead_time AS the_month_before_last_count, time AS the_month_before_last FROM _requirements WHERE time IN (SELECT the_month_before_last FROM the_month_before_last)) SELECT COALESCE(NULLIF(tmr.assignee, ''), NULLIF(lmr.assignee, ''), tmblr.assignee) AS 'Assignee', COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\", CASE WHEN lmr.last_month_count IS NULL OR tmr.this_month_count IS NULL THEN '-' ELSE CONCAT(ROUND(CAST(100 * (tmr.this_month_count - lmr.last_month_count) AS NUMERIC) / NULLIF(lmr.last_month_count, 0), 1), '%') END AS \"Changes in last 2 month\" FROM the_month_before_last_record AS tmblr LEFT JOIN last_month_record AS lmr ON tmblr.assignee = lmr.assignee LEFT JOIN this_month_record AS tmr ON tmblr.assignee = tmr.assignee ORDER BY 2 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "type": "table"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 102,
+      "options": {
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Demo-Average Requirement Lead Time By Assignee (PostgreSQL)",
+  "uid": "q27fk7cnk-pg",
+  "version": 6
+}
