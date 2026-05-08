@@ -430,7 +430,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS 'Security Hotspots' FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'HOTSPOTS' AND severity = ANY(ARRAY[${severity}]::text[])",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Security Hotspots\" FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'HOTSPOTS' AND severity = ANY(ARRAY[${severity}]::text[])",
           "refId": "A",
           "sql": {
             "columns": [
@@ -519,7 +519,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CONCAT(ROUND(CAST(COUNT(CASE WHEN status <> 'TO_REVIEW' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) * 100, 2), '%') AS 'Reviewed' FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'HOTSPOTS' AND severity = ANY(ARRAY[${severity}]::text[])",
+          "rawSql": "SELECT CONCAT(ROUND(CAST(COUNT(CASE WHEN status <> 'TO_REVIEW' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) * 100, 2), '%') AS \"Reviewed\" FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'HOTSPOTS' AND severity = ANY(ARRAY[${severity}]::text[])",
           "refId": "A",
           "sql": {
             "columns": [
@@ -724,7 +724,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS 'Code Smells' FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'CODE_SMELL' AND severity = ANY(ARRAY[${severity}]::text[])",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Code Smells\" FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'CODE_SMELL' AND severity = ANY(ARRAY[${severity}]::text[])",
           "refId": "A",
           "sql": {
             "columns": [
@@ -814,7 +814,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CONCAT(FLOOR(CAST(CAST(SUM(debt) AS NUMERIC) / NULLIF(8, 0) AS NUMERIC) / NULLIF(60, 0)), \" day(s) \", FLOOR(CAST((SUM(debt) % 480) AS NUMERIC) / NULLIF(60, 0)), \" hour(s) \") AS 'Debt' FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'CODE_SMELL' AND severity = ANY(ARRAY[${severity}]::text[])",
+          "rawSql": "SELECT CONCAT(FLOOR(CAST(CAST(SUM(debt) AS NUMERIC) / NULLIF(8, 0) AS NUMERIC) / NULLIF(60, 0)), \" day(s) \", FLOOR(CAST((SUM(debt) % 480) AS NUMERIC) / NULLIF(60, 0)), \" hour(s) \") AS \"Debt\" FROM cq_issues WHERE project_key = ANY(ARRAY[${project_id}]::text[]) AND type = 'CODE_SMELL' AND severity = ANY(ARRAY[${severity}]::text[])",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1405,7 +1405,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT file_name, num_of_lines AS 'Lines of Code', bugs AS 'Bugs', vulnerabilities AS 'Vulnerabilities', code_smells AS 'Code Smells', security_hotspots AS 'Security Hotspots', CONCAT(ROUND(coverage, 2), '%') AS 'Coverage', CONCAT(ROUND(duplicated_lines_density, 2), '%') AS 'Duplications' FROM cq_file_metrics WHERE project_key = ANY(ARRAY[${project_id}]::text[]) ORDER BY bugs DESC NULLS LAST LIMIT 20",
+          "rawSql": "SELECT file_name, num_of_lines AS \"Lines of Code\", bugs AS \"Bugs\", vulnerabilities AS \"Vulnerabilities\", code_smells AS \"Code Smells\", security_hotspots AS \"Security Hotspots\", CONCAT(ROUND(coverage, 2), '%') AS \"Coverage\", CONCAT(ROUND(duplicated_lines_density, 2), '%') AS \"Duplications\" FROM cq_file_metrics WHERE project_key = ANY(ARRAY[${project_id}]::text[]) ORDER BY bugs DESC NULLS LAST LIMIT 20",
           "refId": "A",
           "sql": {
             "columns": [

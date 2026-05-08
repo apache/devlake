@@ -120,7 +120,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -223,7 +223,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -410,7 +410,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -511,7 +511,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -649,7 +649,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, build_count AS \"Build Count\" FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, build_count AS \"Build Count\" FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -806,7 +806,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY time, result, id) SELECT TO_CHAR(time, '%M %Y') AS month, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Build Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY time, result, id) SELECT TO_CHAR(time, '%M %Y') AS month, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Build Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -973,7 +973,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_build_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1",
+          "rawSql": "SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_build_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -1109,7 +1109,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%bamboo%\" AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, CAST(mean_duration_sec AS NUMERIC) / NULLIF(60, 0) AS mean_duration_minutes FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id = ANY(ARRAY[${plan_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, CAST(mean_duration_sec AS NUMERIC) / NULLIF(60, 0) AS mean_duration_minutes FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [

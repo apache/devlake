@@ -201,7 +201,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE CAST(i.created_date AS DATE) BETWEEN CURRENT_DATE - INTERVAL '1 day' - INTERVAL '1 MONTH' AND CURRENT_DATE - INTERVAL '1 day' AND i.status = \"DONE\" AND b.id = ANY(ARRAY[${repo_id}]::text[])",
+          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE CAST(i.created_date AS DATE) BETWEEN CURRENT_DATE - INTERVAL '1 day' - INTERVAL '1 MONTH' AND CURRENT_DATE - INTERVAL '1 day' AND i.status = 'DONE' AND b.id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [
@@ -369,7 +369,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN issue_labels AS il ON il.issue_id = i.id WHERE il.label_name = \"$label_gfi\" AND i.status <> 'DONE' AND b.id = ANY(ARRAY[${repo_id}]::text[])",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN issue_labels AS il ON il.issue_id = i.id WHERE il.label_name = '$label_gfi' AND i.status <> 'DONE' AND b.id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [
@@ -554,7 +554,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT AVG(CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_close FROM pull_requests AS pr WHERE CAST(created_date AS DATE) BETWEEN CURRENT_DATE - INTERVAL '1 day' - INTERVAL '1 MONTH' AND CURRENT_DATE - INTERVAL '1 day' AND status IN ('CLOSED', 'MERGED') AND pr.base_repo_id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [
@@ -639,7 +639,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(100 * SUM(CASE WHEN CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0) < $prrt_sla THEN 1 ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(*), 0) FROM pull_requests AS pr WHERE CAST(created_date AS DATE) BETWEEN CURRENT_DATE - INTERVAL '1 day' - INTERVAL '1 MONTH' AND CURRENT_DATE - INTERVAL '1 day' AND status IN ('CLOSED', 'MERGED') AND pr.base_repo_id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [
@@ -747,7 +747,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(100 * COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE CAST(created_date AS DATE) BETWEEN CURRENT_DATE - INTERVAL '1 day' - INTERVAL '1 MONTH' AND CURRENT_DATE - INTERVAL '1 day' AND pr.base_repo_id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [

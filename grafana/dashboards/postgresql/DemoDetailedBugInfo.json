@@ -114,7 +114,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH bugs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(*) AS bug_count FROM issues AS i WHERE type = 'BUG' AND $__timeFilter(created_date) GROUP BY 1 ORDER BY 1 DESC NULLS LAST) SELECT TO_CHAR(time, '%M %Y') AS month, bug_count AS 'Bug Count over Month' FROM bugs ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH bugs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(*) AS bug_count FROM issues AS i WHERE type = 'BUG' AND $__timeFilter(created_date) GROUP BY 1 ORDER BY 1 DESC NULLS LAST) SELECT TO_CHAR(time, '%M %Y') AS month, bug_count AS \"Bug Count over Month\" FROM bugs ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [

@@ -502,7 +502,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 day' AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND i.status = \"DONE\" AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, issue_lead_time AS \"Mean Requirement Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 day' AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, issue_lead_time AS \"Mean Requirement Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2075,7 +2075,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT CASE WHEN i.type = 'BUG' THEN i.id ELSE NULL END) AS 'Bug', COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key <> '' THEN i.id ELSE NULL END) AS 'Strategic', COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key = '' THEN i.id ELSE NULL END) AS 'Non-Strategic' FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND NOT i.resolution_date IS NULL AND CAST(resolution_date AS DATE) BETWEEN TO_DATE('$month', '%Y-%m-%d') AND TO_DATE('$month', '%Y-%m-%d') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT CASE WHEN i.type = 'BUG' THEN i.id ELSE NULL END) AS \"Bug\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key <> '' THEN i.id ELSE NULL END) AS \"Strategic\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key = '' THEN i.id ELSE NULL END) AS \"Non-Strategic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND NOT i.resolution_date IS NULL AND CAST(resolution_date AS DATE) BETWEEN TO_DATE('$month', '%Y-%m-%d') AND TO_DATE('$month', '%Y-%m-%d') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2207,7 +2207,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT i.priority AS 'Priority', AVG(CAST((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS 'Average Age' FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND i.status = 'TODO' AND i.type = 'BUG' AND i.priority = ANY(ARRAY[${priority}]::text[]) GROUP BY i.priority",
+          "rawSql": "SELECT i.priority AS \"Priority\", AVG(CAST((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS \"Average Age\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name = ANY(ARRAY[${project}]::text[]) AND i.status = 'TODO' AND i.type = 'BUG' AND i.priority = ANY(ARRAY[${priority}]::text[]) GROUP BY i.priority",
           "refId": "A",
           "select": [
             [

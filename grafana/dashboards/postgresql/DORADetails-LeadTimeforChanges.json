@@ -132,7 +132,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_cycle_time AS NUMERIC) / NULLIF(60, 0), 0) AS cycle_time /* convert null to 0 if a PR has no cycle_time to make sure cycle_time equals the sum of the four metrics below */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(cycle_time) AS 'PR Cycle Time(h)' FROM _prs",
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_cycle_time AS NUMERIC) / NULLIF(60, 0), 0) AS cycle_time /* convert null to 0 if a PR has no cycle_time to make sure cycle_time equals the sum of the four metrics below */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(cycle_time) AS \"PR Cycle Time(h)\" FROM _prs",
           "refId": "A",
           "select": [
             [
@@ -240,7 +240,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_coding_time AS NUMERIC) / NULLIF(60, 0), 0) AS coding_time /* convert null to 0 if a PR has no coding_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(coding_time) AS 'Coding Time(h)' FROM _prs",
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_coding_time AS NUMERIC) / NULLIF(60, 0), 0) AS coding_time /* convert null to 0 if a PR has no coding_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(coding_time) AS \"Coding Time(h)\" FROM _prs",
           "refId": "A",
           "select": [
             [
@@ -379,7 +379,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_pickup_time AS NUMERIC) / NULLIF(60, 0), 0) AS pickup_time /* convert null to 0 if a PR has no pickup_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(pickup_time) AS 'Pickup Time(h)' FROM _prs",
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_pickup_time AS NUMERIC) / NULLIF(60, 0), 0) AS pickup_time /* convert null to 0 if a PR has no pickup_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(pickup_time) AS \"Pickup Time(h)\" FROM _prs",
           "refId": "A",
           "select": [
             [
@@ -518,7 +518,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_review_time AS NUMERIC) / NULLIF(60, 0), 0) AS review_time /* convert null to 0 if a PR has no review_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(review_time) AS 'Review Time(h)' FROM _prs",
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_review_time AS NUMERIC) / NULLIF(60, 0), 0) AS review_time /* convert null to 0 if a PR has no review_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(review_time) AS \"Review Time(h)\" FROM _prs",
           "refId": "A",
           "select": [
             [
@@ -657,7 +657,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_deploy_time AS NUMERIC) / NULLIF(60, 0), 0) AS deploy_time /* convert null to 0 if a PR has no deploy_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(deploy_time) AS 'PR Deploy Time(h)' FROM _prs",
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_deploy_time AS NUMERIC) / NULLIF(60, 0), 0) AS deploy_time /* convert null to 0 if a PR has no deploy_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ pm.project_name = ANY(ARRAY[${project}]::text[]) GROUP BY 1, 2, 3) SELECT AVG(deploy_time) AS \"PR Deploy Time(h)\" FROM _prs",
           "refId": "A",
           "select": [
             [

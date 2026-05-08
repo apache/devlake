@@ -28,8 +28,7 @@ services:
       MYSQL_USER: merico
       MYSQL_PASSWORD: merico
       TZ: UTC
-    command: --character-set-server=utf8mb4
-      --collation-server=utf8mb4_bin
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
       --skip-log-bin
 
   postgres:
@@ -51,7 +50,7 @@ services:
       - postgres17-storage:/var/lib/postgresql
     restart: always
     ports:
-      - 5432:5432
+      - 5433:5432
     environment:
       POSTGRES_DB: lake
       POSTGRES_USER: merico
@@ -69,14 +68,17 @@ services:
     environment:
       GF_SERVER_ROOT_URL: "http://localhost:4000/grafana"
       GF_USERS_DEFAULT_THEME: "light"
-      MYSQL_URL: mysql:3306
-      MYSQL_DATABASE: lake
-      MYSQL_USER: merico
-      MYSQL_PASSWORD: merico
+      # Database configuration (choose mysql or postgresql)
+      DATABASE_TYPE: postgresql
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: lake
+      DATABASE_USER: merico
+      DATABASE_PASSWORD: merico
       TZ: UTC
     restart: always
     depends_on:
-      - mysql
+      - postgres
 
   devlake:
     image: devlake-local:latest
@@ -87,7 +89,7 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY}"
         GOPROXY: "${GOPROXY}"
     ports:
-      - 8080:8080
+      - 8084:8080
     restart: always
     volumes:
       - devlake-log:/app/logs
@@ -102,7 +104,7 @@ services:
       TZ: UTC
       # LOGOUT_URI: https://xxx.amazoncognito.com/logout?client_id=yyy&logout_uri=http%3A%2F%2Flocalhost%3A4180%2Foauth2%2Fsign_out
     depends_on:
-      - mysql
+      - postgres
 
   config-ui:
     image: devlake.docker.scarf.sh/apache/devlake-config-ui:latest

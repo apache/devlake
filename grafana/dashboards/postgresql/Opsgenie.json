@@ -1465,7 +1465,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT i.title AS \"Incident Name\", CONCAT('[', STRING_AGG(CONCAT('{\"name\": \"', a.assignee_name, '\"', ', \"type\": \"', r.type, '\"}'), \", \"), ']') AS \"Responders\" FROM issues AS i INNER JOIN issue_assignees AS a ON (SUBSTRING_INDEX(i.id, \":\", -1) = SUBSTRING_INDEX(a.issue_id, \":\", -1)) INNER JOIN _tool_opsgenie_responders AS r ON a.assignee_id = r.id WHERE i.id LIKE 'opsgenie%' GROUP BY i.title",
+          "rawSql": "SELECT i.title AS \"Incident Name\", CONCAT('[', STRING_AGG(CONCAT('{'name': '', a.assignee_name, ''', ', 'type': '', r.type, ''}'), \", \"), ']') AS \"Responders\" FROM issues AS i INNER JOIN issue_assignees AS a ON (SUBSTRING_INDEX(i.id, \":\", -1) = SUBSTRING_INDEX(a.issue_id, \":\", -1)) INNER JOIN _tool_opsgenie_responders AS r ON a.assignee_id = r.id WHERE i.id LIKE 'opsgenie%' GROUP BY i.title",
           "refId": "A",
           "sql": {
             "columns": [

@@ -16,28 +16,47 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kiro Usage Dashboard",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    }
+  ],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "Summary",
+      "type": "row"
+    },
+    {
       "datasource": "postgresql",
-      "description": "Requests, avg prompt/response length, and usage share per model",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "blue",
+                "value": null
               }
             ]
           }
@@ -45,97 +64,219 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 24,
+        "h": 6,
+        "w": 6,
         "x": 0,
-        "y": 0
+        "y": 1
       },
-      "id": 1,
+      "id": 2,
       "options": {
-        "cellHeight": "sm",
-        "showHeader": true,
-        "sortBy": []
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
       },
       "targets": [
         {
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS 'Model', COUNT(*) AS 'Requests', ROUND(CAST(COUNT(*) * 100.0 AS NUMERIC) / NULLIF((SELECT COUNT(*) FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)), 0), 1) AS 'Share %', ROUND(AVG(prompt_length)) AS 'Avg Prompt Len', ROUND(AVG(response_length)) AS 'Avg Response Len', ROUND(CAST(AVG(response_length) AS NUMERIC) / NULLIF(NULLIF(AVG(prompt_length), 0), 0), 2) AS 'Response/Prompt Ratio', SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS 'Steering Uses', SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS 'Spec Mode Uses' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY model_id ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT ROUND(SUM(credits_used)) AS \"Total Credits\" FROM _tool_q_dev_user_report WHERE $__timeFilter(date)",
           "refId": "A"
         }
       ],
-      "title": "Model Performance Summary",
-      "type": "table"
+      "title": "Total Credits Used",
+      "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "Request volume by model over time",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "lineWidth": 1,
-            "stacking": {
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "short"
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 8
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 1
       },
-      "id": 2,
+      "id": 3,
       "options": {
-        "legend": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
           "calcs": [
             "sum"
           ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "multi"
-        }
+        "textMode": "auto"
       },
       "targets": [
         {
           "datasource": "postgresql",
-          "format": "time_series",
+          "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric, COUNT(*) AS value FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE), model_id ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS DECIMAL) / NULLIF(NULLIF(NULLIF(COUNT(DISTINCT pr.id), 0), 0), 0), 1) AS \"Credits / PR\" FROM _tool_q_dev_user_report AS r CROSS JOIN (SELECT DISTINCT id FROM pull_requests WHERE NOT merged_date IS NULL AND $__timeFilter(merged_date)) AS pr WHERE $__timeFilter(r.date)",
           "refId": "A"
         }
       ],
-      "title": "Daily Model Usage Distribution",
-      "type": "timeseries"
+      "title": "Credits per PR (Overall)",
+      "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "Average response length per model over time \u2014 proxy for output quality",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS DECIMAL) / NULLIF(NULLIF(NULLIF(COUNT(DISTINCT cdc.cicd_deployment_id), 0), 0), 0), 1) AS \"Credits / Deploy\" FROM _tool_q_dev_user_report AS r CROSS JOIN (SELECT DISTINCT cicd_deployment_id FROM cicd_deployment_commits WHERE result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(finished_date)) AS cdc WHERE $__timeFilter(r.date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Deployment (Overall)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS DECIMAL) / NULLIF(NULLIF(NULLIF(COUNT(DISTINCT i.id), 0), 0), 0), 1) AS \"Credits / Issue\" FROM _tool_q_dev_user_report AS r CROSS JOIN (SELECT DISTINCT id FROM issues WHERE NOT resolution_date IS NULL AND type <> 'INCIDENT' AND $__timeFilter(resolution_date)) AS i WHERE $__timeFilter(r.date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Issue Resolved",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Weekly Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly cost per merged PR",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
             "drawStyle": "line",
             "fillOpacity": 10,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true,
             "stacking": {
@@ -151,15 +292,16 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 16
+        "y": 8
       },
-      "id": 3,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [
-            "mean"
+            "mean",
+            "min"
           ],
           "displayMode": "table",
           "placement": "right",
@@ -174,11 +316,200 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric, ROUND(AVG(response_length)) AS value FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE), model_id ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _credits AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day'' AS week_start, SUM(credits_used) AS credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day''), _prs AS (SELECT CAST(merged_date AS DATE) - (EXTRACT(ISODOW FROM merged_date) - 1) * INTERVAL ''1 day'' AS week_start, COUNT(*) AS prs FROM pull_requests WHERE NOT merged_date IS NULL AND $__timeFilter(merged_date) GROUP BY CAST(merged_date AS DATE) - (EXTRACT(ISODOW FROM merged_date) - 1) * INTERVAL ''1 day'') SELECT c.week_start AS time, ROUND(CAST(c.credits AS DECIMAL) / NULLIF(NULLIF(NULLIF(p.prs, 0), 0), 0), 1) AS \"Credits per PR\" FROM _credits AS c LEFT JOIN _prs AS p ON c.week_start = p.week_start ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
-      "title": "Avg Response Length by Model (Daily)",
+      "title": "Credits per Merged PR (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly cost per production deployment",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _credits AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day'' AS week_start, SUM(credits_used) AS credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day''), _deploys AS (SELECT CAST(finished_date AS DATE) - (EXTRACT(ISODOW FROM finished_date) - 1) * INTERVAL ''1 day'' AS week_start, COUNT(DISTINCT cicd_deployment_id) AS deploys FROM cicd_deployment_commits WHERE result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(finished_date) GROUP BY CAST(finished_date AS DATE) - (EXTRACT(ISODOW FROM finished_date) - 1) * INTERVAL ''1 day'') SELECT c.week_start AS time, ROUND(CAST(c.credits AS DECIMAL) / NULLIF(NULLIF(NULLIF(d.deploys, 0), 0), 0), 1) AS \"Credits per Deploy\" FROM _credits AS c LEFT JOIN _deploys AS d ON c.week_start = d.week_start ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Deployment (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly cost per resolved issue",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _credits AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day'' AS week_start, SUM(credits_used) AS credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL ''1 day''), _issues AS (SELECT CAST(resolution_date AS DATE) - (EXTRACT(ISODOW FROM resolution_date) - 1) * INTERVAL ''1 day'' AS week_start, COUNT(*) AS resolved FROM issues WHERE NOT resolution_date IS NULL AND type <> 'INCIDENT' AND $__timeFilter(resolution_date) GROUP BY CAST(resolution_date AS DATE) - (EXTRACT(ISODOW FROM resolution_date) - 1) * INTERVAL ''1 day'') SELECT c.week_start AS time, ROUND(CAST(c.credits AS DECIMAL) / NULLIF(NULLIF(NULLIF(i.resolved, 0), 0), 0), 1) AS \"Credits per Issue\" FROM _credits AS c LEFT JOIN _issues AS i ON c.week_start = i.week_start ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Issue Resolved (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Is cost efficiency improving over time?",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL STRING_LITERAL_0_PLACEHOLDER AS time, SUM(credits_used) AS STRING_LITERAL_1_PLACEHOLDER, SUM(total_messages) AS STRING_LITERAL_2_PLACEHOLDER, SUM(chat_conversations) AS STRING_LITERAL_3_PLACEHOLDER FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL STRING_LITERAL_4_PLACEHOLDER ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly AI Activity Volume",
       "type": "timeseries"
     }
   ],
@@ -188,8 +519,8 @@
   "tags": [
     "q_dev",
     "kiro",
-    "model",
-    "roi"
+    "cost",
+    "efficiency"
   ],
   "templating": {
     "list": []
@@ -200,7 +531,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Kiro AI Model ROI (PostgreSQL)",
-  "uid": "kiro_model_roi-pg",
+  "title": "AI Cost-Efficiency (PostgreSQL)",
+  "uid": "ai_cost_efficiency-pg",
   "version": 1
 }

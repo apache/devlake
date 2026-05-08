@@ -62,7 +62,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(COUNT(DISTINCT CASE WHEN has_steering = TRUE THEN user_id END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0), 0) AS 'value' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT ROUND(CAST(COUNT(DISTINCT CASE WHEN has_steering = TRUE THEN user_id END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0), 0) AS \"value\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -113,7 +113,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(COUNT(DISTINCT CASE WHEN is_spec_mode = TRUE THEN user_id END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0), 0) AS 'value' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT ROUND(CAST(COUNT(DISTINCT CASE WHEN is_spec_mode = TRUE THEN user_id END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0), 0) AS \"value\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -164,7 +164,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(COUNT(*), 0), 1) AS 'value' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT ROUND(CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(COUNT(*), 0), 1) AS \"value\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -223,7 +223,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM timestamp) - 1) * INTERVAL '1 day' AS time, CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS 'Steering Rate', CAST(SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS 'Spec Mode Rate' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM timestamp) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM timestamp) - 1) * INTERVAL '1 day' AS time, CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Steering Rate\", CAST(SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Spec Mode Rate\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM timestamp) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -272,7 +272,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT 'With Steering' AS 'Mode', ROUND(AVG(prompt_length)) AS 'Avg Prompt', ROUND(AVG(response_length)) AS 'Avg Response' FROM _tool_q_dev_chat_log WHERE has_steering = TRUE AND $__timeFilter(timestamp) UNION ALL SELECT 'Without Steering', ROUND(AVG(prompt_length)), ROUND(AVG(response_length)) FROM _tool_q_dev_chat_log WHERE has_steering = FALSE AND $__timeFilter(timestamp)",
+          "rawSql": "SELECT 'With Steering' AS \"Mode\", ROUND(AVG(prompt_length)) AS \"Avg Prompt\", ROUND(AVG(response_length)) AS \"Avg Response\" FROM _tool_q_dev_chat_log WHERE has_steering = TRUE AND $__timeFilter(timestamp) UNION ALL SELECT 'Without Steering', ROUND(AVG(prompt_length)), ROUND(AVG(response_length)) FROM _tool_q_dev_chat_log WHERE has_steering = FALSE AND $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -321,7 +321,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS 'User', COUNT(*) AS 'Total Chats', SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS 'Steering', SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS 'Spec Mode', ROUND(CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(COUNT(*), 0), 1) AS 'Steering %' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY user_id ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", COUNT(*) AS \"Total Chats\", SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS \"Steering\", SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS \"Spec Mode\", ROUND(CAST(SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(COUNT(*), 0), 1) AS \"Steering %\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY user_id ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],

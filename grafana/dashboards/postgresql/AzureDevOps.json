@@ -440,7 +440,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT author_name, COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[]) AND pr.status = 'MERGED' GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT 20",
           "refId": "A",
           "select": [
             [
@@ -572,7 +572,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('MERGED', 'CLOSED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[])",
           "refId": "A",
           "select": [
             [
@@ -734,7 +734,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN status = 'OPEN' THEN id ELSE NULL END) AS open, COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS closed, COUNT(DISTINCT CASE WHEN status = 'MERGED' THEN id ELSE NULL END) AS merged FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -DAY($__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, open AS \"PR: Open\", closed AS \"PR: Closed without merging\", merged AS \"PR: Closed and merged\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -838,7 +838,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[]) AND pr.status = 'CLOSED'",
           "refId": "A",
           "select": [
             [
@@ -975,7 +975,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 day' AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('MERGED', 'CLOSED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -1922,7 +1922,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id like \"%azure%\" */ cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY time, result, id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%m/%Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Pipeline Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id LIKE '%azure%' */ cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY time, result, id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%m/%Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Pipeline Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2178,7 +2178,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id like \"%azure%\" */ cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id LIKE '%azure%' */ cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [

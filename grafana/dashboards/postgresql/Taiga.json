@@ -1666,7 +1666,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.status = 'TODO' THEN i.id END) AS 'To Do', COUNT(DISTINCT CASE WHEN i.status = 'IN_PROGRESS' THEN i.id END) AS 'In Progress', COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id END) AS 'Done', COUNT(DISTINCT CASE WHEN NOT i.status IN ('TODO', 'IN_PROGRESS', 'DONE') THEN i.id END) AS 'Other' FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.status = 'TODO' THEN i.id END) AS \"To Do\", COUNT(DISTINCT CASE WHEN i.status = 'IN_PROGRESS' THEN i.id END) AS \"In Progress\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id END) AS \"Done\", COUNT(DISTINCT CASE WHEN NOT i.status IN ('TODO', 'IN_PROGRESS', 'DONE') THEN i.id END) AS \"Other\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
           "refId": "A"
         }
       ],
@@ -2098,7 +2098,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS 'User Story', COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS 'Task', COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS 'Issue', COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS 'Epic' FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Story\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Task\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issue\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
           "refId": "A"
         }
       ],
@@ -2272,7 +2272,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS 'User Stories', COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS 'Tasks', COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS 'Issues', COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS 'Epics' FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) AND $__timeFilter(i.created_date) GROUP BY 1 ORDER BY 1 NULLS FIRST",
+          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Stories\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Tasks\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issues\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epics\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) AND $__timeFilter(i.created_date) GROUP BY 1 ORDER BY 1 NULLS FIRST",
           "refId": "A"
         }
       ],

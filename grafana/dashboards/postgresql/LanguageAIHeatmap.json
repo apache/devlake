@@ -66,7 +66,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS 'Language', COUNT(*) AS 'Requests', ROUND(AVG(completions_count), 2) AS 'Avg Completions', ROUND(AVG(left_context_length)) AS 'Avg Left Context', ROUND(AVG(right_context_length)) AS 'Avg Right Context', ROUND(AVG(left_context_length + right_context_length)) AS 'Avg Total Context', COUNT(DISTINCT user_id) AS 'Users' FROM _tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY file_extension ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS \"Language\", COUNT(*) AS \"Requests\", ROUND(AVG(completions_count), 2) AS \"Avg Completions\", ROUND(AVG(left_context_length)) AS \"Avg Left Context\", ROUND(AVG(right_context_length)) AS \"Avg Right Context\", ROUND(AVG(left_context_length + right_context_length)) AS \"Avg Total Context\", COUNT(DISTINCT user_id) AS \"Users\" FROM _tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY file_extension ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -186,7 +186,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file)' ELSE active_file_extension END AS 'File Type', COUNT(*) AS 'Chat Events' FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY active_file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 10",
+          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file)' ELSE active_file_extension END AS \"File Type\", COUNT(*) AS \"Chat Events\" FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY active_file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 10",
           "refId": "A"
         }
       ],

@@ -70,7 +70,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT COUNT(*) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS 'Chat Events', (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS 'Chat Users', (SELECT COUNT(DISTINCT conversation_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) AND conversation_id <> '') AS 'Conversations', (SELECT COUNT(*) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) AS 'Completion Events', (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) AS 'Completion Users', (SELECT SUM(code_reference_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS 'Code References', (SELECT SUM(web_link_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS 'Web Links Cited'",
+          "rawSql": "SELECT (SELECT COUNT(*) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS \"Chat Events\", (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS \"Chat Users\", (SELECT COUNT(DISTINCT conversation_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) AND conversation_id <> '') AS \"Conversations\", (SELECT COUNT(*) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) AS \"Completion Events\", (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) AS \"Completion Users\", (SELECT SUM(code_reference_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS \"Code References\", (SELECT SUM(web_link_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS \"Web Links Cited\"",
           "refId": "A"
         }
       ],
@@ -159,7 +159,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT LPAD(CAST(hour_of_day AS TEXT), 2, '0') AS 'Hour', SUM(chat_count) AS 'Chat Events', SUM(completion_count) AS 'Completion Events' FROM (SELECT EXTRACT(HOUR FROM timestamp) AS hour_of_day, COUNT(*) AS chat_count, 0 AS completion_count FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY EXTRACT(HOUR FROM timestamp) UNION ALL SELECT EXTRACT(HOUR FROM timestamp) AS hour_of_day, 0 AS chat_count, COUNT(*) AS completion_count FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY EXTRACT(HOUR FROM timestamp)) AS combined GROUP BY hour_of_day ORDER BY hour_of_day NULLS FIRST",
+          "rawSql": "SELECT LPAD(CAST(hour_of_day AS TEXT), 2, '0') AS \"Hour\", SUM(chat_count) AS \"Chat Events\", SUM(completion_count) AS \"Completion Events\" FROM (SELECT EXTRACT(HOUR FROM timestamp) AS hour_of_day, COUNT(*) AS chat_count, 0 AS completion_count FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY EXTRACT(HOUR FROM timestamp) UNION ALL SELECT EXTRACT(HOUR FROM timestamp) AS hour_of_day, 0 AS chat_count, COUNT(*) AS completion_count FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY EXTRACT(HOUR FROM timestamp)) AS combined GROUP BY hour_of_day ORDER BY hour_of_day NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -227,7 +227,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN chat_trigger_type = '' OR chat_trigger_type IS NULL THEN '(unknown)' ELSE chat_trigger_type END AS 'Trigger Type', COUNT(*) AS 'Events' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY chat_trigger_type ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN chat_trigger_type = '' OR chat_trigger_type IS NULL THEN '(unknown)' ELSE chat_trigger_type END AS \"Trigger Type\", COUNT(*) AS \"Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY chat_trigger_type ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -295,7 +295,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS 'Model', COUNT(*) AS 'Requests' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY model_id ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS \"Model\", COUNT(*) AS \"Requests\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY model_id ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -363,7 +363,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS 'File Type', COUNT(*) AS 'Completions' FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
+          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS \"File Type\", COUNT(*) AS \"Completions\" FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
           "refId": "A"
         }
       ],
@@ -455,7 +455,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, CAST(COUNT(*) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END), 0), 0) AS 'Avg Turns per Conversation', COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END) AS 'Unique Conversations', COUNT(*) AS 'Total Chat Events' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, CAST(COUNT(*) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END), 0), 0) AS \"Avg Turns per Conversation\", COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END) AS \"Unique Conversations\", COUNT(*) AS \"Total Chat Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -547,7 +547,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, SUM(chat) AS 'Chat Events', SUM(completions) AS 'Completion Events' FROM (SELECT CAST(timestamp AS DATE) AS time, COUNT(*) AS chat, 0 AS completions FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) UNION ALL SELECT CAST(timestamp AS DATE) AS time, 0 AS chat, COUNT(*) AS completions FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE)) AS combined GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT time, SUM(chat) AS \"Chat Events\", SUM(completions) AS \"Completion Events\" FROM (SELECT CAST(timestamp AS DATE) AS time, COUNT(*) AS chat, 0 AS completions FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) UNION ALL SELECT CAST(timestamp AS DATE) AS time, 0 AS chat, COUNT(*) AS completions FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE)) AS combined GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -609,7 +609,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(u.display_name, u.user_id) AS 'User', u.user_id AS 'User ID', u.chat_events AS 'Chat Events', u.conversations AS 'Conversations', ROUND(CAST(u.chat_events AS NUMERIC) / NULLIF(NULLIF(u.conversations, 0), 0), 1) AS 'Avg Turns', COALESCE(c.completion_events, 0) AS 'Completion Events', COALESCE(c.files_count, 0) AS 'Distinct Files', ROUND(u.avg_prompt_len) AS 'Avg Prompt Len', ROUND(u.avg_response_len) AS 'Avg Response Len', u.steering_count AS 'Steering Uses', u.spec_count AS 'Spec Mode Uses', u.code_ref_count AS 'Code Refs', u.web_link_count AS 'Web Links', u.models_used AS 'Models Used', u.first_seen AS 'First Seen', GREATEST(u.last_seen, COALESCE(c.last_seen, u.last_seen)) AS 'Last Seen' FROM (SELECT user_id, MAX(display_name) AS display_name, COUNT(*) AS chat_events, COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END) AS conversations, AVG(prompt_length) AS avg_prompt_len, AVG(response_length) AS avg_response_len, STRING_AGG(DISTINCT CASE WHEN model_id <> '' AND NOT model_id IS NULL THEN model_id END, ', ' ORDER BY model_id NULLS FIRST) AS models_used, SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS steering_count, SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS spec_count, SUM(code_reference_count) AS code_ref_count, SUM(web_link_count) AS web_link_count, MIN(timestamp) AS first_seen, MAX(timestamp) AS last_seen FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY user_id) AS u LEFT JOIN (SELECT user_id, COUNT(*) AS completion_events, COUNT(DISTINCT file_name) AS files_count, MAX(timestamp) AS last_seen FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY user_id) AS c ON u.user_id = c.user_id ORDER BY u.user_id NULLS FIRST",
+          "rawSql": "SELECT COALESCE(u.display_name, u.user_id) AS \"User\", u.user_id AS \"User ID\", u.chat_events AS \"Chat Events\", u.conversations AS \"Conversations\", ROUND(CAST(u.chat_events AS NUMERIC) / NULLIF(NULLIF(u.conversations, 0), 0), 1) AS \"Avg Turns\", COALESCE(c.completion_events, 0) AS \"Completion Events\", COALESCE(c.files_count, 0) AS \"Distinct Files\", ROUND(u.avg_prompt_len) AS \"Avg Prompt Len\", ROUND(u.avg_response_len) AS \"Avg Response Len\", u.steering_count AS \"Steering Uses\", u.spec_count AS \"Spec Mode Uses\", u.code_ref_count AS \"Code Refs\", u.web_link_count AS \"Web Links\", u.models_used AS \"Models Used\", u.first_seen AS \"First Seen\", GREATEST(u.last_seen, COALESCE(c.last_seen, u.last_seen)) AS \"Last Seen\" FROM (SELECT user_id, MAX(display_name) AS display_name, COUNT(*) AS chat_events, COUNT(DISTINCT CASE WHEN conversation_id <> '' THEN conversation_id END) AS conversations, AVG(prompt_length) AS avg_prompt_len, AVG(response_length) AS avg_response_len, STRING_AGG(DISTINCT CASE WHEN model_id <> '' AND NOT model_id IS NULL THEN model_id END, ', ' ORDER BY model_id NULLS FIRST) AS models_used, SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS steering_count, SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS spec_count, SUM(code_reference_count) AS code_ref_count, SUM(web_link_count) AS web_link_count, MIN(timestamp) AS first_seen, MAX(timestamp) AS last_seen FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY user_id) AS u LEFT JOIN (SELECT user_id, COUNT(*) AS completion_events, COUNT(DISTINCT file_name) AS files_count, MAX(timestamp) AS last_seen FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY user_id) AS c ON u.user_id = c.user_id ORDER BY u.user_id NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -677,7 +677,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS 'Using Steering', SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS 'Using Spec Mode', SUM(CASE WHEN has_steering = FALSE AND is_spec_mode = FALSE THEN 1 ELSE 0 END) AS 'Plain Chat' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT SUM(CASE WHEN has_steering = TRUE THEN 1 ELSE 0 END) AS \"Using Steering\", SUM(CASE WHEN is_spec_mode = TRUE THEN 1 ELSE 0 END) AS \"Using Spec Mode\", SUM(CASE WHEN has_steering = FALSE AND is_spec_mode = FALSE THEN 1 ELSE 0 END) AS \"Plain Chat\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -745,7 +745,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file active)' ELSE active_file_extension END AS 'File Type', COUNT(*) AS 'Chat Events' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY active_file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
+          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file active)' ELSE active_file_extension END AS \"File Type\", COUNT(*) AS \"Chat Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY active_file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
           "refId": "A"
         }
       ],
@@ -813,7 +813,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(CASE WHEN code_reference_count > 0 THEN 1 ELSE 0 END) AS 'With Code References', SUM(CASE WHEN web_link_count > 0 THEN 1 ELSE 0 END) AS 'With Web Links', SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS 'With Followup Prompts', SUM(CASE WHEN code_reference_count = 0 AND web_link_count = 0 AND has_followup_prompts = FALSE THEN 1 ELSE 0 END) AS 'Plain Response' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT SUM(CASE WHEN code_reference_count > 0 THEN 1 ELSE 0 END) AS \"With Code References\", SUM(CASE WHEN web_link_count > 0 THEN 1 ELSE 0 END) AS \"With Web Links\", SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS \"With Followup Prompts\", SUM(CASE WHEN code_reference_count = 0 AND web_link_count = 0 AND has_followup_prompts = FALSE THEN 1 ELSE 0 END) AS \"Plain Response\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -905,7 +905,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, AVG(prompt_length) AS 'Avg Prompt Length', AVG(response_length) AS 'Avg Response Length', MAX(prompt_length) AS 'Max Prompt Length', MAX(response_length) AS 'Max Response Length' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, AVG(prompt_length) AS \"Avg Prompt Length\", AVG(response_length) AS \"Avg Response Length\", MAX(prompt_length) AS \"Max Prompt Length\", MAX(response_length) AS \"Max Response Length\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -996,7 +996,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, ROUND(AVG(left_context_length)) AS 'Avg Left Context', ROUND(AVG(right_context_length)) AS 'Avg Right Context', ROUND(AVG(left_context_length + right_context_length)) AS 'Avg Total Context' FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, ROUND(AVG(left_context_length)) AS \"Avg Left Context\", ROUND(AVG(right_context_length)) AS \"Avg Right Context\", ROUND(AVG(left_context_length + right_context_length)) AS \"Avg Total Context\" FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -1087,7 +1087,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, SUM(code_reference_count) AS 'Code References', SUM(web_link_count) AS 'Web Links', SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS 'Followup Prompts' FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, SUM(code_reference_count) AS \"Code References\", SUM(web_link_count) AS \"Web Links\", SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS \"Followup Prompts\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) ORDER BY CAST(timestamp AS DATE) NULLS FIRST",
           "refId": "A"
         }
       ],

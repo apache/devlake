@@ -108,7 +108,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(resolution_date AS DATE) + INTERVAL '1 day' AS time, CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS lead_time_days FROM issues AS i WHERE type = 'REQUIREMENT' AND $__timeFilter(resolution_date) GROUP BY time) SELECT TO_CHAR(time, '%M %Y') AS month, lead_time_days AS 'Average Requirement Lead Time (day)' FROM _requirements ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(resolution_date AS DATE) + INTERVAL '1 day' AS time, CAST(AVG(lead_time_minutes) AS NUMERIC) / NULLIF(1440, 0) AS lead_time_days FROM issues AS i WHERE type = 'REQUIREMENT' AND $__timeFilter(resolution_date) GROUP BY time) SELECT TO_CHAR(time, '%M %Y') AS month, lead_time_days AS \"Average Requirement Lead Time (day)\" FROM _requirements ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [

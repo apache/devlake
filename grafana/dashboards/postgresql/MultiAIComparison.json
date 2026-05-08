@@ -134,14 +134,14 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT user_id) AS 'Kiro Active Users' FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT user_id) AS \"Kiro Active Users\" FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "A"
         },
         {
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, MAX(daily_active_users) AS 'Copilot Active Users' FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, MAX(daily_active_users) AS \"Copilot Active Users\" FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "B"
         }
       ],
@@ -217,7 +217,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, SUM(inline_suggestions_count) AS 'Kiro: Suggestions', SUM(inline_acceptance_count) AS 'Kiro: Accepted' FROM _tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, SUM(inline_suggestions_count) AS \"Kiro: Suggestions\", SUM(inline_acceptance_count) AS \"Kiro: Accepted\" FROM _tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -280,7 +280,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, SUM(code_generation_activity_count) AS 'Copilot: Suggestions', SUM(code_acceptance_activity_count) AS 'Copilot: Accepted' FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, SUM(code_generation_activity_count) AS \"Copilot: Suggestions\", SUM(code_acceptance_activity_count) AS \"Copilot: Accepted\" FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -356,7 +356,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, SUM(kiro_loc) AS 'Kiro LOC Accepted', SUM(copilot_loc) AS 'Copilot LOC Added' FROM (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, SUM(inline_ai_code_lines + chat_ai_code_lines) AS kiro_loc, 0 AS copilot_loc FROM _tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, 0 AS kiro_loc, SUM(loc_added_sum) AS copilot_loc FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day') AS combined GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT time, SUM(kiro_loc) AS \"Kiro LOC Accepted\", SUM(copilot_loc) AS \"Copilot LOC Added\" FROM (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' AS time, SUM(inline_ai_code_lines + chat_ai_code_lines) AS kiro_loc, 0 AS copilot_loc FROM _tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM date) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day' AS time, 0 AS kiro_loc, SUM(loc_added_sum) AS copilot_loc FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM day) - 1) * INTERVAL '1 day') AS combined GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -407,7 +407,7 @@
           "datasource": "postgresql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT 'Kiro' AS Tool, ROUND(CAST(SUM(inline_acceptance_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0), 1) AS 'Acceptance Rate' FROM _tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Copilot' AS Tool, ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day)",
+          "rawSql": "SELECT 'Kiro' AS Tool, ROUND(CAST(SUM(inline_acceptance_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0), 1) AS \"Acceptance Rate\" FROM _tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Copilot' AS Tool, ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day)",
           "refId": "A"
         }
       ],

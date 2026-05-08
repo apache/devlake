@@ -48,6 +48,61 @@ def convert_sql_mysql_to_postgres(sql: str) -> str:
         # Restore string literals
         converted = restore_string_literals(converted, string_literals)
 
+        # Convert MySQL date format patterns to PostgreSQL in TO_CHAR (after string restoration)
+        # MySQL uses %Y-%m, PostgreSQL uses YYYY-MM
+        converted = re.sub(
+            r"TO_CHAR\s*\(\s*([^,]+?)\s*,\s*'%Y-%m'\s*\)",
+            r"TO_CHAR(\1, 'YYYY-MM')",
+            converted,
+            flags=re.IGNORECASE
+        )
+        converted = re.sub(
+            r"TO_CHAR\s*\(\s*([^,]+?)\s*,\s*'%y/%m'\s*\)",
+            r"TO_CHAR(\1, 'YY/MM')",
+            converted,
+            flags=re.IGNORECASE
+        )
+
+        # DIV(TO_CHAR(date, 'YYYY-MM'), N) -> calculate month-based division (after format conversion)
+        # Used for bucketing dates into N-month periods (e.g., half-years with N=6)
+        converted = re.sub(
+            r'DIV\s*\(\s*TO_CHAR\s*\(\s*([^,]+?)\s*,\s*["\']YYYY-MM["\']\s*\)\s*,\s*(\d+)\s*\)',
+            r'((EXTRACT(YEAR FROM \1) * 12 + EXTRACT(MONTH FROM \1)) / \2)',
+            converted,
+            flags=re.IGNORECASE
+        )
+
+        # Convert AS 'alias' to AS "alias" after string restoration
+        # PostgreSQL doesn't accept single quotes for column aliases
+        converted = re.sub(r'\bAS\s+\'([^\']+)\'', r'AS "\1"', converted, flags=re.IGNORECASE)
+
+        # Convert LIKE/NOT LIKE with double-quoted patterns to single quotes
+        # MySQL accepts both, PostgreSQL only accepts single quotes for string literals
+        # Double quotes in PostgreSQL are for identifiers, not strings
+        converted = re.sub(r'\bLIKE\s+"([^"]+)"', r"LIKE '\1'", converted, flags=re.IGNORECASE)
+        converted = re.sub(r'\bNOT\s+LIKE\s+"([^"]+)"', r"NOT LIKE '\1'", converted, flags=re.IGNORECASE)
+
+        # Convert double-quoted string literals to single quotes
+        # Pattern: = "value", <> "value", != "value", IN ("val1", "val2"), CONCAT(..., "text", ...), THEN "value"
+        # But skip: column aliases after AS (already handled above as AS "alias")
+        # MySQL accepts both quotes for strings, PostgreSQL only single quotes
+        converted = re.sub(r'(=|<>|!=)\s+"([^"]+)"', r"\1 '\2'", converted)
+        converted = re.sub(r'\bIN\s*\(\s*"([^"]+)"\s*\)', r"IN ('\1')", converted, flags=re.IGNORECASE)
+
+        # Convert double-quoted literals inside CONCAT to single quotes
+        # CONCAT(..., "(text)", ...) → CONCAT(..., '(text)', ...)
+        def replace_concat_strings(match):
+            content = match.group(0)
+            # Replace double-quoted strings inside CONCAT with single quotes
+            content = re.sub(r'"([^"]+)"', r"'\1'", content)
+            return content
+
+        converted = re.sub(r'\bCONCAT\s*\([^)]+\)', replace_concat_strings, converted, flags=re.IGNORECASE)
+
+        # Convert THEN/ELSE double-quoted strings to single quotes
+        # THEN "text" → THEN 'text', ELSE "text" → ELSE 'text'
+        converted = re.sub(r'\b(THEN|ELSE)\s+"([^"]+)"', r"\1 '\2'", converted, flags=re.IGNORECASE)
+
         return converted
     except Exception as e:
         # Fallback to regex-based conversion for complex cases
@@ -59,6 +114,7 @@ def protect_string_literals(sql_text: str) -> tuple[str, dict]:
     """
     Replace all string literals with placeholders to protect them from conversion.
     Returns modified SQL and mapping of placeholders to original strings.
+    Handles SQL comments (-- and /* */) to avoid treating quotes in comments as string delimiters.
     """
     literals = {}
     counter = 0
@@ -66,6 +122,30 @@ def protect_string_literals(sql_text: str) -> tuple[str, dict]:
     i = 0
 
     while i < len(sql_text):
+        # Skip single-line comments (-- comment)
+        if i < len(sql_text) - 1 and sql_text[i:i+2] == '--':
+            # Find end of line
+            end = sql_text.find('\n', i)
+            if end == -1:
+                result.append(sql_text[i:])
+                break
+            else:
+                result.append(sql_text[i:end+1])
+                i = end + 1
+            continue
+
+        # Skip multi-line comments (/* comment */)
+        if i < len(sql_text) - 1 and sql_text[i:i+2] == '/*':
+            end = sql_text.find('*/', i + 2)
+            if end == -1:
+                result.append(sql_text[i:])
+                break
+            else:
+                result.append(sql_text[i:end+2])
+                i = end + 2
+            continue
+
+        # Process string literals
         if sql_text[i] in ("'", '"'):
             quote_char = sql_text[i]
             literal_parts = [sql_text[i]]
@@ -402,15 +482,6 @@ def post_process_sql(sql: str) -> str:
         replace_timestampdiff
     )
 
-    # DIV(TO_CHAR(date, 'YYYY-MM'), N) -> calculate month-based division
-    # Used for bucketing dates into N-month periods (e.g., half-years with N=6)
-    sql = re.sub(
-        r'DIV\s*\(\s*TO_CHAR\s*\(\s*([^,]+?)\s*,\s*["\']YYYY-MM["\']\s*\)\s*,\s*(\d+)\s*\)',
-        r'((EXTRACT(YEAR FROM \1) * 12 + EXTRACT(MONTH FROM \1)) / \2)',
-        sql,
-        flags=re.IGNORECASE
-    )
-
     return sql
 
 
@@ -525,11 +596,33 @@ def regex_fallback_conversion(sql: str) -> str:
     )
 
     # IF(cond, a, b) -> CASE WHEN cond THEN a ELSE b END
-    sql = re.sub(
-        r'\bIF\s*\(\s*([^,]+),\s*([^,]+),\s*([^)]+)\)',
-        r'CASE WHEN \1 THEN \2 ELSE \3 END',
+    # Use balanced paren parsing to handle nested expressions
+    def replace_if(args):
+        # Parse comma-separated args manually (can't use split because of nested parens)
+        parts = []
+        depth = 0
+        current = []
+        for char in args:
+            if char == ',' and depth == 0:
+                parts.append(''.join(current).strip())
+                current = []
+            else:
+                if char == '(':
+                    depth += 1
+                elif char == ')':
+                    depth -= 1
+                current.append(char)
+        if current:
+            parts.append(''.join(current).strip())
+
+        if len(parts) == 3:
+            return f'CASE WHEN {parts[0]} THEN {parts[1]} ELSE {parts[2]} END'
+        return f'IF({args})'  # Fallback if parse fails
+
+    sql = replace_function_with_balanced_parens(
         sql,
-        flags=re.IGNORECASE
+        r'\bIF\s*\(',
+        replace_if
     )
 
     # IFNULL -> COALESCE

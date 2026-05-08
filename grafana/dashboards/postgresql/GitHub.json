@@ -415,7 +415,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = \"DONE\"",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = 'DONE'",
           "refId": "A",
           "select": [
             [
@@ -659,7 +659,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time_in_days FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' AND b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = \"DONE\"",
+          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time_in_days FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' AND b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = 'DONE'",
           "refId": "A",
           "select": [
             [
@@ -781,7 +781,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 day' AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = \"DONE\" AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, issue_lead_time AS \"Mean Issue Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 day' AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE b.id = ANY(ARRAY[${repo_id}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, issue_lead_time AS \"Mean Issue Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1921,7 +1921,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[]) AND pr.status = 'CLOSED'",
           "refId": "A",
           "select": [
             [
@@ -2056,7 +2056,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 day' AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -2626,7 +2626,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2733,7 +2733,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2901,7 +2901,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _workflow_runs AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_workflow_run_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_workflow_run_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, successful_workflow_run_count, failed_workflow_run_count FROM _workflow_runs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _workflow_runs AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_workflow_run_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_workflow_run_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, successful_workflow_run_count, failed_workflow_run_count FROM _workflow_runs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -3088,7 +3088,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -3245,7 +3245,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY time, result, id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%m/%Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Workflow Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY time, result, id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%m/%Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Workflow Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -3346,7 +3346,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 day' + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -3501,7 +3501,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE \"%github%\" AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 day' AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id = ANY(ARRAY[${repo_id}]::text[]) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(time, '%M %Y') ELSE CONCAT('W', TO_CHAR(time, '%u %Y')) END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
