@@ -15,3 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 Please see details in the [Apache DevLake website](https://devlake.apache.org/docs/Plugins/gitextractor)
+
+
+Build with local compiled v1.3.2 libgit2
+```
+CGO_LDFLAGS="-L/usr/local/lib -lgit2" CGO_CFLAGS="-I/usr/local/include" go build ./plugins/gitextractor/... 2>&1 | tail -5
+```
