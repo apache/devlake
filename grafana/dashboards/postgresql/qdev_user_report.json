@@ -162,7 +162,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, subscription_tier AS metric, SUM(credits_used) AS value FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY date, subscription_tier ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, subscription_tier AS metric, SUM(credits_used) AS value FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"date\", \"subscription_tier\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -254,7 +254,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(CASE WHEN client_type = 'KIRO_IDE' THEN total_messages ELSE 0 END) AS \"Messages (IDE)\", SUM(CASE WHEN client_type = 'KIRO_CLI' THEN total_messages ELSE 0 END) AS \"Messages (CLI)\", SUM(CASE WHEN client_type = 'PLUGIN' THEN total_messages ELSE 0 END) AS \"Messages (Plugin)\", SUM(chat_conversations) AS \"Conversations\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(CASE WHEN client_type = 'KIRO_IDE' THEN total_messages ELSE 0 END) AS \"Messages (IDE)\", SUM(CASE WHEN client_type = 'KIRO_CLI' THEN total_messages ELSE 0 END) AS \"Messages (CLI)\", SUM(CASE WHEN client_type = 'PLUGIN' THEN total_messages ELSE 0 END) AS \"Messages (Plugin)\", SUM(chat_conversations) AS \"Conversations\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -322,7 +322,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT subscription_tier AS \"Tier\", COUNT(DISTINCT user_id) AS \"Users\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) AND NOT subscription_tier IS NULL AND subscription_tier <> '' GROUP BY subscription_tier ORDER BY COUNT(DISTINCT user_id) DESC NULLS LAST",
+          "rawSql": "SELECT subscription_tier AS \"Tier\", COUNT(DISTINCT user_id) AS \"Users\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) AND NOT subscription_tier IS NULL AND subscription_tier <> '' GROUP BY \"subscription_tier\" ORDER BY COUNT(DISTINCT user_id) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -433,7 +433,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", subscription_tier AS \"Tier\", client_type AS \"Client\", SUM(credits_used) AS \"Credits Used\", SUM(total_messages) AS \"Messages\", SUM(chat_conversations) AS \"Conversations\", SUM(overage_credits_used) AS \"Overage Credits\", CASE WHEN MAX(CAST(overage_enabled AS UBIGINT)) = 1 THEN 'Yes' ELSE 'No' END AS \"Overage\", MIN(date) AS \"First Activity\", MAX(date) AS \"Last Activity\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY user_id, subscription_tier, client_type ORDER BY user_id DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", subscription_tier AS \"Tier\", client_type AS \"Client\", SUM(credits_used) AS \"Credits Used\", SUM(total_messages) AS \"Messages\", SUM(chat_conversations) AS \"Conversations\", SUM(overage_credits_used) AS \"Overage Credits\", CASE WHEN MAX(CAST(overage_enabled AS BIGINT)) = 1 THEN 'Yes' ELSE 'No' END AS \"Overage\", MIN(date) AS \"First Activity\", MAX(date) AS \"Last Activity\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"user_id\", \"subscription_tier\", \"client_type\" ORDER BY user_id DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -458,7 +458,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Kiro Usage Dashboard (PostgreSQL)",
+  "title": "Kiro Usage Dashboard",
   "uid": "qdev_user_report-pg",
   "version": 1
 }

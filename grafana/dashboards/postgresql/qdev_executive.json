@@ -179,7 +179,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(NULLIF(SUM(d.total_accepted), 0), 0), 2) AS \"Credits per Accepted Line\" FROM (SELECT user_id, date, SUM(credits_used) AS credits_used FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY user_id, date) AS r JOIN (SELECT user_id, date, (inline_ai_code_lines + chat_ai_code_lines + code_fix_accepted_lines + dev_accepted_lines) AS total_accepted FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)) AS d ON r.user_id = d.user_id AND r.date = d.date",
+          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(NULLIF(SUM(d.total_accepted), 0), 0), 2) AS \"Credits per Accepted Line\" FROM (SELECT user_id, date, SUM(credits_used) AS credits_used FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"user_id\", date) AS r JOIN (SELECT user_id, \"date\", (inline_ai_code_lines + chat_ai_code_lines + code_fix_accepted_lines + dev_accepted_lines) AS total_accepted FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)) AS d ON r.user_id = d.user_id AND r.date = d.date",
           "refId": "A"
         }
       ],
@@ -298,7 +298,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(COUNT(DISTINCT CASE WHEN has_steering = TRUE THEN user_id END) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0) * 100, 0) AS \"Steering %\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT ROUND(CAST(CAST(COUNT(DISTINCT CASE WHEN has_steering = TRUE THEN user_id END) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0) * 100 AS DECIMAL), 0) AS \"Steering %\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -403,7 +403,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT TO_DATE(CONCAT(yw, ' Monday'), '%X%V %W') AS time, COUNT(DISTINCT user_id) AS \"Active Users\" FROM (SELECT user_id, YEARWEEK(timestamp, 1) AS yw FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS t GROUP BY yw ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT TO_DATE(yw || ' Monday', 'IYYYIW FMDay') AS time, COUNT(DISTINCT user_id) AS \"Active Users\" FROM (SELECT user_id, (EXTRACT(ISOYEAR FROM timestamp) * 100 + EXTRACT(WEEK FROM timestamp))::int AS yw FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS t GROUP BY \"yw\" ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -495,7 +495,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT TO_DATE(CONCAT(yw, ' Monday'), '%X%V %W') AS time, SUM(CASE WHEN yw = first_yw THEN 1 ELSE 0 END) AS \"New Users\", SUM(CASE WHEN yw <> first_yw THEN 1 ELSE 0 END) AS \"Returning Users\" FROM (SELECT DISTINCT u.user_id, YEARWEEK(u.timestamp, 1) AS yw, f.first_yw FROM lake._tool_q_dev_chat_log AS u JOIN (SELECT user_id, YEARWEEK(MIN(timestamp), 1) AS first_yw FROM lake._tool_q_dev_chat_log GROUP BY user_id) AS f ON u.user_id = f.user_id WHERE $__timeFilter(u.timestamp)) AS weekly GROUP BY yw ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT TO_DATE(yw || ' Monday', 'IYYYIW FMDay') AS time, SUM(CASE WHEN yw = first_yw THEN 1 ELSE 0 END) AS \"New Users\", SUM(CASE WHEN yw <> first_yw THEN 1 ELSE 0 END) AS \"Returning Users\" FROM (SELECT DISTINCT u.user_id, (EXTRACT(ISOYEAR FROM u.timestamp) * 100 + EXTRACT(WEEK FROM u.timestamp))::int AS yw, f.first_yw FROM lake._tool_q_dev_chat_log AS u JOIN (SELECT user_id, (EXTRACT(ISOYEAR FROM MIN(timestamp)) * 100 + EXTRACT(WEEK FROM MIN(timestamp)))::int AS first_yw FROM lake._tool_q_dev_chat_log GROUP BY user_id) AS f ON u.user_id = f.user_id WHERE $__timeFilter(u.timestamp)) AS weekly GROUP BY yw ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -600,7 +600,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(SUM(credits_used)) OVER (ORDER BY date NULLS FIRST) AS \"Cumulative Credits\", (SELECT CAST(SUM(credits_used) AS NUMERIC) / NULLIF(COUNT(DISTINCT date), 0) * DAY(CAST(CAST(DATE_TRUNC('MONTH', CURRENT_DATE) + INTERVAL '1 MONTH' - INTERVAL '1 DAY' AS DATE) AS DATE)) FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE))) AS \"Projected Monthly\" FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE)) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(SUM(credits_used)) OVER (ORDER BY date NULLS FIRST) AS \"Cumulative Credits\", (SELECT CAST(SUM(credits_used) AS NUMERIC) / NULLIF(COUNT(DISTINCT date), 0) * EXTRACT(DAY FROM CAST(CAST(DATE_TRUNC('MONTH', CURRENT_DATE) + INTERVAL '1 MONTH' - INTERVAL '1 DAY' AS DATE) AS DATE)) FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE))) AS \"Projected Monthly\" FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE)) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -662,7 +662,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", MAX(subscription_tier) AS \"Tier\", ROUND(SUM(credits_used), 1) AS \"Total Credits Used\", MAX(date) AS \"Last Activity\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) AND subscription_tier = 'POWER' GROUP BY user_id HAVING MAX(date) < NOW() - INTERVAL '14 DAY' ORDER BY MAX(date) NULLS FIRST",
+          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", MAX(subscription_tier) AS \"Tier\", ROUND(SUM(credits_used), 1) AS \"Total Credits Used\", MAX(date) AS \"Last Activity\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) AND subscription_tier = 'POWER' GROUP BY \"user_id\" HAVING MAX(date) < NOW() - INTERVAL '14 DAY' ORDER BY MAX(date) NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -737,7 +737,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(MAX(d.display_name), d.user_id) AS \"User\", COALESCE(MAX(r.subscription_tier), '') AS \"Tier\", ROUND(SUM(r.credits_used), 1) AS \"Credits Used\", SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) AS \"Total Accepted Lines\", CASE WHEN SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) > 0 THEN ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines), 0), 2) ELSE NULL END AS \"Credits/Line\", CONCAT(ROUND(CAST(SUM(d.inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(d.inline_suggestions_count), 0), 0) * 100, 1), '%') AS \"Accept Rate\", SUM(d.code_review_findings_count) AS \"Review Findings\", SUM(d.test_generation_event_count) AS \"Test Gen Events\", SUM(d.dev_accepted_lines) AS \"Agentic Lines\", MIN(d.date) AS \"First Active\", MAX(d.date) AS \"Last Active\" FROM lake._tool_q_dev_user_data AS d LEFT JOIN (SELECT user_id, date, SUM(credits_used) AS credits_used, MAX(subscription_tier) AS subscription_tier FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY user_id, date) AS r ON d.user_id = r.user_id AND d.date = r.date WHERE $__timeFilter(d.date) GROUP BY d.user_id ORDER BY SUM(r.credits_used) DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(MAX(d.display_name), d.user_id) AS \"User\", COALESCE(MAX(r.subscription_tier), '') AS \"Tier\", ROUND(SUM(r.credits_used), 1) AS \"Credits Used\", SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) AS \"Total Accepted Lines\", CASE WHEN SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) > 0 THEN ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines), 0), 2) ELSE NULL END AS \"Credits/Line\", ROUND(CAST(SUM(d.inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(d.inline_suggestions_count), 0), 0) * 100, 1) || '%' AS \"Accept Rate\", SUM(d.code_review_findings_count) AS \"Review Findings\", SUM(d.test_generation_event_count) AS \"Test Gen Events\", SUM(d.dev_accepted_lines) AS \"Agentic Lines\", MIN(d.date) AS \"First Active\", MAX(d.date) AS \"Last Active\" FROM lake._tool_q_dev_user_data AS d LEFT JOIN (SELECT user_id, date, SUM(credits_used) AS credits_used, MAX(subscription_tier) AS subscription_tier FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"user_id\", date) AS r ON d.user_id = r.user_id AND d.date = r.date WHERE $__timeFilter(d.date) GROUP BY d.user_id ORDER BY SUM(r.credits_used) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -762,7 +762,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Kiro Executive Dashboard (PostgreSQL)",
+  "title": "Kiro Executive Dashboard",
   "uid": "qdev_executive-pg",
   "version": 1
 }

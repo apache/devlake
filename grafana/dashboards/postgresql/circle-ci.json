@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 12,
+  "id": 27,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -37,8 +37,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Bamboo",
-          "url": "https://devlake.apache.org/docs/Plugins/bamboo"
+          "title": "CircleCI",
+          "url": "https://devlake.apache.org/docs/Plugins/circleci"
         }
       ],
       "options": {
@@ -47,10 +47,10 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard shows the basic CI/CD metrics from Bamboo, such as [Build Count](https://devlake.apache.org/docs/Metrics/BuildCount), [Build Duration](https://devlake.apache.org/docs/Metrics/BuildDuration) and [Build Success Rate](https://devlake.apache.org/docs/Metrics/BuildSuccessRate). A build in Bamboo is an execution of a Bamboo Plan.\n- Data Source Required: Bamboo",
+        "content": "- Use Cases: This dashboard shows the basic CI/CD metrics from CircleCI, such as [Build Count](https://devlake.apache.org/docs/Metrics/BuildCount), [Build Duration](https://devlake.apache.org/docs/Metrics/BuildDuration) and [Build Success Rate](https://devlake.apache.org/docs/Metrics/BuildSuccessRate).\n- Data Source Required: CircleCI",
         "mode": "markdown"
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "11.0.0",
       "targets": [
         {
           "datasource": {
@@ -108,10 +108,12 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "11.0.0",
       "targets": [
         {
           "datasource": "postgresql",
@@ -120,7 +122,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -161,12 +163,12 @@
           ]
         }
       ],
-      "title": "1. Total Number of Successful Builds [Selected Time Range]",
+      "title": "1. Total Number of Successful Workflows [Selected Time Range]",
       "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "Number of successful builds / Number of total builds",
+      "description": "Number of successful workflows / Number of total workflows",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -211,10 +213,12 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "11.0.0",
       "targets": [
         {
           "datasource": "postgresql",
@@ -223,7 +227,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -264,7 +268,7 @@
           ]
         }
       ],
-      "title": "2. Mean Build Success Rate",
+      "title": "2. Mean Workflow Success Rate",
       "type": "stat"
     },
     {
@@ -397,6 +401,7 @@
           "values": true
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         }
@@ -410,7 +415,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v) GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -451,12 +456,12 @@
           ]
         }
       ],
-      "title": "3. Total Build Result Distribution",
+      "title": "3. Total Workflow Result Distribution",
       "type": "piechart"
     },
     {
       "datasource": "postgresql",
-      "description": "Number of successful builds / Number of total builds",
+      "description": "Number of successful workflows / Number of total workflows",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -499,10 +504,12 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "11.0.0",
       "targets": [
         {
           "datasource": "postgresql",
@@ -511,7 +518,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -552,7 +559,7 @@
           ]
         }
       ],
-      "title": "4. Mean Build Duration in Minutes",
+      "title": "4. Mean Workflow Duration in Minutes",
       "type": "stat"
     },
     {
@@ -564,6 +571,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "Build Count",
@@ -633,6 +641,7 @@
           "valueSize": 12
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         },
@@ -649,7 +658,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, build_count AS \"Build Count\" FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, build_count AS \"Workflow Count\" FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -690,21 +699,22 @@
           ]
         }
       ],
-      "title": "1.1 Total Number of Successful Builds [Each Month]",
+      "title": "1.1 Total Number of Successful Workflows [Each Month]",
       "type": "barchart"
     },
     {
       "datasource": "postgresql",
-      "description": "1. Mean Build success rate over time.\n2. The builds being calculated are filtered by \"build starting time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
+      "description": "1. Mean workflows success rate over time.\n2. The workflows being calculated are filtered by \"build starting time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Build Success Rate(%)",
+            "axisLabel": "Workflow Success Rate(%)",
             "axisPlacement": "auto",
             "axisSoftMin": 0,
             "fillOpacity": 80,
@@ -742,7 +752,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Build Success Rate"
+              "options": "Workflow Success Rate"
             },
             "properties": [
               {
@@ -791,6 +801,7 @@
           "valueSize": 12
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         },
@@ -806,7 +817,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\", \"result\", id) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Build Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v) GROUP BY \"time\", \"result\", id) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Workflow Success Rate\" FROM _build_success_rate GROUP BY 1 ORDER BY 1 NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -847,7 +858,7 @@
           ]
         }
       ],
-      "title": "2.1 Build Success Rate [Each Month]",
+      "title": "2.1 Workflow Success Rate [Each Month]",
       "type": "barchart"
     },
     {
@@ -859,6 +870,7 @@
             "mode": "fixed"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "Build Count",
@@ -872,6 +884,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 4,
@@ -960,6 +973,7 @@
           "showLegend": true
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
@@ -968,12 +982,13 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "time_series",
           "group": [],
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_build_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1",
+          "rawSql": "SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_workflow_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_workflow_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -985,6 +1000,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ae_projects",
           "timeColumn": "ae_create_time",
           "timeColumnType": "timestamp",
@@ -997,7 +1029,7 @@
           ]
         }
       ],
-      "title": "3.1 Number of Successful and Failed Builds [Each Month]",
+      "title": "3.1 Number of Successful and Failed Workflows [Each Month]",
       "type": "timeseries"
     },
     {
@@ -1009,9 +1041,10 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Build Duration(minutes)",
+            "axisLabel": "Build Count",
             "axisPlacement": "auto",
             "axisSoftMin": 0,
             "fillOpacity": 80,
@@ -1094,6 +1127,7 @@
           "valueSize": 12
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         },
@@ -1104,12 +1138,13 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "table",
           "group": [],
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%bamboo%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${plan_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${plan_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, CAST(mean_duration_sec AS NUMERIC) / NULLIF(60, 0) AS mean_duration_minutes FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(finished_date AS DATE)) + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%circleci%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${full_name}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${full_name}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, CAST(mean_duration_sec AS NUMERIC) / NULLIF(60, 0) AS mean_duration_minutes FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1121,6 +1156,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ae_projects",
           "timeColumn": "ae_create_time",
           "timeColumnType": "timestamp",
@@ -1133,7 +1185,7 @@
           ]
         }
       ],
-      "title": "4.1 Mean Build Duration in Minutes [Each Month]",
+      "title": "4.1 Mean Workflow Duration in Minutes [Each Month]",
       "type": "barchart"
     },
     {
@@ -1157,7 +1209,7 @@
         "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
         "mode": "markdown"
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "11.0.0",
       "targets": [
         {
           "datasource": {
@@ -1172,10 +1224,10 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
-    "Data Source Dashboard"
+    "Data Source Dashboard",
+    "Stable Data Sources"
   ],
   "templating": {
     "list": [
@@ -1190,14 +1242,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT name || '--' || id AS text FROM cicd_scopes WHERE id LIKE 'bamboo%'",
+        "definition": "SELECT name || '--' || id AS text FROM cicd_scopes WHERE id LIKE '%circleci%'",
         "hide": 0,
         "includeAll": true,
-        "label": "Plan Name",
+        "label": "CircleCI Project",
         "multi": true,
-        "name": "plan_id",
+        "name": "full_name",
         "options": [],
-        "query": "SELECT name || '--' || id AS text FROM cicd_scopes WHERE id LIKE 'bamboo%'",
+        "query": "SELECT name || '--' || id AS text FROM cicd_scopes WHERE id LIKE '%circleci%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,
@@ -1210,10 +1262,11 @@
     "from": "now-6M",
     "to": "now"
   },
+  "timeRangeUpdatedDuringEditOrView": false,
   "timepicker": {},
   "timezone": "utc",
-  "title": "Bamboo",
-  "uid": "a90e58d9-7acc-4858-aa77-f606d11a7d4a-pg",
-  "version": 2,
+  "title": "CircleCI",
+  "uid": "CircleCI-pg",
+  "version": 3,
   "weekStart": ""
 }

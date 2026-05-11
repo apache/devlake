@@ -227,7 +227,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN chat_trigger_type = '' OR chat_trigger_type IS NULL THEN '(unknown)' ELSE chat_trigger_type END AS \"Trigger Type\", COUNT(*) AS \"Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY chat_trigger_type ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN chat_trigger_type = '' OR chat_trigger_type IS NULL THEN '(unknown)' ELSE chat_trigger_type END AS \"Trigger Type\", COUNT(*) AS \"Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY \"chat_trigger_type\" ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -295,7 +295,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS \"Model\", COUNT(*) AS \"Requests\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY model_id ORDER BY COUNT(*) DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS \"Model\", COUNT(*) AS \"Requests\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY \"model_id\" ORDER BY COUNT(*) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -363,7 +363,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS \"File Type\", COUNT(*) AS \"Completions\" FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
+          "rawSql": "SELECT CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS \"File Type\", COUNT(*) AS \"Completions\" FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY \"file_extension\" ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
           "refId": "A"
         }
       ],
@@ -745,7 +745,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file active)' ELSE active_file_extension END AS \"File Type\", COUNT(*) AS \"Chat Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY active_file_extension ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
+          "rawSql": "SELECT CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file active)' ELSE active_file_extension END AS \"File Type\", COUNT(*) AS \"Chat Events\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY \"active_file_extension\" ORDER BY COUNT(*) DESC NULLS LAST LIMIT 15",
           "refId": "A"
         }
       ],
@@ -813,7 +813,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(CASE WHEN code_reference_count > 0 THEN 1 ELSE 0 END) AS \"With Code References\", SUM(CASE WHEN web_link_count > 0 THEN 1 ELSE 0 END) AS \"With Web Links\", SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS \"With Followup Prompts\", SUM(CASE WHEN code_reference_count = 0 AND web_link_count = 0 AND has_followup_prompts = FALSE THEN 1 ELSE 0 END) AS \"Plain Response\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "rawSql": "SELECT SUM(CASE WHEN code_reference_count > 0 THEN 1 ELSE 0 END) AS \"With Code References\", SUM(CASE WHEN web_link_count > 0 THEN 1 ELSE 0 END) AS \"With Web Links\", SUM(CASE WHEN has_followup_prompts = TRUE THEN 1 ELSE 0 END) AS \"With Followup Prompts\", SUM(CASE WHEN code_reference_count = '0' AND web_link_count = '0' AND has_followup_prompts = FALSE THEN 1 ELSE 0 END) AS \"Plain Response\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
           "refId": "A"
         }
       ],
@@ -1112,7 +1112,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Kiro AI Activity Insights (PostgreSQL)",
+  "title": "Kiro AI Activity Insights",
   "uid": "qdev_logging-pg",
   "version": 1
 }

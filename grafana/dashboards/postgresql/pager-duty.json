@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 27,
+  "id": 20,
   "links": [
     {
       "asDropdown": false,
@@ -64,8 +64,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Zentao",
-          "url": "https://devlake.apache.org/docs/Plugins/zentao"
+          "title": "PagerDuty",
+          "url": "https://devlake.apache.org/docs/Plugins/pagerduty"
         }
       ],
       "options": {
@@ -74,7 +74,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard shows the basic project management metrics from Zentao.\n- Data Source Required: Zentao",
+        "content": "- Use Cases: This dashboard shows the incident data from PagerDuty.\n- Data Source Required: PagerDuty",
         "mode": "markdown"
       },
       "pluginVersion": "9.5.15",
@@ -112,12 +112,12 @@
           "refId": "A"
         }
       ],
-      "title": "1. Issue Throughput",
+      "title": "1. Incident Resolution Status",
       "type": "row"
     },
     {
       "datasource": "postgresql",
-      "description": "1. Total number of issues created.\n2. The requirements being calculated are filtered by \"requirement creation time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
+      "description": "1. Total number of incidents created.\n2. The requirements being calculated are filtered by \"requirement creation time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -175,7 +175,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -214,7 +214,7 @@
           ]
         }
       ],
-      "title": "Number of Issues [Issues Created in Selected Time Range]",
+      "title": "Number of Incidents [Created in Selected Time Range]",
       "type": "stat"
     },
     {
@@ -278,7 +278,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.original_status = 'resolved' AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -317,46 +317,23 @@
           ]
         }
       ],
-      "title": "Number of Delivered Issue [Issues Created in Selected Time Range]",
+      "title": "Number of Resolved Incidents [Created in Selected Time Range]",
       "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "",
+      "description": "1. Total number of incidents created.\n2. The requirements being calculated are filtered by \"requirement creation time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 1,
-            "drawStyle": "bars",
-            "fillOpacity": 12,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -365,16 +342,24 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
-          },
-          "unit": "short"
+          }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.filterable",
+                "value": true
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 6,
@@ -382,7 +367,7 @@
         "x": 8,
         "y": 4
       },
-      "id": 120,
+      "id": 131,
       "links": [
         {
           "targetBlank": true,
@@ -391,29 +376,29 @@
         }
       ],
       "options": {
-        "legend": {
-          "calcs": [
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
             "sum"
           ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "show": false
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
+        "showHeader": true,
+        "sortBy": []
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "9.5.15",
       "targets": [
         {
           "datasource": "postgresql",
-          "format": "time_series",
+          "editorMode": "code",
+          "format": "table",
           "group": [],
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS \"Number of Open Issues\", COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS \"Number of Delivered Issues\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1",
+          "rawSql": "SELECT b.name AS service, i.issue_key, i.description, i.original_status, i.priority, i.created_date, i.updated_date, ROUND(CAST((CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS DECIMAL), 1) AS lead_time_days, i.url FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -425,6 +410,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "timeColumn": "time",
           "where": [
             {
@@ -435,12 +437,12 @@
           ]
         }
       ],
-      "title": "Issue Status Distribution over Month [Issues Created in Selected Time Range]",
-      "type": "timeseries"
+      "title": "List of Incidents [Created in Selected Time Range]",
+      "type": "table"
     },
     {
       "datasource": "postgresql",
-      "description": "Issue Delivery Rate = count(Delivered Issues)/count(Issues)",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -448,7 +450,7 @@
           },
           "mappings": [],
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
               {
                 "color": "red",
@@ -456,7 +458,7 @@
               },
               {
                 "color": "green",
-                "value": 50
+                "value": 0.8
               }
             ]
           },
@@ -474,8 +476,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Delivery Rate",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "options": {
@@ -497,12 +499,13 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS delivered_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT NOW() AS time, CAST(1.0 * delivered_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
+          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.original_status = 'resolved' THEN i.id ELSE NULL END) AS resolved_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT NOW() AS time, CAST(1.0 * resolved_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
           "refId": "A",
           "select": [
             [
@@ -514,6 +517,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "timeColumn": "time",
           "where": [
             {
@@ -524,12 +544,12 @@
           ]
         }
       ],
-      "title": "Issue Delivery Rate [Issues Created in Selected Time Range]",
+      "title": "Incident Resolution Rate [Incidents created in the selected time range]",
       "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "Issue Delivery Rate = count(Delivered Issues)/count(Issues)",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -538,7 +558,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Delivery Rate(%)",
+            "axisLabel": "Resolution Rate(%)",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -570,12 +590,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 0.8
               }
             ]
           },
@@ -593,8 +613,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Delivery Rate",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "options": {
@@ -613,12 +633,13 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS delivered_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT time, delivered_rate FROM _requirements ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.original_status = 'resolved' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS resolved_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT time, resolved_rate FROM _requirements ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -630,6 +651,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "timeColumn": "time",
           "where": [
             {
@@ -640,7 +678,7 @@
           ]
         }
       ],
-      "title": "Issue Delivery Rate over Time [Issues Created in Selected Time Range]",
+      "title": "Incident Resolution Rate over Time [Incidents Created in Selected Time Range]",
       "type": "timeseries"
     },
     {
@@ -666,7 +704,7 @@
           "refId": "A"
         }
       ],
-      "title": "2. Issue Lead Time",
+      "title": "2. Mean Time to Resolve (MTTR)",
       "type": "row"
     },
     {
@@ -684,11 +722,16 @@
                 "value": null
               },
               {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
                 "color": "red",
-                "value": 14
+                "value": 3
               }
             ]
-          }
+          },
+          "unit": "d"
         },
         "overrides": []
       },
@@ -702,8 +745,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Lead Time",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "options": {
@@ -725,11 +768,12 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.original_status = 'resolved' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -741,6 +785,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ca_analysis",
           "timeColumn": "create_time",
           "timeColumnType": "timestamp",
@@ -753,7 +814,7 @@
           ]
         }
       ],
-      "title": "Mean Issue Lead Time in Days [Issues Resolved in Select Time Range]",
+      "title": "MTTR [Incidents Resolved in Select Time Range]",
       "type": "stat"
     },
     {
@@ -770,11 +831,16 @@
                 "value": null
               },
               {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
                 "color": "red",
-                "value": 21
+                "value": 3
               }
             ]
-          }
+          },
+          "unit": "d"
         },
         "overrides": []
       },
@@ -788,8 +854,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Delivery Rate",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "options": {
@@ -811,11 +877,12 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
+          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.original_status = 'resolved' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
           "refId": "A",
           "select": [
             [
@@ -827,6 +894,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ca_analysis",
           "timeColumn": "create_time",
           "timeColumnType": "timestamp",
@@ -839,7 +923,7 @@
           ]
         }
       ],
-      "title": "80% Issues' Lead Time are less than # days [Issues Resolved in Select Time Range]",
+      "title": "80% Incidents' MTTR are less than # [Incidents Resolved in Select Time Range]",
       "type": "stat"
     },
     {
@@ -853,7 +937,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Lead Time(days)",
+            "axisLabel": "Incident Age(days)",
             "axisPlacement": "auto",
             "axisSoftMin": 0,
             "fillOpacity": 80,
@@ -900,8 +984,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Delivery Rate",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "options": {
@@ -932,11 +1016,12 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, mean_lead_time FROM _requirements ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_incident_age FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.original_status = 'resolved' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, mean_incident_age FROM _requirements ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -948,6 +1033,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ca_analysis",
           "timeColumn": "create_time",
           "timeColumnType": "timestamp",
@@ -960,7 +1062,7 @@
           ]
         }
       ],
-      "title": "Mean Issue Lead Time [Issues Resolved in Select Time Range]",
+      "title": "Mean MTTR [Incidents Resolved in Select Time Range]",
       "type": "barchart"
     },
     {
@@ -969,7 +1071,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "postgresql",
-      "description": "1. The cumulative distribution of requirement lead time. \n2. Each point refers to the percent rank of a lead time.",
+      "description": "1. The cumulative distribution of MTTR\n2. Each point refers to the percent rank of a distinct duration to resolve incidents.",
       "fill": 0,
       "fillGradient": 4,
       "gridPos": {
@@ -996,8 +1098,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "Requirement Delivery Rate",
-          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+          "title": "Incident Age",
+          "url": "https://devlake.apache.org/docs/Metrics/IncidentAge"
         }
       ],
       "nullPointMode": "null",
@@ -1016,11 +1118,12 @@
       "targets": [
         {
           "datasource": "postgresql",
+          "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(lead_time_day || 'd', 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
+          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.original_status = 'resolved' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(lead_time_day || 'd', 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1032,6 +1135,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "ca_analysis",
           "timeColumn": "create_time",
           "timeColumnType": "timestamp",
@@ -1056,7 +1176,7 @@
         }
       ],
       "timeRegions": [],
-      "title": "Cumulative Distribution of Requirement Lead Time [Issues Resolved in Select Time Range]",
+      "title": "Cumulative Distribution of MTTR [Incidents Resolved in Select Time Range]",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -1130,7 +1250,8 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
-    "Data Source Dashboard"
+    "Data Source Dashboard",
+    "Stable Data Sources"
   ],
   "templating": {
     "list": [
@@ -1145,37 +1266,16 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT name || '--' || id FROM boards WHERE id LIKE 'zentao%'",
+        "definition": "SELECT name || '--' || id FROM boards WHERE id LIKE 'pagerduty%'",
         "hide": 0,
         "includeAll": true,
         "label": "Choose Board",
         "multi": true,
         "name": "board_id",
         "options": [],
-        "query": "SELECT name || '--' || id FROM boards WHERE id LIKE 'zentao%'",
+        "query": "SELECT name || '--' || id FROM boards WHERE id LIKE 'pagerduty%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": "postgresql",
-        "definition": "SELECT DISTINCT type FROM issues",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Issue Type",
-        "multi": false,
-        "name": "type",
-        "options": [],
-        "query": "SELECT DISTINCT type FROM issues",
-        "refresh": 1,
-        "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
@@ -1188,8 +1288,8 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Zentao",
-  "uid": "yMb4MKh4k-pg",
+  "title": "PagerDuty",
+  "uid": "abb26d07-3268-4bdf-b871-6e39b37b9e00-pg",
   "version": 2,
   "weekStart": ""
 }

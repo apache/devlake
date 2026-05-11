@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 20,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -37,8 +37,8 @@
       "links": [
         {
           "targetBlank": true,
-          "title": "GitLab",
-          "url": "https://devlake.apache.org/docs/Plugins/gitlab"
+          "title": "Azure DevOps",
+          "url": "https://devlake.apache.org/docs/Plugins/azuredevops"
         }
       ],
       "options": {
@@ -47,7 +47,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard shows the basic Git and Code Review metrics from GitLab.\n- Data Source Required: GitLab",
+        "content": "- Use Cases: This dashboard shows the basic Git and Code Review metrics from Azure DevOps.\n- Data Source Required: Azure DevOps",
         "mode": "markdown"
       },
       "pluginVersion": "9.5.15",
@@ -107,7 +107,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -480,11 +481,15 @@
           ]
         }
       ],
-      "title": "1.3 Top 20 Contributors By Merged PRs",
+      "title": "1.3 Top Contributors By Merged PRs",
       "type": "barchart"
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -502,7 +507,7 @@
           "refId": "A"
         }
       ],
-      "title": "2. How Merge Requests(MRs) are handled?",
+      "title": "2. How PRs are handled?",
       "type": "row"
     },
     {
@@ -561,12 +566,13 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
+          "datasource": "postgresql",
           "format": "table",
           "group": [],
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v)",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('MERGED', 'CLOSED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -590,7 +596,7 @@
           ]
         }
       ],
-      "title": "2.1 Ratio of unmerged MRs of All Closed or Merged PRs",
+      "title": "2.1 Ratio of unmerged Pull Requests of All Closed or Merged PRs",
       "type": "stat"
     },
     {
@@ -636,7 +642,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "MR: Open"
+              "options": "PR: Open"
             },
             "properties": [
               {
@@ -651,7 +657,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "MR: Closed without merging"
+              "options": "PR: Closed without merging"
             },
             "properties": [
               {
@@ -666,7 +672,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "MR: Closed and merged"
+              "options": "PR: Closed and merged"
             },
             "properties": [
               {
@@ -712,7 +718,7 @@
           "valueSize": 12
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         },
         "xTickLabelRotation": 0,
@@ -728,7 +734,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status = 'OPEN' THEN id ELSE NULL END) AS open, COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS closed, COUNT(DISTINCT CASE WHEN status = 'MERGED' THEN id ELSE NULL END) AS merged FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, open AS \"MR: Open\", closed AS \"MR: Closed without merging\", merged AS \"MR: Closed and merged\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status = 'OPEN' THEN id ELSE NULL END) AS open, COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS closed, COUNT(DISTINCT CASE WHEN status = 'MERGED' THEN id ELSE NULL END) AS merged FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, open AS \"PR: Open\", closed AS \"PR: Closed without merging\", merged AS \"PR: Closed and merged\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -769,7 +775,7 @@
           ]
         }
       ],
-      "title": "2.2 Merge Request Status Distribution",
+      "title": "2.2 Pull Request Status Distribution",
       "type": "barchart"
     },
     {
@@ -873,7 +879,7 @@
           ]
         }
       ],
-      "title": "2.3 Number of MRs Closed without Merging",
+      "title": "2.3 Number of Pull Requests Closed without Merging [Selected Time Range]",
       "type": "stat"
     },
     {
@@ -891,7 +897,7 @@
             "axisPlacement": "auto",
             "barAlignment": 1,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 50,
             "gradientMode": "opacity",
             "hideFrom": {
               "legend": false,
@@ -903,7 +909,7 @@
               "fill": "solid"
             },
             "lineWidth": 1,
-            "pointSize": 10,
+            "pointSize": 4,
             "scaleDistribution": {
               "type": "linear"
             },
@@ -969,7 +975,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('MERGED', 'CLOSED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -1010,7 +1016,7 @@
           ]
         }
       ],
-      "title": "2.4 Ratio of unmerged MRs of All Closed or Merged MRs",
+      "title": "2.4 Ratio of unmerged PRs of All Closed or Merged PRs",
       "type": "timeseries"
     },
     {
@@ -1071,6 +1077,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
+          "datasource": "postgresql",
           "format": "table",
           "group": [],
           "hide": false,
@@ -1100,7 +1107,7 @@
           ]
         }
       ],
-      "title": "2.5 Mean Time to Merge of Merge Requests",
+      "title": "2.5 Mean Time to Merge of Pull Requests",
       "type": "stat"
     },
     {
@@ -1129,7 +1136,7 @@
               "type": "linear"
             },
             "thresholdsStyle": {
-              "mode": "dashed"
+              "mode": "off"
             }
           },
           "mappings": [],
@@ -1198,7 +1205,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_merge FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_merge AS \"Time to Merge\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_merge FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_merge AS \"Time to Merge\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1239,7 +1246,7 @@
           ]
         }
       ],
-      "title": "2.6 Mean Time to Merge of MRs",
+      "title": "2.6 Mean Time to Merge of Pull Requests",
       "type": "barchart"
     },
     {
@@ -1250,14 +1257,14 @@
         "x": 0,
         "y": 35
       },
-      "id": 110,
+      "id": 102,
       "panels": [],
-      "title": "CI/CD Metrics",
+      "title": "3. CI/CD Metrics",
       "type": "row"
     },
     {
       "datasource": "postgresql",
-      "description": "Number of pipeline runs executed in the selected time range",
+      "description": "Number of Pipeline runs executed in the selected time range",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -1280,7 +1287,7 @@
         "x": 0,
         "y": 36
       },
-      "id": 102,
+      "id": 103,
       "links": [
         {
           "targetBlank": true,
@@ -1312,7 +1319,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */",
+          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -1353,12 +1360,12 @@
           ]
         }
       ],
-      "title": "3.1 Number of successful pipeline runs",
+      "title": "3.1 Number of Successful Pipeline runs",
       "type": "stat"
     },
     {
       "datasource": "postgresql",
-      "description": "Number of successful pipeline runs / Number of total pipeline runs",
+      "description": "Number of successful Pipeline runs / Number of total Pipeline runs",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -1387,7 +1394,7 @@
         "x": 6,
         "y": 36
       },
-      "id": 103,
+      "id": 104,
       "links": [
         {
           "targetBlank": true,
@@ -1419,7 +1426,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* Enable the following condition to remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -1460,7 +1467,7 @@
           ]
         }
       ],
-      "title": "3.2 Mean pipeline run success rate %",
+      "title": "3.2 Mean Pipeline runs Success Rate %",
       "type": "stat"
     },
     {
@@ -1545,7 +1552,7 @@
         "x": 12,
         "y": 36
       },
-      "id": 108,
+      "id": 110,
       "links": [
         {
           "targetBlank": true,
@@ -1587,7 +1594,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"successful_count\", failed_count FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"successful_count\", failed_count FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1633,7 +1640,7 @@
     },
     {
       "datasource": "postgresql",
-      "description": "",
+      "description": "Number of successful Pipeline runs / Number of total Pipeline runs",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1729,7 +1736,7 @@
         "x": 0,
         "y": 42
       },
-      "id": 104,
+      "id": 105,
       "links": [
         {
           "targetBlank": true,
@@ -1774,7 +1781,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1815,7 +1822,7 @@
           ]
         }
       ],
-      "title": "3.4 Pipeline runs result distribution",
+      "title": "3.4 Total Pipeline runs Result Distribution",
       "type": "piechart"
     },
     {
@@ -1871,7 +1878,7 @@
         "x": 6,
         "y": 42
       },
-      "id": 107,
+      "id": 112,
       "interval": "",
       "links": [
         {
@@ -1915,7 +1922,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY \"time\", \"result\", id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(CAST(time AS TIMESTAMP), 'MM/YYYY') ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Pipeline Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id LIKE '%azure%' */ cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY \"time\", \"result\", id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(CAST(time AS TIMESTAMP), 'MM/YYYY') ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Pipeline Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1961,7 +1968,7 @@
     },
     {
       "datasource": "postgresql",
-      "description": "Number of successful pipeline runs / Number of total pipeline runs",
+      "description": "1. Mean Pipeline runs success rate over time.\n2. The Pipeline runs being calculated are filtered by \"Pipeline runs starting time\" (time filter at the upper-right corner) and \"Jira board\" (\"Choose Board\" filter at the upper-left corner)",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -1986,7 +1993,7 @@
         "x": 0,
         "y": 48
       },
-      "id": 105,
+      "id": 106,
       "links": [
         {
           "targetBlank": true,
@@ -2016,7 +2023,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* Enable the following condition to remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2057,7 +2064,7 @@
           ]
         }
       ],
-      "title": "3.6 Mean pipeline runs duration",
+      "title": "3.6 Mean Pipeline runs Duration in Minutes",
       "type": "stat"
     },
     {
@@ -2129,7 +2136,7 @@
         "x": 6,
         "y": 48
       },
-      "id": 109,
+      "id": 111,
       "links": [
         {
           "targetBlank": true,
@@ -2171,7 +2178,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%gitlab%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND /* and id LIKE '%azure%' */ cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2271,14 +2278,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'gitlab%'",
+        "definition": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'azure%'",
         "hide": 0,
         "includeAll": true,
         "label": "Repo",
         "multi": true,
         "name": "repo_id",
         "options": [],
-        "query": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'gitlab%'",
+        "query": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'azure%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,
@@ -2287,12 +2294,13 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "Month",
           "value": "DAYOFMONTH"
         },
         "hide": 0,
         "includeAll": false,
+        "label": "Time Interval",
         "multi": false,
         "name": "interval",
         "options": [
@@ -2320,8 +2328,8 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "GitLab",
-  "uid": "msSjEq97z-pg",
-  "version": 27,
+  "title": "Azure DevOps",
+  "uid": "ba7e3a95-80ed-4067-a54b-2a82758eb3dd-pg",
+  "version": 5,
   "weekStart": ""
 }

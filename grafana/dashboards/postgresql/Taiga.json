@@ -175,7 +175,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -278,7 +278,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -413,7 +413,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS \"Number of Open Stories\", COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS \"Number of Closed Stories\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1",
+          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS \"Number of Open Stories\", COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS \"Number of Closed Stories\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -502,7 +502,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS delivered_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[])) SELECT NOW() AS time, CAST(1.0 * delivered_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
+          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS delivered_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT NOW() AS time, CAST(1.0 * delivered_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
           "refId": "A",
           "select": [
             [
@@ -618,7 +618,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 day' AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS delivered_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1) SELECT time, delivered_rate FROM _requirements ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS delivered_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT time, delivered_rate FROM _requirements ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -729,7 +729,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "select": [
             [
@@ -813,7 +813,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[])) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
+          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
           "refId": "A",
           "select": [
             [
@@ -928,7 +928,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 day' AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1) SELECT TO_CHAR(time, '%M %Y') AS month, mean_lead_time FROM _requirements ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, mean_lead_time FROM _requirements ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1042,7 +1042,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(CONCAT(lead_time_day, 'd'), 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
+          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(lead_time_day || 'd', 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1173,7 +1173,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(ts.total_points) AS value FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT SUM(ts.total_points) AS value FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1258,7 +1258,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(ts.total_points) AS value FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) AND i.status = 'DONE'",
+          "rawSql": "SELECT SUM(ts.total_points) AS value FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) AND i.status = 'DONE'",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1369,7 +1369,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS Milestone, SUM(ts.total_points) AS \"Story Points\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY \"Story Points\" DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS \"Milestone\", SUM(ts.total_points) AS \"Story Points\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY \"Story Points\" DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1473,7 +1473,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(i.assignee_name, ''), 'Unassigned') AS Assignee, SUM(i.story_point) AS \"Story Points\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY \"Story Points\" DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(NULLIF(i.assignee_name, ''), 'Unassigned') AS \"Assignee\", SUM(i.story_point) AS \"Story Points\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY \"Story Points\" DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1558,7 +1558,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(ts.total_points) AS \"Story Points\", CASE WHEN i.status = 'DONE' THEN 'Completed' ELSE 'In Progress' END AS Status FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY Status",
+          "rawSql": "SELECT SUM(ts.total_points) AS \"Story Points\", CASE WHEN i.status = 'DONE' THEN 'Completed' ELSE 'In Progress' END AS \"Status\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY \"Status\"",
           "refId": "A",
           "select": [
             [
@@ -1666,7 +1666,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.status = 'TODO' THEN i.id END) AS \"To Do\", COUNT(DISTINCT CASE WHEN i.status = 'IN_PROGRESS' THEN i.id END) AS \"In Progress\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id END) AS \"Done\", COUNT(DISTINCT CASE WHEN NOT i.status IN ('TODO', 'IN_PROGRESS', 'DONE') THEN i.id END) AS \"Other\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.status = 'TODO' THEN i.id END) AS \"To Do\", COUNT(DISTINCT CASE WHEN i.status = 'IN_PROGRESS' THEN i.id END) AS \"In Progress\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id END) AS \"Done\", COUNT(DISTINCT CASE WHEN NOT i.status IN ('TODO', 'IN_PROGRESS', 'DONE') THEN i.id END) AS \"Other\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A"
         }
       ],
@@ -1751,7 +1751,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(i.assignee_name, ''), 'Unassigned') AS Assignee, COUNT(DISTINCT i.id) AS \"User Stories\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type = ANY(ARRAY[${type}]::text[]) AND $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY \"User Stories\" DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(NULLIF(i.assignee_name, ''), 'Unassigned') AS \"Assignee\", COUNT(DISTINCT i.id) AS \"User Stories\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY \"User Stories\" DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1854,7 +1854,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS Milestone, COUNT(DISTINCT ts.user_story_id) AS \"User Stories\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY \"User Stories\" DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS \"Milestone\", COUNT(DISTINCT ts.user_story_id) AS \"User Stories\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY \"User Stories\" DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1956,7 +1956,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS Milestone, COUNT(DISTINCT CASE WHEN i.status <> 'DONE' THEN ts.user_story_id ELSE NULL END) AS \"Open Stories\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN ts.user_story_id ELSE NULL END) AS \"Closed Stories\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = CONCAT('taiga:TaigaUserStory:', ts.connection_id, ':', ts.user_story_id) JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY \"Closed Stories\" DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(NULLIF(ts.milestone_name, ''), 'No Milestone') AS \"Milestone\", COUNT(DISTINCT CASE WHEN i.status <> 'DONE' THEN ts.user_story_id ELSE NULL END) AS \"Open Stories\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN ts.user_story_id ELSE NULL END) AS \"Closed Stories\" FROM _tool_taiga_user_stories AS ts JOIN board_issues AS bi ON bi.issue_id = 'taiga:TaigaUserStory:' || ts.connection_id || ':' || ts.user_story_id JOIN issues AS i ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY \"Closed Stories\" DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -2098,7 +2098,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Story\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Task\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issue\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[])",
+          "rawSql": "SELECT NOW() AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Story\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Task\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issue\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
           "refId": "A"
         }
       ],
@@ -2182,7 +2182,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(i.original_type, i.type) AS \"Issue Type\", COUNT(DISTINCT CASE WHEN i.status <> 'DONE' THEN i.id ELSE NULL END) AS \"Open\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS \"Closed\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE $__timeFilter(i.created_date) AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 ORDER BY 1 NULLS FIRST",
+          "rawSql": "SELECT COALESCE(i.original_type, i.type) AS \"Issue Type\", COUNT(DISTINCT CASE WHEN i.status <> 'DONE' THEN i.id ELSE NULL END) AS \"Open\", COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS \"Closed\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1 ORDER BY 1 NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -2272,7 +2272,7 @@
           "datasource": "postgresql",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 day' AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Stories\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Tasks\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issues\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epics\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id = ANY(ARRAY[${board_id}]::text[]) AND $__timeFilter(i.created_date) GROUP BY 1 ORDER BY 1 NULLS FIRST",
+          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN i.type = 'USER_STORY' THEN i.id END) AS \"User Stories\", COUNT(DISTINCT CASE WHEN i.type = 'TASK' THEN i.id END) AS \"Tasks\", COUNT(DISTINCT CASE WHEN i.type = 'REQUIREMENT' THEN i.id END) AS \"Issues\", COUNT(DISTINCT CASE WHEN i.type = 'EPIC' THEN i.id END) AS \"Epics\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) AND $__timeFilter(i.created_date) GROUP BY 1 ORDER BY 1 NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -2361,7 +2361,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(i.original_type, i.type) AS \"Issue Type\", ROUND(AVG(CAST(COALESCE(i.lead_time_minutes, (EXTRACT(EPOCH FROM (i.resolution_date - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0)), 1) AS \"Avg Lead Time (days)\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.status = 'DONE' AND bi.board_id = ANY(ARRAY[${board_id}]::text[]) GROUP BY 1 HAVING NOT \"Avg Lead Time (days)\" IS NULL ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(i.original_type, i.type) AS \"Issue Type\", ROUND(CAST(AVG(CAST(COALESCE(i.lead_time_minutes, (EXTRACT(EPOCH FROM (i.resolution_date - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0)) AS DECIMAL), 1) AS \"Avg Lead Time (days)\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.status = 'DONE' AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1  ORDER BY 2 DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -2388,14 +2388,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "select concat(name, '--', id) from boards where id like 'taiga%'",
+        "definition": "SELECT name || '--' || id FROM boards WHERE id LIKE 'taiga%'",
         "hide": 0,
         "includeAll": true,
         "label": "Choose Project",
         "multi": true,
         "name": "board_id",
         "options": [],
-        "query": "select concat(name, '--', id) from boards where id like 'taiga%'",
+        "query": "SELECT name || '--' || id FROM boards WHERE id LIKE 'taiga%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,
@@ -2413,14 +2413,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "select distinct i.type from issues i join board_issues bi on i.id = bi.issue_id where bi.board_id like 'taiga%'",
+        "definition": "SELECT DISTINCT i.type FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id LIKE 'taiga%'",
         "hide": 0,
         "includeAll": true,
         "label": "Issue Type",
         "multi": true,
         "name": "type",
         "options": [],
-        "query": "select distinct i.type from issues i join board_issues bi on i.id = bi.issue_id where bi.board_id like 'taiga%'",
+        "query": "SELECT DISTINCT i.type FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE bi.board_id LIKE 'taiga%'",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2435,7 +2435,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Taiga (PostgreSQL)",
+  "title": "Taiga",
   "uid": "taiga-dashboard-pg",
   "version": 2,
   "weekStart": ""

@@ -174,7 +174,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(inline_suggestions_count) AS \"Suggestions\", SUM(inline_acceptance_count) AS \"Accepted\", SUM(inline_ai_code_lines) AS \"AI Code Lines\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(inline_suggestions_count) AS \"Suggestions\", SUM(inline_acceptance_count) AS \"Accepted\", SUM(inline_ai_code_lines) AS \"AI Code Lines\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -265,7 +265,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, CAST(SUM(inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0) AS \"Inline Suggestions\", CAST(SUM(code_fix_acceptance_event_count) AS NUMERIC) / NULLIF(NULLIF(SUM(code_fix_generation_event_count), 0), 0) AS \"Code Fix\", CAST(SUM(inline_chat_acceptance_event_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_chat_total_event_count), 0), 0) AS \"Inline Chat\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, CAST(SUM(inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0) AS \"Inline Suggestions\", CAST(SUM(code_fix_acceptance_event_count) AS NUMERIC) / NULLIF(NULLIF(SUM(code_fix_generation_event_count), 0), 0) AS \"Code Fix\", CAST(SUM(inline_chat_acceptance_event_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_chat_total_event_count), 0), 0) AS \"Inline Chat\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -369,7 +369,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(chat_messages_sent) AS \"Messages Sent\", SUM(chat_messages_interacted) AS \"Messages Interacted\", SUM(chat_ai_code_lines) AS \"AI Code Lines\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(chat_messages_sent) AS \"Messages Sent\", SUM(chat_messages_interacted) AS \"Messages Interacted\", SUM(chat_ai_code_lines) AS \"AI Code Lines\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -460,7 +460,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(dev_generation_event_count) AS \"Generation Events\", SUM(dev_generated_lines) AS \"Generated Lines\", SUM(dev_accepted_lines) AS \"Accepted Lines\", SUM(dev_acceptance_event_count) AS \"Acceptance Events\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(dev_generation_event_count) AS \"Generation Events\", SUM(dev_generated_lines) AS \"Generated Lines\", SUM(dev_accepted_lines) AS \"Accepted Lines\", SUM(dev_acceptance_event_count) AS \"Acceptance Events\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -564,7 +564,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(code_review_findings_count) AS \"Review Findings\", SUM(code_review_succeeded_event_count) AS \"Reviews Succeeded\", SUM(code_review_failed_event_count) AS \"Reviews Failed\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(code_review_findings_count) AS \"Review Findings\", SUM(code_review_succeeded_event_count) AS \"Reviews Succeeded\", SUM(code_review_failed_event_count) AS \"Reviews Failed\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -655,7 +655,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(test_generation_event_count) AS \"Test Gen Events\", SUM(test_generation_generated_tests) AS \"Tests Generated\", SUM(test_generation_accepted_tests) AS \"Tests Accepted\", SUM(test_generation_generated_lines) AS \"Lines Generated\", SUM(test_generation_accepted_lines) AS \"Lines Accepted\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(test_generation_event_count) AS \"Test Gen Events\", SUM(test_generation_generated_tests) AS \"Tests Generated\", SUM(test_generation_accepted_tests) AS \"Tests Accepted\", SUM(test_generation_generated_lines) AS \"Lines Generated\", SUM(test_generation_accepted_lines) AS \"Lines Accepted\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -746,7 +746,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT date AS time, SUM(doc_generation_event_count) AS \"Doc Gen Events\", SUM(doc_generation_accepted_line_additions) AS \"Doc Lines Accepted\", SUM(transformation_event_count) AS \"Transformation Events\", SUM(transformation_lines_generated) AS \"Transform Lines Generated\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY date ORDER BY date NULLS FIRST",
+          "rawSql": "SELECT date AS time, SUM(doc_generation_event_count) AS \"Doc Gen Events\", SUM(doc_generation_accepted_line_additions) AS \"Doc Lines Accepted\", SUM(transformation_event_count) AS \"Transformation Events\", SUM(transformation_lines_generated) AS \"Transform Lines Generated\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"date\" ORDER BY date NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -842,7 +842,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT 'Chat' AS Feature, COUNT(DISTINCT CASE WHEN chat_messages_sent > 0 THEN user_id END) AS Users FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Inline Suggestions', COUNT(DISTINCT CASE WHEN inline_suggestions_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Code Fix', COUNT(DISTINCT CASE WHEN code_fix_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Code Review', COUNT(DISTINCT CASE WHEN code_review_succeeded_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Doc Generation', COUNT(DISTINCT CASE WHEN doc_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Test Generation', COUNT(DISTINCT CASE WHEN test_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Dev (Agentic)', COUNT(DISTINCT CASE WHEN dev_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Transformation', COUNT(DISTINCT CASE WHEN transformation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)",
+          "rawSql": "SELECT 'Chat' AS \"Feature\", COUNT(DISTINCT CASE WHEN chat_messages_sent > 0 THEN user_id END) AS \"Users\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Inline Suggestions', COUNT(DISTINCT CASE WHEN inline_suggestions_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Code Fix', COUNT(DISTINCT CASE WHEN code_fix_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Code Review', COUNT(DISTINCT CASE WHEN code_review_succeeded_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Doc Generation', COUNT(DISTINCT CASE WHEN doc_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Test Generation', COUNT(DISTINCT CASE WHEN test_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Dev (Agentic)', COUNT(DISTINCT CASE WHEN dev_generation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) UNION ALL SELECT 'Transformation', COUNT(DISTINCT CASE WHEN transformation_event_count > 0 THEN user_id END) FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)",
           "refId": "A"
         }
       ],
@@ -917,7 +917,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", SUM(inline_suggestions_count) AS \"Suggestions\", SUM(inline_acceptance_count) AS \"Accepted\", CONCAT(ROUND(CAST(SUM(inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0) * 100, 1), '%') AS \"Accept %\", SUM(chat_messages_sent) AS \"Chat Msgs\", SUM(chat_ai_code_lines) AS \"Chat Lines\", SUM(dev_accepted_lines) AS \"Agentic Lines\", SUM(code_review_findings_count) AS \"Review Findings\", SUM(test_generation_accepted_tests) AS \"Tests Accepted\", SUM(doc_generation_event_count) AS \"Doc Gen\", SUM(transformation_event_count) AS \"Transforms\", MIN(date) AS \"First Active\", MAX(date) AS \"Last Active\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY user_id ORDER BY SUM(inline_suggestions_count) DESC NULLS LAST",
+          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", SUM(inline_suggestions_count) AS \"Suggestions\", SUM(inline_acceptance_count) AS \"Accepted\", ROUND(CAST(SUM(inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0) * 100, 1) || '%' AS \"Accept %\", SUM(chat_messages_sent) AS \"Chat Msgs\", SUM(chat_ai_code_lines) AS \"Chat Lines\", SUM(dev_accepted_lines) AS \"Agentic Lines\", SUM(code_review_findings_count) AS \"Review Findings\", SUM(test_generation_accepted_tests) AS \"Tests Accepted\", SUM(doc_generation_event_count) AS \"Doc Gen\", SUM(transformation_event_count) AS \"Transforms\", MIN(date) AS \"First Active\", MAX(date) AS \"Last Active\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date) GROUP BY \"user_id\" ORDER BY SUM(inline_suggestions_count) DESC NULLS LAST",
           "refId": "A"
         }
       ],
@@ -942,7 +942,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Kiro Legacy Feature Metrics (PostgreSQL)",
+  "title": "Kiro Legacy Feature Metrics",
   "uid": "qdev_feature_metrics-pg",
   "version": 1
 }

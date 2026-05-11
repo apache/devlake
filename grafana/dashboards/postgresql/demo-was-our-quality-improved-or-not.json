@@ -1,0 +1,220 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 6,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homepage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/0Rjxknc7z/demo-homepage?orgId=1"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 35,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "See Detailed Bug Info",
+          "url": "/grafana/d/s48Lzn5nz/demo-detailed-bug-info?orgId=1"
+        }
+      ],
+      "options": {
+        "barWidth": 0.3,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "text": {
+          "valueSize": 14
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH line_of_code AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, SUM(additions + deletions) AS line_count FROM commits WHERE NOT message LIKE 'Merge%' AND $__timeFilter(authored_date) GROUP BY 1), bug_count AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS time, COUNT(*) AS bug_count FROM issues AS i WHERE type = 'BUG' AND $__timeFilter(created_date) GROUP BY 1), bug_count_per_1k_loc AS (SELECT loc.time, CAST(1.0 * bc.bug_count AS NUMERIC) / NULLIF(loc.line_count, 0) * 1000 AS bug_count_per_1k_loc FROM line_of_code AS loc LEFT JOIN bug_count AS bc ON bc.time = loc.time WHERE NOT bc.bug_count IS NULL AND NOT loc.line_count IS NULL AND loc.line_count <> '0') SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, bug_count_per_1k_loc AS \"Bug Count per 1000 Lines of Code\" FROM bug_count_per_1k_loc ORDER BY time NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Bug Count per 1k Lines of Code",
+      "type": "barchart"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 5,
+        "x": 0,
+        "y": 8
+      },
+      "id": 37,
+      "options": {
+        "content": "<br>\n\n[See Detailed Bug Info](/d/s48Lzn5nz/demo-detailed-bug-info?orgId=1)\n           ",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 32,
+      "options": {
+        "content": "<div>\n  <img border=\"0\" src=\"/grafana/public/img/lake/logo.png\" style=\"padding-bottom:20px\" alt=\"Merico\" width=\"40\"></img>\n  <h2 style=\"display:inline-block;\">MARI Guide - Bug Count per 1k Lines of Code</h2>\n</div>\n\nSection | Description\n:----------------- | :-------------\nMetric Definition | The ratio of the number of bugs found to the corresponding amount of code or code changes, to characterize the density of overall bugs, including bugs found in testing and online. For example, bug count per 1k lines of code, bug count per 1k code equivalent.\nMetric Value | The bug rate, as a quality indicator, represents the density of bugs, and is one of the important indicators used to assess the quality of software products and testing quality. Usually, the cost of fixing detected bugs is higher in the later stage of the software development life cycle, and this metric is valuable for analyzing and evaluating both online quality and bug fixing cost.\n\n***\n#### *M (Measure)*\n1. Bug count per 1k lines of code by project.\n2. Trends in 'Bug count per 1k lines of code' over time.\n3. Measure historical data to establish year-over-year and historical baseline reference values for 'Bug count per 1k lines of code'.\n\n##### *A (Analyze)*\n1. Year-over-year analysis: The bug rate of similar projects in the same period is compared and analyzed, and the improvement effect of product quality is observed through the rise and fall of the data.\n2. Circumferential analysis: Analyze the bug rate of projects in the recent year, analyze the change of online bug rate according to the time axis, and compare with the historical baseline at the same time to give a judgment analysis of the rise and fall of indicators.\n3. Trend analysis: analyze the trend of bug rate over time (days, weeks, months), judge the trend rise, and evaluate whether the stable cycle of product quality is reasonable by observing changes such as trend slowing-down and smoothing.\n4. Horizontal analysis: Compare the bug rate of multiple projects as a reference to evaluate the quality of software products online.\n5. Classification analysis: Classify and analyze the types of bugs, severity levels, and modules they belong to, and identify the key issues that show aggregated distribution.\n\n##### *R (Review)*\nFor the high severity level of online bugs should be a complete review, according to the timeline, role dimensions, the sequence of events on the root cause of bugs to dig, locate the key issues.\nAccording to the quantitative conclusions drawn from the analysis, further data drilling and root cause mining can be organized for bugs in several dimensions, including whether they are missed, the module they belong to, the cause, the occurrence cycle, and the resolution.\n1. bug escape rate: derived from [number of online bugs / (number of online bugs + number of bugs found in test)], this indicator can be compared with historical data, if the data exceeds the acceptable range of history and testing department, then it is necessary to conduct leak analysis. If the data exceeds the acceptable interval of history and testing department, it is necessary to analyze the missed test and confirm whether the use case is missed or not covered, so as to strengthen the use case design and management.\n2. defective module: The defective module can be located to the key module where the problem is concentrated, and targeted improvement measures are required for each link from requirements, design, development to testing, and typical problems are located for the bugive module to establish targeted measures.\n3. bug generation causes: through the cause analysis of bugs, similar bugs bugs can be put together, so that bugs belonging to the same category and accounting for a high percentage of bugs will be highlighted, so that it is easy to take out the bugs with more concentrated causes and jointly discuss the next improvement measures to precisely reduce the number of similar bugs.\n4. bug occurrence cycle: analyze the bug occurrence cycle, determine whether the users use the system frequently, whether the system has been updated or optimized, whether the system has been refactored, etc., which will cause a long and short bug occurrence cycle after the launch, through the analysis of the bug cycle length, to draw some valuable conclusions about the stability of the system.\n5. bug resolution: statistics on the resolution of bugs, which bugs are not reproduced, which are temporarily handled, and which are in need of continuous improvement. For the temporary resolution of bugs, analyze whether it will cause another bug elsewhere in the system, whether the user can receive the temporary resolution, what development and testing need to focus on similar bugs, and whether similar bugs need to be tested elsewhere for horizontal expansion. Those that require continuous improvement need to be further tracked by testing until the problem is resolved.\n\n##### *I (Improve)*\nThrough root cause mining, starting from the key bugs, the key problems of each link to locate, in accordance with the principle that the later the bugs are found, the higher the cost and complexity of the solution, in addition to the test design and implementation to start improving (refer to the improvement links of the number of bugs on the line), more should start the construction of quality from the upstream of the software engineering stage, to achieve the forward movement of the bug discovery stage, such as\n1. optimizing static scan rules according to the type, number and severity level of static scan problems to reduce false positives and expose as many serious problems as possible (quality over quantity).\n2. Define the requirement of resolution ratio for different severity level problems to control the backlog of serious problems.\n3. Establish code review system, strategy, and encourage the promotion of code review implementation.\n4. Establish unit test coverage ratio or unit test coverage condition requirements, e.g. functions with circle complexity greater than 10 shall be covered by unit tests.\nImplement improvement measures and clarify the improvement target, improvement measures, verification cycle and responsible person. Do a new round of MARI (Measure, Analysis, Review, and Verification) for the improvement effect to quantify the improvement effect.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 39,
+      "options": {
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Demo-Was our quality improved or not?",
+  "uid": "G4DEk75nz-pg",
+  "version": 4
+}
