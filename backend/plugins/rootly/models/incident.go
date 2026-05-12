@@ -18,14 +18,37 @@ limitations under the License.
 package models
 
 import (
+	"time"
+
 	"github.com/apache/incubator-devlake/core/models/common"
 )
 
 type Incident struct {
 	common.NoPKModel
-	ConnectionId uint64 `gorm:"primaryKey"`
-	Id           string `gorm:"primaryKey;autoIncrement:false"`
-	ServiceId    string
+	ConnectionId     uint64 `gorm:"primaryKey"`
+	Id               string `gorm:"primaryKey;autoIncrement:false"`
+	Number           int
+	ServiceId        string
+	Url              string
+	Title            string
+	Summary          string
+	Status           string
+	Severity         string
+	Urgency          string
+	StartedDate      time.Time
+	AcknowledgedDate *time.Time
+	MitigatedDate    *time.Time
+	ResolvedDate     *time.Time
+	UpdatedDate      time.Time
+	// Role-specific user ids, extracted from the nested user objects on
+	// attributes.user (creator), started_by, mitigated_by, resolved_by,
+	// and closed_by. Any may be empty if the role was not filled (e.g.,
+	// an unresolved incident has no ResolvedByUserId).
+	CreatorUserId     string
+	StartedByUserId   string
+	MitigatedByUserId string
+	ResolvedByUserId  string
+	ClosedByUserId    string
 }
 
 func (Incident) TableName() string { return "_tool_rootly_incidents" }

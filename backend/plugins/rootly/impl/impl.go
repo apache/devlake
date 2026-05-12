@@ -77,6 +77,8 @@ func (p Rootly) SubTaskMetas() []plugin.SubTaskMeta {
 		tasks.CollectServicesMeta,
 		tasks.ExtractServicesMeta,
 		tasks.ConvertServicesMeta,
+		tasks.CollectIncidentsMeta,
+		tasks.ExtractIncidentsMeta,
 	}
 }
 
@@ -85,7 +87,6 @@ func (p Rootly) GetTablesInfo() []dal.Tabler {
 		&models.Service{},
 		&models.Incident{},
 		&models.User{},
-		&models.Assignment{},
 		&models.RootlyConnection{},
 		&models.RootlyScopeConfig{},
 	}
