@@ -76,9 +76,10 @@ func (p Rootly) SubTaskMetas() []plugin.SubTaskMeta {
 	return []plugin.SubTaskMeta{
 		tasks.CollectServicesMeta,
 		tasks.ExtractServicesMeta,
-		tasks.ConvertServicesMeta,
 		tasks.CollectIncidentsMeta,
 		tasks.ExtractIncidentsMeta,
+		tasks.ConvertServicesMeta,
+		tasks.ConvertIncidentsMeta,
 	}
 }
 
