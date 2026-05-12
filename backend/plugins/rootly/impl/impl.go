@@ -73,7 +73,11 @@ func (p Rootly) ScopeConfig() dal.Tabler {
 }
 
 func (p Rootly) SubTaskMetas() []plugin.SubTaskMeta {
-	return []plugin.SubTaskMeta{}
+	return []plugin.SubTaskMeta{
+		tasks.CollectServicesMeta,
+		tasks.ExtractServicesMeta,
+		tasks.ConvertServicesMeta,
+	}
 }
 
 func (p Rootly) GetTablesInfo() []dal.Tabler {

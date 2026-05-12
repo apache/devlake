@@ -116,7 +116,7 @@ func queryRootlyRemoteScopes(
 		children = append(children, entry)
 	}
 
-	if response.Meta.CurrentPage > 0 && response.Meta.CurrentPage < response.Meta.TotalPages {
+	if page.Page < response.Meta.TotalPages {
 		nextPage = &RootlyRemotePagination{
 			Page:    page.Page + 1,
 			PerPage: page.PerPage,
