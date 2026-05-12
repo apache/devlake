@@ -49,6 +49,7 @@ import (
 	pagerduty "github.com/apache/incubator-devlake/plugins/pagerduty/impl"
 	q_dev "github.com/apache/incubator-devlake/plugins/q_dev/impl"
 	refdiff "github.com/apache/incubator-devlake/plugins/refdiff/impl"
+	rootly "github.com/apache/incubator-devlake/plugins/rootly/impl"
 	slack "github.com/apache/incubator-devlake/plugins/slack/impl"
 	sonarqube "github.com/apache/incubator-devlake/plugins/sonarqube/impl"
 	starrocks "github.com/apache/incubator-devlake/plugins/starrocks/impl"
@@ -88,6 +89,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("org", org.Org{}.GetTablesInfo)
 	checker.FeedIn("pagerduty/models", pagerduty.PagerDuty{}.GetTablesInfo)
 	checker.FeedIn("refdiff/models", refdiff.RefDiff{}.GetTablesInfo)
+	checker.FeedIn("rootly/models", rootly.Rootly{}.GetTablesInfo)
 	checker.FeedIn("slack/models", slack.Slack{}.GetTablesInfo)
 	checker.FeedIn("sonarqube/models", sonarqube.Sonarqube{}.GetTablesInfo)
 	checker.FeedIn("starrocks", starrocks.StarRocks{}.GetTablesInfo)

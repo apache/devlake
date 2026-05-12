@@ -31,6 +31,7 @@ import { GitLabConfig } from './gitlab';
 import { JenkinsConfig } from './jenkins';
 import { JiraConfig } from './jira';
 import { PagerDutyConfig } from './pagerduty';
+import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
 import { TAPDConfig } from './tapd';
 import { WebhookConfig } from './webhook';
@@ -56,6 +57,7 @@ export const pluginConfigs: IPluginConfig[] = [
   JenkinsConfig,
   JiraConfig,
   PagerDutyConfig,
+  RootlyConfig,
   SlackConfig,
   QDevConfig,
   SonarQubeConfig,
