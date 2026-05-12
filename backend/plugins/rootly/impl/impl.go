@@ -23,8 +23,10 @@ import (
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
+	coreModels "github.com/apache/incubator-devlake/core/models"
 	"github.com/apache/incubator-devlake/core/plugin"
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
+	"github.com/apache/incubator-devlake/plugins/rootly/api"
 	"github.com/apache/incubator-devlake/plugins/rootly/models"
 	"github.com/apache/incubator-devlake/plugins/rootly/models/migrationscripts"
 	"github.com/apache/incubator-devlake/plugins/rootly/tasks"
@@ -38,6 +40,7 @@ var _ interface {
 	plugin.PluginTask
 	plugin.PluginApi
 	plugin.PluginModel
+	plugin.DataSourcePluginBlueprintV200
 	plugin.CloseablePluginTask
 	plugin.PluginSource
 } = (*Rootly)(nil)
@@ -53,6 +56,7 @@ func (p Rootly) Name() string {
 }
 
 func (p Rootly) Init(basicRes context.BasicRes) errors.Error {
+	api.Init(basicRes, p)
 	return nil
 }
 
@@ -123,7 +127,48 @@ func (p Rootly) MigrationScripts() []plugin.MigrationScript {
 }
 
 func (p Rootly) ApiResources() map[string]map[string]plugin.ApiResourceHandler {
-	return map[string]map[string]plugin.ApiResourceHandler{}
+	return map[string]map[string]plugin.ApiResourceHandler{
+		"test": {
+			"POST": api.TestConnection,
+		},
+		"connections": {
+			"POST": api.PostConnections,
+			"GET":  api.ListConnections,
+		},
+		"connections/:connectionId": {
+			"GET":    api.GetConnection,
+			"PATCH":  api.PatchConnection,
+			"DELETE": api.DeleteConnection,
+		},
+		"connections/:connectionId/test": {
+			"POST": api.TestExistingConnection,
+		},
+		"connections/:connectionId/remote-scopes": {
+			"GET": api.RemoteScopes,
+		},
+		"connections/:connectionId/search-remote-scopes": {
+			"GET": api.SearchRemoteScopes,
+		},
+		"connections/:connectionId/scopes": {
+			"GET": api.GetScopeList,
+			"PUT": api.PutScopes,
+		},
+		"connections/:connectionId/scopes/:scopeId": {
+			"GET":    api.GetScope,
+			"PATCH":  api.PatchScope,
+			"DELETE": api.DeleteScope,
+		},
+		"connections/:connectionId/scopes/:scopeId/latest-sync-state": {
+			"GET": api.GetScopeLatestSyncState,
+		},
+	}
+}
+
+func (p Rootly) MakeDataSourcePipelinePlanV200(
+	connectionId uint64,
+	scopes []*coreModels.BlueprintScope,
+) (coreModels.PipelinePlan, []plugin.Scope, errors.Error) {
+	return api.MakeDataSourcePipelinePlanV200(p.SubTaskMetas(), connectionId, scopes)
 }
 
 func (p Rootly) Close(taskCtx plugin.TaskContext) errors.Error {
