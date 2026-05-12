@@ -1,0 +1,6 @@
+connection_id,id,number,service_id,url,title,summary,status,severity,urgency,started_date,acknowledged_date,mitigated_date,resolved_date,updated_date,creator_user_id,started_by_user_id,mitigated_by_user_id,resolved_by_user_id,closed_by_user_id
+1,inc_01,101,svc_01,https://rootly.com/account/incidents/inc_01,Payment processor outage,Payments are timing out,triage,sev0,high,2026-05-01T10:00:00.000+00:00,,,,2026-05-01T10:05:00.000+00:00,u1,,,,
+1,inc_02,102,svc_01,https://rootly.com/account/incidents/inc_02,Latency spike,p99 latency above SLO,mitigated,sev1,high,2026-05-02T09:00:00.000+00:00,,2026-05-02T09:45:00.000+00:00,,2026-05-02T09:45:00.000+00:00,u1,u2,u2,,
+1,inc_03,103,svc_01,https://rootly.com/account/incidents/inc_03,Queue backlog,Worker queue backed up,resolved,sev2,medium,2026-05-03T12:00:00.000+00:00,,,2026-05-03T13:30:00.000+00:00,2026-05-03T13:30:00.000+00:00,u1,,,u1,
+1,inc_05,104,svc_01,https://rootly.com/account/incidents/inc_05,False alarm,Cancelled after triage,cancelled,sev4,low,2026-05-05T14:00:00.000+00:00,,,,2026-05-05T14:05:00.000+00:00,,,,,
+1,inc_06,105,svc_01,https://rootly.com/account/incidents/inc_06,Odd state,Status from future Rootly version,investigating,blocker,high,2026-05-06T11:00:00.000+00:00,,,,2026-05-06T11:10:00.000+00:00,u3,,,,
