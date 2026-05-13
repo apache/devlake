@@ -49,6 +49,11 @@ type TableInfoCheckerConfig struct {
 	IgnoreTables        []string
 }
 
+type parsedPackage struct {
+	name  string
+	files map[string]*ast.File
+}
+
 func NewTableInfoChecker(cfg TableInfoCheckerConfig) *TableInfoChecker {
 	return &TableInfoChecker{
 		tables:               make(map[string]struct{}),
@@ -112,8 +117,8 @@ func (checker *TableInfoChecker) Verify() errors.Error {
 	return errors.Default.New(sb.String())
 }
 
-func (checker *TableInfoChecker) parseDirRecursively(modelsDir string, additionalIgnorablePackages ...string) (map[string]*ast.Package, error) {
-	packagesMap := make(map[string]*ast.Package)
+func (checker *TableInfoChecker) parseDirRecursively(modelsDir string, additionalIgnorablePackages ...string) (map[string]*parsedPackage, error) {
+	packagesMap := make(map[string]*parsedPackage)
 	ignorablePackages := append(checker.ignoredPackages, additionalIgnorablePackages...)
 	err := filepath.WalkDir(modelsDir, func(path string, d fs2.DirEntry, err error) error {
 		if err != nil {
@@ -122,7 +127,7 @@ func (checker *TableInfoChecker) parseDirRecursively(modelsDir string, additiona
 		if !d.IsDir() {
 			return nil
 		}
-		packs, err := parser.ParseDir(token.NewFileSet(), path, nil, 0)
+		packs, err := parsePackagesInDir(path, 0)
 		if err != nil {
 			return err
 		}
@@ -143,10 +148,40 @@ func (checker *TableInfoChecker) parseDirRecursively(modelsDir string, additiona
 	return packagesMap, nil
 }
 
-func (checker *TableInfoChecker) getTableNameFuncs(pks map[string]*ast.Package) []*ast.FuncDecl {
+func parsePackagesInDir(dir string, mode parser.Mode) (map[string]*parsedPackage, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	packs := make(map[string]*parsedPackage)
+	fileSet := token.NewFileSet()
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") {
+			continue
+		}
+		filename := filepath.Join(dir, entry.Name())
+		file, err := parser.ParseFile(fileSet, filename, nil, mode)
+		if err != nil {
+			return nil, err
+		}
+		packageName := file.Name.Name
+		pack := packs[packageName]
+		if pack == nil {
+			pack = &parsedPackage{
+				name:  packageName,
+				files: make(map[string]*ast.File),
+			}
+			packs[packageName] = pack
+		}
+		pack.files[filename] = file
+	}
+	return packs, nil
+}
+
+func (checker *TableInfoChecker) getTableNameFuncs(pks map[string]*parsedPackage) []*ast.FuncDecl {
 	var funcs []*ast.FuncDecl
 	for _, pack := range pks {
-		for _, f := range pack.Files {
+		for _, f := range pack.files {
 			for _, d := range f.Decls {
 				if fn, isFn := d.(*ast.FuncDecl); isFn && fn.Name.String() == "TableName" {
 					funcs = append(funcs, fn)
@@ -180,12 +215,12 @@ func (checker *TableInfoChecker) ensureCoverage() errors.Error {
 		if strings.Count(path, string(os.PathSeparator)) != 0 {
 			return fs2.SkipDir
 		}
-		packs, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.PackageClauseOnly)
+		packs, err := parsePackagesInDir(path, parser.PackageClauseOnly)
 		if err != nil {
 			return err
 		}
 		for _, pk := range packs {
-			if pk.Name == "main" {
+			if pk.name == "main" {
 				packagesFound++
 				return fs2.SkipDir
 			}

@@ -179,7 +179,7 @@ func getGoType(schema utils.JsonObject, required bool) (reflect.Type, errors.Err
 			if required {
 				return timeType, nil
 			} else {
-				return reflect.PtrTo(timeType), nil
+				return reflect.PointerTo(timeType), nil
 			}
 		} else {
 			return stringType, nil
