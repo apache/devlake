@@ -66,7 +66,7 @@ type RootlyResponse struct {
 	RootlyConnection
 }
 
-// ApiUserResponse represents the Rootly /users/current response for token validation.
+// ApiUserResponse represents the Rootly /users/me response for token validation.
 type ApiUserResponse struct {
 	Id   string
 	Name string `json:"name"`

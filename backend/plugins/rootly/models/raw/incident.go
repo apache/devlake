@@ -18,76 +18,27 @@ limitations under the License.
 package raw
 
 import (
-	"encoding/json"
 	"time"
 )
 
 // Incident is the JSON:API envelope for a Rootly incident as returned by
-// GET /incidents. The top-level Id is the incident id; display fields live
-// under Attributes, and Relationships carries cross-entity references
-// (services, users) that we may or may not consult during extraction.
+// GET /incidents. The top-level Id is the incident id; display fields
+// live under Attributes. Role-bearing fields (user, *_by) and the
+// severity field on Attributes are themselves JSON:API response
+// envelopes nested on the incident's attributes. Service membership
+// lives on the sibling Relationships block (JSON:API relationship
+// data, id+type pointers only) and is used by the extractor's
+// safety-net service-scope filter.
 type Incident struct {
-	Id            string             `json:"id"`
-	Type          string             `json:"type"`
-	Attributes    IncidentAttributes `json:"attributes"`
-	Relationships json.RawMessage    `json:"relationships"`
-}
-
-// IncidentAttributes carries the display fields for a Rootly incident.
-//
-// The severity response shape is defensive: Rootly may return severity
-// as a flat slug string or as a nested object; we accept either. The
-// extractor prefers SeverityObj.Slug when non-nil, otherwise falls back
-// to SeveritySlug, otherwise empty string.
-//
-// Role-bearing user objects (User, StartedBy, MitigatedBy, ResolvedBy,
-// ClosedBy) are nested user records inlined directly on the incident —
-// NOT JSON:API-wrapped and NOT surfaced through a relationships
-// `included` array. Any of them may be nil if the role was not filled.
-type IncidentAttributes struct {
-	SequentialId   *int           `json:"sequential_id"`
-	Title          string         `json:"title"`
-	Summary        *string        `json:"summary"`
-	Url            *string        `json:"url"`
-	Status         string         `json:"status"`
-	SeveritySlug   *string        `json:"severity"`
-	SeverityObj    *SeverityAttrs `json:"severity_attributes"`
-	Urgency        *string        `json:"urgency"`
-	StartedAt      time.Time      `json:"started_at"`
-	AcknowledgedAt *time.Time     `json:"acknowledged_at"`
-	MitigatedAt    *time.Time     `json:"mitigated_at"`
-	ResolvedAt     *time.Time     `json:"resolved_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-
-	// Role-bearing user objects. Each is a nullable nested user record.
-	// User is the incident creator; the others track lifecycle actors.
-	User        *NestedUser `json:"user"`
-	StartedBy   *NestedUser `json:"started_by"`
-	MitigatedBy *NestedUser `json:"mitigated_by"`
-	ResolvedBy  *NestedUser `json:"resolved_by"`
-	ClosedBy    *NestedUser `json:"closed_by"`
-}
-
-type SeverityAttrs struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
-// NestedUser is the shape of a user object as inlined on an incident's
-// attributes. Plain JSON — NOT a JSON:API envelope. Rootly exposes the
-// display name under either `name` or `full_name` depending on endpoint
-// shape; the extractor prefers FullName when non-empty.
-type NestedUser struct {
-	Id       string  `json:"id"`
-	Email    *string `json:"email"`
-	Name     *string `json:"name"`
-	FullName *string `json:"full_name"`
-	Url      *string `json:"url"`
+	Id            string                `json:"id"`
+	Type          string                `json:"type"`
+	Attributes    IncidentAttributes    `json:"attributes"`
+	Relationships IncidentRelationships `json:"relationships"`
 }
 
 // IncidentRelationships is a narrow view of the JSON:API relationships
-// envelope used only for the safety-net service-scope check. It ignores
-// every relationship type except services.
+// block used only for the safety-net service-scope check in the
+// extractor. Every relationship type other than services is ignored.
 type IncidentRelationships struct {
 	Services struct {
 		Data []struct {
@@ -96,3 +47,81 @@ type IncidentRelationships struct {
 		} `json:"data"`
 	} `json:"services"`
 }
+
+// IncidentAttributes carries the display fields for a Rootly incident.
+// Shapes here match an actual GET /v1/incidents response. Notable:
+//
+//   - `severity`, `user`, `started_by`, `mitigated_by`, `resolved_by`,
+//     `closed_by` are each nullable JSON:API-envelope objects — the
+//     inner record lives at `<field>.data.id` /
+//     `<field>.data.attributes.*`.
+//   - Service membership is NOT on attributes; it lives on the
+//     Incident.Relationships.Services block as JSON:API id+type
+//     pointers. Without `?include=services` the full service records
+//     are not returned — but the relationship pointers alone are
+//     enough for the extractor's safety-net scope filter.
+//   - No `urgency` field exists on the incident resource.
+type IncidentAttributes struct {
+	SequentialId   *int       `json:"sequential_id"`
+	Title          string     `json:"title"`
+	Summary        *string    `json:"summary"`
+	Url            *string    `json:"url"`
+	Status         string     `json:"status"`
+	StartedAt      time.Time  `json:"started_at"`
+	AcknowledgedAt *time.Time `json:"acknowledged_at"`
+	MitigatedAt    *time.Time `json:"mitigated_at"`
+	ResolvedAt     *time.Time `json:"resolved_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+
+	// Severity is a JSON:API-envelope nested object. Inner attributes
+	// include `slug` (e.g. sev0, sev1) and `severity` (the domain-
+	// normalized value: critical, high, medium, low).
+	Severity *SeverityEnvelope `json:"severity"`
+
+	// Role-bearing users. Each is a JSON:API-envelope nested object,
+	// nullable. User is the incident creator.
+	User        *UserEnvelope `json:"user"`
+	StartedBy   *UserEnvelope `json:"started_by"`
+	MitigatedBy *UserEnvelope `json:"mitigated_by"`
+	ResolvedBy  *UserEnvelope `json:"resolved_by"`
+	ClosedBy    *UserEnvelope `json:"closed_by"`
+}
+
+// SeverityEnvelope is a JSON:API response envelope for a severity
+// resource as it appears nested on an incident's attributes.
+type SeverityEnvelope struct {
+	Data struct {
+		Id         string             `json:"id"`
+		Type       string             `json:"type"`
+		Attributes SeverityAttributes `json:"attributes"`
+	} `json:"data"`
+}
+
+// SeverityAttributes carries the inner severity display fields.
+// `Slug` is the org-defined identifier (e.g. sev0, sev1). `Severity`
+// is the domain-normalized bucket (critical, high, medium, low) that
+// DevLake maps straight onto ticket.Issue.Priority.
+type SeverityAttributes struct {
+	Slug     string `json:"slug"`
+	Name     string `json:"name"`
+	Severity string `json:"severity"`
+}
+
+// UserEnvelope is a JSON:API response envelope for a user resource as
+// it appears nested on an incident's attributes.
+type UserEnvelope struct {
+	Data struct {
+		Id         string         `json:"id"`
+		Type       string         `json:"type"`
+		Attributes UserAttributes `json:"attributes"`
+	} `json:"data"`
+}
+
+// UserAttributes is the subset of the user resource DevLake cares
+// about for incident role tracking.
+type UserAttributes struct {
+	Name     string `json:"name"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+}
+

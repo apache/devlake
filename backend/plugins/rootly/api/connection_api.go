@@ -37,7 +37,7 @@ func testConnection(ctx context.Context, connection models.RootlyConn) (*plugin.
 	if err != nil {
 		return nil, err
 	}
-	response, err := apiClient.Get("users/current", nil, nil)
+	response, err := apiClient.Get("users/me", nil, nil)
 	if err != nil {
 		return nil, err
 	}

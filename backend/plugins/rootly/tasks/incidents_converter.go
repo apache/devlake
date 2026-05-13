@@ -135,7 +135,6 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 				LeadTimeMinutes: leadTime,
 				Priority:        mapSeverityToPriority(incident.Severity),
 				Severity:        incident.Severity,
-				Urgency:         incident.Urgency,
 				CreatorId:       creatorDomainId,
 				CreatorName:     creatorName,
 				AssigneeId:      creatorDomainId,

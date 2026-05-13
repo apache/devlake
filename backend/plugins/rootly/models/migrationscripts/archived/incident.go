@@ -34,7 +34,6 @@ type Incident struct {
 	Summary           string
 	Status            string
 	Severity          string
-	Urgency           string
 	StartedDate       time.Time
 	AcknowledgedDate  *time.Time
 	MitigatedDate     *time.Time

@@ -62,38 +62,33 @@ func ExtractIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 //
 // Output shape per incident:
 //   - exactly one *models.Incident (always), with role-specific user-id
-//     fields populated from the nested attributes.user / started_by /
-//     mitigated_by / resolved_by / closed_by blocks
+//     fields populated from the nested attributes.{user,started_by,
+//     mitigated_by,resolved_by,closed_by} JSON:API-envelope blocks
 //   - zero-to-N *models.User rows, one per distinct user id seen across
 //     those role fields (deduplicated within a single incident — if the
-//     same user is both creator and resolver, only one User row is emitted)
+//     same user is both creator and resolver, only one User row is
+//     emitted)
 //
-// The nested user objects are plain JSON on the incident's attributes,
-// NOT JSON:API-wrapped and NOT surfaced through a relationships
-// `included` array. That is the whole reason this extractor can emit
-// users directly without a separate users-collector.
+// The role fields are nested JSON:API response envelopes on the
+// incident's attributes — inner record at `<field>.data.attributes.*`.
+// We pull users straight from those without needing a separate users
+// collector or a JSON:API `included` sidecar parse.
 func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, errors.Error) {
 	rawIncident := &raw.Incident{}
 	if err := errors.Convert(json.Unmarshal(rawData, rawIncident)); err != nil {
 		return nil, err
 	}
 
-	// Safety-net scope filter. The collector already sends
-	// filter[services]=<op.ServiceId>, but if Rootly ever returns an
-	// incident that touches multiple services (or the filter regresses),
-	// dropping anything whose relationships.services.data does not
-	// include our scoped service keeps the tool table clean. When the
-	// envelope has no relationships at all we accept the incident — the
-	// API-side filter is the only scoping signal we have.
-	if len(rawIncident.Relationships) > 0 {
-		relationships := raw.IncidentRelationships{}
-		// Ignore unmarshal errors here: a malformed relationships block
-		// should not fail the entire row — fall through to accept.
-		if err := json.Unmarshal(rawIncident.Relationships, &relationships); err == nil {
-			if len(relationships.Services.Data) > 0 && !containsService(relationships.Services.Data, op.ServiceId) {
-				return nil, nil
-			}
-		}
+	// Safety-net scope filter. Rootly exposes service membership on the
+	// JSON:API relationships block (id+type pointers only, no embedded
+	// attributes unless we pass `?include=services`). The collector
+	// relies on `filter[service_ids]=<op.ServiceId>` for scoping; this
+	// is defense in depth for multi-service incidents that would
+	// otherwise leak into a wrong scope. When the relationship is
+	// empty we accept the incident — API-side filtering is the only
+	// signal we have.
+	if services := rawIncident.Relationships.Services.Data; len(services) > 0 && !containsServiceId(services, op.ServiceId) {
+		return nil, nil
 	}
 
 	if rawIncident.Attributes.StartedAt.IsZero() {
@@ -109,8 +104,7 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 		Title:            rawIncident.Attributes.Title,
 		Summary:          resolve(rawIncident.Attributes.Summary),
 		Status:           rawIncident.Attributes.Status,
-		Severity:         resolveSeverity(rawIncident.Attributes),
-		Urgency:          resolve(rawIncident.Attributes.Urgency),
+		Severity:         resolveSeverity(rawIncident.Attributes.Severity),
 		StartedDate:      rawIncident.Attributes.StartedAt,
 		AcknowledgedDate: rawIncident.Attributes.AcknowledgedAt,
 		MitigatedDate:    rawIncident.Attributes.MitigatedAt,
@@ -120,21 +114,20 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 
 	results := []interface{}{incident}
 	seen := map[string]bool{}
-	addUser := func(u *raw.NestedUser, setRoleId func(string)) {
-		if u == nil || u.Id == "" {
+	addUser := func(u *raw.UserEnvelope, setRoleId func(string)) {
+		if u == nil || u.Data.Id == "" {
 			return
 		}
-		setRoleId(u.Id)
-		if seen[u.Id] {
+		setRoleId(u.Data.Id)
+		if seen[u.Data.Id] {
 			return
 		}
-		seen[u.Id] = true
+		seen[u.Data.Id] = true
 		results = append(results, &models.User{
 			ConnectionId: op.ConnectionId,
-			Id:           u.Id,
-			Email:        resolve(u.Email),
-			Name:         pickUserName(u),
-			Url:          resolve(u.Url),
+			Id:           u.Data.Id,
+			Email:        u.Data.Attributes.Email,
+			Name:         pickUserName(u.Data.Attributes),
 		})
 	}
 	addUser(rawIncident.Attributes.User, func(id string) { incident.CreatorUserId = id })
@@ -146,29 +139,27 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 	return results, nil
 }
 
-// pickUserName chooses the best display name for a nested user:
-// FullName when set, otherwise Name, otherwise Email, otherwise empty.
-// Email is a last-resort fallback so the User row is never nameless.
-func pickUserName(u *raw.NestedUser) string {
-	if u.FullName != nil && *u.FullName != "" {
-		return *u.FullName
+// pickUserName chooses the best display name: FullName when set,
+// otherwise Name, otherwise Email, otherwise empty. Email is a
+// last-resort fallback so the User row is never nameless.
+func pickUserName(u raw.UserAttributes) string {
+	if u.FullName != "" {
+		return u.FullName
 	}
-	if u.Name != nil && *u.Name != "" {
-		return *u.Name
+	if u.Name != "" {
+		return u.Name
 	}
-	if u.Email != nil {
-		return *u.Email
-	}
-	return ""
+	return u.Email
 }
 
-// containsService checks whether the given service id appears in the
-// JSON:API relationships.services.data array.
-func containsService(data []struct {
+// containsServiceId checks whether the given service id appears in
+// the incident's relationships.services.data array. Each entry is
+// just a JSON:API pointer (id + type), not a full service record.
+func containsServiceId(services []struct {
 	Id   string `json:"id"`
 	Type string `json:"type"`
 }, serviceId string) bool {
-	for _, s := range data {
+	for _, s := range services {
 		if s.Id == serviceId {
 			return true
 		}
@@ -176,15 +167,17 @@ func containsService(data []struct {
 	return false
 }
 
-// resolveSeverity picks whichever severity shape Rootly returned:
-// a nested severity_attributes.slug if present, else the flat
-// `severity` field. See raw.IncidentAttributes for the shape
-// decision deferred to implementation.
-func resolveSeverity(attrs raw.IncidentAttributes) string {
-	if attrs.SeverityObj != nil && attrs.SeverityObj.Slug != "" {
-		return attrs.SeverityObj.Slug
+// resolveSeverity extracts the slug from a Rootly severity envelope.
+// Rootly returns severity as a JSON:API envelope with inner attributes
+// `slug` (org-defined, e.g. "sev2") and `severity` (domain-normalized:
+// critical/high/medium/low). We preserve the org's own slug in the tool
+// layer — the converter applies the domain-normalized mapping at
+// conversion time.
+func resolveSeverity(s *raw.SeverityEnvelope) string {
+	if s == nil {
+		return ""
 	}
-	return resolve(attrs.SeveritySlug)
+	return s.Data.Attributes.Slug
 }
 
 func resolve[T any](t *T) T {

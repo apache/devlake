@@ -27,40 +27,37 @@ import (
 	"github.com/apache/incubator-devlake/plugins/rootly/models"
 )
 
-// buildRawIncident produces a minimally-valid JSON:API incident envelope
-// so individual tests can override only the fields they exercise. When
-// overrides is non-empty it is used verbatim as the raw payload.
-func buildRawIncident(overrides string) []byte {
-	base := `{
-		"id": "inc_01",
-		"type": "incidents",
-		"attributes": {
-			"sequential_id": 42,
-			"title": "db outage",
-			"summary": "replica lag blew past threshold",
-			"url": "https://rootly.example.com/incidents/inc_01",
-			"status": "started",
-			"severity": "sev1",
-			"urgency": "high",
-			"started_at": "2026-05-10T10:00:00Z",
-			"updated_at": "2026-05-10T10:05:00Z",
-			"user": {
-				"id": "usr_100",
-				"email": "reporter@example.com",
-				"full_name": "Reporter One"
-			}
-		},
-		"relationships": {
-			"services": {
-				"data": [{"id": "svc_02", "type": "services"}]
-			}
-		}
-	}`
-	if overrides != "" {
-		return []byte(overrides)
+// Fixture shapes match a real GET /v1/incidents response:
+//   - each incident is a JSON:API envelope {id, type, attributes, relationships}
+//   - role-bearing users (user, started_by, …) live on attributes as
+//     nested JSON:API envelopes: {"data": {"id": "…", "type": "users",
+//     "attributes": {"name", "full_name", "email"}}}
+//   - severity lives on attributes as a nested JSON:API envelope:
+//     {"data": {"id": "…", "type": "severities", "attributes":
+//     {"slug", "severity", "name"}}}
+//   - service membership lives on the sibling relationships block as
+//     plain JSON:API pointers: {"services": {"data": [{"id":"…","type":"services"}]}}
+//     (Full service records are only returned when the caller passes
+//     `?include=services`; we don't, so we only see pointer ids here.)
+
+const baseHappyPathActive = `{
+	"id": "inc_01",
+	"type": "incidents",
+	"attributes": {
+		"sequential_id": 42,
+		"title": "db outage",
+		"summary": "replica lag blew past threshold",
+		"url": "https://rootly.example.com/incidents/inc_01",
+		"status": "started",
+		"severity": {"data": {"id": "sev-uuid-1", "type": "severities", "attributes": {"slug": "sev1", "name": "SEV1", "severity": "high"}}},
+		"started_at": "2026-05-10T10:00:00Z",
+		"updated_at": "2026-05-10T10:05:00Z",
+		"user": {"data": {"id": "usr_100", "type": "users", "attributes": {"name": "Reporter One", "full_name": "Reporter One", "email": "reporter@example.com"}}}
+	},
+	"relationships": {
+		"services": {"data": [{"id": "svc_02", "type": "services"}]}
 	}
-	return []byte(base)
-}
+}`
 
 func newTestOptions() *RootlyOptions {
 	return &RootlyOptions{
@@ -87,7 +84,7 @@ func collectUsers(results []interface{}) []*models.User {
 // Incident row (with CreatorUserId populated) and one User row.
 func TestExtractRootlyIncident_HappyPathActive(t *testing.T) {
 	op := newTestOptions()
-	results, err := extractRootlyIncident(buildRawIncident(""), op)
+	results, err := extractRootlyIncident([]byte(baseHappyPathActive), op)
 	require.NoError(t, err)
 	require.Len(t, results, 2)
 
@@ -102,7 +99,6 @@ func TestExtractRootlyIncident_HappyPathActive(t *testing.T) {
 	assert.Equal(t, "https://rootly.example.com/incidents/inc_01", incident.Url)
 	assert.Equal(t, "started", incident.Status)
 	assert.Equal(t, "sev1", incident.Severity)
-	assert.Equal(t, "high", incident.Urgency)
 	assert.Equal(t, time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC), incident.StartedDate)
 	assert.Nil(t, incident.AcknowledgedDate)
 	assert.Nil(t, incident.MitigatedDate)
@@ -126,7 +122,7 @@ func TestExtractRootlyIncident_HappyPathActive(t *testing.T) {
 // TestExtractRootlyIncident_Resolved verifies that a resolved incident
 // populates AcknowledgedDate / MitigatedDate / ResolvedDate as non-nil
 // pointers AND populates CreatorUserId + ResolvedByUserId from the
-// nested user objects. Both users are emitted as User rows.
+// nested JSON:API user envelopes. Both users are emitted as User rows.
 func TestExtractRootlyIncident_Resolved(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_02",
@@ -135,14 +131,14 @@ func TestExtractRootlyIncident_Resolved(t *testing.T) {
 			"sequential_id": 43,
 			"title": "cache cleared",
 			"status": "resolved",
-			"severity": "sev3",
+			"severity": {"data": {"id": "sev-uuid-3", "type": "severities", "attributes": {"slug": "sev3", "severity": "low"}}},
 			"started_at": "2026-05-09T08:00:00Z",
 			"acknowledged_at": "2026-05-09T08:05:00Z",
 			"mitigated_at": "2026-05-09T08:30:00Z",
 			"resolved_at": "2026-05-09T09:00:00Z",
 			"updated_at": "2026-05-09T09:01:00Z",
-			"user": {"id": "usr_100", "full_name": "Reporter One"},
-			"resolved_by": {"id": "usr_200", "full_name": "Resolver Two"}
+			"user": {"data": {"id": "usr_100", "type": "users", "attributes": {"full_name": "Reporter One"}}},
+			"resolved_by": {"data": {"id": "usr_200", "type": "users", "attributes": {"full_name": "Resolver Two"}}}
 		},
 		"relationships": {
 			"services": {"data": [{"id": "svc_02", "type": "services"}]}
@@ -203,19 +199,18 @@ func TestExtractRootlyIncident_MissingOptionalTimestamps(t *testing.T) {
 	assert.Nil(t, incident.AcknowledgedDate)
 }
 
-// TestExtractRootlyIncident_SeverityObjectShape covers the defensive
-// alternate response shape: when severity comes in as a nested
-// severity_attributes object, the extractor prefers its Slug over
-// the flat `severity` field.
-func TestExtractRootlyIncident_SeverityObjectShape(t *testing.T) {
+// TestExtractRootlyIncident_NullSeverity covers the common case where
+// an incident has no severity set: the Severity field on the tool row
+// is empty string, not a panic or a "null" literal.
+func TestExtractRootlyIncident_NullSeverity(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_04",
 		"type": "incidents",
 		"attributes": {
 			"sequential_id": 45,
-			"title": "nested severity",
+			"title": "no sev yet",
 			"status": "mitigated",
-			"severity_attributes": {"slug": "sev0", "name": "Critical"},
+			"severity": null,
 			"started_at": "2026-05-10T14:00:00Z",
 			"updated_at": "2026-05-10T14:05:00Z"
 		},
@@ -228,7 +223,7 @@ func TestExtractRootlyIncident_SeverityObjectShape(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, results, 1)
 	incident := results[0].(*models.Incident)
-	assert.Equal(t, "sev0", incident.Severity)
+	assert.Equal(t, "", incident.Severity)
 }
 
 // TestExtractRootlyIncident_NoRolesFilled verifies that an incident
@@ -283,8 +278,8 @@ func TestExtractRootlyIncident_SameUserInMultipleRoles(t *testing.T) {
 			"started_at": "2026-05-10T16:00:00Z",
 			"resolved_at": "2026-05-10T16:30:00Z",
 			"updated_at": "2026-05-10T16:31:00Z",
-			"user":        {"id": "usr_100", "full_name": "Solo Operator"},
-			"resolved_by": {"id": "usr_100", "full_name": "Solo Operator"}
+			"user":        {"data": {"id": "usr_100", "type": "users", "attributes": {"full_name": "Solo Operator"}}},
+			"resolved_by": {"data": {"id": "usr_100", "type": "users", "attributes": {"full_name": "Solo Operator"}}}
 		},
 		"relationships": {
 			"services": {"data": [{"id": "svc_02", "type": "services"}]}
@@ -318,9 +313,9 @@ func TestExtractRootlyIncident_UserNamePreference(t *testing.T) {
 			"status": "started",
 			"started_at": "2026-05-10T17:00:00Z",
 			"updated_at": "2026-05-10T17:05:00Z",
-			"user":        {"id": "usr_full",  "full_name": "Full Name",  "name": "Ignored",       "email": "ignored@example.com"},
-			"started_by":  {"id": "usr_short", "name": "Short Name",       "email": "ignored@example.com"},
-			"resolved_by": {"id": "usr_mail",  "email": "fallback@example.com"}
+			"user":        {"data": {"id": "usr_full",  "type": "users", "attributes": {"full_name": "Full Name",  "name": "Ignored", "email": "ignored@example.com"}}},
+			"started_by":  {"data": {"id": "usr_short", "type": "users", "attributes": {"name": "Short Name",      "email": "ignored@example.com"}}},
+			"resolved_by": {"data": {"id": "usr_mail",  "type": "users", "attributes": {"email": "fallback@example.com"}}}
 		},
 		"relationships": {
 			"services": {"data": [{"id": "svc_02", "type": "services"}]}
@@ -345,10 +340,11 @@ func TestExtractRootlyIncident_UserNamePreference(t *testing.T) {
 }
 
 // TestExtractRootlyIncident_WrongServiceSkipped asserts the safety-net
-// scope filter: if the incident's relationships don't include the
-// configured ServiceId, the extractor returns an empty slice and no
-// error. This protects us from multi-service incidents leaking into
-// the wrong scope even if the API-side filter[services] query failed.
+// scope filter: if the incident's relationships.services.data doesn't
+// include the configured ServiceId, the extractor returns an empty
+// slice and no error. Defense in depth against multi-service
+// incidents leaking into the wrong scope even if the API-side
+// filter[service_ids] query failed.
 func TestExtractRootlyIncident_WrongServiceSkipped(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_wrong_svc",
@@ -370,17 +366,18 @@ func TestExtractRootlyIncident_WrongServiceSkipped(t *testing.T) {
 	assert.Empty(t, results, "incident for unrelated service should produce no rows")
 }
 
-// TestExtractRootlyIncident_NoRelationshipsAccepted covers the case
-// where the API response omits relationships entirely. We cannot fail
-// closed here — `filter[services]` already scoped the list — so the
-// incident is accepted with incident.ServiceId = op.ServiceId.
-func TestExtractRootlyIncident_NoRelationshipsAccepted(t *testing.T) {
+// TestExtractRootlyIncident_EmptyServicesAccepted covers the case
+// where an incident has no services relationship (empty array or
+// missing block entirely). We accept the incident — the API-side
+// filter[service_ids] query is the only scoping signal — and tag it
+// with op.ServiceId.
+func TestExtractRootlyIncident_EmptyServicesAccepted(t *testing.T) {
 	raw := []byte(`{
-		"id": "inc_no_rel",
+		"id": "inc_no_svc",
 		"type": "incidents",
 		"attributes": {
 			"sequential_id": 50,
-			"title": "relationships omitted",
+			"title": "services omitted",
 			"status": "started",
 			"started_at": "2026-05-10T19:00:00Z",
 			"updated_at": "2026-05-10T19:05:00Z"

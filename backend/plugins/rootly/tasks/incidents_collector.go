@@ -64,41 +64,41 @@ var CollectIncidentsMeta = plugin.SubTaskMeta{
 
 func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*RootlyTaskData)
+	logger := taskCtx.GetLogger()
+	logger.Info("[rootly] CollectIncidents: starting for serviceId=%s connectionId=%d", data.Options.ServiceId, data.Options.ConnectionId)
 	args := api.RawDataSubTaskArgs{
 		Ctx:     taskCtx,
 		Options: data.Options,
 		Table:   RAW_INCIDENTS_TABLE,
 	}
+	// lastPage captures the pagination signals from the most recent
+	// ResponseParser invocation so GetNextPageCustomData can decide
+	// whether to stop without re-reading prevPageResponse.Body, which
+	// has already been drained by ResponseParser (http.Response.Body
+	// is a single-read stream).
+	var lastPage *collectedListMeta
+	var lastLinksNext *string
+	var lastPageEmpty bool
+
 	collector, err := api.NewStatefulApiCollectorForFinalizableEntity(api.FinalizableApiCollectorArgs{
 		RawDataSubTaskArgs: args,
 		ApiClient:          data.Client,
 		CollectNewRecordsByList: api.FinalizableApiCollectorListArgs{
 			PageSize: 100,
-			// GetNextPageCustomData terminates pagination by reading the
-			// JSON:API links.next / meta.current_page / meta.total_pages
-			// fields from the previous response. If either signal says
-			// "no more pages", return ErrFinishCollect.
 			GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-				if prevPageResponse == nil {
+				// The response body was already consumed by
+				// ResponseParser; rely on the closure-captured
+				// pagination state from that parse.
+				if lastLinksNext != nil && *lastLinksNext != "" {
 					return nil, nil
 				}
-				parsed := collectedIncidents{}
-				if perr := api.UnmarshalResponse(prevPageResponse, &parsed); perr != nil {
-					return nil, perr
-				}
-				if parsed.Links != nil && parsed.Links.Next != nil && *parsed.Links.Next != "" {
-					return nil, nil
-				}
-				if parsed.Meta != nil && parsed.Meta.CurrentPage != nil && parsed.Meta.TotalPages != nil {
-					if *parsed.Meta.CurrentPage >= *parsed.Meta.TotalPages {
+				if lastPage != nil && lastPage.CurrentPage != nil && lastPage.TotalPages != nil {
+					if *lastPage.CurrentPage >= *lastPage.TotalPages {
 						return nil, api.ErrFinishCollect
 					}
 					return nil, nil
 				}
-				// No signal either way — if the page came back empty,
-				// stop. Otherwise continue and let the next empty page
-				// terminate us.
-				if len(parsed.Data) == 0 {
+				if lastPageEmpty {
 					return nil, api.ErrFinishCollect
 				}
 				return nil, nil
@@ -107,7 +107,7 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 				UrlTemplate: "incidents",
 				Query: func(reqData *api.RequestData, createdAfter *time.Time) (url.Values, errors.Error) {
 					query := url.Values{}
-					query.Set("filter[services]", data.Options.ServiceId)
+					query.Set("filter[service_ids]", data.Options.ServiceId)
 					query.Set("page[size]", fmt.Sprintf("%d", reqData.Pager.Size))
 					// Rootly's JSON:API pagination is 1-based.
 					pageNumber := reqData.Pager.Skip/reqData.Pager.Size + 1
@@ -116,13 +116,35 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 					if createdAfter != nil {
 						query.Set("filter[updated_at][gt]", createdAfter.UTC().Format(time.RFC3339))
 					}
+					logger.Debug("[rootly] incidents query: page=%d size=%d createdAfter=%v %s", pageNumber, reqData.Pager.Size, createdAfter, query.Encode())
 					return query, nil
 				},
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 					rawResult := collectedIncidents{}
 					if err := api.UnmarshalResponse(res, &rawResult); err != nil {
+						logger.Error(err, "[rootly] incidents ResponseParser: unmarshal failed")
 						return nil, err
 					}
+					metaStr := "nil"
+					if rawResult.Meta != nil {
+						metaStr = fmt.Sprintf("current=%s total_pages=%s total_count=%s",
+							derefIntStr(rawResult.Meta.CurrentPage),
+							derefIntStr(rawResult.Meta.TotalPages),
+							derefIntStr(rawResult.Meta.TotalCount))
+					}
+					linksNextStr := "nil"
+					if rawResult.Links != nil && rawResult.Links.Next != nil {
+						linksNextStr = *rawResult.Links.Next
+					}
+					logger.Debug("[rootly] incidents response: status=%d count=%d meta=%s links.next=%s",
+						res.StatusCode, len(rawResult.Data), metaStr, linksNextStr)
+					lastPage = rawResult.Meta
+					if rawResult.Links != nil {
+						lastLinksNext = rawResult.Links.Next
+					} else {
+						lastLinksNext = nil
+					}
+					lastPageEmpty = len(rawResult.Data) == 0
 					return rawResult.Data, nil
 				},
 			},
@@ -132,4 +154,11 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	return collector.Execute()
+}
+
+func derefIntStr(p *int) string {
+	if p == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%d", *p)
 }
