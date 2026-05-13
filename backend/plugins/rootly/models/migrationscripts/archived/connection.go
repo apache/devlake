@@ -23,8 +23,11 @@ import (
 
 type Connection struct {
 	archived.Model
-	Name  string `gorm:"type:varchar(100);uniqueIndex" json:"name" validate:"required"`
-	Token string `mapstructure:"token" env:"ROOTLY_AUTH" validate:"required" encrypt:"yes"`
+	Name             string `gorm:"type:varchar(100);uniqueIndex" json:"name" validate:"required"`
+	Endpoint         string `mapstructure:"endpoint" validate:"required" json:"endpoint"`
+	Proxy            string `mapstructure:"proxy" json:"proxy"`
+	RateLimitPerHour int    `comment:"api request rate limit per hour" json:"rateLimitPerHour"`
+	Token            string `mapstructure:"token" env:"ROOTLY_AUTH" validate:"required" encrypt:"yes"`
 }
 
 func (Connection) TableName() string {
