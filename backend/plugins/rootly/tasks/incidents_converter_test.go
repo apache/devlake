@@ -28,9 +28,6 @@ import (
 	"github.com/apache/incubator-devlake/plugins/rootly/models"
 )
 
-// TestMapStatus exercises every branch of the Rootly-to-domain status
-// mapping, including the deliberate divergence from PagerDuty: unknown
-// statuses fall back to IN_PROGRESS with a warning rather than panic.
 func TestMapStatus(t *testing.T) {
 	cases := []struct {
 		in       string
@@ -52,19 +49,12 @@ func TestMapStatus(t *testing.T) {
 	}
 }
 
-// TestMapStatusDoesNotPanic pins the behavioral difference from the
-// PagerDuty converter, which panics on unknown statuses. Rootly's
-// enum is more volatile, so we fall back rather than crash.
 func TestMapStatusDoesNotPanic(t *testing.T) {
 	assert.NotPanics(t, func() {
 		_ = mapStatus("brand-new-status-rootly-invented-yesterday")
 	})
 }
 
-// TestMapSeverityToPriority covers the severity table plus case
-// variation (Rootly has been observed returning SEV0, sev0, and
-// Sev0 interchangeably) and the pass-through behavior for unknown
-// values.
 func TestMapSeverityToPriority(t *testing.T) {
 	cases := []struct {
 		in       string
@@ -89,9 +79,6 @@ func TestMapSeverityToPriority(t *testing.T) {
 	}
 }
 
-// TestComputeLeadTime_Resolved verifies that a resolved incident yields
-// a non-nil lead time in minutes and a non-nil resolution date pointer
-// whose value matches the resolved timestamp.
 func TestComputeLeadTime_Resolved(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
 	resolved := time.Date(2026, 5, 10, 11, 30, 0, 0, time.UTC)
@@ -102,10 +89,6 @@ func TestComputeLeadTime_Resolved(t *testing.T) {
 	assert.Equal(t, resolved, *resolutionDate)
 }
 
-// TestComputeLeadTime_Unresolved verifies that an unresolved incident
-// (resolved pointer is nil) yields nil, nil rather than a zero-time
-// sentinel — downstream DORA math treats (nil) as "still ongoing" and
-// a zero-time value would pollute mean-time-to-resolve.
 func TestComputeLeadTime_Unresolved(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
 	leadTime, resolutionDate := computeLeadTime(started, nil)
@@ -113,10 +96,6 @@ func TestComputeLeadTime_Unresolved(t *testing.T) {
 	assert.Nil(t, resolutionDate)
 }
 
-// TestComputeLeadTime_ZeroDuration covers the edge case where an
-// incident is resolved at the same instant it started. Lead time is
-// zero but should still be non-nil, because DORA needs to distinguish
-// "resolved instantly" from "not yet resolved".
 func TestComputeLeadTime_ZeroDuration(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
 	resolved := started
@@ -126,12 +105,6 @@ func TestComputeLeadTime_ZeroDuration(t *testing.T) {
 	assert.Equal(t, uint(0), *leadTime)
 }
 
-// TestComputeLeadTime_ResolvedBeforeStarted guards against clock skew
-// or backfill anomalies where the resolution timestamp precedes the
-// start. A naive uint() cast on a negative duration would produce
-// wraparound garbage and silently corrupt MTTR. The helper treats
-// these cases as if unresolved so bad data does not contaminate the
-// domain layer.
 func TestComputeLeadTime_ResolvedBeforeStarted(t *testing.T) {
 	started := time.Date(2026, 5, 10, 11, 0, 0, 0, time.UTC)
 	resolved := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
@@ -140,11 +113,6 @@ func TestComputeLeadTime_ResolvedBeforeStarted(t *testing.T) {
 	assert.Nil(t, resolutionDate)
 }
 
-// TestIssueKeyFor covers the human-readable-id preference: prefer the
-// Rootly sequential id when positive, fall back to the internal slug id
-// when missing, zero, or negative. The negative branch matters because
-// Number is typed int and a "negative sequential id" would be a data
-// bug we should surface as the slug rather than as a negative string.
 func TestIssueKeyFor(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -162,12 +130,6 @@ func TestIssueKeyFor(t *testing.T) {
 	}
 }
 
-// TestAssigneeDedup covers the role-user dedup in ConvertIncidents by
-// calling the dedup logic in isolation (inlined here to avoid wiring up
-// a SubTaskContext in a unit test — e2e coverage lives in U6). The
-// invariants are: (1) distinct user ids across roles produce distinct
-// IssueAssignees, (2) duplicate user ids across roles produce exactly
-// one IssueAssignee, (3) empty-string user ids are skipped.
 func TestAssigneeDedup(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -241,16 +203,9 @@ func TestAssigneeDedup(t *testing.T) {
 	}
 }
 
-// TestMapStatus_MitigatedIsKnown pins the boundary between mapStatus
-// and isKnownStatus: "mitigated" maps to IN_PROGRESS (the same bucket
-// as the unknown-status fallback), but it is a KNOWN status and should
-// not trigger the warning log. Without this test, a regression that
-// deletes "mitigated" from isKnownStatus would silently fire unknown-
-// status warnings on every mitigated incident.
 func TestMapStatus_MitigatedIsKnown(t *testing.T) {
 	assert.Equal(t, ticket.IN_PROGRESS, mapStatus("mitigated"))
 	assert.True(t, isKnownStatus("mitigated"))
-	// And the contrapositive — the fallback case is indeed unknown.
 	assert.Equal(t, ticket.IN_PROGRESS, mapStatus("something-else"))
 	assert.False(t, isKnownStatus("something-else"))
 }

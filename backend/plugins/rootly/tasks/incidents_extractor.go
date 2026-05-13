@@ -55,38 +55,15 @@ func ExtractIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	return extractor.Execute()
 }
 
-// extractRootlyIncident is the pure-function core of the extractor:
-// take a raw JSON:API incident envelope + the task options, return the
-// tool-layer rows to persist. Factored out of the closure so it can be
-// unit-tested without a SubTaskContext.
-//
-// Output shape per incident:
-//   - exactly one *models.Incident (always), with role-specific user-id
-//     fields populated from the nested attributes.{user,started_by,
-//     mitigated_by,resolved_by,closed_by} JSON:API-envelope blocks
-//   - zero-to-N *models.User rows, one per distinct user id seen across
-//     those role fields (deduplicated within a single incident — if the
-//     same user is both creator and resolver, only one User row is
-//     emitted)
-//
-// The role fields are nested JSON:API response envelopes on the
-// incident's attributes — inner record at `<field>.data.attributes.*`.
-// We pull users straight from those without needing a separate users
-// collector or a JSON:API `included` sidecar parse.
 func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, errors.Error) {
 	rawIncident := &raw.Incident{}
 	if err := errors.Convert(json.Unmarshal(rawData, rawIncident)); err != nil {
 		return nil, err
 	}
 
-	// Safety-net scope filter. Rootly exposes service membership on the
-	// JSON:API relationships block (id+type pointers only, no embedded
-	// attributes unless we pass `?include=services`). The collector
-	// relies on `filter[service_ids]=<op.ServiceId>` for scoping; this
-	// is defense in depth for multi-service incidents that would
-	// otherwise leak into a wrong scope. When the relationship is
-	// empty we accept the incident — API-side filtering is the only
-	// signal we have.
+	// Safety net: filter[service_ids] in the collector is the primary
+	// scope filter, but a regression there would let multi-service
+	// incidents leak into a wrong scope's tool table.
 	if services := rawIncident.Relationships.Services.Data; len(services) > 0 && !containsServiceId(services, op.ServiceId) {
 		return nil, nil
 	}
@@ -139,9 +116,6 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 	return results, nil
 }
 
-// pickUserName chooses the best display name: FullName when set,
-// otherwise Name, otherwise Email, otherwise empty. Email is a
-// last-resort fallback so the User row is never nameless.
 func pickUserName(u raw.UserAttributes) string {
 	if u.FullName != "" {
 		return u.FullName
@@ -152,9 +126,6 @@ func pickUserName(u raw.UserAttributes) string {
 	return u.Email
 }
 
-// containsServiceId checks whether the given service id appears in
-// the incident's relationships.services.data array. Each entry is
-// just a JSON:API pointer (id + type), not a full service record.
 func containsServiceId(services []struct {
 	Id   string `json:"id"`
 	Type string `json:"type"`
@@ -167,12 +138,6 @@ func containsServiceId(services []struct {
 	return false
 }
 
-// resolveSeverity extracts the slug from a Rootly severity envelope.
-// Rootly returns severity as a JSON:API envelope with inner attributes
-// `slug` (org-defined, e.g. "sev2") and `severity` (domain-normalized:
-// critical/high/medium/low). We preserve the org's own slug in the tool
-// layer — the converter applies the domain-normalized mapping at
-// conversion time.
 func resolveSeverity(s *raw.SeverityEnvelope) string {
 	if s == nil {
 		return ""

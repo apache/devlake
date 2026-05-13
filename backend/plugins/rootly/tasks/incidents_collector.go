@@ -33,10 +33,6 @@ const RAW_INCIDENTS_TABLE = "rootly_incidents"
 
 var _ plugin.SubTaskEntryPoint = CollectIncidents
 
-// collectedIncidents is the JSON:API envelope for a paginated list of
-// incidents. `data` is an array of raw resource objects (id, type,
-// attributes, relationships) — one per incident — and `meta`/`links`
-// drive pagination termination.
 type collectedIncidents struct {
 	Data  []json.RawMessage   `json:"data"`
 	Meta  *collectedListMeta  `json:"meta"`
@@ -65,17 +61,15 @@ var CollectIncidentsMeta = plugin.SubTaskMeta{
 func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*RootlyTaskData)
 	logger := taskCtx.GetLogger()
-	logger.Info("[rootly] CollectIncidents: starting for serviceId=%s connectionId=%d", data.Options.ServiceId, data.Options.ConnectionId)
 	args := api.RawDataSubTaskArgs{
 		Ctx:     taskCtx,
 		Options: data.Options,
 		Table:   RAW_INCIDENTS_TABLE,
 	}
-	// lastPage captures the pagination signals from the most recent
-	// ResponseParser invocation so GetNextPageCustomData can decide
-	// whether to stop without re-reading prevPageResponse.Body, which
-	// has already been drained by ResponseParser (http.Response.Body
-	// is a single-read stream).
+	// Pagination state captured during ResponseParser and consulted in
+	// GetNextPageCustomData. Required because prevPageResponse.Body is
+	// a single-read stream and is already drained by the time the
+	// next-page hook fires.
 	var lastPage *collectedListMeta
 	var lastLinksNext *string
 	var lastPageEmpty bool
@@ -86,9 +80,6 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		CollectNewRecordsByList: api.FinalizableApiCollectorListArgs{
 			PageSize: 100,
 			GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-				// The response body was already consumed by
-				// ResponseParser; rely on the closure-captured
-				// pagination state from that parse.
 				if lastLinksNext != nil && *lastLinksNext != "" {
 					return nil, nil
 				}
@@ -116,28 +107,14 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 					if createdAfter != nil {
 						query.Set("filter[updated_at][gt]", createdAfter.UTC().Format(time.RFC3339))
 					}
-					logger.Debug("[rootly] incidents query: page=%d size=%d createdAfter=%v %s", pageNumber, reqData.Pager.Size, createdAfter, query.Encode())
 					return query, nil
 				},
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 					rawResult := collectedIncidents{}
 					if err := api.UnmarshalResponse(res, &rawResult); err != nil {
-						logger.Error(err, "[rootly] incidents ResponseParser: unmarshal failed")
+						logger.Error(err, "rootly incidents response unmarshal failed")
 						return nil, err
 					}
-					metaStr := "nil"
-					if rawResult.Meta != nil {
-						metaStr = fmt.Sprintf("current=%s total_pages=%s total_count=%s",
-							derefIntStr(rawResult.Meta.CurrentPage),
-							derefIntStr(rawResult.Meta.TotalPages),
-							derefIntStr(rawResult.Meta.TotalCount))
-					}
-					linksNextStr := "nil"
-					if rawResult.Links != nil && rawResult.Links.Next != nil {
-						linksNextStr = *rawResult.Links.Next
-					}
-					logger.Debug("[rootly] incidents response: status=%d count=%d meta=%s links.next=%s",
-						res.StatusCode, len(rawResult.Data), metaStr, linksNextStr)
 					lastPage = rawResult.Meta
 					if rawResult.Links != nil {
 						lastLinksNext = rawResult.Links.Next
@@ -154,11 +131,4 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	return collector.Execute()
-}
-
-func derefIntStr(p *int) string {
-	if p == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("%d", *p)
 }

@@ -26,22 +26,18 @@ import (
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
 )
 
-// RootlyAccessToken implements HTTP Bearer Authentication with an access token
 type RootlyAccessToken helper.AccessToken
 
-// SetupAuthentication sets up the request headers for authentication
 func (at *RootlyAccessToken) SetupAuthentication(request *http.Request) errors.Error {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", at.Token))
 	return nil
 }
 
-// RootlyConn holds the essential information to connect to the Rootly API
 type RootlyConn struct {
 	helper.RestConnection `mapstructure:",squash"`
 	RootlyAccessToken     `mapstructure:",squash"`
 }
 
-// RootlyConnection holds RootlyConn plus ID/Name for database storage
 type RootlyConnection struct {
 	helper.BaseConnection `mapstructure:",squash"`
 	RootlyConn            `mapstructure:",squash"`
@@ -59,14 +55,12 @@ func (connection *RootlyConnection) MergeFromRequest(target *RootlyConnection, b
 	return nil
 }
 
-// This object conforms to what the frontend currently expects.
 type RootlyResponse struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
 	RootlyConnection
 }
 
-// ApiUserResponse represents the Rootly /users/me response for token validation.
 type ApiUserResponse struct {
 	Id   string
 	Name string `json:"name"`

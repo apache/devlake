@@ -19,9 +19,6 @@ package raw
 
 import "time"
 
-// Service is the JSON:API shape of a single Rootly service as returned
-// by GET /services/{id}. The top-level Id lives on the JSON:API envelope;
-// all display fields are nested under Attributes.
 type Service struct {
 	Id         string            `json:"id"`
 	Type       string            `json:"type"`

@@ -32,13 +32,11 @@ import (
 	"github.com/apache/incubator-devlake/plugins/rootly/models"
 )
 
-// RootlyRemotePagination holds JSON:API page-based pagination state.
 type RootlyRemotePagination struct {
 	Page    int `json:"page"`
 	PerPage int `json:"per_page"`
 }
 
-// ServiceResponse mirrors Rootly's JSON:API envelope for GET /services.
 type ServiceResponse struct {
 	Data []struct {
 		Id         string `json:"id"`

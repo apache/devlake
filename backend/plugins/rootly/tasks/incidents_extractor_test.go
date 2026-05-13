@@ -27,19 +27,6 @@ import (
 	"github.com/apache/incubator-devlake/plugins/rootly/models"
 )
 
-// Fixture shapes match a real GET /v1/incidents response:
-//   - each incident is a JSON:API envelope {id, type, attributes, relationships}
-//   - role-bearing users (user, started_by, …) live on attributes as
-//     nested JSON:API envelopes: {"data": {"id": "…", "type": "users",
-//     "attributes": {"name", "full_name", "email"}}}
-//   - severity lives on attributes as a nested JSON:API envelope:
-//     {"data": {"id": "…", "type": "severities", "attributes":
-//     {"slug", "severity", "name"}}}
-//   - service membership lives on the sibling relationships block as
-//     plain JSON:API pointers: {"services": {"data": [{"id":"…","type":"services"}]}}
-//     (Full service records are only returned when the caller passes
-//     `?include=services`; we don't, so we only see pointer ids here.)
-
 const baseHappyPathActive = `{
 	"id": "inc_01",
 	"type": "incidents",
@@ -66,9 +53,6 @@ func newTestOptions() *RootlyOptions {
 	}
 }
 
-// collectUsers pulls the *models.User rows out of a heterogeneous result
-// slice so individual tests can make assertions without worrying about
-// the incident row's ordering.
 func collectUsers(results []interface{}) []*models.User {
 	users := []*models.User{}
 	for _, r := range results {
@@ -79,9 +63,6 @@ func collectUsers(results []interface{}) []*models.User {
 	return users
 }
 
-// TestExtractRootlyIncident_HappyPathActive covers the base case: a
-// started incident with a creator user in attributes.user produces one
-// Incident row (with CreatorUserId populated) and one User row.
 func TestExtractRootlyIncident_HappyPathActive(t *testing.T) {
 	op := newTestOptions()
 	results, err := extractRootlyIncident([]byte(baseHappyPathActive), op)
@@ -119,10 +100,6 @@ func TestExtractRootlyIncident_HappyPathActive(t *testing.T) {
 	assert.Equal(t, "reporter@example.com", users[0].Email)
 }
 
-// TestExtractRootlyIncident_Resolved verifies that a resolved incident
-// populates AcknowledgedDate / MitigatedDate / ResolvedDate as non-nil
-// pointers AND populates CreatorUserId + ResolvedByUserId from the
-// nested JSON:API user envelopes. Both users are emitted as User rows.
 func TestExtractRootlyIncident_Resolved(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_02",
@@ -171,9 +148,6 @@ func TestExtractRootlyIncident_Resolved(t *testing.T) {
 	assert.Equal(t, "Resolver Two", ids["usr_200"])
 }
 
-// TestExtractRootlyIncident_MissingOptionalTimestamps asserts that
-// missing mitigated_at and resolved_at yield nil pointers rather than
-// zero-time values (which would pollute downstream DORA math).
 func TestExtractRootlyIncident_MissingOptionalTimestamps(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_03",
@@ -199,9 +173,6 @@ func TestExtractRootlyIncident_MissingOptionalTimestamps(t *testing.T) {
 	assert.Nil(t, incident.AcknowledgedDate)
 }
 
-// TestExtractRootlyIncident_NullSeverity covers the common case where
-// an incident has no severity set: the Severity field on the tool row
-// is empty string, not a panic or a "null" literal.
 func TestExtractRootlyIncident_NullSeverity(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_04",
@@ -226,10 +197,6 @@ func TestExtractRootlyIncident_NullSeverity(t *testing.T) {
 	assert.Equal(t, "", incident.Severity)
 }
 
-// TestExtractRootlyIncident_NoRolesFilled verifies that an incident
-// with every role-bearing user field null produces exactly one result
-// (the incident row) with all role user-id fields empty and zero User
-// rows.
 func TestExtractRootlyIncident_NoRolesFilled(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_05",
@@ -263,10 +230,6 @@ func TestExtractRootlyIncident_NoRolesFilled(t *testing.T) {
 	assert.Empty(t, collectUsers(results))
 }
 
-// TestExtractRootlyIncident_SameUserInMultipleRoles verifies the
-// dedupe invariant: if one person is both the creator and the
-// resolver, only one User row is emitted but BOTH role id fields on
-// the incident point to that user.
 func TestExtractRootlyIncident_SameUserInMultipleRoles(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_dup",
@@ -300,9 +263,6 @@ func TestExtractRootlyIncident_SameUserInMultipleRoles(t *testing.T) {
 	assert.Equal(t, "Solo Operator", users[0].Name)
 }
 
-// TestExtractRootlyIncident_UserNamePreference verifies the name
-// preference order: FullName > Name > Email > empty string. Three
-// users exercise the three fallbacks in a single incident.
 func TestExtractRootlyIncident_UserNamePreference(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_names",
@@ -339,12 +299,6 @@ func TestExtractRootlyIncident_UserNamePreference(t *testing.T) {
 	assert.Equal(t, "fallback@example.com", byId["usr_mail"].Name)
 }
 
-// TestExtractRootlyIncident_WrongServiceSkipped asserts the safety-net
-// scope filter: if the incident's relationships.services.data doesn't
-// include the configured ServiceId, the extractor returns an empty
-// slice and no error. Defense in depth against multi-service
-// incidents leaking into the wrong scope even if the API-side
-// filter[service_ids] query failed.
 func TestExtractRootlyIncident_WrongServiceSkipped(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_wrong_svc",
@@ -366,11 +320,6 @@ func TestExtractRootlyIncident_WrongServiceSkipped(t *testing.T) {
 	assert.Empty(t, results, "incident for unrelated service should produce no rows")
 }
 
-// TestExtractRootlyIncident_EmptyServicesAccepted covers the case
-// where an incident has no services relationship (empty array or
-// missing block entirely). We accept the incident — the API-side
-// filter[service_ids] query is the only scoping signal — and tag it
-// with op.ServiceId.
 func TestExtractRootlyIncident_EmptyServicesAccepted(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_no_svc",
@@ -391,9 +340,6 @@ func TestExtractRootlyIncident_EmptyServicesAccepted(t *testing.T) {
 	assert.Equal(t, "svc_02", incident.ServiceId)
 }
 
-// TestExtractRootlyIncident_MissingStartedAtReturnsError covers the
-// single required-field validation. A missing started_at would write
-// a zero-time row, breaking downstream MTTR math silently. Fail loud.
 func TestExtractRootlyIncident_MissingStartedAtReturnsError(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_bad",
@@ -413,10 +359,6 @@ func TestExtractRootlyIncident_MissingStartedAtReturnsError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// TestExtractRootlyIncident_MissingSequentialId verifies graceful
-// degradation when the Rootly response omits the incident number.
-// We want the row to still land in the tool table so downstream
-// conversion can fall back to the string id.
 func TestExtractRootlyIncident_MissingSequentialId(t *testing.T) {
 	raw := []byte(`{
 		"id": "inc_no_num",

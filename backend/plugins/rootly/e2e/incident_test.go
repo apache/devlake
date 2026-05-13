@@ -42,10 +42,7 @@ func TestIncidentDataFlow(t *testing.T) {
 		Options: &options,
 	}
 
-	// Seed the service scope as a prereq: the service is the scope unit,
-	// not test data, so we populate _tool_rootly_services directly
-	// instead of running the services extractor. Mirrors the pagerduty
-	// e2e pattern.
+	// scope
 	dataflowTester.FlushTabler(&models.Service{})
 	service := models.Service{
 		Scope: common.Scope{
@@ -57,14 +54,13 @@ func TestIncidentDataFlow(t *testing.T) {
 	}
 	require.NoError(t, dataflowTester.Dal.CreateOrUpdate(&service))
 
-	// Import the raw incidents fixture that drives the extractor.
+	// import raw data table
 	dataflowTester.ImportCsvIntoRawTable(
 		"./raw_tables/_raw_rootly_incidents.csv",
 		"_raw_rootly_incidents",
 	)
 
-	// Extract incidents. The extractor writes to _tool_rootly_incidents
-	// and _tool_rootly_users (inline users from nested attributes).
+	// verify extraction
 	dataflowTester.FlushTabler(&models.Incident{})
 	dataflowTester.FlushTabler(&models.User{})
 	dataflowTester.Subtask(tasks.ExtractIncidentsMeta, taskData)
@@ -90,8 +86,7 @@ func TestIncidentDataFlow(t *testing.T) {
 		},
 	)
 
-	// Convert: services -> boards, incidents -> issues + assignees + board
-	// membership.
+	// verify conversion
 	dataflowTester.FlushTabler(&ticket.Board{})
 	dataflowTester.Subtask(tasks.ConvertServicesMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(

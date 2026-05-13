@@ -43,25 +43,11 @@ var ConvertIncidentsMeta = plugin.SubTaskMeta{
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
 }
 
-// ConvertIncidents turns _tool_rootly_incidents rows into the domain
-// TICKET trio: ticket.Issue (one per incident), ticket.IssueAssignee
-// (one per distinct role user referenced by the incident), and
-// ticket.BoardIssue (linking the incident to its service board).
-//
-// Unlike PagerDuty's converter, there is no assignments join — U4
-// reshaped the tool layer so incidents carry role-specific user-id
-// columns directly. The only auxiliary lookup is a per-connection map
-// of user display names, built once before the cursor opens.
 func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	data := taskCtx.GetData().(*RootlyTaskData)
 	logger := taskCtx.GetLogger()
 
-	// Load all users for this connection up-front so the per-row
-	// Convert closure can resolve role user ids to display names
-	// without re-querying. This is cheaper than a per-incident join
-	// when the user table is small (Rootly users, not incidents), and
-	// incidents outnumber users.
 	var userRows []models.User
 	if err := db.All(
 		&userRows,
@@ -108,10 +94,6 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 
 			domainIssueId := idGen.Generate(data.Options.ConnectionId, incident.Id)
 
-			// Creator drives Issue.CreatorId / CreatorName and also
-			// Issue.AssigneeId / AssigneeName (the latter is a
-			// convenience denormalization — per-role fidelity lives
-			// on the IssueAssignee rows below).
 			var creatorDomainId, creatorName string
 			if incident.CreatorUserId != "" {
 				creatorDomainId = userIdGen.Generate(data.Options.ConnectionId, incident.CreatorUserId)
@@ -143,10 +125,6 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 
 			results := []interface{}{domainIssue}
 
-			// Emit one IssueAssignee per distinct role-user on the
-			// incident. Deduping is local to this incident so that
-			// the same person in multiple roles (e.g. creator +
-			// resolver) produces a single assignee row.
 			seenAssignees := map[string]bool{}
 			roleUserIds := []string{
 				incident.CreatorUserId,
@@ -181,10 +159,9 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	return converter.Execute()
 }
 
-// mapStatus translates a Rootly incident status into the domain-layer
-// status enum. Unknown statuses fall through to IN_PROGRESS; callers
-// that care whether a value was known should check via isKnownStatus
-// to emit a warning log rather than a panic.
+// Unknown statuses fall through to IN_PROGRESS rather than panicking
+// (PagerDuty panics). Rootly's status enum is more volatile, so a new
+// value from upstream shouldn't crash a production pipeline.
 func mapStatus(status string) string {
 	switch status {
 	case "triage", "started":
@@ -198,9 +175,6 @@ func mapStatus(status string) string {
 	}
 }
 
-// isKnownStatus answers whether the given Rootly status value is one
-// of the enum members we map explicitly. Used so the converter can
-// warn about unknown values without re-running the switch.
 func isKnownStatus(status string) bool {
 	switch status {
 	case "triage", "started", "mitigated", "resolved", "closed", "cancelled":
@@ -210,12 +184,6 @@ func isKnownStatus(status string) bool {
 	}
 }
 
-// mapSeverityToPriority translates a Rootly severity slug into the
-// domain-layer priority string. Accepts case-insensitive inputs
-// because Rootly has been observed returning SEV0, sev0, and Sev0
-// interchangeably. Unknown severities are passed through verbatim
-// so operators can see the raw value rather than a collapsed
-// default.
 func mapSeverityToPriority(severity string) string {
 	switch strings.ToLower(severity) {
 	case "sev0":
@@ -231,20 +199,13 @@ func mapSeverityToPriority(severity string) string {
 	}
 }
 
-// computeLeadTime derives the DORA lead-time and resolution-date
-// values from the incident's started_at and optional resolved_at
-// timestamps. When resolved is nil both return values are nil — the
-// incident is still ongoing and has no resolution to measure. When
-// resolved equals started the lead time is zero minutes but still
-// non-nil, so DORA math can distinguish "resolved instantly" from
-// "not yet resolved".
 func computeLeadTime(started time.Time, resolved *time.Time) (*uint, *time.Time) {
 	if resolved == nil {
 		return nil, nil
 	}
-	// Guard against clock skew or backfill anomalies that place the
-	// resolution before the start. A naive uint() cast on a negative
-	// duration produces wraparound garbage and silently corrupts MTTR.
+	// Clock skew / backfill can place resolved before started. A naive
+	// uint() cast on a negative duration wraps to huge garbage and
+	// silently corrupts MTTR; treat as unresolved instead.
 	if resolved.Before(started) {
 		return nil, nil
 	}
@@ -253,10 +214,6 @@ func computeLeadTime(started time.Time, resolved *time.Time) (*uint, *time.Time)
 	return &minutes, &resolutionDate
 }
 
-// issueKeyFor picks the most human-readable identifier available: the
-// Rootly sequential id (what operators see in the UI) when present,
-// falling back to the internal slug id when the sequential id is
-// missing or zero.
 func issueKeyFor(incident *models.Incident) string {
 	if incident.Number > 0 {
 		return fmt.Sprintf("%d", incident.Number)

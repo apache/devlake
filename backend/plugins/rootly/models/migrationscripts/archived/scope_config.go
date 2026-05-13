@@ -21,12 +21,9 @@ import (
 	"github.com/apache/incubator-devlake/core/models/migrationscripts/archived"
 )
 
-// ScopeConfig mirrors the columns contributed by live
-// `models.RootlyScopeConfig`'s embedded `common.ScopeConfig`
-// (Model + Entities + ConnectionId + Name). The archived base
-// `ScopeConfig` struct only carries Model + Entities, so we carry
-// ConnectionId and Name explicitly here so the generated table has
-// the columns the live model reads and writes.
+// ConnectionId and Name come from `common.ScopeConfig` on the live
+// model; the archived `archived.ScopeConfig` base only carries
+// Model + Entities, so declare them explicitly.
 type ScopeConfig struct {
 	archived.ScopeConfig `mapstructure:",squash" json:",inline" gorm:"embedded"`
 	ConnectionId         uint64 `json:"connectionId" gorm:"index" validate:"required" mapstructure:"connectionId,omitempty"`

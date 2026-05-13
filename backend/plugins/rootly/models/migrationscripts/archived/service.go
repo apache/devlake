@@ -21,10 +21,8 @@ import (
 	"github.com/apache/incubator-devlake/core/models/migrationscripts/archived"
 )
 
-// Service mirrors the columns contributed by live `models.Service`'s
-// embedded `common.Scope` (NoPKModel + ConnectionId + ScopeConfigId)
-// plus the Rootly-specific fields. Missing `scope_config_id` here
-// would cause PUT /scopes to fail with "Unknown column 'scope_config_id'".
+// ScopeConfigId mirrors the column that live `models.Service` gets via
+// embedded `common.Scope`; the archived `NoPKModel` doesn't include it.
 type Service struct {
 	archived.NoPKModel
 	ConnectionId  uint64 `gorm:"primaryKey"`

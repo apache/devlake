@@ -38,11 +38,7 @@ type Incident struct {
 	AcknowledgedDate *time.Time
 	MitigatedDate    *time.Time
 	ResolvedDate     *time.Time
-	UpdatedDate      time.Time
-	// Role-specific user ids, extracted from the nested user objects on
-	// attributes.user (creator), started_by, mitigated_by, resolved_by,
-	// and closed_by. Any may be empty if the role was not filled (e.g.,
-	// an unresolved incident has no ResolvedByUserId).
+	UpdatedDate       time.Time
 	CreatorUserId     string
 	StartedByUserId   string
 	MitigatedByUserId string
