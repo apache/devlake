@@ -25,19 +25,19 @@ import (
 
 type Incident struct {
 	common.NoPKModel
-	ConnectionId     uint64 `gorm:"primaryKey"`
-	Id               string `gorm:"primaryKey;autoIncrement:false"`
-	Number           int
-	ServiceId        string `gorm:"index"`
-	Url              string
-	Title            string
-	Summary          string
-	Status           string
-	Severity         string
-	StartedDate      time.Time
-	AcknowledgedDate *time.Time
-	MitigatedDate    *time.Time
-	ResolvedDate     *time.Time
+	ConnectionId      uint64 `gorm:"primaryKey"`
+	Id                string `gorm:"primaryKey;autoIncrement:false"`
+	Number            int
+	ServiceId         string `gorm:"index"`
+	Url               string
+	Title             string
+	Summary           string
+	Status            string
+	Severity          string
+	StartedDate       time.Time
+	AcknowledgedDate  *time.Time
+	MitigatedDate     *time.Time
+	ResolvedDate      *time.Time
 	UpdatedDate       time.Time
 	CreatorUserId     string
 	StartedByUserId   string
