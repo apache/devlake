@@ -25,7 +25,6 @@ type User struct {
 	Id           string `gorm:"primaryKey;autoIncrement:false"`
 	Email        string
 	Name         string
-	Url          string
 }
 
 func (User) TableName() string { return "_tool_rootly_users" }

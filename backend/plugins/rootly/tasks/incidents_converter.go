@@ -85,8 +85,8 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			incident := inputRow.(*models.Incident)
 
-			status := mapStatus(incident.Status)
-			if status == ticket.IN_PROGRESS && !isKnownStatus(incident.Status) {
+			status, known := mapStatus(incident.Status)
+			if !known {
 				logger.Warn(nil, "unknown rootly incident status: %s", incident.Status)
 			}
 
@@ -126,14 +126,7 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 			results := []interface{}{domainIssue}
 
 			seenAssignees := map[string]bool{}
-			roleUserIds := []string{
-				incident.CreatorUserId,
-				incident.StartedByUserId,
-				incident.MitigatedByUserId,
-				incident.ResolvedByUserId,
-				incident.ClosedByUserId,
-			}
-			for _, toolUserId := range roleUserIds {
+			for _, toolUserId := range incident.RoleUserIds() {
 				if toolUserId == "" || seenAssignees[toolUserId] {
 					continue
 				}
@@ -162,25 +155,16 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 // Unknown statuses fall through to IN_PROGRESS rather than panicking
 // (PagerDuty panics). Rootly's status enum is more volatile, so a new
 // value from upstream shouldn't crash a production pipeline.
-func mapStatus(status string) string {
+func mapStatus(status string) (mapped string, known bool) {
 	switch status {
 	case "triage", "started":
-		return ticket.TODO
+		return ticket.TODO, true
 	case "mitigated":
-		return ticket.IN_PROGRESS
+		return ticket.IN_PROGRESS, true
 	case "resolved", "closed", "cancelled":
-		return ticket.DONE
+		return ticket.DONE, true
 	default:
-		return ticket.IN_PROGRESS
-	}
-}
-
-func isKnownStatus(status string) bool {
-	switch status {
-	case "triage", "started", "mitigated", "resolved", "closed", "cancelled":
-		return true
-	default:
-		return false
+		return ticket.IN_PROGRESS, false
 	}
 }
 

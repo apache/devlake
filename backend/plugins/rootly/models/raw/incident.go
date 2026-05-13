@@ -30,11 +30,13 @@ type Incident struct {
 
 type IncidentRelationships struct {
 	Services struct {
-		Data []struct {
-			Id   string `json:"id"`
-			Type string `json:"type"`
-		} `json:"data"`
+		Data []ServiceRef `json:"data"`
 	} `json:"services"`
+}
+
+type ServiceRef struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
 }
 
 type IncidentAttributes struct {
@@ -67,9 +69,7 @@ type SeverityEnvelope struct {
 }
 
 type SeverityAttributes struct {
-	Slug     string `json:"slug"`     // org-defined (sev0, sev1, ...)
-	Name     string `json:"name"`     // display name
-	Severity string `json:"severity"` // critical, high, medium, low
+	Slug string `json:"slug"`
 }
 
 type UserEnvelope struct {

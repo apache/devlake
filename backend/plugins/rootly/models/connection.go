@@ -38,11 +38,20 @@ type RootlyConn struct {
 	RootlyAccessToken     `mapstructure:",squash"`
 }
 
+func (connection RootlyConn) Sanitize() RootlyConn {
+	connection.Token = utils.SanitizeString(connection.Token)
+	return connection
+}
+
 type RootlyConnection struct {
 	helper.BaseConnection `mapstructure:",squash"`
 	RootlyConn            `mapstructure:",squash"`
 }
 
+// MergeFromRequest preserves the existing token when an incoming PATCH
+// body omits it or echoes the sanitized form. The config-UI sends the
+// sanitized token back on every PATCH to avoid round-tripping the
+// secret; this guard is what makes that pattern safe.
 func (connection *RootlyConnection) MergeFromRequest(target *RootlyConnection, body map[string]interface{}) error {
 	token := target.Token
 	if err := helper.DecodeMapStruct(body, target, true); err != nil {
@@ -53,17 +62,6 @@ func (connection *RootlyConnection) MergeFromRequest(target *RootlyConnection, b
 		target.Token = token
 	}
 	return nil
-}
-
-type RootlyResponse struct {
-	Name string `json:"name"`
-	ID   int    `json:"id"`
-	RootlyConnection
-}
-
-type ApiUserResponse struct {
-	Id   string
-	Name string `json:"name"`
 }
 
 func (RootlyConnection) TableName() string {

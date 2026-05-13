@@ -48,12 +48,12 @@ func PutScopes(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, error
 // @Tags plugins/rootly
 // @Accept application/json
 // @Param connectionId path int true "connection ID"
-// @Param serviceId path string true "service ID"
+// @Param scopeId path string true "scope ID"
 // @Param scope body models.Service true "json"
 // @Success 200  {object} models.Service
 // @Failure 400  {object} shared.ApiBody "Bad Request"
 // @Failure 500  {object} shared.ApiBody "Internal Error"
-// @Router /plugins/rootly/connections/{connectionId}/scopes/{serviceId} [PATCH]
+// @Router /plugins/rootly/connections/{connectionId}/scopes/{scopeId} [PATCH]
 func PatchScope(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ScopeApi.Patch(input)
 }
@@ -80,12 +80,12 @@ func GetScopeList(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, er
 // @Description get one Rootly service
 // @Tags plugins/rootly
 // @Param connectionId path int true "connection ID"
-// @Param serviceId path string true "service ID"
+// @Param scopeId path string true "scope ID"
 // @Param blueprints query bool false "also return blueprints using this scope as part of the payload"
 // @Success 200  {object} ScopeDetail
 // @Failure 400  {object} shared.ApiBody "Bad Request"
 // @Failure 500  {object} shared.ApiBody "Internal Error"
-// @Router /plugins/rootly/connections/{connectionId}/scopes/{serviceId} [GET]
+// @Router /plugins/rootly/connections/{connectionId}/scopes/{scopeId} [GET]
 func GetScope(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ScopeApi.GetScopeDetail(input)
 }
@@ -95,13 +95,13 @@ func GetScope(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors
 // @Description delete data associated with plugin scope
 // @Tags plugins/rootly
 // @Param connectionId path int true "connection ID"
-// @Param serviceId path string true "service ID"
+// @Param scopeId path string true "scope ID"
 // @Param delete_data_only query bool false "Only delete the scope data, not the scope itself"
 // @Success 200
 // @Failure 400  {object} shared.ApiBody "Bad Request"
 // @Failure 409  {object} api.ScopeRefDoc "References exist to this scope"
 // @Failure 500  {object} shared.ApiBody "Internal Error"
-// @Router /plugins/rootly/connections/{connectionId}/scopes/{serviceId} [DELETE]
+// @Router /plugins/rootly/connections/{connectionId}/scopes/{scopeId} [DELETE]
 func DeleteScope(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ScopeApi.Delete(input)
 }

@@ -30,28 +30,31 @@ import (
 
 func TestMapStatus(t *testing.T) {
 	cases := []struct {
-		in       string
-		expected string
+		in            string
+		expectMapped  string
+		expectedKnown bool
 	}{
-		{"triage", ticket.TODO},
-		{"started", ticket.TODO},
-		{"mitigated", ticket.IN_PROGRESS},
-		{"resolved", ticket.DONE},
-		{"closed", ticket.DONE},
-		{"cancelled", ticket.DONE},
-		{"wat", ticket.IN_PROGRESS},
-		{"", ticket.IN_PROGRESS},
+		{"triage", ticket.TODO, true},
+		{"started", ticket.TODO, true},
+		{"mitigated", ticket.IN_PROGRESS, true},
+		{"resolved", ticket.DONE, true},
+		{"closed", ticket.DONE, true},
+		{"cancelled", ticket.DONE, true},
+		{"wat", ticket.IN_PROGRESS, false},
+		{"", ticket.IN_PROGRESS, false},
 	}
 	for _, c := range cases {
 		t.Run(c.in, func(t *testing.T) {
-			assert.Equal(t, c.expected, mapStatus(c.in))
+			mapped, known := mapStatus(c.in)
+			assert.Equal(t, c.expectMapped, mapped)
+			assert.Equal(t, c.expectedKnown, known)
 		})
 	}
 }
 
 func TestMapStatusDoesNotPanic(t *testing.T) {
 	assert.NotPanics(t, func() {
-		_ = mapStatus("brand-new-status-rootly-invented-yesterday")
+		_, _ = mapStatus("brand-new-status-rootly-invented-yesterday")
 	})
 }
 
@@ -181,13 +184,7 @@ func TestAssigneeDedup(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			seen := map[string]bool{}
 			var got []string
-			for _, uid := range []string{
-				c.incident.CreatorUserId,
-				c.incident.StartedByUserId,
-				c.incident.MitigatedByUserId,
-				c.incident.ResolvedByUserId,
-				c.incident.ClosedByUserId,
-			} {
+			for _, uid := range c.incident.RoleUserIds() {
 				if uid == "" || seen[uid] {
 					continue
 				}
@@ -204,8 +201,10 @@ func TestAssigneeDedup(t *testing.T) {
 }
 
 func TestMapStatus_MitigatedIsKnown(t *testing.T) {
-	assert.Equal(t, ticket.IN_PROGRESS, mapStatus("mitigated"))
-	assert.True(t, isKnownStatus("mitigated"))
-	assert.Equal(t, ticket.IN_PROGRESS, mapStatus("something-else"))
-	assert.False(t, isKnownStatus("something-else"))
+	mapped, known := mapStatus("mitigated")
+	assert.Equal(t, ticket.IN_PROGRESS, mapped)
+	assert.True(t, known)
+	mapped, known = mapStatus("something-else")
+	assert.Equal(t, ticket.IN_PROGRESS, mapped)
+	assert.False(t, known)
 }

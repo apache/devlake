@@ -73,6 +73,10 @@ func (p Rootly) ScopeConfig() dal.Tabler {
 }
 
 func (p Rootly) SubTaskMetas() []plugin.SubTaskMeta {
+	// Convert services before incidents so the domain Board row exists
+	// before the BoardIssue rows that reference it; the opposite order
+	// (PagerDuty / Opsgenie convention) works too because BoardIssue
+	// has no FK enforcement, but ours is explicit about the dependency.
 	return []plugin.SubTaskMeta{
 		tasks.CollectServicesMeta,
 		tasks.ExtractServicesMeta,

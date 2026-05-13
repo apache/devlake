@@ -42,7 +42,6 @@ type collectedIncidents struct {
 type collectedListMeta struct {
 	CurrentPage *int `json:"current_page"`
 	TotalPages  *int `json:"total_pages"`
-	TotalCount  *int `json:"total_count"`
 }
 
 type collectedListLinks struct {
@@ -60,7 +59,6 @@ var CollectIncidentsMeta = plugin.SubTaskMeta{
 
 func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*RootlyTaskData)
-	logger := taskCtx.GetLogger()
 	args := api.RawDataSubTaskArgs{
 		Ctx:     taskCtx,
 		Options: data.Options,
@@ -72,7 +70,6 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	// next-page hook fires.
 	var lastPage *collectedListMeta
 	var lastLinksNext *string
-	var lastPageEmpty bool
 
 	collector, err := api.NewStatefulApiCollectorForFinalizableEntity(api.FinalizableApiCollectorArgs{
 		RawDataSubTaskArgs: args,
@@ -80,6 +77,12 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		CollectNewRecordsByList: api.FinalizableApiCollectorListArgs{
 			PageSize: 100,
 			GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
+				// Safety cap against an upstream that returns full pages forever
+				// without populating either meta.total_pages or links.next.
+				const maxPages = 10000
+				if prevReqData.Pager.Page >= maxPages {
+					return nil, api.ErrFinishCollect
+				}
 				if lastLinksNext != nil && *lastLinksNext != "" {
 					return nil, nil
 				}
@@ -87,32 +90,17 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 					if *lastPage.CurrentPage >= *lastPage.TotalPages {
 						return nil, api.ErrFinishCollect
 					}
-					return nil, nil
-				}
-				if lastPageEmpty {
-					return nil, api.ErrFinishCollect
 				}
 				return nil, nil
 			},
 			FinalizableApiCollectorCommonArgs: api.FinalizableApiCollectorCommonArgs{
 				UrlTemplate: "incidents",
 				Query: func(reqData *api.RequestData, createdAfter *time.Time) (url.Values, errors.Error) {
-					query := url.Values{}
-					query.Set("filter[service_ids]", data.Options.ServiceId)
-					query.Set("page[size]", fmt.Sprintf("%d", reqData.Pager.Size))
-					// Rootly's JSON:API pagination is 1-based.
-					pageNumber := reqData.Pager.Skip/reqData.Pager.Size + 1
-					query.Set("page[number]", fmt.Sprintf("%d", pageNumber))
-					query.Set("sort", "-updated_at")
-					if createdAfter != nil {
-						query.Set("filter[updated_at][gt]", createdAfter.UTC().Format(time.RFC3339))
-					}
-					return query, nil
+					return buildIncidentsQuery(data.Options.ServiceId, reqData.Pager.Size, reqData.Pager.Page, createdAfter), nil
 				},
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 					rawResult := collectedIncidents{}
 					if err := api.UnmarshalResponse(res, &rawResult); err != nil {
-						logger.Error(err, "rootly incidents response unmarshal failed")
 						return nil, err
 					}
 					lastPage = rawResult.Meta
@@ -121,7 +109,6 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 					} else {
 						lastLinksNext = nil
 					}
-					lastPageEmpty = len(rawResult.Data) == 0
 					return rawResult.Data, nil
 				},
 			},
@@ -131,4 +118,21 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	return collector.Execute()
+}
+
+// buildIncidentsQuery is the pure-function core of the Query closure
+// above so a regression in the filter parameter name (we shipped with
+// `filter[services]` once and got 0 results back; the correct param is
+// `filter[service_ids]`) is caught by a unit test.
+func buildIncidentsQuery(serviceId string, pageSize, pageNumber int, createdAfter *time.Time) url.Values {
+	query := url.Values{}
+	query.Set("filter[service_ids]", serviceId)
+	query.Set("page[size]", fmt.Sprintf("%d", pageSize))
+	// Rootly's JSON:API pagination is 1-based.
+	query.Set("page[number]", fmt.Sprintf("%d", pageNumber))
+	query.Set("sort", "-updated_at")
+	if createdAfter != nil {
+		query.Set("filter[updated_at][gt]", createdAfter.UTC().Format(time.RFC3339))
+	}
+	return query
 }

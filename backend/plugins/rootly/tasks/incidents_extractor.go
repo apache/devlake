@@ -35,6 +35,7 @@ var ExtractIncidentsMeta = plugin.SubTaskMeta{
 	EnabledByDefault: true,
 	Description:      "Extract Rootly incidents",
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
+	ProductTables:    []string{models.Incident{}.TableName(), models.User{}.TableName()},
 }
 
 func ExtractIncidents(taskCtx plugin.SubTaskContext) errors.Error {
@@ -75,7 +76,7 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 	incident := &models.Incident{
 		ConnectionId:     op.ConnectionId,
 		Id:               rawIncident.Id,
-		Number:           resolveInt(rawIncident.Attributes.SequentialId),
+		Number:           resolve(rawIncident.Attributes.SequentialId),
 		ServiceId:        op.ServiceId,
 		Url:              resolve(rawIncident.Attributes.Url),
 		Title:            rawIncident.Attributes.Title,
@@ -100,11 +101,17 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 			return
 		}
 		seen[u.Data.Id] = true
+		name := pickUserName(u.Data.Attributes)
+		// Skip rows with no useful data so a sibling scope task that has
+		// fuller data for the same user doesn't get overwritten with blanks.
+		if name == "" && u.Data.Attributes.Email == "" {
+			return
+		}
 		results = append(results, &models.User{
 			ConnectionId: op.ConnectionId,
 			Id:           u.Data.Id,
 			Email:        u.Data.Attributes.Email,
-			Name:         pickUserName(u.Data.Attributes),
+			Name:         name,
 		})
 	}
 	addUser(rawIncident.Attributes.User, func(id string) { incident.CreatorUserId = id })
@@ -126,10 +133,7 @@ func pickUserName(u raw.UserAttributes) string {
 	return u.Email
 }
 
-func containsServiceId(services []struct {
-	Id   string `json:"id"`
-	Type string `json:"type"`
-}, serviceId string) bool {
+func containsServiceId(services []raw.ServiceRef, serviceId string) bool {
 	for _, s := range services {
 		if s.Id == serviceId {
 			return true
@@ -150,11 +154,4 @@ func resolve[T any](t *T) T {
 		return *new(T)
 	}
 	return *t
-}
-
-func resolveInt(i *int) int {
-	if i == nil {
-		return 0
-	}
-	return *i
 }

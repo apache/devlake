@@ -20,6 +20,7 @@ package tasks
 import (
 	"encoding/json"
 
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 	"github.com/apache/incubator-devlake/helpers/pluginhelper/api"
@@ -35,10 +36,12 @@ var ExtractServicesMeta = plugin.SubTaskMeta{
 	EnabledByDefault: true,
 	Description:      "Extract Rootly services",
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
+	ProductTables:    []string{models.Service{}.TableName()},
 }
 
 func ExtractServices(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*RootlyTaskData)
+	db := taskCtx.GetDal()
 	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
 		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
 			Ctx:     taskCtx,
@@ -60,6 +63,11 @@ func ExtractServices(taskCtx plugin.SubTaskContext) errors.Error {
 				Url:  url,
 			}
 			service.ConnectionId = data.Options.ConnectionId
+			// Preserve operator-set ScopeConfigId across re-collections.
+			existing := &models.Service{}
+			if err := db.First(existing, dal.Where("connection_id = ? AND id = ?", data.Options.ConnectionId, rawService.Id)); err == nil {
+				service.ScopeConfigId = existing.ScopeConfigId
+			}
 			return []interface{}{service}, nil
 		},
 	})

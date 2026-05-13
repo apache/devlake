@@ -188,12 +188,3 @@ func SearchRemoteScopes(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutp
 	return raScopeSearch.Get(input)
 }
 
-// @Summary Remote server API proxy
-// @Description Forward API requests to the specified remote server
-// @Param connectionId path int true "connection ID"
-// @Param path path string true "path to a API endpoint"
-// @Tags plugins/rootly
-// @Router /plugins/rootly/connections/{connectionId}/proxy/{path} [GET]
-func Proxy(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
-	return raProxy.Proxy(input)
-}

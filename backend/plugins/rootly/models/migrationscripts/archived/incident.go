@@ -28,7 +28,7 @@ type Incident struct {
 	ConnectionId      uint64 `gorm:"primaryKey"`
 	Id                string `gorm:"primaryKey;autoIncrement:false"`
 	Number            int
-	ServiceId         string
+	ServiceId         string `gorm:"index"`
 	Url               string
 	Title             string
 	Summary           string

@@ -43,6 +43,7 @@ var CollectServicesMeta = plugin.SubTaskMeta{
 	EnabledByDefault: true,
 	Description:      "Collect Rootly services",
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
+	ProductTables:    []string{RAW_SERVICES_TABLE},
 }
 
 func CollectServices(taskCtx plugin.SubTaskContext) errors.Error {

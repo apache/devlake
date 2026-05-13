@@ -64,15 +64,6 @@ func DecodeTaskOptions(options map[string]interface{}) (*RootlyOptions, errors.E
 	return &op, nil
 }
 
-func EncodeTaskOptions(op *RootlyOptions) (map[string]interface{}, errors.Error) {
-	var result map[string]interface{}
-	err := api.Decode(op, &result, nil)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
 func ValidateTaskOptions(op *RootlyOptions) errors.Error {
 	if op.ServiceId == "" {
 		return errors.BadInput.New("not enough info for Rootly execution")

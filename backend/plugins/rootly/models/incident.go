@@ -28,7 +28,7 @@ type Incident struct {
 	ConnectionId     uint64 `gorm:"primaryKey"`
 	Id               string `gorm:"primaryKey;autoIncrement:false"`
 	Number           int
-	ServiceId        string
+	ServiceId        string `gorm:"index"`
 	Url              string
 	Title            string
 	Summary          string
@@ -47,3 +47,16 @@ type Incident struct {
 }
 
 func (Incident) TableName() string { return "_tool_rootly_incidents" }
+
+// RoleUserIds returns the five role-bearing user ids on the incident
+// in lifecycle order (creator, started_by, mitigated_by, resolved_by,
+// closed_by). Empty strings are included; callers filter or dedup.
+func (i *Incident) RoleUserIds() []string {
+	return []string{
+		i.CreatorUserId,
+		i.StartedByUserId,
+		i.MitigatedByUserId,
+		i.ResolvedByUserId,
+		i.ClosedByUserId,
+	}
+}
