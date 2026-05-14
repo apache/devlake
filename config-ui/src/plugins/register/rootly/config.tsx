@@ -26,6 +26,7 @@ export const RootlyConfig: IPluginConfig = {
   name: 'Rootly',
   icon: ({ color }) => <Icon fill={color} />,
   sort: 16,
+  isBeta: true,
   connection: {
     docLink: DOC_URL.PLUGIN.ROOTLY.BASIS,
     initialValues: {
