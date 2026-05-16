@@ -20,11 +20,12 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/apache/incubator-devlake/core/log"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/apache/incubator-devlake/core/log"
 
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/dal"
@@ -113,7 +114,6 @@ func RestAuthentication(router *gin.Engine, basicRes context.BasicRes) gin.Handl
 		path := c.Request.URL.Path
 		// Only open api needs to check api key
 		if !strings.HasPrefix(path, "/rest") {
-			logger.Debug("path %s will continue", path)
 			c.Next()
 			return
 		}
@@ -128,6 +128,53 @@ func RestAuthentication(router *gin.Engine, basicRes context.BasicRes) gin.Handl
 			c.Abort()
 			return
 		}
+	}
+}
+
+func RequirePushAuthentication(basicRes context.BasicRes) gin.HandlerFunc {
+	logger := basicRes.GetLogger()
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if !strings.HasPrefix(path, "/push/") {
+			c.Next()
+			return
+		}
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, &apiBody{
+				Success: false,
+				Message: "token is missing",
+			})
+			return
+		}
+		apiKeyStr := strings.TrimPrefix(authHeader, "Bearer ")
+		if apiKeyStr == authHeader || apiKeyStr == "" {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, &apiBody{
+				Success: false,
+				Message: "token is not present or malformed",
+			})
+			return
+		}
+
+		db := basicRes.GetDal()
+		if db == nil {
+			logger.Error(nil, "db is not initialised")
+			c.Abort()
+			c.JSON(http.StatusInternalServerError, &apiBody{
+				Success: false,
+				Message: "database is not initialised",
+			})
+			return
+		}
+
+		apiKeyHelper := apikeyhelper.NewApiKeyHelper(basicRes, logger)
+		if !CheckAuthorizationHeader(c, logger, db, apiKeyHelper, authHeader, path) {
+			return
+		}
+		c.Next()
 	}
 }
 
