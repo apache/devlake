@@ -88,20 +88,28 @@ func (c *Config) ProviderNames() []string {
 }
 
 // LoadConfig reads auth env vars via Viper and validates required fields.
-// Returns Config{AuthEnabled:false} when AUTH_ENABLED=false (the default,
-// preserves historical behavior).
+// AUTH_ENABLED defaults to true unless it is explicitly set to false.
 func LoadConfig(basicRes context.BasicRes) (*Config, error) {
 	cfg := basicRes.GetConfigReader()
 
-	if !cfg.GetBool("AUTH_ENABLED") {
+	authEnabled := true
+	if cfg.IsSet("AUTH_ENABLED") {
+		authEnabled = cfg.GetBool("AUTH_ENABLED")
+	}
+	if !authEnabled {
 		return &Config{AuthEnabled: false}, nil
 	}
 
+	oidcEnabled := cfg.GetBool("OIDC_ENABLED")
 	sessionSecret := strings.TrimSpace(cfg.GetString("SESSION_SECRET"))
-	if sessionSecret == "" {
-		return nil, fmt.Errorf("AUTH_ENABLED=true but SESSION_SECRET is not set")
-	}
-	if len(sessionSecret) < 32 {
+	if oidcEnabled {
+		if sessionSecret == "" {
+			return nil, fmt.Errorf("OIDC_ENABLED=true but SESSION_SECRET is not set")
+		}
+		if len(sessionSecret) < 32 {
+			return nil, fmt.Errorf("SESSION_SECRET must be at least 32 bytes")
+		}
+	} else if sessionSecret != "" && len(sessionSecret) < 32 {
 		return nil, fmt.Errorf("SESSION_SECRET must be at least 32 bytes")
 	}
 
@@ -121,7 +129,7 @@ func LoadConfig(basicRes context.BasicRes) (*Config, error) {
 
 	out := &Config{
 		AuthEnabled:    true,
-		OIDCEnabled:    cfg.GetBool("OIDC_ENABLED"),
+		OIDCEnabled:    oidcEnabled,
 		Providers:      map[string]*ProviderConfig{},
 		LogoutRedirect: cfg.GetBool("OIDC_LOGOUT_REDIRECT"),
 		SessionSecret:  []byte(sessionSecret),

@@ -65,6 +65,10 @@ func (s *Service) OIDCAuthentication() gin.HandlerFunc {
 			c.Next()
 			return
 		}
+		if len(s.cfg.SessionSecret) == 0 {
+			c.Next()
+			return
+		}
 		raw, err := c.Cookie(oidchelper.SessionCookieName)
 		if err != nil || raw == "" {
 			c.Next()
@@ -92,8 +96,8 @@ func (s *Service) OIDCAuthentication() gin.HandlerFunc {
 	}
 }
 
-// RequireAuth is the terminal gate. No-op when AUTH_ENABLED=false so existing
-// deployments are unaffected.
+// RequireAuth is the terminal gate. It only becomes a no-op when
+// AUTH_ENABLED=false is set explicitly.
 func (s *Service) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if s.cfg == nil || !s.cfg.AuthEnabled {

@@ -84,7 +84,7 @@ var (
 )
 
 // Init builds the default Service from env config and starts the background
-// loops. Panics if AUTH_ENABLED=true but the config is incomplete.
+// loops. Panics if auth is enabled but the config is incomplete.
 func Init(basicRes corectx.BasicRes) {
 	initOnce.Do(func() {
 		s, err := NewService(stdctx.Background(), basicRes)
@@ -357,13 +357,15 @@ func (s *Service) Logout(c *gin.Context) {
 	}
 
 	var sessionProvider string
-	if raw, err := c.Cookie(oidchelper.SessionCookieName); err == nil && raw != "" {
-		if claims, err := oidchelper.ParseSession(s.cfg.SessionSecret, raw); err == nil && claims.ID != "" {
-			sessionProvider = claims.Provider
-			if err := RevokeSession(s.db, claims.ID); err != nil {
-				s.logger.Error(err, "auth: revoke session row")
+	if len(s.cfg.SessionSecret) > 0 {
+		if raw, err := c.Cookie(oidchelper.SessionCookieName); err == nil && raw != "" {
+			if claims, err := oidchelper.ParseSession(s.cfg.SessionSecret, raw); err == nil && claims.ID != "" {
+				sessionProvider = claims.Provider
+				if err := RevokeSession(s.db, claims.ID); err != nil {
+					s.logger.Error(err, "auth: revoke session row")
+				}
+				s.revoked.Add(claims.ID)
 			}
-			s.revoked.Add(claims.ID)
 		}
 	}
 	oidchelper.ClearSessionCookie(c, s.cfg)

@@ -20,6 +20,13 @@ package oidchelper
 import (
 	"reflect"
 	"testing"
+
+	"github.com/spf13/viper"
+
+	"github.com/apache/incubator-devlake/core/config"
+	corectx "github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/dal"
+	"github.com/apache/incubator-devlake/core/log"
 )
 
 func TestParseScopes(t *testing.T) {
@@ -82,5 +89,45 @@ func TestProviderNamesSorted(t *testing.T) {
 	}
 	if names := c.ProviderNames(); !reflect.DeepEqual(names, []string{"entra", "google"}) {
 		t.Errorf("ProviderNames = %v, want sorted [entra google]", names)
+	}
+}
+
+type basicResStub struct {
+	cfg config.ConfigReader
+}
+
+func (b basicResStub) GetConfigReader() config.ConfigReader { return b.cfg }
+func (b basicResStub) GetConfig(string) string              { return "" }
+func (b basicResStub) GetLogger() log.Logger                { return nil }
+func (b basicResStub) NestedLogger(string) corectx.BasicRes { return nil }
+func (b basicResStub) ReplaceLogger(log.Logger) corectx.BasicRes {
+	return nil
+}
+func (b basicResStub) GetDal() dal.Dal { return nil }
+
+func TestLoadConfigDefaultsAuthEnabled(t *testing.T) {
+	v := viper.New()
+
+	cfg, err := LoadConfig(basicResStub{cfg: v})
+	if err != nil {
+		t.Fatalf("LoadConfig returned error: %v", err)
+	}
+	if !cfg.AuthEnabled {
+		t.Fatal("AuthEnabled should default to true when AUTH_ENABLED is unset")
+	}
+	if cfg.OIDCEnabled {
+		t.Fatal("OIDCEnabled should default to false")
+	}
+	if len(cfg.SessionSecret) != 0 {
+		t.Fatalf("SessionSecret = %q, want empty when OIDC is disabled", string(cfg.SessionSecret))
+	}
+}
+
+func TestLoadConfigRequiresSessionSecretForOIDC(t *testing.T) {
+	v := viper.New()
+	v.Set("OIDC_ENABLED", true)
+
+	if _, err := LoadConfig(basicResStub{cfg: v}); err == nil {
+		t.Fatal("LoadConfig should reject OIDC-enabled config without SESSION_SECRET")
 	}
 }

@@ -234,4 +234,5 @@ var DbtConverterMeta = plugin.SubTaskMeta{
 	EntryPoint:       DbtConverter,
 	EnabledByDefault: true,
 	Description:      "Convert data by dbt",
+	Dependencies:     []*plugin.SubTaskMeta{&GitMeta},
 }
