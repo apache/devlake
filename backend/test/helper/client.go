@@ -137,6 +137,10 @@ func ConnectLocalServer(t *testing.T, clientConfig *LocalClientConfig) *DevlakeC
 	fmt.Printf("Using test temp directory: %s\n", throwawayDir)
 	logger := logruslog.Global.Nested("test")
 	cfg := config.GetConfig()
+	// E2E helpers issue direct API requests without session or API-key auth.
+	// Keep local test servers aligned with that contract.
+	t.Setenv("AUTH_ENABLED", "false")
+	cfg.Set("AUTH_ENABLED", false)
 	cfg.Set("DB_URL", clientConfig.DbURL)
 	db, err := runner.NewGormDb(cfg, logger)
 	require.NoError(t, err)
