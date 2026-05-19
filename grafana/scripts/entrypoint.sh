@@ -62,11 +62,17 @@ echo "Database type: $MODE"
 # Remove unused dashboard folder to prevent confusion
 if [ "$MODE" = "mysql" ]; then
   rm -rf /etc/grafana/dashboards/postgresql
+  export GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH="/etc/grafana/dashboards/mysql/Homepage.json"
 else
   rm -rf /etc/grafana/dashboards/mysql
+  SSL_MODE="${DATABASE_SSL_MODE:-disable}"
+  export GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH="/etc/grafana/dashboards/postgresql/Homepage.json"
+  echo "SSL Mode: ${SSL_MODE}"
 fi
 
-# Generate datasource.yml
+echo "Homepage: $GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH"
+
+# Create empty datasource.yml (datasources created via API)
 cat > "$DATASOURCE_FILE" << HEADER
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -82,41 +88,91 @@ cat > "$DATASOURCE_FILE" << HEADER
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: 1
-
-datasources:
 HEADER
 
+# Start Grafana in background
+/run.sh "$@" &
+GRAFANA_PID=$!
+
+# Wait for Grafana API
+echo "Waiting for Grafana API..."
+for i in $(seq 1 60); do
+  if curl -f -s http://localhost:3000/api/health >/dev/null 2>&1; then
+    echo "Grafana API ready"
+    sleep 5  # Extra wait for migrations
+    break
+  fi
+  sleep 2
+done
+
+# Create datasource via API (both MySQL and PostgreSQL)
+PAYLOAD_FILE="/tmp/datasource-api.json"
+
 if [ "$MODE" = "mysql" ]; then
-  cat >> "$DATASOURCE_FILE" << MYSQL_DS
-  - name: mysql
-    type: mysql
-    url: ${MYSQL_URL}
-    database: ${MYSQL_DATABASE}
-    user: ${MYSQL_USER}
-    secureJsonData:
-      password: ${MYSQL_PASSWORD}
-    editable: false
-MYSQL_DS
-  export GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH="/etc/grafana/dashboards/mysql/Homepage.json"
+  cat > "$PAYLOAD_FILE" <<APIJSON
+{
+  "uid": "devlake-mysql-api",
+  "name": "mysql",
+  "type": "mysql",
+  "url": "${MYSQL_URL}",
+  "database": "${MYSQL_DATABASE}",
+  "user": "${MYSQL_USER}",
+  "secureJsonData": {
+    "password": "${MYSQL_PASSWORD}"
+  },
+  "access": "proxy",
+  "isDefault": true,
+  "editable": true
+}
+APIJSON
+
+  echo "Deleting old MySQL datasources..."
+  curl -s -X DELETE "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources/name/mysql" 2>&1 || true
+  curl -s -X DELETE "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources/uid/devlake-mysql-api" 2>&1 || true
+  sleep 2
+
 else
-  cat >> "$DATASOURCE_FILE" << POSTGRES_DS
-  - name: postgresql
-    type: postgres
-    url: ${POSTGRES_URL}
-    database: ${POSTGRES_DATABASE}
-    user: ${POSTGRES_USER}
-    secureJsonData:
-      password: ${POSTGRES_PASSWORD}
-    editable: false
-    jsonData:
-      sslmode: disable
-      postgresVersion: 1400
-POSTGRES_DS
-  export GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH="/etc/grafana/dashboards/postgresql/Homepage.json"
+  SSL_MODE="${DATABASE_SSL_MODE:-disable}"
+  cat > "$PAYLOAD_FILE" <<APIJSON
+{
+  "uid": "devlake-postgres-api",
+  "name": "postgresql",
+  "type": "postgres",
+  "url": "${POSTGRES_URL}",
+  "database": "${POSTGRES_DATABASE}",
+  "user": "${POSTGRES_USER}",
+  "secureJsonData": {
+    "password": "${POSTGRES_PASSWORD}"
+  },
+  "jsonData": {
+    "sslmode": "${SSL_MODE}",
+    "postgresVersion": 1400
+  },
+  "access": "proxy",
+  "isDefault": true,
+  "editable": true
+}
+APIJSON
+
 fi
 
-echo "Homepage: $GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH"
+echo "Creating datasource via API..."
+for i in $(seq 1 10); do
+  RESPONSE=$(curl -s -X POST "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources" \
+    -H "Content-Type: application/json" \
+    -d @"$PAYLOAD_FILE" 2>&1)
 
-exec /run.sh "$@"
+  if echo "$RESPONSE" | grep -q '"id"'; then
+    echo "Datasource created successfully"
+    break
+  elif echo "$RESPONSE" | grep -q "database is locked"; then
+    echo "DB locked, retry $i/10..."
+    sleep 3
+  else
+    echo "API error: $RESPONSE"
+    sleep 2
+  fi
+done
+
+# Wait for Grafana
+wait $GRAFANA_PID

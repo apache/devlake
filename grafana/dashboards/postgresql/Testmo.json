@@ -168,7 +168,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS value FROM (SELECT DISTINCT ar.id, ar.connection_id, ar.testmo_created_at FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT DISTINCT r.id, r.connection_id, r.testmo_created_at FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(*) AS value FROM (SELECT DISTINCT ar.id, ar.connection_id, ar.testmo_created_at FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT DISTINCT r.id, r.connection_id, r.testmo_created_at FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
           "refId": "A"
         }
       ],
@@ -237,7 +237,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(COUNT(CASE WHEN combined.status IN (1, 2) THEN 1 ELSE NULL END) * 1.0 AS NUMERIC) / NULLIF(COUNT(*), 0) AS value FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+          "rawSql": "SELECT CAST(COUNT(CASE WHEN combined.status IN (1, 2) THEN 1 ELSE NULL END) * 1.0 AS NUMERIC) / NULLIF(COUNT(*), 0) AS value FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
           "refId": "A"
         }
       ],
@@ -372,7 +372,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(combined.testmo_created_at AS DATE) AS time, COUNT(CASE WHEN combined.status = 1 THEN 1 ELSE NULL END) AS \"Passed Tests\", COUNT(CASE WHEN combined.status = 2 THEN 1 ELSE NULL END) AS \"Failed Tests\", COUNT(CASE WHEN NOT combined.status IN (1, 2) THEN 1 ELSE NULL END) AS \"Other Tests\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(combined.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(combined.testmo_created_at AS DATE) AS time, COUNT(CASE WHEN combined.status = 1 THEN 1 ELSE NULL END) AS \"Passed Tests\", COUNT(CASE WHEN combined.status = 2 THEN 1 ELSE NULL END) AS \"Failed Tests\", COUNT(CASE WHEN NOT combined.status IN (1, 2) THEN 1 ELSE NULL END) AS \"Other Tests\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(combined.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -431,7 +431,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT r.id) AS value FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND r.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT r.id) AS value FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND ('${connection_id:csv}' = '' OR r.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
           "refId": "A"
         }
       ],
@@ -500,7 +500,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT ar.id) AS value FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ar.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT ar.id) AS value FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ('${connection_id:csv}' = '' OR ar.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
           "refId": "A"
         }
       ],
@@ -605,7 +605,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(r.testmo_created_at AS DATE) AS time, COUNT(*) AS \"Test Runs\" FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND r.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(r.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(r.testmo_created_at AS DATE) AS time, COUNT(*) AS \"Test Runs\" FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND ('${connection_id:csv}' = '' OR r.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(r.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -689,7 +689,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT p.name AS metric, COUNT(*) AS \"Test Runs\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.project_id FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.project_id FROM _tool_testmo_runs AS r) AS combined JOIN _tool_testmo_projects AS p ON combined.project_id = p.id AND combined.connection_id = p.connection_id WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY p.name ORDER BY COUNT(*) DESC NULLS LAST LIMIT 10",
+          "rawSql": "SELECT p.name AS metric, COUNT(*) AS \"Test Runs\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.project_id FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.project_id FROM _tool_testmo_runs AS r) AS combined JOIN _tool_testmo_projects AS p ON combined.project_id = p.id AND combined.connection_id = p.connection_id WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY p.name ORDER BY COUNT(*) DESC NULLS LAST LIMIT 10",
           "refId": "A"
         }
       ],
@@ -802,7 +802,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(combined.testmo_created_at AS DATE) AS time, CAST(COUNT(CASE WHEN combined.status IN (1, 2) THEN 1 ELSE NULL END) * 1.0 AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Success Rate\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(combined.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(combined.testmo_created_at AS DATE) AS time, CAST(COUNT(CASE WHEN combined.status IN (1, 2) THEN 1 ELSE NULL END) * 1.0 AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Success Rate\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.status FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.status FROM _tool_testmo_runs AS r) AS combined WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(combined.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -887,7 +887,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(ar.testmo_created_at AS DATE) AS time, COUNT(DISTINCT ar.id) AS \"Test Count\" FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ar.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(ar.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(ar.testmo_created_at AS DATE) AS time, COUNT(DISTINCT ar.id) AS \"Test Count\" FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ('${connection_id:csv}' = '' OR ar.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(ar.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -1006,7 +1006,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(ar.testmo_created_at AS DATE) AS time, COUNT(DISTINCT ar.id) AS \"Automation Runs\" FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ar.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(ar.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(ar.testmo_created_at AS DATE) AS time, COUNT(DISTINCT ar.id) AS \"Automation Runs\" FROM _tool_testmo_automation_runs AS ar WHERE $__timeFilter(ar.testmo_created_at) AND ('${connection_id:csv}' = '' OR ar.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(ar.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "A"
         },
         {
@@ -1015,7 +1015,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(r.testmo_created_at AS DATE) AS time, COUNT(DISTINCT r.id) AS \"Test Runs\" FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND r.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) GROUP BY CAST(r.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(r.testmo_created_at AS DATE) AS time, COUNT(DISTINCT r.id) AS \"Test Runs\" FROM _tool_testmo_runs AS r WHERE $__timeFilter(r.testmo_created_at) AND ('${connection_id:csv}' = '' OR r.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) GROUP BY CAST(r.testmo_created_at AS DATE) ORDER BY time NULLS FIRST",
           "refId": "B"
         }
       ],
@@ -1121,7 +1121,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT combined.id AS \"Test Run ID\", p.name AS \"Project\", combined.name AS \"Test Name\", combined.status_name AS \"Status\", combined.testmo_created_at AS \"Created Date\", combined.source AS \"Source\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.project_id, ar.name, CASE WHEN ar.status = 1 THEN 'Failed' WHEN ar.status = 2 THEN 'Passed' ELSE 'Other' END AS status_name, 'Automation Run' AS source FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.project_id, r.name, r.status_name, 'Test Run' AS source FROM _tool_testmo_runs AS r) AS combined JOIN _tool_testmo_projects AS p ON combined.project_id = p.id AND combined.connection_id = p.connection_id WHERE $__timeFilter(combined.testmo_created_at) AND combined.connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v) ORDER BY combined.testmo_created_at DESC NULLS LAST LIMIT 20",
+          "rawSql": "SELECT combined.id AS \"Test Run ID\", p.name AS \"Project\", combined.name AS \"Test Name\", combined.status_name AS \"Status\", combined.testmo_created_at AS \"Created Date\", combined.source AS \"Source\" FROM (SELECT ar.id, ar.connection_id, ar.testmo_created_at, ar.project_id, ar.name, CASE WHEN ar.status = 1 THEN 'Failed' WHEN ar.status = 2 THEN 'Passed' ELSE 'Other' END AS status_name, 'Automation Run' AS source FROM _tool_testmo_automation_runs AS ar UNION ALL SELECT r.id, r.connection_id, r.testmo_created_at, r.project_id, r.name, r.status_name, 'Test Run' AS source FROM _tool_testmo_runs AS r) AS combined JOIN _tool_testmo_projects AS p ON combined.project_id = p.id AND combined.connection_id = p.connection_id WHERE $__timeFilter(combined.testmo_created_at) AND ('${connection_id:csv}' = '' OR combined.connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[])) ORDER BY combined.testmo_created_at DESC NULLS LAST LIMIT 20",
           "refId": "A"
         }
       ],
@@ -1203,14 +1203,14 @@
           "value": "$__all"
         },
         "datasource": "postgresql",
-        "definition": "SELECT DISTINCT name FROM _tool_testmo_projects WHERE connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+        "definition": "SELECT DISTINCT name FROM _tool_testmo_projects WHERE ('${connection_id:csv}' = '' OR connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
         "hide": 0,
         "includeAll": true,
         "label": "Project",
         "multi": true,
         "name": "project",
         "options": [],
-        "query": "SELECT DISTINCT name FROM _tool_testmo_projects WHERE connection_id::text IN (SELECT v FROM unnest(CASE WHEN '${connection_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${connection_id}]::text[] END) v)",
+        "query": "SELECT DISTINCT name FROM _tool_testmo_projects WHERE ('${connection_id:csv}' = '' OR connection_id::text = ANY(ARRAY[${connection_id:singlequote}]::text[]))",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

@@ -175,7 +175,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -278,7 +278,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -413,7 +413,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS \"Number of Open Issues\", COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS \"Number of Delivered Issues\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1",
+          "rawSql": "SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS \"Number of Open Issues\", COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS \"Number of Delivered Issues\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -502,7 +502,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS delivered_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT NOW() AS time, CAST(1.0 * delivered_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
+          "rawSql": "WITH _requirements AS (SELECT COUNT(DISTINCT i.id) AS total_count, COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS delivered_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))) SELECT NOW() AS time, CAST(1.0 * delivered_count AS NUMERIC) / NULLIF(total_count, 0) AS requirement_delivery_rate FROM _requirements",
           "refId": "A",
           "select": [
             [
@@ -618,7 +618,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS delivered_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND $__timeFilter(i.created_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT time, delivered_rate FROM _requirements ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, CAST(1.0 * COUNT(DISTINCT CASE WHEN i.status = 'DONE' THEN i.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT i.id), 0) AS delivered_rate FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY 1) SELECT time, delivered_rate FROM _requirements ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -729,7 +729,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)",
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -815,7 +815,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v)) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
+          "rawSql": "WITH _ranks AS (SELECT i.lead_time_minutes, PERCENT_RANK() OVER (ORDER BY lead_time_minutes ASC NULLS FIRST) AS ranks FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))) SELECT MAX(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM _ranks WHERE ranks <= 0.8",
           "refId": "A",
           "select": [
             [
@@ -936,7 +936,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, mean_lead_time FROM _requirements ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _requirements AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS mean_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, mean_lead_time FROM _requirements ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1020,7 +1020,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND bi.board_id::text IN (SELECT v FROM unnest(CASE WHEN '${board_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${board_id}]::text[] END) v) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(lead_time_day || 'd', 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
+          "rawSql": "WITH _ranks AS (SELECT ROUND(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS lead_time_day FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id WHERE ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) ORDER BY lead_time_day ASC NULLS FIRST) SELECT NOW() AS time, LPAD(lead_time_day || 'd', 4, ' ') AS metric, PERCENT_RANK() OVER (ORDER BY lead_time_day ASC NULLS FIRST) AS value FROM _ranks ORDER BY lead_time_day ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1145,14 +1145,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT name || '--' || id FROM boards WHERE id LIKE 'teambition%'",
+        "definition": "SELECT name || '--' || id FROM boards WHERE id::text LIKE 'teambition%'",
         "hide": 0,
         "includeAll": true,
         "label": "Choose Board",
         "multi": true,
         "name": "board_id",
         "options": [],
-        "query": "SELECT name || '--' || id FROM boards WHERE id LIKE 'teambition%'",
+        "query": "SELECT name || '--' || id FROM boards WHERE id::text LIKE 'teambition%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,

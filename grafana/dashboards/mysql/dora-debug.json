@@ -198,7 +198,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tpm.project_name,\n\tIF(pm.project_name in ($project),'This project is selected','Not Selected') as select_status,\n\tIF(cdc._raw_data_table != '', cdc._raw_data_table, cdc.cicd_scope_id) as _raw_data_table,\n\tresult,\n\tenvironment,\n\tcount(distinct cdc.id) as deployment_commit_count, \n\tcount(distinct cdc.cicd_deployment_id) as deployment_count\nFROM cicd_deployment_commits cdc\nLEFT join project_mapping pm on cdc.cicd_scope_id = pm.row_id and pm.`table` = 'cicd_scopes'\nWHERE $__timeFilter(cdc.finished_date)\nGROUP BY pm.project_name, select_status, _raw_data_table,result,environment",
+          "rawSql": "SELECT\n\tpm.project_name,\n\tIF(pm.project_name in ($project),'This project is selected','Not Selected') as select_status,\n\tIF(cdc._raw_data_table != '', cdc._raw_data_table, cdc.cicd_scope_id) as _raw_data_table,\n\tresult,\n\tenvironment,\n\tcount(distinct cdc.id) as deployment_commit_count, \n\tcount(distinct cdc.cicd_deployment_id) as deployment_count\nFROM cicd_deployment_commits cdc\nLEFT join project_mapping pm on cdc.cicd_scope_id = pm.row_id and pm.`table` = 'cicd_scopes'\nWHERE $__timeFilter(cdc.finished_date)\nGROUP BY 1, 2, 3, 4, 5",
           "refId": "A",
           "select": [
             [

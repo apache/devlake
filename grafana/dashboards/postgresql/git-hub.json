@@ -150,7 +150,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -286,7 +286,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT i.id) AS issue_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and i.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, issue_count AS \"Issue Count\" FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT i.id) AS issue_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and i.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, issue_count AS \"Issue Count\" FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -415,7 +415,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND i.status = 'DONE'",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND i.status = 'DONE'",
           "refId": "A",
           "select": [
             [
@@ -551,7 +551,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS open_issue_count, COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS closed_issue_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and i.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"open_issue_count\", closed_issue_count FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status <> 'DONE' THEN i.id ELSE NULL END) AS open_issue_count, COUNT(DISTINCT CASE WHEN status = 'DONE' THEN i.id ELSE NULL END) AS closed_issue_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and i.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"open_issue_count\", closed_issue_count FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -659,7 +659,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time_in_days FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' AND b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND i.status = 'DONE'",
+          "rawSql": "SELECT AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time_in_days FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' AND ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND i.status = 'DONE'",
           "refId": "A",
           "select": [
             [
@@ -781,7 +781,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.resolution_date AS DATE)) - 1) END + 1) AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, issue_lead_time AS \"Mean Issue Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.resolution_date AS DATE)) - 1) END + 1) AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, issue_lead_time AS \"Mean Issue Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -916,7 +916,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "/* Get the queue time of all outstanding bugs */ WITH _outstanding_issues AS (SELECT DISTINCT b.name AS repo_name, i.issue_key, i.title, i.created_date, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS queue_time_in_days, b.url || '/' || i.issue_key AS url FROM issues AS i LEFT JOIN board_issues AS bi ON i.id = bi.issue_id LEFT JOIN boards AS b ON bi.board_id = b.id WHERE b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND $__timeFilter(i.created_date) AND i.status <> 'DONE') SELECT '#' || issue_key AS issue_key, title, url, queue_time_in_days FROM _outstanding_issues ORDER BY 4 DESC NULLS LAST LIMIT 20",
+          "rawSql": "/* Get the queue time of all outstanding bugs */ WITH _outstanding_issues AS (SELECT DISTINCT b.name AS repo_name, i.issue_key, i.title, i.created_date, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS queue_time_in_days, b.url || '/' || i.issue_key AS url FROM issues AS i LEFT JOIN board_issues AS bi ON i.id = bi.issue_id LEFT JOIN boards AS b ON bi.board_id = b.id WHERE ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND i.status <> 'DONE') SELECT '#' || issue_key AS issue_key, title, url, queue_time_in_days FROM _outstanding_issues ORDER BY 4 DESC NULLS LAST LIMIT 20",
           "refId": "A",
           "select": [
             [
@@ -1103,7 +1103,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "/* Get the queue time of all outstanding bugs */ SELECT b.name AS repo_name, i.issue_key AS issue_key, i.title, i.created_date, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS queue_time_in_days, b.url || '/' || i.issue_key AS url FROM issues AS i LEFT JOIN board_issues AS bi ON i.id = bi.issue_id LEFT JOIN boards AS b ON bi.board_id = b.id WHERE b.id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND $__timeFilter(i.created_date) AND i.status <> 'DONE' ORDER BY queue_time_in_days DESC NULLS LAST",
+          "rawSql": "/* Get the queue time of all outstanding bugs */ SELECT b.name AS repo_name, i.issue_key AS issue_key, i.title, i.created_date, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS queue_time_in_days, b.url || '/' || i.issue_key AS url FROM issues AS i LEFT JOIN board_issues AS bi ON i.id = bi.issue_id LEFT JOIN boards AS b ON bi.board_id = b.id WHERE ('${repo_id:csv}' = '' OR b.id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND i.status <> 'DONE' ORDER BY queue_time_in_days DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -1216,7 +1216,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT pr.id) AS pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT pr.id) AS pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -1366,7 +1366,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT id) AS pr_count FROM pull_requests WHERE base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND $__timeFilter(created_date) /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, pr_count AS \"Pull Request Count\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT id) AS pr_count FROM pull_requests WHERE ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND $__timeFilter(created_date) /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, pr_count AS \"Pull Request Count\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1505,7 +1505,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT author_name, COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND pr.status = 'MERGED' GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT 20",
+          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT author_name, COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND pr.status = 'MERGED' GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT 20",
           "refId": "A",
           "select": [
             [
@@ -1638,7 +1638,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v)",
+          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -1817,7 +1817,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status = 'OPEN' THEN id ELSE NULL END) AS open, COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS closed, COUNT(DISTINCT CASE WHEN status = 'MERGED' THEN id ELSE NULL END) AS merged FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, open AS \"PR: Open\", closed AS \"PR: Closed without merging\", merged AS \"PR: Closed and merged\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "/* The PR/MR statuses are standardized to 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN status = 'OPEN' THEN id ELSE NULL END) AS open, COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS closed, COUNT(DISTINCT CASE WHEN status = 'MERGED' THEN id ELSE NULL END) AS merged FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, open AS \"PR: Open\", closed AS \"PR: Closed without merging\", merged AS \"PR: Closed and merged\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1921,7 +1921,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND pr.status = 'CLOSED'",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT COUNT(DISTINCT pr.id) AS merged_pull_request_count FROM pull_requests AS pr WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND pr.status = 'CLOSED'",
           "refId": "A",
           "select": [
             [
@@ -2056,7 +2056,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1",
+          "rawSql": "/* The PR/MR statuses are standardized to DevLake's statuses 'OPEN', 'MERGED' and 'CLOSED'. You can check out the original status from the field \"original_status\" */ SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, CAST(COUNT(DISTINCT CASE WHEN status = 'CLOSED' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT CASE WHEN status IN ('CLOSED', 'MERGED') THEN id ELSE NULL END), 0) AS ratio FROM pull_requests WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) GROUP BY 1",
           "refId": "A",
           "select": [
             [
@@ -2164,7 +2164,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND NOT merged_date IS NULL",
+          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) FROM pull_requests WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND NOT merged_date IS NULL",
           "refId": "A",
           "select": [
             [
@@ -2285,7 +2285,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_merge FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_merge AS \"Time to Merge\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (merged_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_merge FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_merge AS \"Time to Merge\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2391,7 +2391,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_close FROM pull_requests WHERE $__timeFilter(created_date) AND base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND status IN ('CLOSED', 'MERGED')",
+          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_close FROM pull_requests WHERE $__timeFilter(created_date) AND ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND status IN ('CLOSED', 'MERGED')",
           "refId": "A",
           "select": [
             [
@@ -2512,7 +2512,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_close FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ base_repo_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND status IN ('CLOSED', 'MERGED') GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_close AS \"Time to Close\" FROM _prs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _prs AS (SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(created_date AS DATE)) - 1) END + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (closed_date - created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS time_to_close FROM pull_requests WHERE $__timeFilter(created_date) AND /* Enable the following condition to remove the month with incomplete data */ /* and created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${repo_id:csv}' = '' OR base_repo_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND status IN ('CLOSED', 'MERGED') GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, time_to_close AS \"Time to Close\" FROM _prs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2626,7 +2626,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT id) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND result = 'SUCCESS' AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2733,7 +2733,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(1.0 * COUNT(CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2901,7 +2901,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _workflow_runs AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_workflow_run_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_workflow_run_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"successful_workflow_run_count\", failed_workflow_run_count FROM _workflow_runs ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _workflow_runs AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, COUNT(DISTINCT CASE WHEN result = 'SUCCESS' THEN id ELSE NULL END) AS successful_workflow_run_count, COUNT(DISTINCT CASE WHEN result <> 'SUCCESS' THEN id ELSE NULL END) AS failed_workflow_run_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, \"successful_workflow_run_count\", failed_workflow_run_count FROM _workflow_runs ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -3088,7 +3088,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
+          "rawSql": "SELECT CASE WHEN result = '' THEN 'Unknown' ELSE result END AS result, COUNT(DISTINCT id) AS build_count FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1 ORDER BY 2 DESC NULLS LAST",
           "refId": "A",
           "select": [
             [
@@ -3245,7 +3245,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY \"time\", \"result\", id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(CAST(time AS TIMESTAMP), 'MM/YYYY') ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Workflow Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _build_success_rate AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, result, id FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY \"time\", \"result\", id) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN TO_CHAR(CAST(time AS TIMESTAMP), 'MM/YYYY') ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, CAST(1.0 * SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(*), 0) AS \"Workflow Runs Success Rate\" FROM _build_success_rate GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -3346,7 +3346,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(duration_sec AS NUMERIC) / NULLIF(60, 0)) AS duration_in_minutes FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) AND /* the following condition will remove the month with incomplete data */ finished_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -3501,7 +3501,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id LIKE '%github%' AND cicd_scope_id::text IN (SELECT v FROM unnest(CASE WHEN '${repo_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${repo_id}]::text[] END) v) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _builds AS (SELECT CAST(finished_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(finished_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) END + 1) AS time, AVG(duration_sec) AS mean_duration_sec FROM cicd_pipelines WHERE $__timeFilter(finished_date) AND id::text LIKE '%github%' AND ('${repo_id:csv}' = '' OR cicd_scope_id::text = ANY(ARRAY[${repo_id:singlequote}]::text[])) /* Enable the following condition to remove the month with incomplete data */ /* and finished_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ GROUP BY 1) SELECT CASE WHEN '$interval' = 'DAYOFMONTH' THEN (TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY'))::TEXT ELSE 'W' || TO_CHAR(CAST(time AS TIMESTAMP), 'IW YYYY') END AS _time, mean_duration_sec FROM _builds ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -3601,14 +3601,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'github%'",
+        "definition": "SELECT name || '--' || id AS text FROM repos WHERE id::text LIKE 'github%'",
         "hide": 0,
         "includeAll": true,
         "label": "Repo",
         "multi": true,
         "name": "repo_id",
         "options": [],
-        "query": "SELECT name || '--' || id AS text FROM repos WHERE id LIKE 'github%'",
+        "query": "SELECT name || '--' || id AS text FROM repos WHERE id::text LIKE 'github%'",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,

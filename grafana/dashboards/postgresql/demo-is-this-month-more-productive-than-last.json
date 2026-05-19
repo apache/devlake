@@ -138,7 +138,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _commits AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, COUNT(*) AS commit_count FROM commits WHERE NOT message LIKE '%Merge%' AND $__timeFilter(authored_date) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, commit_count AS \"Commit Count\" FROM _commits ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _commits AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, COUNT(*) AS commit_count FROM commits WHERE message::text NOT LIKE '%Merge%' AND $__timeFilter(authored_date) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, commit_count AS \"Commit Count\" FROM _commits ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [

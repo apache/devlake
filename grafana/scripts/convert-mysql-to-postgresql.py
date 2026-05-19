@@ -196,6 +196,26 @@ def convert_sql_mysql_to_postgres(sql: str) -> str:
         converted = re.sub(r'\bLIKE\s+"([^"]+)"', r"LIKE '\1'", converted, flags=re.IGNORECASE)
         converted = re.sub(r'\bNOT\s+LIKE\s+"([^"]+)"', r"NOT LIKE '\1'", converted, flags=re.IGNORECASE)
 
+        # Cast non-text columns to ::text for LIKE patterns
+        # PostgreSQL LIKE requires text type, MySQL allows implicit conversion
+        # Pattern: id LIKE '%value%' → id::text LIKE '%value%'
+        #          id NOT LIKE '%x%' → id::text NOT LIKE '%x%'
+        # Single-pass pattern matches both LIKE and NOT LIKE
+        def add_text_cast_for_like_pattern(match):
+            column = match.group(1)
+            operator = match.group(2)  # "LIKE" or "NOT LIKE"
+            # If column already has :: cast, don't add another
+            if '::' in column:
+                return match.group(0)
+            return f'{column}::text {operator} '
+
+        converted = re.sub(
+            r'\b([\w.]+(?:::\w+)?)\s+((?:NOT\s+)?LIKE)\s+',
+            add_text_cast_for_like_pattern,
+            converted,
+            flags=re.IGNORECASE
+        )
+
         # Convert double-quoted string literals to single quotes
         # Pattern: = "value", <> "value", != "value", IN ("val1", "val2"), CONCAT(..., "text", ...), THEN "value"
         # But skip: column aliases after AS (already handled above as AS "alias")
@@ -355,30 +375,29 @@ def convert_sql_mysql_to_postgres(sql: str) -> str:
         )
 
         # Fix ambiguous identifier in GROUP BY when alias matches column name
-        # PostgreSQL folds unquoted identifiers to lowercase, causing ambiguity
-        # Quote all bare (unquoted, non-numeric) identifiers in GROUP BY
+        # PostgreSQL can't distinguish between alias and column with same name
+        # Keep GROUP BY as-is for now - dashboards using positional (1,2,3) work fine
+        # Dashboards using aliases may have ambiguity - fix at dashboard level
         def quote_group_by_identifiers(sql_text):
             def quote_group_by_item(match):
                 prefix = match.group(1)  # "GROUP BY "
                 items_str = match.group(2)  # rest of clause
 
-                # Split by comma to handle multiple items
+                # Keep positional numbers (1,2,3) as-is since they work perfectly
+                # Keep complex expressions (table.col) as-is
+                # Only quote simple identifiers for case-sensitivity
                 items = []
                 for item in items_str.split(','):
                     item = item.strip()
-                    # Skip if already quoted, numeric positional, or empty
-                    if not item or item.startswith('"') or item.isdigit():
+                    if not item or item.isdigit() or '.' in item:
                         items.append(item)
-                    # Check if it's a word (identifier) - quote it
                     elif re.match(r'^\w+$', item):
                         items.append(f'"{item}"')
                     else:
-                        # Complex expression (table.col, etc.) - keep as-is
                         items.append(item)
 
                 return prefix + ', '.join(items)
 
-            # Match GROUP BY clause (from GROUP BY to next keyword or end)
             sql_text = re.sub(
                 r'\b(GROUP\s+BY\s+)([^;]*?)(?=\s*(?:HAVING|ORDER|LIMIT|$))',
                 quote_group_by_item,
@@ -508,26 +527,45 @@ def convert_sql_mysql_to_postgres(sql: str) -> str:
             converted
         )
 
-        # PostgreSQL rejects IN () when Grafana variables are empty - wrap with CASE/unnest
-        # Also cast column to text to avoid type mismatch (bigint = text)
+        # PostgreSQL rejects IN () when Grafana variables are empty
+        # Use = ANY(ARRAY[...]) instead of IN (...) because empty array is valid SQL
+        # When empty: = ANY(ARRAY[]::text[]) is always false
+        # When multi-value: = ANY(ARRAY['val1','val2']::text[]) filters correctly
+        def format_grafana_variable(var):
+            """Extract variable name and return (var_formatted, var_check) for Grafana expansion."""
+            if var.startswith('${') and var.endswith('}'):
+                var_name = var[2:-1]
+                if ':' not in var_name:
+                    return f'${{{var_name}:singlequote}}', f'${{{var_name}:csv}}'
+                return var, var
+            # Bare $var form
+            var_name = var[1:]
+            return f'${{{var_name}:singlequote}}', f'${{{var_name}:csv}}'
+
         def protect_in_clause_with_cast(match):
             column = match.group(1)
             var = match.group(2)
-            # Cast column to text if not already cast
             if '::' not in column:
                 column = f'{column}::text'
-            return f"{column} IN (SELECT v FROM unnest(CASE WHEN '{var}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[{var}]::text[] END) v)"
+            var_formatted, var_check = format_grafana_variable(var)
+            return f"('{var_check}' = '' OR {column} = ANY(ARRAY[{var_formatted}]::text[]))"
+
+        def protect_function_in_clause(match):
+            func_expr = match.group(1)
+            var = match.group(2)
+            var_formatted, var_check = format_grafana_variable(var)
+            return f"('{var_check}' = '' OR {func_expr} = ANY(ARRAY[{var_formatted}]::text[]))"
 
         converted = re.sub(
-            r'(\S+)\s+IN\s*\(\s*(\$\{[^}]+\})\s*\)',  # column IN (${var})
+            r'([\w.]+(?:::\w+)?)\s+IN\s*\(\s*(\$\{[^}]+\}|\$(?!__)[a-z_][a-z0-9_]*)\s*\)',
             protect_in_clause_with_cast,
             converted,
             flags=re.IGNORECASE
         )
 
         converted = re.sub(
-            r'(\S+)\s+IN\s*\(\s*(\$(?!__)[a-z_][a-z0-9_]*)\s*\)',  # column IN ($var)
-            protect_in_clause_with_cast,
+            r'(SPLIT_PART\([^)]+\))\s+IN\s*\(\s*(\$\{[^}]+\}|\$(?!__)[a-z_][a-z0-9_]*)\s*\)',
+            protect_function_in_clause,
             converted,
             flags=re.IGNORECASE
         )

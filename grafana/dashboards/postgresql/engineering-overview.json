@@ -119,7 +119,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND i.priority::text IN (SELECT v FROM unnest(CASE WHEN '${priority}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${priority}]::text[] END) v) AND i.type = 'BUG' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) AND i.type = 'BUG' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -253,7 +253,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT i.id) AS defect_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND i.priority::text IN (SELECT v FROM unnest(CASE WHEN '${priority}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${priority}]::text[] END) v) AND i.type = 'BUG' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, defect_count FROM _issues ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT i.id) AS defect_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) AND i.type = 'BUG' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, defect_count FROM _issues ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -360,7 +360,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND i.type::text IN (SELECT v FROM unnest(CASE WHEN '${type}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${type}]::text[] END) v) AND i.status = 'DONE' AND i.resolution_date BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND i.resolution_date BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -502,7 +502,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, issue_lead_time AS \"Mean Requirement Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
+          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, issue_lead_time AS \"Mean Requirement Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -591,7 +591,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT author_name) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT author_name) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -725,7 +725,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _developers AS (SELECT CAST(c.authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(c.authored_date AS DATE)) + 1) AS time, COUNT(DISTINCT author_name) AS developer_count FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(c.authored_date) AND c.authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' AND pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, developer_count FROM _developers ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _developers AS (SELECT CAST(c.authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(c.authored_date AS DATE)) + 1) AS time, COUNT(DISTINCT author_name) AS developer_count FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(c.authored_date) AND c.authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, developer_count FROM _developers ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -840,7 +840,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'), _total_num_issues AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH') SELECT NOW() AS time, 100 - CAST(100 * (SELECT 1.0 * num_issues_with_sprint_updated FROM _num_issues_with_sprint_updated) AS NUMERIC) / NULLIF((SELECT total_num_issues FROM _total_num_issues), 0) AS ratio",
+          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'), _total_num_issues AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH') SELECT NOW() AS time, 100 - CAST(100 * (SELECT 1.0 * num_issues_with_sprint_updated FROM _num_issues_with_sprint_updated) AS NUMERIC) / NULLIF((SELECT total_num_issues FROM _total_num_issues), 0) AS ratio",
           "refId": "A",
           "select": [
             [
@@ -981,7 +981,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time), _total_num_issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT x.time, 100 - 100 * (CAST(1.0 * x.num_issues_with_sprint_updated AS NUMERIC) / NULLIF(y.total_num_issues, 0)) AS delivery_rate FROM _num_issues_with_sprint_updated AS x JOIN _total_num_issues AS y ON x.time = y.time",
+          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time), _total_num_issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT x.time, 100 - 100 * (CAST(1.0 * x.num_issues_with_sprint_updated AS NUMERIC) / NULLIF(y.total_num_issues, 0)) AS delivery_rate FROM _num_issues_with_sprint_updated AS x JOIN _total_num_issues AS y ON x.time = y.time",
           "refId": "A",
           "select": [
             [
@@ -1090,7 +1090,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT pr.id) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE NOT pr.merged_date IS NULL AND CAST(pr.merged_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT pr.id) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE NOT pr.merged_date IS NULL AND CAST(pr.merged_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[]))",
           "refId": "A",
           "select": [
             [
@@ -1231,7 +1231,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _merged_prs AS (SELECT CAST(pr.merged_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.merged_date AS DATE)) + 1) AS time, COUNT(DISTINCT pr.id) AS pr_merged_count FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.merged_date) AND pr.merged_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, pr_merged_count FROM _merged_prs ORDER BY time ASC NULLS FIRST",
+          "rawSql": "WITH _merged_prs AS (SELECT CAST(pr.merged_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.merged_date AS DATE)) + 1) AS time, COUNT(DISTINCT pr.id) AS pr_merged_count FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.merged_date) AND pr.merged_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, pr_merged_count FROM _merged_prs ORDER BY time ASC NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -1344,7 +1344,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -1483,7 +1483,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS time, CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND $__timeFilter(created_date) AND created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\"",
+          "rawSql": "SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS time, CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(created_date) AND created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\"",
           "refId": "A",
           "select": [
             [
@@ -1585,7 +1585,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND (EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4 AND CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' GROUP BY \"author_name\", CAST(authored_date AS DATE)) SELECT CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) FROM _commits_groupby_name_and_date",
+          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND (EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4 AND CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' GROUP BY \"author_name\", CAST(authored_date AS DATE)) SELECT CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) FROM _commits_groupby_name_and_date",
           "refId": "A",
           "select": [
             [
@@ -1717,7 +1717,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND ((EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4) AND $__timeFilter(authored_date) AND authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1, 2) SELECT _day + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(_day AS DATE)) + 1) AS time, CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) AS working_days_percentatages_per_month FROM _commits_groupby_name_and_date GROUP BY time",
+          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ((EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4) AND $__timeFilter(authored_date) AND authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1, 2) SELECT _day + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(_day AS DATE)) + 1) AS time, CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) AS working_days_percentatages_per_month FROM _commits_groupby_name_and_date GROUP BY time",
           "refId": "A",
           "select": [
             [
@@ -1828,7 +1828,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND NOT pr.merged_date IS NULL AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -1969,7 +1969,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(pr.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.created_date AS DATE)) + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS pr_time_to_merge_in_days FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.created_date) AND pr.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\" ORDER BY time NULLS FIRST",
+          "rawSql": "SELECT CAST(pr.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.created_date AS DATE)) + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS pr_time_to_merge_in_days FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.created_date) AND pr.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\" ORDER BY time NULLS FIRST",
           "refId": "A",
           "select": [
             [
@@ -2075,7 +2075,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT CASE WHEN i.type = 'BUG' THEN i.id ELSE NULL END) AS \"Bug\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key <> '' THEN i.id ELSE NULL END) AS \"Strategic\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key = '' THEN i.id ELSE NULL END) AS \"Non-Strategic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND NOT i.resolution_date IS NULL AND CAST(resolution_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "rawSql": "SELECT COUNT(DISTINCT CASE WHEN i.type = 'BUG' THEN i.id ELSE NULL END) AS \"Bug\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key <> '' THEN i.id ELSE NULL END) AS \"Strategic\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key = '' THEN i.id ELSE NULL END) AS \"Non-Strategic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT i.resolution_date IS NULL AND CAST(resolution_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
           "refId": "A",
           "select": [
             [
@@ -2207,7 +2207,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT i.priority AS \"Priority\", AVG(CAST((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS \"Average Age\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE pm.project_name::text IN (SELECT v FROM unnest(CASE WHEN '${project}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project}]::text[] END) v) AND i.status = 'TODO' AND i.type = 'BUG' AND i.priority::text IN (SELECT v FROM unnest(CASE WHEN '${priority}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${priority}]::text[] END) v) GROUP BY i.priority",
+          "rawSql": "SELECT i.priority AS \"Priority\", AVG(CAST((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS \"Average Age\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND i.status = 'TODO' AND i.type = 'BUG' AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) GROUP BY i.priority",
           "refId": "A",
           "select": [
             [

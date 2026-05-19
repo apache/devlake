@@ -151,7 +151,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Bugs\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'BUG' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Bugs\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'BUG' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -239,7 +239,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Vulnerabilities\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'VULNERABILITY' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Vulnerabilities\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'VULNERABILITY' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -328,7 +328,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Security Hotspots\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'HOTSPOTS' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Security Hotspots\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'HOTSPOTS' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -416,7 +416,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(CAST(COUNT(CASE WHEN status <> 'TO_REVIEW' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) * 100 AS DECIMAL), 2) || '%' AS \"Reviewed\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'HOTSPOTS' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT ROUND(CAST(CAST(COUNT(CASE WHEN status <> 'TO_REVIEW' THEN id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT id), 0) * 100 AS DECIMAL), 2) || '%' AS \"Reviewed\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'HOTSPOTS' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -530,7 +530,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST((SUM(lines_to_cover) - SUM(uncovered_lines)) AS NUMERIC) / NULLIF(SUM(lines_to_cover), 0) * 100, 1) || '% ' || 'Coverage on ' || ROUND(CAST(CAST(SUM(lines_to_cover) AS NUMERIC) / NULLIF(1000, 0) AS DECIMAL), 0) || 'k Lines to cover' FROM cq_file_metrics WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v)",
+          "rawSql": "SELECT ROUND(CAST((SUM(lines_to_cover) - SUM(uncovered_lines)) AS NUMERIC) / NULLIF(SUM(lines_to_cover), 0) * 100, 1) || '% ' || 'Coverage on ' || ROUND(CAST(CAST(SUM(lines_to_cover) AS NUMERIC) / NULLIF(1000, 0) AS DECIMAL), 0) || 'k Lines to cover' FROM cq_file_metrics WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -619,7 +619,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT FLOOR(CAST(CAST(SUM(debt) AS NUMERIC) / NULLIF(8, 0) AS NUMERIC) / NULLIF(60, 0)) || ' day(s) ' || FLOOR(CAST((SUM(debt) % 480) AS NUMERIC) / NULLIF(60, 0)) || ' hour(s) ' AS \"Debt\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'CODE_SMELL' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT FLOOR(CAST(CAST(SUM(debt) AS NUMERIC) / NULLIF(8, 0) AS NUMERIC) / NULLIF(60, 0)) || ' day(s) ' || FLOOR(CAST((SUM(debt) % 480) AS NUMERIC) / NULLIF(60, 0)) || ' hour(s) ' AS \"Debt\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'CODE_SMELL' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -708,7 +708,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Code Smells\" FROM cq_issues WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) AND type = 'CODE_SMELL' AND severity::text IN (SELECT v FROM unnest(CASE WHEN '${severity}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${severity}]::text[] END) v)",
+          "rawSql": "SELECT COUNT(DISTINCT id) AS \"Code Smells\" FROM cq_issues WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) AND type = 'CODE_SMELL' AND ('${severity:csv}' = '' OR severity::text = ANY(ARRAY[${severity:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -822,7 +822,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(duplicated_blocks) FROM cq_file_metrics WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v)",
+          "rawSql": "SELECT SUM(duplicated_blocks) FROM cq_file_metrics WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -910,7 +910,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(CAST(SUM(duplicated_lines) AS NUMERIC) / NULLIF(SUM(num_of_lines), 0) * 100, 1) || '% ' || 'Duplications on ' || ROUND(CAST(CAST(SUM(ncloc) AS NUMERIC) / NULLIF(1000, 0) AS DECIMAL), 0) || 'k Lines' FROM cq_file_metrics WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v)",
+          "rawSql": "SELECT ROUND(CAST(SUM(duplicated_lines) AS NUMERIC) / NULLIF(SUM(num_of_lines), 0) * 100, 1) || '% ' || 'Duplications on ' || ROUND(CAST(CAST(SUM(ncloc) AS NUMERIC) / NULLIF(1000, 0) AS DECIMAL), 0) || 'k Lines' FROM cq_file_metrics WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[]))",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1000,7 +1000,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT file_name, num_of_lines AS \"Lines of Code\", bugs AS \"Bugs\", vulnerabilities AS \"Vulnerabilities\", code_smells AS \"Code Smells\", security_hotspots AS \"Security Hotspots\", ROUND(coverage, 2) || '%' AS \"Coverage\", ROUND(duplicated_lines_density, 2) || '%' AS \"Duplications\" FROM cq_file_metrics WHERE project_key::text IN (SELECT v FROM unnest(CASE WHEN '${project_id}' = '' THEN ARRAY[NULL::text] ELSE ARRAY[${project_id}]::text[] END) v) ORDER BY bugs DESC NULLS LAST LIMIT 20",
+          "rawSql": "SELECT file_name, num_of_lines AS \"Lines of Code\", bugs AS \"Bugs\", vulnerabilities AS \"Vulnerabilities\", code_smells AS \"Code Smells\", security_hotspots AS \"Security Hotspots\", ROUND(coverage, 2) || '%' AS \"Coverage\", ROUND(duplicated_lines_density, 2) || '%' AS \"Duplications\" FROM cq_file_metrics WHERE ('${project_id:csv}' = '' OR project_key::text = ANY(ARRAY[${project_id:singlequote}]::text[])) ORDER BY bugs DESC NULLS LAST LIMIT 20",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1069,14 +1069,14 @@
           ]
         },
         "datasource": "postgresql",
-        "definition": "SELECT DISTINCT severity FROM cq_issues WHERE id LIKE 'sonar%'",
+        "definition": "SELECT DISTINCT severity FROM cq_issues WHERE id::text LIKE 'sonar%'",
         "hide": 0,
         "includeAll": true,
         "label": "Severity",
         "multi": true,
         "name": "severity",
         "options": [],
-        "query": "SELECT DISTINCT severity FROM cq_issues WHERE id LIKE 'sonar%'",
+        "query": "SELECT DISTINCT severity FROM cq_issues WHERE id::text LIKE 'sonar%'",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
