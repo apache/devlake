@@ -44,7 +44,7 @@
   ],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "The number of commits from different commit authors.",
       "fieldConfig": {
         "defaults": {
@@ -117,9 +117,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]
@@ -142,7 +140,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -192,9 +190,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]

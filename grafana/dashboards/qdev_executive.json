@@ -69,7 +69,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Distinct users with chat activity in the last 7 days (from prompt logging)",
       "fieldConfig": {
         "defaults": {
@@ -102,9 +102,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -116,7 +114,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -128,7 +126,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Average credits spent per accepted line of code (new report + legacy metrics)",
       "fieldConfig": {
         "defaults": {
@@ -161,9 +159,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -175,7 +171,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -187,7 +183,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Percentage of inline suggestions accepted (from legacy feature metrics)",
       "fieldConfig": {
         "defaults": {
@@ -220,9 +216,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -234,7 +228,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -246,7 +240,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Percentage of users who used steering rules (from prompt logging)",
       "fieldConfig": {
         "defaults": {
@@ -280,9 +274,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -294,7 +286,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -319,7 +311,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Weekly active user count over time (from prompt logging)",
       "fieldConfig": {
         "defaults": {
@@ -381,11 +373,7 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -399,7 +387,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -411,7 +399,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "New vs returning users by week (from prompt logging)",
       "fieldConfig": {
         "defaults": {
@@ -473,11 +461,7 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -491,7 +475,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -516,7 +500,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Cumulative credits this month vs projected total (from new user_report)",
       "fieldConfig": {
         "defaults": {
@@ -578,11 +562,7 @@
       "id": 8,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -596,7 +576,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -608,7 +588,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Power tier users with no activity in the last 14 days (from new user_report)",
       "fieldConfig": {
         "defaults": {
@@ -647,9 +627,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -658,7 +636,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -683,7 +661,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Per-user productivity combining credits (new format) with feature metrics (legacy). Only shows users present in both data sources.",
       "fieldConfig": {
         "defaults": {
@@ -722,9 +700,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -733,7 +709,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -748,11 +724,7 @@
   "preload": false,
   "refresh": "5m",
   "schemaVersion": 41,
-  "tags": [
-    "q_dev",
-    "executive",
-    "kiro"
-  ],
+  "tags": ["q_dev", "executive", "kiro"],
   "templating": {
     "list": []
   },

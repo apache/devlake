@@ -19,7 +19,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Overview of key user metrics",
       "fieldConfig": {
         "defaults": {
@@ -52,9 +52,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -66,7 +64,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -77,9 +75,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -115,7 +111,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily AI code line changes across all users",
       "fieldConfig": {
         "defaults": {
@@ -177,11 +173,7 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -195,7 +187,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -206,9 +198,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -244,7 +234,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily AI interaction trends across all users",
       "fieldConfig": {
         "defaults": {
@@ -306,11 +296,7 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -324,7 +310,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -335,9 +321,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -373,7 +357,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Code review metrics over time",
       "fieldConfig": {
         "defaults": {
@@ -435,11 +419,7 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -453,7 +433,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -463,9 +443,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -501,7 +479,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily acceptance rate of AI suggestions",
       "fieldConfig": {
         "defaults": {
@@ -563,11 +541,7 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "min"
-          ],
+          "calcs": ["mean", "max", "min"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -581,7 +555,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -592,9 +566,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -630,7 +602,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "User AI interaction metrics",
       "fieldConfig": {
         "defaults": {
@@ -713,9 +685,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -724,7 +694,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -735,9 +705,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -773,7 +741,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily doc generation events and accepted/rejected lines",
       "fieldConfig": {
         "defaults": {
@@ -835,11 +803,7 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -853,7 +817,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -864,9 +828,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -902,7 +864,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily test generation events and lines",
       "fieldConfig": {
         "defaults": {
@@ -964,11 +926,7 @@
       "id": 12,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -982,7 +940,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -993,9 +951,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -1031,7 +987,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily agentic dev events and lines",
       "fieldConfig": {
         "defaults": {
@@ -1093,11 +1049,7 @@
       "id": 13,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "sum"
-          ],
+          "calcs": ["mean", "max", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1111,7 +1063,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -1122,9 +1074,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "column"
               }
             ]
@@ -1163,10 +1113,7 @@
   "preload": false,
   "refresh": "5m",
   "schemaVersion": 41,
-  "tags": [
-    "q_dev",
-    "user_data"
-  ],
+  "tags": ["q_dev", "user_data"],
   "templating": {
     "list": []
   },

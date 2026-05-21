@@ -37,9 +37,7 @@
       "icon": "external link",
       "includeVars": false,
       "keepTime": true,
-      "tags": [
-        "Data Source Specific Dashboard"
-      ],
+      "tags": ["Data Source Specific Dashboard"],
       "targetBlank": false,
       "title": "Metric dashboards",
       "tooltip": "",
@@ -116,7 +114,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Total number of test runs executed in the selected time range",
       "fieldConfig": {
         "defaults": {
@@ -149,9 +147,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -161,7 +157,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -176,7 +172,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Percentage of test runs that passed successfully",
       "fieldConfig": {
         "defaults": {
@@ -218,9 +214,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -230,7 +224,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -245,7 +239,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Test execution results over time showing pass/fail/skip distribution",
       "fieldConfig": {
         "defaults": {
@@ -351,9 +345,7 @@
       "id": 120,
       "options": {
         "legend": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -366,7 +358,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -380,7 +372,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Total number of Testmo runs (new data source)",
       "fieldConfig": {
         "defaults": {
@@ -413,9 +405,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -425,7 +415,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -439,7 +429,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Average execution time per test run in minutes",
       "fieldConfig": {
         "defaults": {
@@ -482,9 +472,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -494,7 +482,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -508,7 +496,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily count of test runs from the new runs data source",
       "fieldConfig": {
         "defaults": {
@@ -585,9 +573,7 @@
       "id": 121,
       "options": {
         "legend": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -599,7 +585,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -613,7 +599,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Test coverage across different projects",
       "fieldConfig": {
         "defaults": {
@@ -684,7 +670,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -723,7 +709,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Success rate trend over time",
       "fieldConfig": {
         "defaults": {
@@ -797,7 +783,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -810,7 +796,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Average test execution time trend",
       "fieldConfig": {
         "defaults": {
@@ -882,7 +868,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -895,7 +881,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Comparison between automation runs and regular test runs over time",
       "fieldConfig": {
         "defaults": {
@@ -986,10 +972,7 @@
       "id": 131,
       "options": {
         "legend": {
-          "calcs": [
-            "sum",
-            "mean"
-          ],
+          "calcs": ["sum", "mean"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -1001,7 +984,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -1010,7 +993,7 @@
           "refId": "A"
         },
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -1023,7 +1006,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Test runs that take the longest time to execute",
       "fieldConfig": {
         "defaults": {
@@ -1106,9 +1089,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true
@@ -1116,7 +1097,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1166,22 +1147,16 @@
   "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-    "Data Source Dashboard"
-  ],
+  "tags": ["Data Source Dashboard"],
   "templating": {
     "list": [
       {
         "current": {
           "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select concat(name, '--', id) from _tool_testmo_connections",
         "hide": 0,
         "includeAll": true,
@@ -1202,7 +1177,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select distinct name from _tool_testmo_projects where connection_id in (${connection_id})",
         "hide": 0,
         "includeAll": true,

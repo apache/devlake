@@ -69,7 +69,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -200,9 +200,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "frameIndex": 1,
@@ -212,7 +210,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -241,7 +239,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -344,9 +342,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -355,7 +351,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -384,7 +380,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -576,7 +572,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -618,7 +614,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -693,10 +689,7 @@
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
+          "values": ["value", "percent"]
         },
         "pieType": "donut",
         "reduceOptions": {
@@ -712,7 +705,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -741,7 +734,7 @@
       "type": "piechart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -783,7 +776,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -812,7 +805,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -855,7 +848,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -884,7 +877,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -927,7 +920,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -956,7 +949,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -999,7 +992,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1028,7 +1021,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1114,7 +1107,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1126,9 +1119,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -1179,7 +1170,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1222,7 +1213,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1251,7 +1242,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1294,7 +1285,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1323,7 +1314,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "average pr review time from first comment to the last comment",
       "fieldConfig": {
         "defaults": {
@@ -1367,7 +1358,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1398,11 +1389,7 @@
   ],
   "refresh": "",
   "schemaVersion": 39,
-  "tags": [
-    "Developer",
-    "Highlights",
-    "New"
-  ],
+  "tags": ["Developer", "Highlights", "New"],
   "templating": {
     "list": [
       {
@@ -1411,7 +1398,7 @@
           "text": "None",
           "value": ""
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select concat(name, '--', id) from teams",
         "hide": 0,
         "includeAll": false,
@@ -1429,14 +1416,10 @@
       {
         "current": {
           "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select concat(users.name, '--', users.id) from users left join team_users on users.id = team_users.user_id where team_users.team_id in ($team)",
         "hide": 0,
         "includeAll": true,

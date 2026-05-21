@@ -59,7 +59,7 @@
       "type": "text"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -97,9 +97,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -111,7 +109,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -122,9 +120,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -145,7 +141,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -183,9 +179,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -195,7 +189,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -206,9 +200,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -229,7 +221,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -267,9 +259,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -279,7 +269,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -290,9 +280,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -313,7 +301,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -350,9 +338,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -362,7 +348,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -374,9 +360,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -414,7 +398,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -452,9 +436,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -464,7 +446,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -475,9 +457,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -498,7 +478,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -536,9 +516,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -548,7 +526,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -559,9 +537,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -582,7 +558,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -620,9 +596,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -632,7 +606,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -644,9 +618,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -684,7 +656,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -728,9 +700,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -740,7 +710,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -752,9 +722,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -829,9 +797,7 @@
   "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-    "OSS Maintainer Dashboard"
-  ],
+  "tags": ["OSS Maintainer Dashboard"],
   "templating": {
     "list": [
       {
@@ -840,7 +806,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select concat(name, '-', id) from repos",
         "hide": 0,
         "includeAll": true,

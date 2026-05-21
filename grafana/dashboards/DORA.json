@@ -58,7 +58,7 @@
       "type": "text"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -215,9 +215,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -226,7 +224,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -238,9 +236,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -278,7 +274,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "How often an organization deploys code to production or release it to end users\n\n# 2023 Benchmarks\n- **Elite**: >= 7 deployment days per week\n- **High**: >= 1 deployment day per week\n- **Medium**: >= 1 deployment day per month\n- **Low**: < 1 deployment day per month\n# 2021 Benchmarks\n- **Elite**: >= 7 deployment days per week\n- **High**: >= 1 deployment day per month\n- **Medium**: >= 1  deployment day per six months\n- **Low**: < 1 deployment day per six months",
       "fieldConfig": {
         "defaults": {
@@ -359,9 +355,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "/^Deployment Frequency$/",
           "values": false
         },
@@ -373,7 +367,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -385,9 +379,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -425,7 +417,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "The median amount of time for a code change to be deployed into production.\n\n\n# 2023 Benchmarks\n- **Elite**: Less than one day\n- **High**: Between one day and one week\n- **Medium**: Between one week and one month\n- **Low**: More than one month\n# 2021 Benchmarks\n- **Elite**: Less than one hour\n- **High**: Less than one week\n- **Medium**: Between one week and six months\n- **Low**: More than six months\n",
       "fieldConfig": {
         "defaults": {
@@ -505,9 +497,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "/.*/",
           "values": false
         },
@@ -519,7 +509,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -531,9 +521,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -571,7 +559,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "The percentage of changes that were made to a code that then resulted in incidents, rollbacks, or any type of production failure.\n\n# 2023 Benchmarks\n- **Elite**: (0, 5%]\n- **High**: (5%, 10%]\n- **Medium**: (10%, 15%]\n- **Low**: (15%, 100%]\n# 2021 Benchmarks\n- **Elite**: (0, 15%]\n- **High**: (16%, 20%]\n- **Medium**: (21%, 30%]\n- **Low**: (30%, 100%]\n",
       "fieldConfig": {
         "defaults": {
@@ -652,9 +640,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "/^change_failure_rate$/",
           "values": false
         },
@@ -666,7 +652,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -678,9 +664,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -718,7 +702,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "# MTTR benchmarks:\ndevlake.apache.org/docs/Metrics/MTTR#how-is-it-calculated\n# FDRT benchmarks:\ndevlake.apache.org/docs/Metrics/FailedDeploymentRecoveryTime#how-is-it-calculated\n",
       "fieldConfig": {
         "defaults": {
@@ -806,9 +790,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "/.*/",
           "values": false
         },
@@ -820,7 +802,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -832,9 +814,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -872,7 +852,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -955,7 +935,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -967,9 +947,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -1007,7 +985,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1088,7 +1066,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1100,9 +1078,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -1140,7 +1116,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1242,7 +1218,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1254,9 +1230,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -1294,7 +1268,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1400,7 +1374,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1412,9 +1386,7 @@
           "select": [
             [
               {
-                "params": [
-                  "id"
-                ],
+                "params": ["id"],
                 "type": "column"
               }
             ]
@@ -1454,24 +1426,16 @@
   ],
   "refresh": "",
   "schemaVersion": 39,
-  "tags": [
-    "Engineering Leads Dashboard",
-    "Highlights",
-    "DORA"
-  ],
+  "tags": ["Engineering Leads Dashboard", "Highlights", "DORA"],
   "templating": {
     "list": [
       {
         "current": {
           "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select distinct name from projects",
         "hide": 0,
         "includeAll": true,
@@ -1492,7 +1456,7 @@
           "text": "2023",
           "value": "2023"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select dora_report from dora_benchmarks",
         "hide": 0,
         "includeAll": false,
@@ -1513,7 +1477,7 @@
           "text": "Failed Deployment Recovery Time",
           "value": "Failed Deployment Recovery Time"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "SELECT \n  CASE \n    WHEN dora_report = '2023' THEN \"Failed Deployment Recovery Time\"\n    WHEN dora_report = '2021' THEN \"Median Time to Restore Service\"\n    ELSE NULL \n  END AS title_value\nFROM dora_benchmarks\nWHERE dora_report = '${dora_report:raw}'",
         "hide": 2,
         "includeAll": false,

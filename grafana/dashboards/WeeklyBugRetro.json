@@ -71,7 +71,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -157,7 +157,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -169,9 +169,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -209,7 +207,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -295,7 +293,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -307,9 +305,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -347,7 +343,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -412,9 +408,7 @@
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": ["mean"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -435,7 +429,7 @@
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -447,9 +441,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -500,7 +492,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -543,9 +535,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -557,7 +547,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -569,9 +559,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -609,7 +597,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -641,18 +629,12 @@
         }
       ],
       "options": {
-        "displayLabels": [
-          "name",
-          "value"
-        ],
+        "displayLabels": ["name", "value"],
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true,
-          "values": [
-            "percent",
-            "value"
-          ]
+          "values": ["percent", "value"]
         },
         "pieType": "donut",
         "reduceOptions": {
@@ -669,7 +651,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -681,9 +663,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -721,7 +701,7 @@
       "type": "piechart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -817,9 +797,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -828,7 +806,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -840,9 +818,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -880,7 +856,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -923,9 +899,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -937,7 +911,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -949,9 +923,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -989,7 +961,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1037,9 +1009,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1051,7 +1021,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1063,9 +1033,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1103,7 +1071,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1213,9 +1181,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -1224,7 +1190,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1236,9 +1202,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1276,7 +1240,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1342,9 +1306,7 @@
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": ["mean"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -1364,7 +1326,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1376,9 +1338,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1416,7 +1376,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1459,9 +1419,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1473,7 +1431,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1485,9 +1443,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1525,7 +1481,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1568,9 +1524,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1582,7 +1536,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1593,9 +1547,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1616,7 +1568,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1750,9 +1702,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -1761,7 +1711,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1773,9 +1723,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1813,7 +1761,7 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1878,10 +1826,7 @@
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
+          "calcs": ["mean", "max"],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -1901,7 +1846,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1913,9 +1858,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -1953,7 +1896,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2087,9 +2030,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -2098,7 +2039,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -2110,9 +2051,7 @@
           "select": [
             [
               {
-                "params": [
-                  "script_version"
-                ],
+                "params": ["script_version"],
                 "type": "column"
               }
             ]
@@ -2186,10 +2125,7 @@
   ],
   "refresh": "",
   "schemaVersion": 39,
-  "tags": [
-    "Engineering Leads Dashboard",
-    "Highlights"
-  ],
+  "tags": ["Engineering Leads Dashboard", "Highlights"],
   "templating": {
     "list": [
       {
@@ -2198,7 +2134,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select concat(name, '-', id) as text from boards",
         "hide": 0,
         "includeAll": true,
@@ -2219,7 +2155,7 @@
           "text": "BUG",
           "value": "BUG"
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select distinct type from issues",
         "hide": 0,
         "includeAll": true,
@@ -2237,14 +2173,10 @@
       {
         "current": {
           "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "select distinct priority from issues",
         "hide": 0,
         "includeAll": true,

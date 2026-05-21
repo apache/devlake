@@ -46,9 +46,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]
@@ -97,9 +95,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]
@@ -148,9 +144,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]

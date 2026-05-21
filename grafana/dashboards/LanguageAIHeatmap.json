@@ -19,22 +19,30 @@
   "links": [],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Completion requests, avg context size, and completion rate per language",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true
+          },
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
         },
         "overrides": []
       },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "options": { "cellHeight": "sm", "showHeader": true, "sortBy": [{ "desc": true, "displayName": "Requests" }] },
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Requests" }]
+      },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT\n  CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS 'Language',\n  COUNT(*) AS 'Requests',\n  ROUND(AVG(completions_count), 2) AS 'Avg Completions',\n  ROUND(AVG(left_context_length)) AS 'Avg Left Context',\n  ROUND(AVG(right_context_length)) AS 'Avg Right Context',\n  ROUND(AVG(left_context_length + right_context_length)) AS 'Avg Total Context',\n  COUNT(DISTINCT user_id) AS 'Users'\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY file_extension\nORDER BY COUNT(*) DESC",
@@ -45,14 +53,17 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily completion requests by language",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
-            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
-            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "stacking": { "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "unit": "short"
         },
@@ -61,12 +72,17 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 9 },
       "id": 2,
       "options": {
-        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "legend": {
+          "calcs": ["sum"],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi" }
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS metric,\n  COUNT(*) AS value\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), file_extension\nORDER BY time",
@@ -77,7 +93,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Which file types are most active during chat sessions",
       "fieldConfig": {
         "defaults": {
@@ -91,14 +107,23 @@
       "id": 3,
       "options": {
         "displayLabels": ["name", "percent"],
-        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": ["value", "percent"]
+        },
         "pieType": "donut",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": true
+        },
         "tooltip": { "mode": "single" }
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT\n  CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file)' ELSE active_file_extension END AS 'File Type',\n  COUNT(*) AS 'Chat Events'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY active_file_extension\nORDER BY COUNT(*) DESC\nLIMIT 10",
@@ -109,15 +134,20 @@
       "type": "piechart"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Context size trends for top languages",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
-            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
-            "showPoints": "never", "spanNulls": true,
-            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "unit": "short"
         },
@@ -126,12 +156,17 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
       "id": 4,
       "options": {
-        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "legend": {
+          "calcs": ["mean"],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi" }
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT DATE(timestamp) AS time,\n  file_extension AS metric,\n  ROUND(AVG(left_context_length + right_context_length)) AS value\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\n  AND file_extension IN (SELECT file_extension FROM _tool_q_dev_completion_log GROUP BY file_extension ORDER BY COUNT(*) DESC LIMIT 5)\nGROUP BY DATE(timestamp), file_extension\nORDER BY time",

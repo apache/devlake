@@ -19,7 +19,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "High-level summary of legacy feature-level activity metrics (from by_user_analytic CSV reports)",
       "fieldConfig": {
         "defaults": {
@@ -52,9 +52,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": ["sum"],
           "fields": "",
           "values": false
         },
@@ -66,7 +64,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -91,7 +89,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily inline suggestion and acceptance counts",
       "fieldConfig": {
         "defaults": {
@@ -153,10 +151,7 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -170,7 +165,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -182,7 +177,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Acceptance rates for inline suggestions, code fix, and inline chat over time",
       "fieldConfig": {
         "defaults": {
@@ -244,10 +239,7 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
+          "calcs": ["mean", "max"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -261,7 +253,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -286,7 +278,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Daily chat messages sent and AI-generated code lines from chat",
       "fieldConfig": {
         "defaults": {
@@ -348,10 +340,7 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -365,7 +354,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -377,7 +366,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Agentic (Dev) code generation and acceptance metrics",
       "fieldConfig": {
         "defaults": {
@@ -439,10 +428,7 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -456,7 +442,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -481,7 +467,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Code review findings and test generation metrics over time",
       "fieldConfig": {
         "defaults": {
@@ -543,10 +529,7 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -560,7 +543,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -572,7 +555,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Test generation events and acceptance over time",
       "fieldConfig": {
         "defaults": {
@@ -634,10 +617,7 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -651,7 +631,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -663,7 +643,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Doc generation and code transformation events",
       "fieldConfig": {
         "defaults": {
@@ -725,10 +705,7 @@
       "id": 8,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "sum"
-          ],
+          "calcs": ["mean", "sum"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -742,7 +719,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
@@ -754,7 +731,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Number of users who used each feature in the selected period",
       "fieldConfig": {
         "defaults": {
@@ -838,7 +815,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -863,7 +840,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Per-user breakdown of legacy feature-level metrics",
       "fieldConfig": {
         "defaults": {
@@ -902,9 +879,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -913,7 +888,7 @@
       "pluginVersion": "11.6.2",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -928,11 +903,7 @@
   "preload": false,
   "refresh": "5m",
   "schemaVersion": 41,
-  "tags": [
-    "q_dev",
-    "legacy",
-    "kiro"
-  ],
+  "tags": ["q_dev", "legacy", "kiro"],
   "templating": {
     "list": []
   },
