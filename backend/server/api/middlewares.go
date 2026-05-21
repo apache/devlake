@@ -18,6 +18,7 @@ limitations under the License.
 package api
 
 import (
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -35,12 +36,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getOAuthUserInfo(c *gin.Context) (*common.User, error) {
+const (
+	forwardedUserHeader       = "X-Forwarded-User"
+	forwardedEmailHeader      = "X-Forwarded-Email"
+	forwardedUserSecretHeader = "X-Forwarded-User-Secret"
+)
+
+func getOAuthUserInfo(c *gin.Context, forwardedUserSecret string) (*common.User, error) {
 	if c == nil {
 		return nil, errors.Default.New("request is nil")
 	}
-	user := c.GetHeader("X-Forwarded-User")
-	email := c.GetHeader("X-Forwarded-Email")
+	user := strings.TrimSpace(c.GetHeader(forwardedUserHeader))
+	if user == "" {
+		return nil, nil
+	}
+	if forwardedUserSecret == "" {
+		return nil, errors.Default.New("ignoring forwarded user headers because FORWARDED_USER_SECRET is not configured")
+	}
+	providedSecret := strings.TrimSpace(c.GetHeader(forwardedUserSecretHeader))
+	if subtle.ConstantTimeCompare([]byte(providedSecret), []byte(forwardedUserSecret)) != 1 {
+		return nil, errors.Default.New("ignoring forwarded user headers because X-Forwarded-User-Secret did not match")
+	}
+	email := strings.TrimSpace(c.GetHeader(forwardedEmailHeader))
 	return &common.User{
 		Name:  user,
 		Email: email,
@@ -75,12 +92,13 @@ func getBasicAuthUserInfo(c *gin.Context, basicRes context.BasicRes) (*common.Us
 
 func OAuth2ProxyAuthentication(basicRes context.BasicRes) gin.HandlerFunc {
 	logger := basicRes.GetLogger()
+	forwardedUserSecret := strings.TrimSpace(basicRes.GetConfigReader().GetString("FORWARDED_USER_SECRET"))
 	return func(c *gin.Context) {
 		_, exist := c.Get(common.USER)
 		if !exist {
-			user, err := getOAuthUserInfo(c)
+			user, err := getOAuthUserInfo(c, forwardedUserSecret)
 			if err != nil {
-				logger.Error(err, "getOAuthUserInfo")
+				logger.Warn(err, "rejected forwarded user headers")
 			}
 			if user == nil || user.Name == "" {
 				// fetch with basic auth header

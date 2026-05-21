@@ -107,8 +107,8 @@ func CreateApiServer() *gin.Engine {
 
 	// Auth chain order matters: REST API key first (its own short-circuit),
 	// then the push API key gate, then OIDC session, then oauth2-proxy header
-	// (only sets USER if not yet set), then the terminal 401 gate, finally
-	// CSRF on unsafe methods.
+	// (only sets USER if not yet set and the forwarded secret matches), then the terminal 401 gate,
+	// finally CSRF on unsafe methods.
 	router.Use(RestAuthentication(router, basicRes))
 	router.Use(RequirePushAuthentication(basicRes))
 	router.Use(auth.OIDCAuthentication())
