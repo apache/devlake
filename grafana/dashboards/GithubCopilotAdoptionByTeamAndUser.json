@@ -1,0 +1,2675 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 49,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Daily active users in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Daily Active Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND m.day = (\n    SELECT MAX(day) FROM _tool_copilot_user_daily_metrics\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  )\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Active Users",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Code acceptance rate for the selected team(s) in the time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 40
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(m.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(m.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Acceptance Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total lines of code added by team members in the time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(m.loc_added_sum) as \"Lines Added\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Lines of Code Added",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total user-initiated interactions in the time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(m.user_initiated_interaction_count) as \"User-Initiated Interactions\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "User-Initiated Interactions",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly active users in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Weekly Active Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE m.day >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users (WAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Monthly active users in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Monthly Active Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE m.day >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Active Users (MAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Unique users with Copilot activity in the time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Unique Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Unique Users (Period)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Seat utilization for team members",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 14,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(CASE WHEN s.last_activity_at IS NOT NULL THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as \"Utilization %\"\nFROM _tool_copilot_seats s\nWHERE s.connection_id = ${connection_id}\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = s.connection_id\n        AND tu.user_login = s.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR s.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Utilization",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Users who have used Copilot agent mode in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "id": 47,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Agent Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND m.used_agent = 1\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Mode Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Users who have used Copilot chat in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 48,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT m.user_login) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND m.used_chat = 1\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total PR summaries created by Copilot for selected team(s) in the time range Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 8
+      },
+      "id": 50,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(total_pr_summaries_created) as \"PRs by Copilot\"\nFROM _tool_copilot_team_dotcom_prs\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring}))\n  AND '${user:csv}' = '0'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Created by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Proxy metric for PR review engagement in selected team(s) (team API exposes engaged users, not reviewed count) Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 8
+      },
+      "id": 51,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(total_engaged_users) as \"PRs Reviewed by Copilot\"\nFROM _tool_copilot_team_dotcom_prs\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring}))\n  AND '${user:csv}' = '0'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Reviewed by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Active users over time for the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  COUNT(DISTINCT m.user_login) as \"Active Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Users Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Code suggestions generated vs accepted over time for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  SUM(m.code_generation_activity_count) as \"Suggestions\",\n  SUM(m.code_acceptance_activity_count) as \"Acceptances\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Suggestions & Acceptances",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Lines of code suggested vs added over time for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Lines of Code",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  SUM(m.loc_suggested_to_add_sum) as \"LOC Suggested\",\n  SUM(m.loc_added_sum) as \"LOC Added\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Suggested vs LOC Added Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily acceptance rate trend for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  SUM(m.code_acceptance_activity_count) / NULLIF(SUM(m.code_generation_activity_count), 0) as \"Acceptance Rate\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Acceptance Rate Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily LOC yield trend for team members (added LOC / suggested LOC)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 49,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  ROUND(SUM(m.loc_added_sum) / NULLIF(SUM(m.loc_suggested_to_add_sum), 0), 2) as \"LOC Yield\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Yield Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "PR summary activity over time for selected team(s) Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Pull Requests",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 52,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT date as time,\n  SUM(total_pr_summaries_created) as \"PRs Created by Copilot\",\n  SUM(total_engaged_users) as \"PR Engaged Users\"\nFROM _tool_copilot_team_dotcom_prs\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring}))\n  AND '${user:csv}' = '0'\nGROUP BY date\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "PR Activity Over Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 40,
+      "panels": [],
+      "title": "Team Comparison",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Side-by-side comparison of key metrics across all teams (users in multiple teams are counted once per team)",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 41,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT t.name as \"Team\",\n  COUNT(DISTINCT m.user_login) as \"Active Users\",\n  SUM(m.code_generation_activity_count) as \"Suggestions\",\n  SUM(m.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(m.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(m.code_generation_activity_count), 0), 1) as \"Acceptance %\",\n  SUM(m.loc_added_sum) as \"LOC Added\",\n  SUM(m.user_initiated_interaction_count) as \"Interactions\",\n  COUNT(DISTINCT CASE WHEN m.used_agent = 1 THEN m.user_login END) as \"Agent Adopters\",\n  COUNT(DISTINCT CASE WHEN m.used_chat = 1 THEN m.user_login END) as \"Chat Adopters\"\nFROM _tool_copilot_user_daily_metrics m\nINNER JOIN (\n  SELECT DISTINCT connection_id, team_id, user_login\n  FROM _tool_copilot_team_users\n) tu\n  ON tu.connection_id = m.connection_id AND tu.user_login = m.user_login\nINNER JOIN _tool_copilot_teams t\n  ON t.connection_id = tu.connection_id AND t.id = tu.team_id\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR t.slug IN (${team:sqlstring}))\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY t.name\nORDER BY SUM(m.code_generation_activity_count) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Team Metrics Comparison",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly active users by team over time (users in multiple teams appear in each team they belong to)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 42,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "stacking": {
+          "group": "A",
+          "mode": "normal"
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(DATE_SUB(m.day, INTERVAL WEEKDAY(m.day) DAY)) as time,\n  t.name as metric,\n  COUNT(DISTINCT m.user_login) as value\nFROM _tool_copilot_user_daily_metrics m\nINNER JOIN (\n  SELECT DISTINCT connection_id, team_id, user_login\n  FROM _tool_copilot_team_users\n) tu\n  ON tu.connection_id = m.connection_id AND tu.user_login = m.user_login\nINNER JOIN _tool_copilot_teams t\n  ON t.connection_id = tu.connection_id AND t.id = tu.team_id\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR t.slug IN (${team:sqlstring}))\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY time, t.name\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users by Team",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 43,
+      "panels": [],
+      "title": "Quality & Efficiency Ratios",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Acceptance ratio by language for team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT lf.language as \"Language\",\n  SUM(lf.code_generation_activity_count) as \"Suggestions\",\n  SUM(lf.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(lf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(lf.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_metrics_by_language_feature lf\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = lf.connection_id AND udm.user_id = lf.user_id AND udm.day = lf.day AND udm.scope_id = lf.scope_id\nWHERE $__timeFilter(lf.day)\n  AND lf.connection_id = ${connection_id}\n  AND lf.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = udm.connection_id\n        AND tu.user_login = udm.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY lf.language\nHAVING SUM(lf.code_generation_activity_count) > 0\nORDER BY ROUND(SUM(lf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(lf.code_generation_activity_count), 0), 1) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Languages by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Acceptance ratio by model for team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT mf.model as \"Model\",\n  SUM(mf.code_generation_activity_count) as \"Suggestions\",\n  SUM(mf.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(mf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(mf.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_metrics_by_model_feature mf\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = mf.connection_id AND udm.user_id = mf.user_id AND udm.day = mf.day AND udm.scope_id = mf.scope_id\nWHERE $__timeFilter(mf.day)\n  AND mf.connection_id = ${connection_id}\n  AND mf.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = udm.connection_id\n        AND tu.user_login = udm.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY mf.model\nHAVING SUM(mf.code_generation_activity_count) > 0\nORDER BY ROUND(SUM(mf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(mf.code_generation_activity_count), 0), 1) DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Models by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 45,
+      "panels": [],
+      "title": "User Behavior",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Top users by code generation activity in the selected team(s)",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 65
+      },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.user_login as \"user_login\",\n  (SELECT GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ', ')\n   FROM _tool_copilot_team_users tu\n   INNER JOIN _tool_copilot_teams t\n     ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n   WHERE tu.connection_id = m.connection_id\n     AND tu.user_login = m.user_login\n  ) as \"teams\",\n  SUM(m.code_generation_activity_count) as \"suggestions\",\n  SUM(m.code_acceptance_activity_count) as \"acceptances\",\n  ROUND(SUM(m.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(m.code_generation_activity_count), 0), 1) as \"acceptance %\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.user_login\nHAVING SUM(m.code_generation_activity_count) > 0\nORDER BY SUM(m.code_generation_activity_count) DESC\nLIMIT 25",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Users by Code Generations",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Agent vs chat user trend for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 65
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.day as time,\n  COUNT(DISTINCT CASE WHEN m.used_agent = 1 THEN m.user_login END) as \"Agent Users\",\n  COUNT(DISTINCT CASE WHEN m.used_chat = 1 THEN m.user_login END) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics m\nWHERE $__timeFilter(m.day)\n  AND m.connection_id = ${connection_id}\n  AND m.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = m.connection_id\n        AND tu.user_login = m.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\nGROUP BY m.day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Users vs Chat Users Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "New active users per day for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 73
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT first_day as time,\n  COUNT(*) as \"New Active Users\"\nFROM (\n  SELECT m.user_login,\n    MIN(m.day) as first_day\n  FROM _tool_copilot_user_daily_metrics m\n  WHERE m.connection_id = ${connection_id}\n    AND m.scope_id = '${scope_id}'\n    AND (\n      '${team:csv}' = '0'\n      OR EXISTS (\n        SELECT 1\n        FROM _tool_copilot_team_users tu\n        INNER JOIN _tool_copilot_teams t\n          ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n        WHERE tu.connection_id = m.connection_id\n          AND tu.user_login = m.user_login\n          AND t.slug IN (${team:sqlstring})\n      )\n    )\n    AND ('${user:csv}' = '0' OR m.user_login IN (${user:sqlstring}))\n  GROUP BY m.user_login\n) first_seen\nWHERE $__timeFilter(first_day)\nGROUP BY first_day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "New Active Users per Day",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 81
+      },
+      "id": 46,
+      "panels": [],
+      "title": "Seat Effectiveness",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Seat activity by editor for team members",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 82
+      },
+      "id": 33,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(NULLIF(s.last_activity_editor, ''), 'unknown') as \"Editor\",\n  COUNT(*) as \"Seats\"\nFROM _tool_copilot_seats s\nWHERE s.connection_id = ${connection_id}\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = s.connection_id\n        AND tu.user_login = s.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR s.user_login IN (${user:sqlstring}))\nGROUP BY COALESCE(NULLIF(s.last_activity_editor, ''), 'unknown')\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Activity by Editor",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total, active, and inactive seats for team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 82
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as \"total_seats\",\n  SUM(CASE WHEN s.last_activity_at IS NOT NULL AND s.last_activity_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"active_seats\",\n  SUM(CASE WHEN s.last_activity_at IS NULL OR s.last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"inactive_seats\"\nFROM _tool_copilot_seats s\nWHERE s.connection_id = ${connection_id}\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = s.connection_id\n        AND tu.user_login = s.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR s.user_login IN (${user:sqlstring}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Seats Summary",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Inactive seats for team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 82
+      },
+      "id": 35,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.user_login as \"user_login\",\n  (SELECT GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ', ')\n   FROM _tool_copilot_team_users tu\n   INNER JOIN _tool_copilot_teams t\n     ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n   WHERE tu.connection_id = s.connection_id\n     AND tu.user_login = s.user_login\n  ) as \"teams\",\n  s.last_activity_at as \"last_activity_at\",\n  s.plan_type as \"plan_type\"\nFROM _tool_copilot_seats s\nWHERE s.connection_id = ${connection_id}\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = s.connection_id\n        AND tu.user_login = s.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND (s.last_activity_at IS NULL OR s.last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY))\n  AND ('${user:csv}' = '0' OR s.user_login IN (${user:sqlstring}))\nORDER BY s.last_activity_at IS NULL DESC, s.last_activity_at ASC\nLIMIT 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Inactive Seats",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly user-initiated interactions by top Copilot features for the selected team(s) and user(s), using per-user metrics as the source of truth.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 90
+      },
+      "id": 53,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "stacking": {
+          "group": "A",
+          "mode": "normal"
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(DATE_SUB(f.day, INTERVAL WEEKDAY(f.day) DAY)) as time,\n  CASE\n    WHEN f.feature IN (\n      SELECT feature FROM (\n        SELECT f2.feature\n        FROM _tool_copilot_user_metrics_by_feature f2\n        INNER JOIN _tool_copilot_user_daily_metrics udm2\n          ON udm2.connection_id = f2.connection_id AND udm2.user_id = f2.user_id AND udm2.day = f2.day AND udm2.scope_id = f2.scope_id\n        LEFT JOIN (\n          SELECT DISTINCT connection_id, user_login\n          FROM _tool_copilot_team_users\n          WHERE '${team:csv}' = '0' OR team_slug IN (${team:sqlstring})\n        ) tu2\n          ON tu2.connection_id = udm2.connection_id AND tu2.user_login = udm2.user_login\n        WHERE $__timeFilter(f2.day)\n          AND f2.connection_id = ${connection_id}\n          AND f2.scope_id = '${scope_id}'\n          AND ('${team:csv}' = '0' OR tu2.user_login IS NOT NULL)\n          AND ('${user:csv}' = '0' OR udm2.user_login IN (${user:sqlstring}))\n        GROUP BY f2.feature\n        HAVING SUM(f2.user_initiated_interaction_count) > 0\n        ORDER BY SUM(f2.user_initiated_interaction_count) DESC\n        LIMIT 4\n      ) top_features\n    ) THEN REPLACE(REPLACE(f.feature, 'chat_panel_', ''), '_mode', '')\n    ELSE 'Other'\n  END as metric,\n  SUM(f.user_initiated_interaction_count) as value\nFROM _tool_copilot_user_metrics_by_feature f\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = f.connection_id AND udm.user_id = f.user_id AND udm.day = f.day AND udm.scope_id = f.scope_id\nLEFT JOIN (\n  SELECT DISTINCT connection_id, user_login\n  FROM _tool_copilot_team_users\n  WHERE '${team:csv}' = '0' OR team_slug IN (${team:sqlstring})\n) tu\n  ON tu.connection_id = udm.connection_id AND tu.user_login = udm.user_login\nWHERE $__timeFilter(f.day)\n  AND f.connection_id = ${connection_id}\n  AND f.scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR tu.user_login IS NOT NULL)\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY time, metric\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature Mix Over Time",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly IDE activity for selected team(s) and user(s), using per-user IDE metrics as the source of truth.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Weekly Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 90
+      },
+      "id": 54,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "stacking": {
+          "group": "A",
+          "mode": "normal"
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(DATE_SUB(ui.day, INTERVAL WEEKDAY(ui.day) DAY)) as time,\n  ui.ide as metric,\n  SUM(ui.user_initiated_interaction_count + ui.code_generation_activity_count + ui.code_acceptance_activity_count) as value\nFROM _tool_copilot_user_metrics_by_ide ui\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = ui.connection_id AND udm.user_id = ui.user_id AND udm.day = ui.day AND udm.scope_id = ui.scope_id\nLEFT JOIN (\n  SELECT DISTINCT connection_id, user_login\n  FROM _tool_copilot_team_users\n  WHERE '${team:csv}' = '0' OR team_slug IN (${team:sqlstring})\n) tu\n  ON tu.connection_id = udm.connection_id AND tu.user_login = udm.user_login\nWHERE $__timeFilter(ui.day)\n  AND ui.connection_id = ${connection_id}\n  AND ui.scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR tu.user_login IS NOT NULL)\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY time, ui.ide\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "IDE Adoption Over Time",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Matrix-style breakdown of completion suggestions and acceptances by language for selected team(s) and user(s), using per-user language metrics as the source of truth.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 98
+      },
+      "id": 55,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT lf.language as \"Language\",\n  'code_completions' as \"Feature\",\n  SUM(lf.code_generation_activity_count) as \"Suggestions\",\n  SUM(lf.code_acceptance_activity_count) as \"Acceptances\"\nFROM _tool_copilot_user_metrics_by_language_feature lf\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = lf.connection_id AND udm.user_id = lf.user_id AND udm.day = lf.day AND udm.scope_id = lf.scope_id\nLEFT JOIN (\n  SELECT DISTINCT connection_id, user_login\n  FROM _tool_copilot_team_users\n  WHERE '${team:csv}' = '0' OR team_slug IN (${team:sqlstring})\n) tu\n  ON tu.connection_id = udm.connection_id AND tu.user_login = udm.user_login\nWHERE $__timeFilter(lf.day)\n  AND lf.connection_id = ${connection_id}\n  AND lf.scope_id = '${scope_id}'\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY lf.language\nHAVING SUM(lf.code_generation_activity_count) > 0\nORDER BY lf.language",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Feature x Language Matrix",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Acceptance ratio by Copilot feature for selected team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 106
+      },
+      "id": 56,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT f.feature as \"Feature\",\n  SUM(f.code_generation_activity_count) as \"Suggestions\",\n  SUM(f.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(f.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(f.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_metrics_by_feature f\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = f.connection_id AND udm.user_id = f.user_id AND udm.day = f.day AND udm.scope_id = f.scope_id\nWHERE $__timeFilter(f.day)\n  AND f.connection_id = ${connection_id}\n  AND f.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = udm.connection_id\n        AND tu.user_login = udm.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY f.feature\nHAVING SUM(f.code_generation_activity_count) > 0\nORDER BY ROUND(SUM(f.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(f.code_generation_activity_count), 0), 1) DESC, SUM(f.code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Feature",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Acceptance ratio by programming language for selected team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 106
+      },
+      "id": 57,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT lf.language as \"Language\",\n  SUM(lf.code_generation_activity_count) as \"Suggestions\",\n  SUM(lf.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(lf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(lf.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_metrics_by_language_feature lf\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = lf.connection_id AND udm.user_id = lf.user_id AND udm.day = lf.day AND udm.scope_id = lf.scope_id\nWHERE $__timeFilter(lf.day)\n  AND lf.connection_id = ${connection_id}\n  AND lf.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = udm.connection_id\n        AND tu.user_login = udm.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY lf.language\nHAVING SUM(lf.code_generation_activity_count) > 0\nORDER BY ROUND(SUM(lf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(lf.code_generation_activity_count), 0), 1) DESC, SUM(lf.code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Language",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Acceptance ratio by model for selected team members",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 106
+      },
+      "id": 58,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT mf.model as \"Model\",\n  SUM(mf.code_generation_activity_count) as \"Suggestions\",\n  SUM(mf.code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(mf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(mf.code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_user_metrics_by_model_feature mf\nINNER JOIN _tool_copilot_user_daily_metrics udm\n  ON udm.connection_id = mf.connection_id AND udm.user_id = mf.user_id AND udm.day = mf.day AND udm.scope_id = mf.scope_id\nWHERE $__timeFilter(mf.day)\n  AND mf.connection_id = ${connection_id}\n  AND mf.scope_id = '${scope_id}'\n  AND (\n    '${team:csv}' = '0'\n    OR EXISTS (\n      SELECT 1\n      FROM _tool_copilot_team_users tu\n      INNER JOIN _tool_copilot_teams t\n        ON t.connection_id = tu.connection_id AND t.id = tu.team_id\n      WHERE tu.connection_id = udm.connection_id\n        AND tu.user_login = udm.user_login\n        AND t.slug IN (${team:sqlstring})\n    )\n  )\n  AND ('${user:csv}' = '0' OR udm.user_login IN (${user:sqlstring}))\nGROUP BY mf.model\nHAVING SUM(mf.code_generation_activity_count) > 0\nORDER BY ROUND(SUM(mf.code_acceptance_activity_count) * 100.0 / NULLIF(SUM(mf.code_generation_activity_count), 0), 1) DESC, SUM(mf.code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Model",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 114
+      },
+      "id": 59,
+      "panels": [],
+      "title": "Diagnostics",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Latest available team metrics day freshness Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 115
+      },
+      "id": 60,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(TIMESTAMPDIFF(DAY, MAX(date), UTC_DATE()), 9999) as \"Days Since Latest Data\"\nFROM _tool_copilot_team_daily_metrics\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring}))\n  AND '${user:csv}' = '0'",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Freshness",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of PR summaries tied to unknown model taxonomy in selected team(s) Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 115
+      },
+      "id": 61,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n  SUM(CASE WHEN LOWER(COALESCE(model, '')) = 'unknown' THEN total_pr_summaries_created ELSE 0 END) * 100.0\n  / NULLIF(SUM(total_pr_summaries_created), 0),\n  2\n) as \"Unknown Taxonomy %\"\nFROM _tool_copilot_team_dotcom_prs\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring}))\n  AND '${user:csv}' = '0'",
+          "refId": "A"
+        }
+      ],
+      "title": "Unknown Taxonomy Share",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Row counts for team Copilot metrics tables Team-level aggregate; returns no data when User filter is applied.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 115
+      },
+      "id": 62,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT *\nFROM (\n  SELECT '_tool_copilot_team_daily_metrics' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_team_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring})) AND '${user:csv}' = '0'\n\n  UNION ALL\n\n  SELECT '_tool_copilot_team_completions' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_team_completions\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring})) AND '${user:csv}' = '0'\n\n  UNION ALL\n\n  SELECT '_tool_copilot_team_ide_chat' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_team_ide_chat\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring})) AND '${user:csv}' = '0'\n\n  UNION ALL\n\n  SELECT '_tool_copilot_team_dotcom_chat' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_team_dotcom_chat\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring})) AND '${user:csv}' = '0'\n\n  UNION ALL\n\n  SELECT '_tool_copilot_team_dotcom_prs' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_team_dotcom_prs\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR team_slug IN (${team:sqlstring})) AND '${user:csv}' = '0'\n) data_volume\nORDER BY row_count DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Volume by Table",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [
+    "copilot",
+    "devlake",
+    "teams",
+    "users"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "refresh": 2,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allValue": "0",
+        "current": {
+          "text": "All",
+          "value": "0"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT slug as __value, name as __text FROM _tool_copilot_teams WHERE connection_id = ${connection_id} ORDER BY name",
+        "includeAll": true,
+        "label": "Team",
+        "multi": true,
+        "name": "team",
+        "options": [],
+        "query": "SELECT slug as __value, name as __text FROM _tool_copilot_teams WHERE connection_id = ${connection_id} ORDER BY name",
+        "refresh": 2,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allValue": "0",
+        "current": {
+          "text": "All",
+          "value": "0"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT m.user_login as __value, m.user_login as __text FROM _tool_copilot_user_daily_metrics m WHERE m.connection_id = ${connection_id} AND m.scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR EXISTS (SELECT 1 FROM _tool_copilot_team_users tu INNER JOIN _tool_copilot_teams t ON t.connection_id = tu.connection_id AND t.id = tu.team_id WHERE tu.connection_id = m.connection_id AND tu.user_login = m.user_login AND t.slug IN (${team:sqlstring}))) ORDER BY m.user_login",
+        "includeAll": true,
+        "label": "User",
+        "multi": true,
+        "name": "user",
+        "options": [],
+        "query": "SELECT DISTINCT m.user_login as __value, m.user_login as __text FROM _tool_copilot_user_daily_metrics m WHERE m.connection_id = ${connection_id} AND m.scope_id = '${scope_id}' AND ('${team:csv}' = '0' OR EXISTS (SELECT 1 FROM _tool_copilot_team_users tu INNER JOIN _tool_copilot_teams t ON t.connection_id = tu.connection_id AND t.id = tu.team_id WHERE tu.connection_id = m.connection_id AND tu.user_login = m.user_login AND t.slug IN (${team:sqlstring}))) ORDER BY m.user_login",
+        "refresh": 2,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "GitHub Copilot Adoption by Team and User",
+  "uid": "copilot_adoption_by_team_and_user",
+  "version": 7
+}

@@ -17,21 +17,27 @@ limitations under the License.
 
 package migrationscripts
 
-import "github.com/apache/incubator-devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/helpers/migrationhelper"
+	"github.com/apache/incubator-devlake/plugins/gh-copilot/models"
+)
 
-// All returns the ordered list of migration scripts for the Copilot plugin.
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(addCopilotInitialTables),
-		new(addRawDataOriginToCopilotSeats),
-		new(addRawDataOriginToCopilotLanguageMetrics),
-		new(addNameFieldsToScopes),
-		new(addScopeConfig20260121),
-		new(migrateToUsageMetricsV2),
-		new(addPRFieldsToEnterpriseMetrics),
-		new(addTeamTables),
-		new(addOrganizationIdToUserMetrics),
-		new(addTeamTables),
-		new(addOrganizationIdToUserMetrics),
-	}
+type addTeamTables struct{}
+
+func (script *addTeamTables) Up(basicRes context.BasicRes) errors.Error {
+	return migrationhelper.AutoMigrateTables(
+		basicRes,
+		&models.GhCopilotTeam{},
+		&models.GhCopilotTeamUser{},
+	)
+}
+
+func (*addTeamTables) Version() uint64 {
+	return 20260227000000
+}
+
+func (*addTeamTables) Name() string {
+	return "copilot add team and team_user tables"
 }
