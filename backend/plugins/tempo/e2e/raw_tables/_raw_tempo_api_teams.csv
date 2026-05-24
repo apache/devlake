@@ -1,0 +1,3 @@
+"id","params","data","url","input","created_at"
+1,"{""ConnectionId"":1}","[{""self"":""https://api.tempo.io/4/teams/17"",""id"":17,""name"":""Abstract BE Team"",""summary"":"""",""key"":""""}]","https://api.tempo.io/4/teams","{""self"":""https://api.tempo.io/4/teams/17"",""id"":17,""name"":""Abstract BE Team"",""summary"":"""",""key"":""""}","2024-01-15 10:00:00.000"
+2,"{""ConnectionId"":1}","[{""self"":""https://api.tempo.io/4/teams/71"",""id"":71,""name"":""SmartShopper (RTL+WHS)"",""summary"":""Microservice Applications"",""key"":""""}]","https://api.tempo.io/4/teams","{""self"":""https://api.tempo.io/4/teams/71"",""id"":71,""name"":""SmartShopper (RTL+WHS)"",""summary"":""Microservice Applications"",""key"":""""}","2024-01-15 10:00:00.000"
