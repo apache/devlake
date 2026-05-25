@@ -123,7 +123,8 @@ func NewStaticRoundTripper(base http.RoundTripper, rawToken string) *StaticRound
 
 func (rt *StaticRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	// always overrides headers put by SetupAuthentication, to make sure the token is always injected
-	tok := rt.tokens[rt.idx.Add(1)%uint64(len(rt.tokens))]
+	// Add(1)-1 yields a 0-based sequence (0, 1, 2, ...) so rotation starts at tokens[0].
+	tok := rt.tokens[(rt.idx.Add(1)-1)%uint64(len(rt.tokens))]
 	reqClone := req.Clone(req.Context())
 	reqClone.Header.Set("Authorization", "Bearer "+tok)
 	return rt.base.RoundTrip(reqClone)
