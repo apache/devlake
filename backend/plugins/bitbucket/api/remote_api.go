@@ -80,6 +80,15 @@ func listBitbucketWorkspaces(
 	if err != nil {
 		return
 	}
+	if res.StatusCode > 299 {
+		body, e := io.ReadAll(res.Body)
+		if e != nil {
+			err = errors.BadInput.Wrap(e, "failed to read response body")
+			return
+		}
+		err = errors.HttpStatus(res.StatusCode).New(string(body))
+		return
+	}
 
 	resBody := &models.WorkspaceResponse{}
 	err = api.UnmarshalResponse(res, resBody)
