@@ -155,7 +155,13 @@ func (apiClient *GraphqlAsyncClient) updateRateRemaining(rateRemaining int, rese
 			newRateRemaining, newResetAt, err := apiClient.getRateRemaining(apiClient.ctx, apiClient.client, apiClient.logger)
 			if err != nil {
 				apiClient.logger.Info("failed to update graphql rate limit, will retry next cycle: %v", err)
-				apiClient.updateRateRemaining(apiClient.rateRemaining, nil)
+				// Floor the reused value so Signal() always fires; prevents deadlock when
+				// rateRemaining is 0 and the rate-limit endpoint keeps erroring (e.g. GHE).
+				fallback := apiClient.rateRemaining
+				if fallback < defaultRateLimitConst {
+					fallback = defaultRateLimitConst
+				}
+				apiClient.updateRateRemaining(fallback, nil)
 				return
 			}
 			apiClient.updateRateRemaining(newRateRemaining, newResetAt)
