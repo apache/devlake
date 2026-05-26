@@ -18,29 +18,36 @@ limitations under the License.
 package tasks
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildUserActivityAllowedEmailSetNormalizesEmails(t *testing.T) {
-	allowedEmails := buildUserActivityAllowedEmailSet([]string{
-		" Alice@example.com ",
-		"BOB@example.com",
-		"",
-	})
+func TestParseAnalyticsDateFromDayInput(t *testing.T) {
+	input, err := json.Marshal(claudeCodeDayInput{Day: "2026-03-04"})
+	assert.NoError(t, err)
 
-	assert.Len(t, allowedEmails, 2)
-	_, hasAlice := allowedEmails["alice@example.com"]
-	_, hasBob := allowedEmails["bob@example.com"]
-	assert.True(t, hasAlice)
-	assert.True(t, hasBob)
+	date, parseErr := parseAnalyticsDate(input)
+
+	assert.Nil(t, parseErr)
+	assert.Equal(t, time.Date(2026, 3, 4, 0, 0, 0, 0, time.UTC), date)
 }
 
-func TestShouldExtractUserActivityEmail(t *testing.T) {
-	allowedEmails := buildUserActivityAllowedEmailSet([]string{"alice@example.com"})
+func TestParseAnalyticsDateFromRangeInput(t *testing.T) {
+	input, err := json.Marshal(claudeCodeDateRangeInput{StartDate: "2026-03-04", EndDate: "2026-03-05"})
+	assert.NoError(t, err)
 
-	assert.True(t, shouldExtractUserActivityEmail(normalizeUserActivityEmail(" Alice@example.com "), allowedEmails))
-	assert.False(t, shouldExtractUserActivityEmail(normalizeUserActivityEmail("bob@example.com"), allowedEmails))
-	assert.False(t, shouldExtractUserActivityEmail("", allowedEmails))
+	date, parseErr := parseAnalyticsDate(input)
+
+	assert.Nil(t, parseErr)
+	assert.Equal(t, time.Date(2026, 3, 4, 0, 0, 0, 0, time.UTC), date)
+}
+
+func TestParseAnalyticsDateReturnsErrorForInvalidInput(t *testing.T) {
+	date, parseErr := parseAnalyticsDate(json.RawMessage(`{"unknown":"2026-03-04"}`))
+
+	assert.NotNil(t, parseErr)
+	assert.True(t, date.IsZero())
 }
