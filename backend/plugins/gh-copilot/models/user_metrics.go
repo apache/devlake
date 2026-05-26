@@ -30,10 +30,11 @@ type GhCopilotUserDailyMetrics struct {
 	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
 	UserId       int64     `gorm:"primaryKey" json:"userId"`
 
-	EnterpriseId string `json:"enterpriseId" gorm:"type:varchar(100)"`
-	UserLogin    string `json:"userLogin" gorm:"type:varchar(255);index"`
-	UsedAgent    bool   `json:"usedAgent"`
-	UsedChat     bool   `json:"usedChat"`
+	OrganizationId string `json:"organizationId" gorm:"type:varchar(100)"`
+	EnterpriseId   string `json:"enterpriseId" gorm:"type:varchar(100)"`
+	UserLogin      string `json:"userLogin" gorm:"type:varchar(255);index"`
+	UsedAgent      bool   `json:"usedAgent"`
+	UsedChat       bool   `json:"usedChat"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
 	common.NoPKModel

@@ -33,7 +33,7 @@ type scopeConfig20260121 struct {
 	Entities           []string   `gorm:"type:json;serializer:json" json:"entities" mapstructure:"entities"`
 	ConnectionId       uint64     `json:"connectionId" gorm:"index" validate:"required" mapstructure:"connectionId,omitempty"`
 	Name               string     `mapstructure:"name" json:"name" gorm:"type:varchar(255);uniqueIndex" validate:"required"`
-	ImplementationDate *time.Time `json:"implementationDate" mapstructure:"implementationDate" gorm:"type:datetime"`
+	ImplementationDate *time.Time `json:"implementationDate" mapstructure:"implementationDate"`
 	BaselinePeriodDays int        `json:"baselinePeriodDays" mapstructure:"baselinePeriodDays" gorm:"default:90"`
 }
 

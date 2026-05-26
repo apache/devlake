@@ -19,7 +19,7 @@ package models
 
 import "time"
 
-// LockingHistory is desgned for preventing mutiple delake instances from sharing the same database which may cause
+// LockingHistory is desgned for preventing multiple delake instances from sharing the same database which may cause
 // problems like #3537, #3466. It works by the following step:
 //
 // 1. Each devlake insert a record to this table whie `Succeeded=false`

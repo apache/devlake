@@ -58,8 +58,8 @@ func ConvertJobs(taskCtx plugin.SubTaskContext) errors.Error {
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			userTool := inputRow.(*models.CircleciJob)
 			createdAt := time.Now()
-			if userTool.CreatedAt != nil {
-				createdAt = userTool.CreatedAt.ToTime()
+			if userTool.CreatedDate != nil {
+				createdAt = userTool.CreatedDate.ToTime()
 			}
 			task := &devops.CICDTask{
 				DomainEntity: domainlayer.DomainEntity{

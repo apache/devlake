@@ -36,8 +36,8 @@ func TestExampleCsvFile(t *testing.T) {
 	defer iter.Close()
 	for iter.HasNext() {
 		row := iter.Fetch()
-		assert.Equal(t, row["name"], "foobar", "name not euqal")
-		assert.Equal(t, row["json"], `{"url": "https://example.com"}`, "json not euqal")
+		assert.Equal(t, row["name"], "foobar", "name not equal")
+		assert.Equal(t, row["json"], `{"url": "https://example.com"}`, "json not equal")
 	}
 }
 

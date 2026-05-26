@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -81,24 +79,17 @@ type MilestonesResponse struct {
 
 func ExtractMilestones(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[MilestonesResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_MILESTONE_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			response := &MilestonesResponse{}
-			err := errors.Convert(json.Unmarshal(row.Data, response))
-			if err != nil {
-				return nil, err
-			}
-			results := make([]interface{}, 0, 1)
-			results = append(results, convertGithubMilestone(response, data.Options.ConnectionId, data.Options.GithubId))
-			return results, nil
+		Extract: func(body *MilestonesResponse, row *api.RawData) ([]any, errors.Error) {
+			return []any{convertGithubMilestone(body, data.Options.ConnectionId, data.Options.GithubId)}, nil
 		},
 	})
 	if err != nil {

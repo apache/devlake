@@ -258,7 +258,7 @@ func DeleteBlueprint(id uint64) errors.Error {
 var blueprintReloadLock sync.Mutex
 var bpCronIdMap map[uint64]cron.EntryID
 
-// ReloadBlueprints reloades cronjobs based on blueprints
+// ReloadBlueprints reloads cronjobs based on blueprints
 func ReloadBlueprints() (err errors.Error) {
 	enable := true
 	isManual := false

@@ -70,61 +70,43 @@ type PullRequestCommit struct {
 func ExtractApiPullRequestCommits(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
-	extractor, err := helper.NewApiExtractor(helper.ApiExtractorArgs{
-		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraIssues by Board
-			*/
+	extractor, err := helper.NewStatefulApiExtractor(&helper.StatefulApiExtractorArgs[PrCommitsResponse]{
+		SubtaskCommonArgs: &helper.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_PR_COMMIT_TABLE,
 		},
-		Extract: func(row *helper.RawData) ([]interface{}, errors.Error) {
-			apiPullRequestCommit := &PrCommitsResponse{}
+		Extract: func(body *PrCommitsResponse, row *helper.RawData) ([]any, errors.Error) {
 			if strings.HasPrefix(string(row.Data), "{\"message\": \"Not Found\"") {
 				return nil, nil
 			}
-			err := errors.Convert(json.Unmarshal(row.Data, apiPullRequestCommit))
-			if err != nil {
-				return nil, err
-			}
 			pull := &SimplePr{}
-			err = errors.Convert(json.Unmarshal(row.Input, pull))
+			err := errors.Convert(json.Unmarshal(row.Input, pull))
 			if err != nil {
 				return nil, err
 			}
-			// need to extract 2 kinds of entities here
 			results := make([]interface{}, 0, 3)
 			githubRepoCommit := &models.GithubRepoCommit{
 				ConnectionId: data.Options.ConnectionId,
 				RepoId:       repoId,
-				CommitSha:    apiPullRequestCommit.Sha,
+				CommitSha:    body.Sha,
 			}
 			results = append(results, githubRepoCommit)
-
-			githubCommit, err := convertPullRequestCommit(apiPullRequestCommit, data.Options.ConnectionId)
+			githubCommit, err := convertPullRequestCommit(body, data.Options.ConnectionId)
 			if err != nil {
 				return nil, err
 			}
 			results = append(results, githubCommit)
-
 			githubPullRequestCommit := &models.GithubPrCommit{
 				ConnectionId:       data.Options.ConnectionId,
-				CommitSha:          apiPullRequestCommit.Sha,
+				CommitSha:          body.Sha,
 				PullRequestId:      pull.GithubId,
 				CommitAuthorName:   githubCommit.AuthorName,
 				CommitAuthorEmail:  githubCommit.AuthorEmail,
 				CommitAuthoredDate: githubCommit.AuthoredDate,
-			}
-			if err != nil {
-				return nil, err
 			}
 			results = append(results, githubPullRequestCommit)
 			return results, nil

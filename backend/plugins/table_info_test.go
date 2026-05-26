@@ -23,6 +23,7 @@ import (
 	"github.com/apache/incubator-devlake/helpers/unithelper"
 	ae "github.com/apache/incubator-devlake/plugins/ae/impl"
 	argocd "github.com/apache/incubator-devlake/plugins/argocd/impl"
+	asana "github.com/apache/incubator-devlake/plugins/asana/impl"
 	azuredevops "github.com/apache/incubator-devlake/plugins/azuredevops_go/impl"
 	bamboo "github.com/apache/incubator-devlake/plugins/bamboo/impl"
 	bitbucket "github.com/apache/incubator-devlake/plugins/bitbucket/impl"
@@ -49,9 +50,11 @@ import (
 	pagerduty "github.com/apache/incubator-devlake/plugins/pagerduty/impl"
 	q_dev "github.com/apache/incubator-devlake/plugins/q_dev/impl"
 	refdiff "github.com/apache/incubator-devlake/plugins/refdiff/impl"
+	rootly "github.com/apache/incubator-devlake/plugins/rootly/impl"
 	slack "github.com/apache/incubator-devlake/plugins/slack/impl"
 	sonarqube "github.com/apache/incubator-devlake/plugins/sonarqube/impl"
 	starrocks "github.com/apache/incubator-devlake/plugins/starrocks/impl"
+	taiga "github.com/apache/incubator-devlake/plugins/taiga/impl"
 	tapd "github.com/apache/incubator-devlake/plugins/tapd/impl"
 	teambition "github.com/apache/incubator-devlake/plugins/teambition/impl"
 	testmo "github.com/apache/incubator-devlake/plugins/testmo/impl"
@@ -71,6 +74,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("bitbucket/models", bitbucket.Bitbucket{}.GetTablesInfo)
 	checker.FeedIn("bitbucket_server/models", bitbucket_server.BitbucketServer{}.GetTablesInfo)
 	checker.FeedIn("argocd/models", argocd.ArgoCD{}.GetTablesInfo)
+	checker.FeedIn("asana/models", asana.Asana{}.GetTablesInfo)
 	checker.FeedIn("customize/models", customize.Customize{}.GetTablesInfo)
 	checker.FeedIn("dbt", dbt.Dbt{}.GetTablesInfo)
 	checker.FeedIn("dora/models", dora.Dora{}.GetTablesInfo)
@@ -86,9 +90,11 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("org", org.Org{}.GetTablesInfo)
 	checker.FeedIn("pagerduty/models", pagerduty.PagerDuty{}.GetTablesInfo)
 	checker.FeedIn("refdiff/models", refdiff.RefDiff{}.GetTablesInfo)
+	checker.FeedIn("rootly/models", rootly.Rootly{}.GetTablesInfo)
 	checker.FeedIn("slack/models", slack.Slack{}.GetTablesInfo)
 	checker.FeedIn("sonarqube/models", sonarqube.Sonarqube{}.GetTablesInfo)
 	checker.FeedIn("starrocks", starrocks.StarRocks{}.GetTablesInfo)
+	checker.FeedIn("taiga/models", taiga.Taiga{}.GetTablesInfo)
 	checker.FeedIn("tapd/models", tapd.Tapd{}.GetTablesInfo)
 	checker.FeedIn("teambition/models", teambition.Teambition{}.GetTablesInfo)
 	checker.FeedIn("testmo/models", testmo.Testmo{}.GetTablesInfo)

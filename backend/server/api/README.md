@@ -18,7 +18,7 @@ limitations under the License.
 
 ### Summary
 
-Users can set pipepline plan by config-ui to create schedule jobs.
+Users can set pipeline plan by config-ui to create schedule jobs.
 And config-ui will send blueprint request with cronConfig in crontab format.
 
 ### Cron Job

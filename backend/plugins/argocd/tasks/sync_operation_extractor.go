@@ -43,15 +43,23 @@ var ExtractSyncOperationsMeta = plugin.SubTaskMeta{
 	ProductTables:    []string{models.ArgocdSyncOperation{}.TableName()},
 }
 
+// ArgocdApiSyncSource represents a single source in a multi-source ArgoCD application.
+type ArgocdApiSyncSource struct {
+	RepoURL string `json:"repoURL"`
+	Chart   string `json:"chart"`
+}
+
 type ArgocdApiSyncOperation struct {
 	// For history entries
 	ID              int64      `json:"id"`
 	Revision        string     `json:"revision"`
+	Revisions       []string   `json:"revisions"` // multi-source apps populate this instead of revision
 	DeployedAt      time.Time  `json:"deployedAt"`
 	DeployStartedAt *time.Time `json:"deployStartedAt"`
 	Source          struct {
 		RepoURL string `json:"repoURL"`
 	} `json:"source"`
+	Sources     []ArgocdApiSyncSource `json:"sources"` // multi-source apps populate this instead of source
 	InitiatedBy struct {
 		Username  string `json:"username"`
 		Automated bool   `json:"automated"`
@@ -66,6 +74,7 @@ type ArgocdApiSyncOperation struct {
 	FinishedAt *time.Time `json:"finishedAt"`
 	SyncResult struct {
 		Revision  string                      `json:"revision"`
+		Revisions []string                    `json:"revisions"` // multi-source apps
 		Resources []ArgocdApiSyncResourceItem `json:"resources"`
 	} `json:"syncResult"`
 }
@@ -179,9 +188,26 @@ func ExtractSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 
 			isOperationState := apiOp.Phase != ""
 
+			// operationState always represents the same sync as the latest history entry
+			// (when phase=Succeeded). Skip it to avoid the duplicate DeploymentId.
+			if isOperationState && isRedundantOperationState(apiOp.Phase) {
+				return nil, nil
+			}
+
+			// For multi-source apps ArgoCD sets revisions[] instead of revision. Resolve
+			// the single commit SHA we care about before deciding whether to skip this entry.
+			if apiOp.Revision == "" {
+				apiOp.Revision = resolveMultiSourceRevision(apiOp.Revisions, apiOp.Sources)
+			}
 			if !isOperationState && apiOp.DeployedAt.IsZero() && apiOp.Revision == "" {
 				return nil, nil
 			}
+
+			// Resolve the git repo URL at extraction time so the convertor can set
+			// cicd_deployment_commits.repo_url correctly even when
+			// _tool_argocd_applications.repo_url is empty (e.g. for multi-source apps
+			// whose collectApplications subtask was skipped due to state caching).
+			syncOp.RepoURL = resolveGitRepoURL(apiOp.Source.RepoURL, apiOp.Sources)
 
 			if isOperationState {
 				start := normalize(apiOp.StartedAt)
@@ -190,7 +216,14 @@ func ExtractSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 				} else {
 					syncOp.DeploymentId = time.Now().Unix()
 				}
-				syncOp.Revision = apiOp.SyncResult.Revision
+				// Prefer the top-level resolved revision; fall back to syncResult.
+				syncOp.Revision = apiOp.Revision
+				if syncOp.Revision == "" {
+					syncOp.Revision = resolveMultiSourceRevision(apiOp.SyncResult.Revisions, apiOp.Sources)
+				}
+				if syncOp.Revision == "" {
+					syncOp.Revision = apiOp.SyncResult.Revision
+				}
 				syncOp.StartedAt = start
 				syncOp.FinishedAt = normalizePtr(apiOp.FinishedAt)
 				syncOp.Phase = apiOp.Phase
@@ -379,4 +412,149 @@ func stringSlicesEqual(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+// resolveMultiSourceRevision picks the git commit SHA from a multi-source ArgoCD
+// application's revisions slice. ArgoCD multi-source apps store one revision per
+// source: Helm chart sources carry a semver tag while git sources carry a 40-hex
+// commit SHA. We prefer the first git-hosted source (github.com / gitlab.com /
+// bitbucket.org) and fall back to any entry that looks like a 40-character hex SHA.
+//
+// Single-source apps already populate the top-level "revision" field, so this
+// function is only called when that field is empty.
+func resolveMultiSourceRevision(revisions []string, sources []ArgocdApiSyncSource) string {
+	if len(revisions) == 0 {
+		return ""
+	}
+
+	// Pass 1: prefer a revision whose corresponding source is a git hosting service.
+	for i, rev := range revisions {
+		if i >= len(sources) {
+			break
+		}
+		repoURL := sources[i].RepoURL
+		if isGitHostedURL(repoURL) && isCommitSHA(rev) {
+			return rev
+		}
+	}
+
+	// Pass 2: accept any revision that looks like a full commit SHA regardless of
+	// source type (covers self-hosted Gitea / Forgejo / etc.).
+	for _, rev := range revisions {
+		if isCommitSHA(rev) {
+			return rev
+		}
+	}
+
+	return ""
+}
+
+// isGitHostedURL returns true when the URL belongs to a known git hosting service
+// or is clearly not a Helm chart registry.
+func isGitHostedURL(repoURL string) bool {
+	if repoURL == "" {
+		return false
+	}
+	gitHosts := []string{
+		"github.com",
+		"gitlab.com",
+		"bitbucket.org",
+		"dev.azure.com",
+		"ssh.dev.azure.com",
+		"gitea.",
+		"forgejo.",
+	}
+	lower := strings.ToLower(repoURL)
+	for _, host := range gitHosts {
+		if strings.Contains(lower, host) {
+			return true
+		}
+	}
+	// Any https/ssh git URL that is not a chart registry (gs://, oci://, https://*.azurecr.io, etc.)
+	chartPrefixes := []string{"gs://", "oci://", "s3://"}
+	for _, pfx := range chartPrefixes {
+		if strings.HasPrefix(lower, pfx) {
+			return false
+		}
+	}
+	// .git suffix is a strong signal
+	return strings.HasSuffix(strings.TrimSpace(repoURL), ".git")
+}
+
+// resolveGitRepoURL returns the best git repository URL from a sync operation's
+// source metadata. For single-source apps the source.repoURL is used directly.
+// For multi-source apps (sources[]) the first URL that matches a known git
+// hosting service is preferred; if none match the heuristic, the first non-chart
+// HTTPS/SSH URL is used as a fallback so that cicd_deployment_commits.repo_url
+// is never left as the deployment-name placeholder.
+//
+// This is called during extractSyncOperations which always runs, providing
+// reliable repo_url population even when extractApplications is skipped due
+// to the collector state cache.
+func resolveGitRepoURL(singleSourceURL string, sources []ArgocdApiSyncSource) string {
+	// Single-source app: use the URL directly.
+	if singleSourceURL != "" {
+		return singleSourceURL
+	}
+
+	// Multi-source app: pass 1 — prefer a known git host.
+	for _, src := range sources {
+		if isGitHostedURL(src.RepoURL) {
+			return src.RepoURL
+		}
+	}
+
+	// Pass 2 — fall back to the first non-chart URL (covers self-hosted instances
+	// not in the known-host list, e.g. on-prem GitLab with a custom domain).
+	chartPrefixes := []string{"gs://", "oci://", "s3://"}
+	for _, src := range sources {
+		if src.RepoURL == "" {
+			continue
+		}
+		lower := strings.ToLower(src.RepoURL)
+		isChart := false
+		for _, pfx := range chartPrefixes {
+			if strings.HasPrefix(lower, pfx) {
+				isChart = true
+				break
+			}
+		}
+		if !isChart {
+			return src.RepoURL
+		}
+	}
+
+	return ""
+}
+
+// isCommitSHA returns true for a 40-character lowercase hexadecimal string,
+// which is the standard representation of a Git commit SHA-1.
+func isCommitSHA(s string) bool {
+	if len(s) != 40 {
+		return false
+	}
+	for _, c := range s {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
+}
+
+// isRedundantOperationState reports whether an operationState entry should be
+// skipped because it duplicates the most recent history entry.
+//
+// ArgoCD exposes a completed sync in two places:
+//   - status.history[]     — authoritative log, one entry per sync
+//   - status.operationState — mirrors the last sync while it is current
+//
+// When phase is Succeeded the operationState is always already present in
+// history[]. Emitting it would produce a second ArgocdSyncOperation whose
+// DeploymentId differs by one second (startedAt vs deployedAt), creating a
+// duplicate deployment in DORA metrics.
+//
+// In-flight (Running, Terminating) and terminal-failure (Failed, Error) states
+// are not yet — or may never be — written to history, so they must be kept.
+func isRedundantOperationState(phase string) bool {
+	return phase == "Succeeded"
 }

@@ -53,7 +53,7 @@ func TestResolvePort(t *testing.T) {
 	}
 	_, err = ResolvePort("", "rabbitmq")
 	if err == nil {
-		t.Errorf("Expected error %s, Got nil", "schema not fount")
+		t.Errorf("Expected error %s, Got nil", "schema not found")
 	}
 	_, err = ResolvePort("", "")
 	if err == nil {

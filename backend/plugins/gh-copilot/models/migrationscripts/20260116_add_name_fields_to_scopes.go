@@ -38,9 +38,9 @@ type ghCopilotScope20260116 struct {
 	Organization       string     `json:"organization" gorm:"type:varchar(255)"`
 	Name               string     `json:"name" gorm:"type:varchar(255)"`
 	FullName           string     `json:"fullName" gorm:"type:varchar(255)"`
-	ImplementationDate *time.Time `json:"implementationDate" gorm:"type:datetime"`
+	ImplementationDate *time.Time `json:"implementationDate"`
 	BaselinePeriodDays int        `json:"baselinePeriodDays" gorm:"default:90"`
-	SeatsLastSyncedAt  *time.Time `json:"seatsLastSyncedAt" gorm:"type:datetime"`
+	SeatsLastSyncedAt  *time.Time `json:"seatsLastSyncedAt"`
 }
 
 func (ghCopilotScope20260116) TableName() string {

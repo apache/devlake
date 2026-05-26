@@ -56,7 +56,7 @@
       },
       "id": 48,
       "options": {
-        "content": "<div style=\"display: block;text-align: center;margin-top: 56px;\">\n  <div style=\"display: inline-flex;\">\n    <img src=\"/grafana/public/img/lake/1.png\" alt=\"No.1\" width=\"56\">\n    <p style=\"font-size:24px; margin:10px; color:#BFC1C8;\"><b>MR Troughput and Pass Rate<b></b></b></p><b><b>\n  </div>\n</div>",
+        "content": "<div style=\"display: block;text-align: center;margin-top: 56px;\">\n  <div style=\"display: inline-flex;\">\n    <img src=\"/grafana/public/img/lake/1.png\" alt=\"No.1\" width=\"56\">\n    <p style=\"font-size:24px; margin:10px; color:#BFC1C8;\"><b>MR Throughput and Pass Rate<b></b></b></p><b><b>\n  </div>\n</div>",
         "mode": "html"
       },
       "pluginVersion": "8.0.6",
@@ -857,7 +857,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT\n  timestamp(DATE_ADD(date(gitlab_created_at), INTERVAL -$interval(date(gitlab_created_at))+1 DAY)) as time,\n  avg(review_rounds) as \"Pull Request Reveiw Round\"\nFROM\n  gitlab_merge_requests gmr\nWHERE\n  state = 'merged'\n  and review_rounds > 0\n  and gmr.project_id = $repo_id\n  and $__timeFilter(gitlab_created_at)\nGROUP BY 1\nORDER BY 1",
+          "rawSql": "SELECT\n  timestamp(DATE_ADD(date(gitlab_created_at), INTERVAL -$interval(date(gitlab_created_at))+1 DAY)) as time,\n  avg(review_rounds) as \"Pull Request Review Round\"\nFROM\n  gitlab_merge_requests gmr\nWHERE\n  state = 'merged'\n  and review_rounds > 0\n  and gmr.project_id = $repo_id\n  and $__timeFilter(gitlab_created_at)\nGROUP BY 1\nORDER BY 1",
           "refId": "A",
           "select": [
             [

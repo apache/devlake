@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/apache/incubator-devlake/core/errors"
@@ -46,23 +45,16 @@ func ExtractJobs(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[models.GithubJob]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_JOB_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			githubJob := &models.GithubJob{}
-			err := errors.Convert(json.Unmarshal(row.Data, githubJob))
-			if err != nil {
-				return nil, err
-			}
-
-			results := make([]interface{}, 0, 1)
+		Extract: func(githubJob *models.GithubJob, row *api.RawData) ([]any, errors.Error) {
 			githubJobResult := &models.GithubJob{
 				ConnectionId:  data.Options.ConnectionId,
 				RepoId:        repoId,
@@ -87,8 +79,7 @@ func ExtractJobs(taskCtx plugin.SubTaskContext) errors.Error {
 				Type:          data.RegexEnricher.ReturnNameIfMatched(devops.DEPLOYMENT, githubJob.Name),
 				Environment:   data.RegexEnricher.ReturnNameIfOmittedOrMatched(devops.PRODUCTION, githubJob.Name),
 			}
-			results = append(results, githubJobResult)
-			return results, nil
+			return []any{githubJobResult}, nil
 		},
 	})
 

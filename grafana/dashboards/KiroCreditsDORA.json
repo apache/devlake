@@ -1,0 +1,426 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "DORA Dashboard",
+      "type": "link",
+      "url": "/d/qNo8_0M4z/dora"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kiro Usage Dashboard",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "## Kiro Credits + DORA Correlation\nThis dashboard correlates **Kiro AI usage (credits and messages)** with **DORA** performance indicators at a weekly aggregate level.\n\n- **Pearson's r** measures linear correlation: negative r suggests higher AI usage may correlate with shorter cycle times.\n- Data is aggregated by **week** and joined on `week_start`.",
+        "mode": "markdown"
+      },
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 3 },
+      "id": 2,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Pearson correlation coefficient between weekly Kiro credits and PR cycle time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "options": { "match": "null", "result": { "text": "Need more data" } }, "type": "special" }],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": -0.3 },
+              { "color": "orange", "value": 0.3 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 4 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showPercentChange": false,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (\n  SELECT\n    DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS weekly_credits\n  FROM _tool_q_dev_user_report\n  WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_pr_weekly AS (\n  SELECT\n    DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY) AS week_start,\n    AVG(pr_cycle_time) / 60.0 AS avg_cycle_hours\n  FROM project_pr_metrics\n  WHERE pr_merged_date IS NOT NULL\n    AND pr_cycle_time IS NOT NULL\n    AND $__timeFilter(pr_merged_date)\n  GROUP BY DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY)\n),\n_joined AS (\n  SELECT k.weekly_credits AS x, p.avg_cycle_hours AS y\n  FROM _kiro_weekly k\n  INNER JOIN _pr_weekly p ON k.week_start = p.week_start\n),\n_stats AS (\n  SELECT COUNT(*) AS n, AVG(x) AS mx, AVG(y) AS my, STDDEV_POP(x) AS sx, STDDEV_POP(y) AS sy\n  FROM _joined\n)\nSELECT CASE\n  WHEN s.n < 4 THEN NULL\n  WHEN s.sx = 0 OR s.sy = 0 THEN 0\n  ELSE ROUND((SELECT SUM((j.x - s.mx) * (j.y - s.my)) FROM _joined j) / (s.n * s.sx * s.sy), 2)\nEND AS 'r'\nFROM _stats s",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits vs Cycle Time (r)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total Kiro credits consumed in period",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 4 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(credits_used) AS 'Credits Used'\nFROM _tool_q_dev_user_report\nWHERE $__timeFilter(date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Credits",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Median PR cycle time in hours",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 4 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _ranked AS (\n  SELECT pr_cycle_time / 60.0 AS ct,\n    PERCENT_RANK() OVER (ORDER BY pr_cycle_time) AS prank\n  FROM project_pr_metrics\n  WHERE pr_merged_date IS NOT NULL AND pr_cycle_time IS NOT NULL\n    AND $__timeFilter(pr_merged_date)\n)\nSELECT ROUND(MAX(ct), 1) AS 'Median Cycle Time'\nFROM _ranked WHERE prank <= 0.5",
+          "refId": "A"
+        }
+      ],
+      "title": "Median Cycle Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Cycle time comparison: weeks with above-median vs below-median AI credits usage",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 4 },
+      "id": 6,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.6,
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS weekly_credits\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_pr_weekly AS (\n  SELECT DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY) AS week_start,\n    AVG(pr_cycle_time) / 60.0 AS avg_ct\n  FROM project_pr_metrics\n  WHERE pr_merged_date IS NOT NULL AND pr_cycle_time IS NOT NULL AND $__timeFilter(pr_merged_date)\n  GROUP BY DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY)\n),\n_joined AS (\n  SELECT k.weekly_credits, p.avg_ct FROM _kiro_weekly k INNER JOIN _pr_weekly p ON k.week_start = p.week_start\n),\n_med AS (\n  SELECT weekly_credits AS med FROM _joined ORDER BY weekly_credits LIMIT 1 OFFSET (SELECT FLOOR(COUNT(*)/2) FROM _joined)\n)\nSELECT\n  CASE WHEN j.weekly_credits >= m.med THEN 'High AI Usage' ELSE 'Low AI Usage' END AS 'Tier',\n  ROUND(AVG(j.avg_ct), 1) AS 'Avg Cycle Time'\nFROM _joined j, _med m\nGROUP BY CASE WHEN j.weekly_credits >= m.med THEN 'High AI Usage' ELSE 'Low AI Usage' END",
+          "refId": "A"
+        }
+      ],
+      "title": "Cycle Time: High vs Low AI Usage",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "id": 10,
+      "panels": [],
+      "title": "Weekly Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly Kiro credits consumed",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 11 },
+      "id": 11,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  SUM(credits_used) AS 'Credits Used',\n  COUNT(DISTINCT user_id) AS 'Active Users'\nFROM _tool_q_dev_user_report\nWHERE $__timeFilter(date)\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Kiro Credits & Active Users",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly average PR cycle time in hours",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 11 },
+      "id": 12,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY) AS time,\n  ROUND(AVG(pr_cycle_time) / 60.0, 1) AS 'Avg Cycle Time (hrs)',\n  COUNT(*) AS 'PRs Merged'\nFROM project_pr_metrics\nWHERE pr_merged_date IS NOT NULL AND pr_cycle_time IS NOT NULL\n  AND $__timeFilter(pr_merged_date)\nGROUP BY DATE_SUB(DATE(pr_merged_date), INTERVAL WEEKDAY(DATE(pr_merged_date)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly PR Cycle Time & Volume",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "id": 20,
+      "panels": [],
+      "title": "Deployment Frequency",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Pearson correlation between weekly credits and deployment count",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "options": { "match": "null", "result": { "text": "Need more data" } }, "type": "special" }],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 20 },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS weekly_credits\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_deploy_weekly AS (\n  SELECT DATE_SUB(DATE(cdc.finished_date), INTERVAL WEEKDAY(DATE(cdc.finished_date)) DAY) AS week_start,\n    COUNT(DISTINCT cdc.cicd_deployment_id) AS deploys\n  FROM cicd_deployment_commits cdc\n  JOIN project_mapping pm ON cdc.cicd_scope_id = pm.row_id AND pm.`table` = 'cicd_scopes'\n  WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION'\n    AND $__timeFilter(cdc.finished_date)\n  GROUP BY DATE_SUB(DATE(cdc.finished_date), INTERVAL WEEKDAY(DATE(cdc.finished_date)) DAY)\n),\n_joined AS (\n  SELECT k.weekly_credits AS x, d.deploys AS y\n  FROM _kiro_weekly k INNER JOIN _deploy_weekly d ON k.week_start = d.week_start\n),\n_stats AS (\n  SELECT COUNT(*) AS n, AVG(x) AS mx, AVG(y) AS my, STDDEV_POP(x) AS sx, STDDEV_POP(y) AS sy FROM _joined\n)\nSELECT CASE\n  WHEN s.n < 4 THEN NULL\n  WHEN s.sx = 0 OR s.sy = 0 THEN 0\n  ELSE ROUND((SELECT SUM((j.x - s.mx) * (j.y - s.my)) FROM _joined j) / (s.n * s.sx * s.sy), 2)\nEND AS 'r'\nFROM _stats s",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits vs Deploy Freq (r)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly credits overlaid with deployment count",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 20 },
+      "id": 22,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(credits) AS 'Credits Used', SUM(deploys) AS 'Deployments'\nFROM (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n    SUM(credits_used) AS credits, 0 AS deploys\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n  UNION ALL\n  SELECT DATE_SUB(DATE(cdc.finished_date), INTERVAL WEEKDAY(DATE(cdc.finished_date)) DAY) AS time,\n    0 AS credits, COUNT(DISTINCT cdc.cicd_deployment_id) AS deploys\n  FROM cicd_deployment_commits cdc\n  JOIN project_mapping pm ON cdc.cicd_scope_id = pm.row_id AND pm.`table` = 'cicd_scopes'\n  WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION'\n    AND $__timeFilter(cdc.finished_date)\n  GROUP BY DATE_SUB(DATE(cdc.finished_date), INTERVAL WEEKDAY(DATE(cdc.finished_date)) DAY)\n) combined\nGROUP BY time ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Credits vs Deployments",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 },
+      "id": 30,
+      "panels": [],
+      "title": "Change Failure Rate",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Change failure rate: % of deployments that caused incidents",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 29 },
+      "id": 31,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(credits) AS 'Credits Used', SUM(cfr) AS 'Change Failure Rate'\nFROM (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n    SUM(credits_used) AS credits, 0 AS cfr\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n  UNION ALL\n  SELECT DATE_SUB(DATE(d.deployment_finished_date), INTERVAL WEEKDAY(DATE(d.deployment_finished_date)) DAY) AS time,\n    0 AS credits,\n    SUM(CASE WHEN i.id IS NOT NULL THEN 1 ELSE 0 END) / COUNT(DISTINCT d.deployment_id) AS cfr\n  FROM (\n    SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date\n    FROM cicd_deployment_commits cdc\n    JOIN project_mapping pm ON cdc.cicd_scope_id = pm.row_id AND pm.`table` = 'cicd_scopes'\n    WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION'\n      AND $__timeFilter(cdc.finished_date)\n    GROUP BY cdc.cicd_deployment_id\n  ) d\n  LEFT JOIN project_incident_deployment_relationships pidr ON d.deployment_id = pidr.deployment_id\n  LEFT JOIN incidents i ON pidr.id = i.id\n  GROUP BY DATE_SUB(DATE(d.deployment_finished_date), INTERVAL WEEKDAY(DATE(d.deployment_finished_date)) DAY)\n) combined\nGROUP BY time ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Credits vs Change Failure Rate",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "dora", "kiro", "correlation"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro Credits + DORA Correlation",
+  "uid": "kiro_credits_dora",
+  "version": 1
+}

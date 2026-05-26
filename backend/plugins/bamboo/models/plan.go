@@ -110,7 +110,7 @@ type SearchEntity struct {
 	Type        string `json:"type"`
 }
 
-// Name trys to keep plan's name field the same with name in /remote-scopes.
+// Name tries to keep plan's name field the same with name in /remote-scopes.
 // In /remote-scopes, plan's name is "{projectName - planName}".
 func (entity SearchEntity) Name() string {
 	return strings.Join([]string{entity.ProjectName, entity.PlanName}, " - ")

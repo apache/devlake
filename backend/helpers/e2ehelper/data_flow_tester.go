@@ -112,7 +112,7 @@ func NewDataFlowTester(t *testing.T, pluginName string, pluginMeta plugin.Plugin
 	cfg.Set(`DB_URL`, cfg.GetString(`E2E_DB_URL`))
 	db, err := runner.NewGormDb(cfg, logruslog.Global)
 	if err != nil {
-		// if here fail with error `acces denied for user` you need to create database by your self as follow command
+		// if here fail with error `access denied for user` you need to create database by your self as follow command
 		// create databases lake_test;
 		// grant all on lake_test.* to 'merico'@'%';
 		panic(err)

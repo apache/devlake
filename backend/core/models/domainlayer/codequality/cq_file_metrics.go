@@ -23,7 +23,7 @@ import (
 
 type CqFileMetrics struct {
 	domainlayer.DomainEntity
-	ProjectKey                          string `gorm:"index;type:varchar(255)"` //domain project key
+	ProjectKey                          string `gorm:"index;type:varchar(500)"` //domain project key
 	FileName                            string `gorm:"type:varchar(2000)"`
 	FilePath                            string
 	FileLanguage                        string `gorm:"type:varchar(20)"`

@@ -30,7 +30,7 @@ type JiraSource struct {
 	StoryPointField            string `gorm:"type:varchar(50);" json:"storyPointField"`
 	RemotelinkCommitShaPattern string `gorm:"type:varchar(255);comment='golang regexp, the first group will be recognized as commit sha, ref https://github.com/google/re2/wiki/Syntax'" json:"remotelinkCommitShaPattern"`
 	Proxy                      string `json:"proxy"`
-	RateLimit                  int    `comment:"api request rate limt per second"`
+	RateLimit                  int    `comment:"api request rate limit per second"`
 }
 
 type JiraIssueTypeMapping struct {

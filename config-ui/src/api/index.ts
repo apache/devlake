@@ -19,6 +19,7 @@
 import { request } from '@/utils';
 
 import * as apiKey from './api-key';
+import * as auth from './auth';
 import * as blueprint from './blueprint';
 import * as connection from './connection';
 import * as pipeline from './pipeline';
@@ -35,6 +36,7 @@ const version = (signal?: AbortSignal): Promise<{ version: string }> => request(
 
 export const API = {
   apiKey,
+  auth,
   blueprint,
   connection,
   pipeline,

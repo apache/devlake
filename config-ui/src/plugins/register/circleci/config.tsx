@@ -34,8 +34,10 @@ export const CircleCIConfig: IPluginConfig = {
         key: 'endpoint',
         multipleVersions: {
           cloud: 'https://circleci.com/api/',
-          server: '',
+          server: '(v4.x+)',
         },
+        subLabel:
+          'If you are using CircleCI Server, please enter the endpoint URL. E.g. https://circleci.your-company.com/api/',
       },
       'token',
       'proxy',

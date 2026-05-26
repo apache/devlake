@@ -79,9 +79,10 @@ services:
       - mysql
 
   devlake:
-    image: devlake.docker.scarf.sh/apache/devlake:latest
+    image: devlake-local:latest
     build:
       context: backend
+      dockerfile: Dockerfile.local
       args:
         HTTPS_PROXY: "${HTTPS_PROXY}"
         GOPROXY: "${GOPROXY}"
@@ -93,6 +94,10 @@ services:
     env_file:
       - ./.env
     environment:
+      DB_URL: postgres://merico:merico@postgres:5432/lake?sslmode=disable
+      E2E_DB_URL: postgres://merico:merico@postgres:5432/lake_test?sslmode=disable
+      REMOTE_PLUGIN_DIR: ""
+      FORCE_MIGRATION: "true"
       LOGGING_DIR: /app/logs
       TZ: UTC
       # LOGOUT_URI: https://xxx.amazoncognito.com/logout?client_id=yyy&logout_uri=http%3A%2F%2Flocalhost%3A4180%2Foauth2%2Fsign_out

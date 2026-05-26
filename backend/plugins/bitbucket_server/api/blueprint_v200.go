@@ -75,8 +75,11 @@ func makeDataSourcePipelinePlanV200(
 	scopeDetails []*srvhelper.ScopeDetail[models.BitbucketServerRepo, models.BitbucketServerScopeConfig],
 	connection *models.BitbucketServerConnection,
 ) (coreModels.PipelinePlan, errors.Error) {
-	plan := make(coreModels.PipelinePlan, len(scopeDetails))
+	plan := make(coreModels.PipelinePlan, 0, len(scopeDetails)+1)
 	for i, scopeDetail := range scopeDetails {
+		if i == len(plan) {
+			plan = append(plan, nil)
+		}
 		bitbucketRepo, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 		stage := plan[i]
 		if stage == nil {

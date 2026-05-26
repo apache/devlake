@@ -76,7 +76,7 @@ export const SyncPolicy = ({
 
   const cron = useMemo(() => getCron(isManual, cronConfig), [isManual, cronConfig]);
 
-  const [mintue, hour, day, month, week] = useMemo(() => cronConfig.split(' '), [cronConfig]);
+  const [minute, hour, day, month, week] = useMemo(() => cronConfig.split(' '), [cronConfig]);
 
   const handleChangeFrequency = (e: RadioChangeEvent) => {
     const value = e.target.value;
@@ -152,32 +152,32 @@ export const SyncPolicy = ({
               <Space>
                 <Block title="Minute">
                   <Input
-                    value={mintue}
+                    value={minute}
                     onChange={(e) => onChangeCronConfig([e.target.value, hour, day, month, week].join(' '))}
                   />
                 </Block>
                 <Block title="Hour">
                   <Input
                     value={hour}
-                    onChange={(e) => onChangeCronConfig([mintue, e.target.value, day, month, week].join(' '))}
+                    onChange={(e) => onChangeCronConfig([minute, e.target.value, day, month, week].join(' '))}
                   />
                 </Block>
                 <Block title="Day">
                   <Input
                     value={day}
-                    onChange={(e) => onChangeCronConfig([mintue, hour, e.target.value, month, week].join(' '))}
+                    onChange={(e) => onChangeCronConfig([minute, hour, e.target.value, month, week].join(' '))}
                   />
                 </Block>
                 <Block title="Month">
                   <Input
                     value={month}
-                    onChange={(e) => onChangeCronConfig([mintue, hour, day, e.target.value, week].join(' '))}
+                    onChange={(e) => onChangeCronConfig([minute, hour, day, e.target.value, week].join(' '))}
                   />
                 </Block>
                 <Block title="Week">
                   <Input
                     value={week}
-                    onChange={(e) => onChangeCronConfig([mintue, hour, day, month, e.target.value].join(' '))}
+                    onChange={(e) => onChangeCronConfig([minute, hour, day, month, e.target.value].join(' '))}
                   />
                 </Block>
               </Space>

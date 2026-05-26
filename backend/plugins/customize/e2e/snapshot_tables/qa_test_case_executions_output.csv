@@ -1,4 +1,4 @@
-id,qa_project_id,qa_test_case_id,create_time,start_time,finish_time,creator_id,status,_raw_data_params,_raw_data_table,_raw_data_id,_raw_data_remark
-exec-1,test-qa-project-id,tc-1,2023-03-01T10:00:00.000+00:00,2023-03-01T10:01:00.000+00:00,2023-03-01T10:05:00.000+00:00,csv:CsvAccount:0:user-a,SUCCESS,test-qa-project-id,,,
-exec-2,test-qa-project-id,tc-2,2023-03-01T11:00:00.000+00:00,2023-03-01T11:02:00.000+00:00,2023-03-01T11:06:00.000+00:00,csv:CsvAccount:0:user-b,FAILED,test-qa-project-id,,,
-exec-3,test-qa-project-id,tc-1,2023-03-02T10:00:00.000+00:00,2023-03-02T10:01:00.000+00:00,2023-03-02T10:04:00.000+00:00,csv:CsvAccount:0:user-a,SUCCESS,test-qa-project-id,,,
+id,qa_project_id,qa_test_case_id,create_time,start_time,finish_time,creator_id,is_invalid,status,_raw_data_params,_raw_data_table,_raw_data_id,_raw_data_remark
+exec-1,test-qa-project-id,tc-1,2023-03-01T10:00:00.000+00:00,2023-03-01T10:01:00.000+00:00,2023-03-01T10:05:00.000+00:00,csv:CsvAccount:0:user-a,0,SUCCESS,test-qa-project-id,,,
+exec-2,test-qa-project-id,tc-2,2023-03-01T11:00:00.000+00:00,2023-03-01T11:02:00.000+00:00,2023-03-01T11:06:00.000+00:00,csv:CsvAccount:0:user-b,0,FAILED,test-qa-project-id,,,
+exec-3,test-qa-project-id,tc-1,2023-03-02T10:00:00.000+00:00,2023-03-02T10:01:00.000+00:00,2023-03-02T10:04:00.000+00:00,csv:CsvAccount:0:user-a,0,SUCCESS,test-qa-project-id,,,

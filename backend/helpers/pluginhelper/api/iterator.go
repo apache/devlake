@@ -55,7 +55,7 @@ func NewBatchedDalCursorIterator(db dal.Dal, cursor dal.Rows, elemType reflect.T
 	}, nil
 }
 
-// HasNext increments the row curser. If we're at the end, it'll return false.
+// HasNext increments the row cursor. If we're at the end, it'll return false.
 func (c *DalCursorIterator) HasNext() bool {
 	return c.cursor.Next()
 }
@@ -149,7 +149,7 @@ type QueueIterator struct {
 	queue *Queue
 }
 
-// HasNext increments the row curser. If we're at the end, it'll return false.
+// HasNext increments the row cursor. If we're at the end, it'll return false.
 func (q *QueueIterator) HasNext() bool {
 	return q.queue.GetCount() > 0
 }

@@ -75,8 +75,11 @@ func makeDataSourcePipelinePlanV200(
 	scopeDetails []*srvhelper.ScopeDetail[models.BitbucketRepo, models.BitbucketScopeConfig],
 	connection *models.BitbucketConnection,
 ) (coreModels.PipelinePlan, errors.Error) {
-	plan := make(coreModels.PipelinePlan, len(scopeDetails))
+	plan := make(coreModels.PipelinePlan, 0, len(scopeDetails)+1)
 	for i, scopeDetail := range scopeDetails {
+		if i == len(plan) {
+			plan = append(plan, nil)
+		}
 		bitbucketRepo, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 		stage := plan[i]
 		if stage == nil {
@@ -153,6 +156,11 @@ func makeScopesV200(
 	for _, scopeDetail := range scopeDetails {
 		scope, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 		id := idgen.Generate(connection.ID, scope.BitbucketId)
+
+		// if no entities specified, use all entities enabled by default
+		if len(scopeConfig.Entities) == 0 {
+			scopeConfig.Entities = plugin.DOMAIN_TYPES
+		}
 
 		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE_REVIEW) ||
 			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) ||

@@ -18,14 +18,17 @@ limitations under the License.
 package tasks
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/devops"
 	"github.com/apache/incubator-devlake/core/plugin"
 	"github.com/apache/incubator-devlake/helpers/pluginhelper/api"
-	"net/http"
-	"net/url"
 )
 
 // Build and TimeLine Record State and Result types can be found here:
@@ -145,9 +148,29 @@ func change203To401(res *http.Response) errors.Error {
 	return nil
 }
 
-func ignoreDeletedBuilds(res *http.Response) errors.Error {
+// ignoreInvalidTimelineResponse is an AfterResponse handler for the Timeline API.
+// It skips builds whose timeline response is missing or unparseable (e.g. builds
+// that failed due to a YAML syntax error never produce a usable timeline), instead
+// of aborting the entire subtask.
+func ignoreInvalidTimelineResponse(res *http.Response) errors.Error {
+	// Keep existing behaviour: treat 404 as a graceful skip (build was deleted).
 	if res.StatusCode == http.StatusNotFound {
 		return api.ErrIgnoreAndContinue
 	}
+
+	// Read the body so we can inspect it, then restore it for the ResponseParser.
+	body, err := io.ReadAll(res.Body)
+	_ = res.Body.Close()
+	if err != nil {
+		return api.ErrIgnoreAndContinue
+	}
+	res.Body = io.NopCloser(bytes.NewReader(body))
+
+	// An empty body or non-JSON body means the timeline is not available.
+	// Return ErrIgnoreAndContinue so the build is skipped without failing the subtask.
+	if len(body) == 0 || !json.Valid(body) {
+		return api.ErrIgnoreAndContinue
+	}
+
 	return nil
 }

@@ -305,10 +305,10 @@
         "pieType": "pie",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "tooltip": {
           "mode": "single",
@@ -433,7 +433,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(display_name, user_id) as 'User',\n  subscription_tier as 'Tier',\n  client_type as 'Client',\n  SUM(credits_used) as 'Credits Used',\n  SUM(total_messages) as 'Messages',\n  SUM(chat_conversations) as 'Conversations',\n  SUM(overage_credits_used) as 'Overage Credits',\n  CASE WHEN MAX(CAST(overage_enabled AS UNSIGNED)) = 1 THEN 'Yes' ELSE 'No' END as 'Overage',\n  MIN(date) as 'First Activity',\n  MAX(date) as 'Last Activity'\nFROM lake._tool_q_dev_user_report\nWHERE $__timeFilter(date)\nGROUP BY user_id, display_name, subscription_tier, client_type\nORDER BY SUM(credits_used) DESC",
+          "rawSql": "SELECT\n  COALESCE(MAX(display_name), user_id) as 'User',\n  subscription_tier as 'Tier',\n  client_type as 'Client',\n  SUM(credits_used) as 'Credits Used',\n  SUM(total_messages) as 'Messages',\n  SUM(chat_conversations) as 'Conversations',\n  SUM(overage_credits_used) as 'Overage Credits',\n  CASE WHEN MAX(CAST(overage_enabled AS UNSIGNED)) = 1 THEN 'Yes' ELSE 'No' END as 'Overage',\n  MIN(date) as 'First Activity',\n  MAX(date) as 'Last Activity'\nFROM lake._tool_q_dev_user_report\nWHERE $__timeFilter(date)\nGROUP BY user_id, subscription_tier, client_type\nORDER BY user_id DESC",
           "refId": "A"
         }
       ],

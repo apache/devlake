@@ -59,28 +59,21 @@ type IssueComment struct {
 func ExtractApiComments(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 
-	extractor, err := helper.NewApiExtractor(helper.ApiExtractorArgs{
-		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := helper.NewStatefulApiExtractor(&helper.StatefulApiExtractorArgs[IssueComment]{
+		SubtaskCommonArgs: &helper.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_COMMENTS_TABLE,
 		},
-		Extract: func(row *helper.RawData) ([]interface{}, errors.Error) {
-			apiComment := &IssueComment{}
-			err := errors.Convert(json.Unmarshal(row.Data, apiComment))
-			if err != nil {
-				return nil, err
-			}
-			// need to extract 2 kinds of entities here
+		Extract: func(body *IssueComment, row *helper.RawData) ([]any, errors.Error) {
 			results := make([]interface{}, 0, 2)
-			if apiComment.GithubId == 0 {
+			if body.GithubId == 0 {
 				return nil, nil
 			}
-			//If this is a pr, ignore
-			issueINumber, err := errors.Convert01(githubUtils.GetIssueIdByIssueUrl(apiComment.IssueUrl))
+			issueINumber, err := errors.Convert01(githubUtils.GetIssueIdByIssueUrl(body.IssueUrl))
 			if err != nil {
 				return nil, err
 			}
@@ -90,7 +83,7 @@ func ExtractApiComments(taskCtx plugin.SubTaskContext) errors.Error {
 			if err != nil && !db.IsErrorNotFound(err) {
 				return nil, err
 			}
-			//if we can not find issues with issue number above, move the comments to github_pull_request_comments
+			// if we can not find issues with issue number above, move the comments to github_pull_request_comments
 			if issue.GithubId == 0 {
 				pr := &models.GithubPullRequest{}
 				err = db.First(pr, dal.Where("connection_id = ? and number = ? and repo_id = ?", data.Options.ConnectionId, issueINumber, data.Options.GithubId))
@@ -99,23 +92,21 @@ func ExtractApiComments(taskCtx plugin.SubTaskContext) errors.Error {
 				}
 				githubPrComment := &models.GithubPrComment{
 					ConnectionId:    data.Options.ConnectionId,
-					GithubId:        apiComment.GithubId,
+					GithubId:        body.GithubId,
 					PullRequestId:   pr.GithubId,
-					Body:            string(apiComment.Body),
-					GithubCreatedAt: apiComment.GithubCreatedAt.ToTime(),
-					GithubUpdatedAt: apiComment.GithubUpdatedAt.ToTime(),
+					Body:            string(body.Body),
+					GithubCreatedAt: body.GithubCreatedAt.ToTime(),
+					GithubUpdatedAt: body.GithubUpdatedAt.ToTime(),
 					Type:            "NORMAL",
 				}
-				if apiComment.User != nil {
-					// Filter bot comments by username
-					if shouldSkipByUsername(apiComment.User.Login) {
-						taskCtx.GetLogger().Debug("Skipping PR comment #%d from bot user: %s", apiComment.GithubId, apiComment.User.Login)
+				if body.User != nil {
+					if shouldSkipByUsername(body.User.Login) {
+						taskCtx.GetLogger().Debug("Skipping PR comment #%d from bot user: %s", body.GithubId, body.User.Login)
 						return nil, nil
 					}
-					githubPrComment.AuthorUsername = apiComment.User.Login
-					githubPrComment.AuthorUserId = apiComment.User.Id
-
-					githubAccount, err := convertAccount(apiComment.User, data.Options.GithubId, data.Options.ConnectionId)
+					githubPrComment.AuthorUsername = body.User.Login
+					githubPrComment.AuthorUserId = body.User.Id
+					githubAccount, err := convertAccount(body.User, data.Options.GithubId, data.Options.ConnectionId)
 					if err != nil {
 						return nil, err
 					}
@@ -125,22 +116,20 @@ func ExtractApiComments(taskCtx plugin.SubTaskContext) errors.Error {
 			} else {
 				githubIssueComment := &models.GithubIssueComment{
 					ConnectionId:    data.Options.ConnectionId,
-					GithubId:        apiComment.GithubId,
+					GithubId:        body.GithubId,
 					IssueId:         issue.GithubId,
-					Body:            string(apiComment.Body),
-					GithubCreatedAt: apiComment.GithubCreatedAt.ToTime(),
-					GithubUpdatedAt: apiComment.GithubUpdatedAt.ToTime(),
+					Body:            string(body.Body),
+					GithubCreatedAt: body.GithubCreatedAt.ToTime(),
+					GithubUpdatedAt: body.GithubUpdatedAt.ToTime(),
 				}
-				if apiComment.User != nil {
-					// Filter bot comments by username
-					if shouldSkipByUsername(apiComment.User.Login) {
-						taskCtx.GetLogger().Debug("Skipping issue comment #%d from bot user: %s", apiComment.GithubId, apiComment.User.Login)
+				if body.User != nil {
+					if shouldSkipByUsername(body.User.Login) {
+						taskCtx.GetLogger().Debug("Skipping issue comment #%d from bot user: %s", body.GithubId, body.User.Login)
 						return nil, nil
 					}
-					githubIssueComment.AuthorUsername = apiComment.User.Login
-					githubIssueComment.AuthorUserId = apiComment.User.Id
-
-					githubAccount, err := convertAccount(apiComment.User, data.Options.GithubId, data.Options.ConnectionId)
+					githubIssueComment.AuthorUsername = body.User.Login
+					githubIssueComment.AuthorUserId = body.User.Id
+					githubAccount, err := convertAccount(body.User, data.Options.GithubId, data.Options.ConnectionId)
 					if err != nil {
 						return nil, err
 					}

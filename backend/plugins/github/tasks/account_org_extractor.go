@@ -50,28 +50,23 @@ type GithubAccountOrgsResponse struct {
 
 func ExtractAccountOrg(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[[]GithubAccountOrgsResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_ACCOUNT_ORG_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			apiAccountOrgs := &[]GithubAccountOrgsResponse{}
-			err := json.Unmarshal(row.Data, apiAccountOrgs)
-			if err != nil {
-				return nil, errors.Convert(err)
-			}
+		Extract: func(body *[]GithubAccountOrgsResponse, row *api.RawData) ([]any, errors.Error) {
 			simpleAccount := &SimpleAccountWithId{}
-			err = json.Unmarshal(row.Input, simpleAccount)
+			err := errors.Convert(json.Unmarshal(row.Input, simpleAccount))
 			if err != nil {
-				return nil, errors.Convert(err)
+				return nil, err
 			}
-			results := make([]interface{}, 0, len(*apiAccountOrgs))
-			for _, apiAccountOrg := range *apiAccountOrgs {
+			results := make([]interface{}, 0, len(*body))
+			for _, apiAccountOrg := range *body {
 				githubAccount := &models.GithubAccountOrg{
 					ConnectionId: data.Options.ConnectionId,
 					AccountId:    simpleAccount.AccountId,

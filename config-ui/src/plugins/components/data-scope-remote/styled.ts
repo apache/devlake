@@ -31,6 +31,6 @@ export const JobLoad = styled.div`
 
   & > span.count {
     margin: 0 8px;
-    color: #7497f7;
+    color: ${({ theme }) => theme.colors.primary};
   }
 `;

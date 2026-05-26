@@ -219,7 +219,7 @@ func ConvertIssueStatusHistory(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 		}
 	}
-	logger.Info("issues status history covert successfully")
+	logger.Info("issues status history converted successfully")
 	return nil
 }
 

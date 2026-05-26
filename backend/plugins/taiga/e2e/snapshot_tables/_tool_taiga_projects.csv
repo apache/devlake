@@ -1,0 +1,2 @@
+connection_id,project_id,scope_config_id,name,slug,description,url,is_private,total_milestones,total_story_points
+1,1,0,Test Project Alpha,test-project-alpha,A test project for the DevLake Taiga plugin e2e tests,,0,0,0

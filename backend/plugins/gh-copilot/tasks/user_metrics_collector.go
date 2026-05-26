@@ -32,9 +32,9 @@ import (
 
 const rawUserMetricsTable = "copilot_user_metrics"
 
-// CollectUserMetrics collects enterprise user-level daily Copilot usage reports.
+// CollectUserMetrics collects user-level daily Copilot usage reports.
 // These reports are in JSONL format (one JSON object per line per user).
-// Only available for enterprise-scoped connections.
+// Utilizes the enterprise or organization endpoints depending on connection configuration
 func CollectUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	data, ok := taskCtx.TaskContext().GetData().(*GhCopilotTaskData)
 	if !ok {
@@ -43,14 +43,19 @@ func CollectUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	connection := data.Connection
 	connection.Normalize()
 
-	if !connection.HasEnterprise() {
-		taskCtx.GetLogger().Info("No enterprise configured, skipping user metrics collection")
-		return nil
-	}
-
 	apiClient, err := CreateApiClient(taskCtx.TaskContext(), connection)
 	if err != nil {
 		return err
+	}
+
+	var urlTemplate string
+
+	if connection.HasEnterprise() {
+		urlTemplate = fmt.Sprintf("enterprises/%s/copilot/metrics/reports/users-1-day", connection.Enterprise)
+	} else if connection.Organization != "" {
+		urlTemplate = fmt.Sprintf("orgs/%s/copilot/metrics/reports/users-1-day", connection.Organization)
+	} else {
+		return nil
 	}
 
 	rawArgs := helper.RawDataSubTaskArgs{
@@ -76,10 +81,9 @@ func CollectUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	dayIter := newDayIterator(start, until)
 
 	err = collector.InitCollector(helper.ApiCollectorArgs{
-		ApiClient: apiClient,
-		Input:     dayIter,
-		UrlTemplate: fmt.Sprintf("enterprises/%s/copilot/metrics/reports/users-1-day",
-			connection.Enterprise),
+		ApiClient:   apiClient,
+		Input:       dayIter,
+		UrlTemplate: urlTemplate,
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			input := reqData.Input.(*dayInput)
 			q := url.Values{}
@@ -88,12 +92,15 @@ func CollectUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		Incremental:   true,
 		Concurrency:   1,
-		AfterResponse: ignore404,
+		AfterResponse: ignoreNoContent,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			body, readErr := io.ReadAll(res.Body)
 			res.Body.Close()
 			if readErr != nil {
 				return nil, errors.Default.Wrap(readErr, "failed to read report metadata")
+			}
+			if isEmptyReport(body) {
+				return nil, nil
 			}
 
 			var meta reportMetadataResponse

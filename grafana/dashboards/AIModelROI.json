@@ -1,0 +1,124 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Requests, avg prompt/response length, and usage share per model",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "cellHeight": "sm", "showHeader": true, "sortBy": [] },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS 'Model',\n  COUNT(*) AS 'Requests',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)), 1) AS 'Share %',\n  ROUND(AVG(prompt_length)) AS 'Avg Prompt Len',\n  ROUND(AVG(response_length)) AS 'Avg Response Len',\n  ROUND(AVG(response_length) / NULLIF(AVG(prompt_length), 0), 2) AS 'Response/Prompt Ratio',\n  SUM(CASE WHEN has_steering = 1 THEN 1 ELSE 0 END) AS 'Steering Uses',\n  SUM(CASE WHEN is_spec_mode = 1 THEN 1 ELSE 0 END) AS 'Spec Mode Uses'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY model_id\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Model Performance Summary",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Request volume by model over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
+            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric,\n  COUNT(*) AS value\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), model_id\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Model Usage Distribution",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average response length per model over time — proxy for output quality",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric,\n  ROUND(AVG(response_length)) AS value\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), model_id\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Response Length by Model (Daily)",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "kiro", "model", "roi"],
+  "templating": { "list": [] },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro AI Model ROI",
+  "uid": "kiro_model_roi",
+  "version": 1
+}

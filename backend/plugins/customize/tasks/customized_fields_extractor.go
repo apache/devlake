@@ -149,7 +149,10 @@ func extractCustomizedFields(ctx context.Context, d dal.Dal, table, rawTable, ra
 			// remove columns that are not primary key
 			delete(row, "_raw_data_id")
 			delete(row, "data")
-			query, params := mkUpdate(table, updates, row)
+			query, params, err := mkUpdate(table, updates, row)
+			if err != nil {
+				return err
+			}
 			err = d.Exec(query, params...)
 			if err != nil {
 				return errors.Default.Wrap(err, "Exec SQL error")
@@ -169,18 +172,27 @@ func fillInUpdates(result gjson.Result, field string, updates map[string]interfa
 }
 
 // mkUpdate generates SQL statement and parameters for updating a record
-func mkUpdate(table string, updates map[string]interface{}, pk map[string]interface{}) (string, []interface{}) {
+func mkUpdate(table string, updates map[string]interface{}, pk map[string]interface{}) (string, []interface{}, error) {
+	if err := dal.ValidateTableName(table); err != nil {
+		return "", nil, err
+	}
 	var params []interface{}
 	stat := fmt.Sprintf("UPDATE %s SET ", table)
 	var uu []string
 	for field, value := range updates {
+		if err := dal.ValidateColumnName(field); err != nil {
+			return "", nil, err
+		}
 		uu = append(uu, fmt.Sprintf("%s = ?", field))
 		params = append(params, value)
 	}
 	var ww []string
 	for field, value := range pk {
+		if err := dal.ValidateColumnName(field); err != nil {
+			return "", nil, err
+		}
 		ww = append(ww, fmt.Sprintf("%s = ?", field))
 		params = append(params, value)
 	}
-	return stat + strings.Join(uu, ", ") + " WHERE " + strings.Join(ww, " AND "), params
+	return stat + strings.Join(uu, ", ") + " WHERE " + strings.Join(ww, " AND "), params, nil
 }

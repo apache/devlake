@@ -99,7 +99,16 @@ func (s *QDevS3Slice) normalize(strict bool) error {
 	}
 
 	if s.Id == "" {
-		s.Id = s.Prefix
+		if s.AccountId != "" {
+			// Use URL-safe ID: account_year or account_year_month
+			if s.Month != nil {
+				s.Id = fmt.Sprintf("%s_%04d_%02d", s.AccountId, s.Year, *s.Month)
+			} else {
+				s.Id = fmt.Sprintf("%s_%04d", s.AccountId, s.Year)
+			}
+		} else {
+			s.Id = s.Prefix
+		}
 	}
 
 	if s.AccountId != "" {

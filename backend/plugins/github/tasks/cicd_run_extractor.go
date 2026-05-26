@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/devops"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -45,26 +43,21 @@ func ExtractRuns(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[models.GithubRun]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_RUN_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			githubRun := &models.GithubRun{}
-			err := errors.Convert(json.Unmarshal(row.Data, githubRun))
-			if err != nil {
-				return nil, err
-			}
-			githubRun.RepoId = repoId
-			githubRun.ConnectionId = data.Options.ConnectionId
-			githubRun.Type = data.RegexEnricher.ReturnNameIfMatched(devops.DEPLOYMENT, githubRun.Name)
-			githubRun.Environment = data.RegexEnricher.ReturnNameIfOmittedOrMatched(devops.PRODUCTION, githubRun.Name, githubRun.HeadBranch)
-			return []interface{}{githubRun}, nil
+		Extract: func(body *models.GithubRun, row *api.RawData) ([]any, errors.Error) {
+			body.RepoId = repoId
+			body.ConnectionId = data.Options.ConnectionId
+			body.Type = data.RegexEnricher.ReturnNameIfMatched(devops.DEPLOYMENT, body.Name)
+			body.Environment = data.RegexEnricher.ReturnNameIfOmittedOrMatched(devops.PRODUCTION, body.Name, body.HeadBranch)
+			return []any{body}, nil
 		},
 	})
 

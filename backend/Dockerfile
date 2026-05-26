@@ -31,7 +31,7 @@ FROM --platform=linux/arm64 debian:bookworm as debian-arm64
 RUN apt-get update
 RUN apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
 
-FROM --platform=$BUILDPLATFORM golang:1.20.5-bookworm as builder
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
 ARG GOPROXY=
@@ -49,7 +49,7 @@ RUN if [ "$(arch)" != "x86_64" ] ; then \
         apt-get install -y gcc-x86-64-linux-gnu binutils-x86-64-linux-gnu ; \
     fi
 
-RUN go install github.com/vektra/mockery/v2@v2.20.0
+RUN go install github.com/vektra/mockery/v2@v2.53.6
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.1
 
 COPY --from=debian-amd64 /usr/include /rootfs-amd64/usr/include
@@ -63,8 +63,8 @@ COPY --from=debian-arm64 /lib/aarch64-linux-gnu /rootfs-arm64/lib/aarch64-linux-
 
 RUN for arch in aarch64 x86_64 ; do \
         mkdir -p /tmp/build/${arch} && cd /tmp/build/${arch} && \
-        wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.2.tar.gz -O - | tar -xz && \
-        cd libgit2-1.3.2 && \
+        wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.0.tar.gz -O - | tar -xz && \
+        cd libgit2-1.3.0 && \
         mkdir build && cd build && \
         if [ "$arch" = "aarch64" ] ; then \
             cmake .. -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
@@ -143,14 +143,14 @@ RUN mkdir logs
 VOLUME /app/logs
 
 # Setup Python
-COPY python/ /app/python/
+COPY --chown=devlake:devlake python/ /app/python/
 RUN python3 -m pip install --no-cache --upgrade pip setuptools && \
     python3 -m pip install --no-cache -r python/requirements.txt && \
     python3 -m pip install --upgrade pip
 
-# Setup Python Poetry package manager
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="$PATH:/app/.local/bin"
+# Setup Python package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/app/.local/bin sh
+ENV PATH="/app/.local/bin:${PATH}"
 
 # Build Python plugins, make sure the scripts has execute permission
 # RUN find /app/python/ -name "*.sh" | xargs -I{} chmod +x {}
@@ -182,4 +182,3 @@ USER devlake
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 CMD ["lake"]
-

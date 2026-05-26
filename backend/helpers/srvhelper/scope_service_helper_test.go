@@ -35,7 +35,7 @@ func Test_setDefaultEntities(t *testing.T) {
 	setDefaultEntities(sc1)
 	assert.Equal(t, sc1.Entities, plugin.DOMAIN_TYPES)
 
-	// plugin embeded the common ScopeConfig
+	// plugin embedded the common ScopeConfig
 	sc2 := &struct {
 		common.ScopeConfig
 	}{

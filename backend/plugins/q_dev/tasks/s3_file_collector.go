@@ -59,9 +59,9 @@ func CollectQDevS3Files(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 
 			for _, object := range result.Contents {
-				// Only process CSV files
-				if !strings.HasSuffix(*object.Key, ".csv") {
-					taskCtx.GetLogger().Debug("Skipping non-CSV file: %s", *object.Key)
+				// Only process CSV and JSON.gz files
+				if !strings.HasSuffix(*object.Key, ".csv") && !strings.HasSuffix(*object.Key, ".json.gz") {
+					taskCtx.GetLogger().Debug("Skipping unsupported file: %s", *object.Key)
 					continue
 				}
 

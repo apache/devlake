@@ -24,7 +24,7 @@ export const Label = styled.label`
 `;
 
 export const LabelInfo = styled.i`
-  color: #ff8b8b;
+  color: ${({ theme }) => theme.colors.secondary};
 `;
 
 export const LabelDescription = styled.p`
@@ -48,11 +48,11 @@ export const Input = styled.div`
       margin-left: 4px;
 
       span.error {
-        color: #f5222d;
+        color: ${({ theme }) => theme.colors.error};
       }
 
       span.success {
-        color: #4db764;
+        color: ${({ theme }) => theme.colors.success};
       }
     }
   }
@@ -65,7 +65,7 @@ export const Input = styled.div`
 export const Alert = styled.div`
   margin-top: 8px;
   padding: 12px 20px;
-  background: #f9f9fa;
-  border: 1px solid #dbdcdf;
+  background: ${({ theme }) => theme.colors.bgLayout};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 4px;
 `;

@@ -42,7 +42,7 @@ var _ interface {
 type Linker struct{}
 
 func (p Linker) Description() string {
-	return "link some cross table datas together"
+	return "link some cross table data together"
 }
 
 // RequiredDataEntities hasn't been used so far

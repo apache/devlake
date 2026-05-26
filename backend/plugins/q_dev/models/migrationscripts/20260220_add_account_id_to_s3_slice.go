@@ -19,6 +19,7 @@ package migrationscripts
 
 import (
 	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 )
@@ -30,13 +31,10 @@ type addAccountIdToS3Slice struct{}
 func (*addAccountIdToS3Slice) Up(basicRes context.BasicRes) errors.Error {
 	db := basicRes.GetDal()
 
-	err := db.Exec(`
-		ALTER TABLE _tool_q_dev_s3_slices
-		ADD COLUMN IF NOT EXISTS account_id VARCHAR(255) DEFAULT NULL
-	`)
-	if err != nil {
-		// Try alternative syntax for databases that don't support IF NOT EXISTS
-		_ = db.Exec(`ALTER TABLE _tool_q_dev_s3_slices ADD COLUMN account_id VARCHAR(255) DEFAULT NULL`)
+	if !db.HasColumn("_tool_q_dev_s3_slices", "account_id") {
+		if err := db.AddColumn("_tool_q_dev_s3_slices", "account_id", dal.Varchar); err != nil {
+			return errors.Default.Wrap(err, "failed to add account_id to _tool_q_dev_s3_slices")
+		}
 	}
 
 	return nil

@@ -32,7 +32,7 @@ interface Props {
 }
 
 export const OnboardCard = ({ style }: Props) => {
-  const [oeprating, setOperating] = useState(false);
+  const [operating, setOperating] = useState(false);
   const [version, setVersion] = useState(0);
 
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ export const OnboardCard = ({ style }: Props) => {
       title: 'Permanently close this entry?',
       content: 'You will not be able to get back to the onboarding session again.',
       okButtonProps: {
-        loading: oeprating,
+        loading: operating,
       },
       okText: 'Confirm',
       onOk: async () => {

@@ -1,0 +1,3 @@
+connection_id,project_id,user_story_id,ref,subject,description,status,status_color,is_closed,created_date,modified_date,finished_date,assigned_to,assigned_to_name,total_points,milestone_id,milestone_name,priority,is_blocked,blocked_note
+1,1,101,1,Setup CI/CD Pipeline,,In Progress,,0,2024-01-15T10:00:00.000+00:00,2024-01-20T15:30:00.000+00:00,,5,Alice Smith,8,1,Sprint 1,3,0,
+1,1,102,2,User Authentication,,Done,,1,2024-01-10T09:00:00.000+00:00,2024-01-18T17:00:00.000+00:00,2024-01-18T17:00:00.000+00:00,6,Bob Jones,5,0,,1,0,

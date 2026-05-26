@@ -89,7 +89,7 @@ func (srv *ModelSrvHelper[M]) ValidateModel(model *M) errors.Error {
 	}
 	// basic validator
 	if e := srv.validator.Struct(model); e != nil {
-		return errors.BadInput.Wrap(e, "validation faild")
+		return errors.BadInput.Wrap(e, "validation failed")
 	}
 	return nil
 }

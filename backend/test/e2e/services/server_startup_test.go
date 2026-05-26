@@ -39,6 +39,7 @@ import (
 	org "github.com/apache/incubator-devlake/plugins/org/impl"
 	pagerduty "github.com/apache/incubator-devlake/plugins/pagerduty/impl"
 	refdiff "github.com/apache/incubator-devlake/plugins/refdiff/impl"
+	rootly "github.com/apache/incubator-devlake/plugins/rootly/impl"
 	slack "github.com/apache/incubator-devlake/plugins/slack/impl"
 	sonarqube "github.com/apache/incubator-devlake/plugins/sonarqube/impl"
 	starrocks "github.com/apache/incubator-devlake/plugins/starrocks/impl"
@@ -78,6 +79,7 @@ func loadGoPlugins() []plugin.PluginMeta {
 		org.Org{},
 		pagerduty.PagerDuty{},
 		refdiff.RefDiff{},
+		rootly.Rootly{},
 		slack.Slack{},
 		sonarqube.Sonarqube{},
 		starrocks.StarRocks{},

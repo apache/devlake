@@ -30,6 +30,7 @@ interface ImportMetaEnv {
   readonly DEVLAKE_DASHBOARD_URL_GITLAB: string;
   readonly DEVLAKE_DASHBOARD_URL_BITBUCKET: string;
   readonly DEVLAKE_DASHBOARD_URL_AZUREDEVOPS: string;
+  readonly DEVLAKE_DASHBOARD_URL_ASANA: string;
 }
 
 interface ImportMeta {

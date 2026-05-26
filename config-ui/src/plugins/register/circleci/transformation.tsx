@@ -100,7 +100,7 @@ const renderCollapseItems = ({
                 })
               }
             />
-            <i style={{ color: '#E34040' }}>*</i>
+            <i style={{ color: 'var(--devlake-color-error-alt)' }}>*</i>
             <HelpTooltip content="CircleCI Workflows: https://circleci.com/docs/workflows/" />
           </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>

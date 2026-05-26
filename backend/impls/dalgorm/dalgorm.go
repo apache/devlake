@@ -277,7 +277,7 @@ func (d *Dalgorm) Delete(entity interface{}, clauses ...dal.Clause) errors.Error
 	return d.convertGormError(buildTx(d.db, clauses).Delete(entity).Error)
 }
 
-// UpdateColumn allows you to update mulitple records
+// UpdateColumn allows you to update multiple records
 func (d *Dalgorm) UpdateColumn(entityOrTable interface{}, columnName string, value interface{}, clauses ...dal.Clause) errors.Error {
 	d.unwrapDynamic(&entityOrTable, &clauses)
 	if expr, ok := value.(dal.DalClause); ok {
@@ -286,7 +286,7 @@ func (d *Dalgorm) UpdateColumn(entityOrTable interface{}, columnName string, val
 	return d.convertGormError(buildTx(d.db, clauses).Update(columnName, value).Error)
 }
 
-// UpdateColumns allows you to update multiple columns of mulitple records
+// UpdateColumns allows you to update multiple columns of multiple records
 func (d *Dalgorm) UpdateColumns(entityOrTable interface{}, set []dal.DalSet, clauses ...dal.Clause) errors.Error {
 	d.unwrapDynamic(&entityOrTable, &clauses)
 	updatesSet := make(map[string]interface{})

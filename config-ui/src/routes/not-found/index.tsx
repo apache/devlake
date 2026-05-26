@@ -30,7 +30,7 @@ export const NotFound = () => {
       <Card>
         <h2>
           <Space>
-            <ExclamationCircleOutlined style={{ fontSize: 20, color: '#faad14' }} />
+            <ExclamationCircleOutlined style={{ fontSize: 20, color: 'var(--devlake-color-warning-alt)' }} />
             <span>404 Not Found</span>
           </Space>
         </h2>

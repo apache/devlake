@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
@@ -62,42 +60,27 @@ type ApiSingleCommitResponse struct {
 func ExtractApiCommitStats(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraCommits by Board
-			*/
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[ApiSingleCommitResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_COMMIT_STATS_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			body := &ApiSingleCommitResponse{}
-			err := errors.Convert(json.Unmarshal(row.Data, body))
-			if err != nil {
-				return nil, err
-			}
+		Extract: func(body *ApiSingleCommitResponse, row *api.RawData) ([]any, errors.Error) {
 			if body.Sha == "" {
 				return nil, nil
 			}
-
 			db := taskCtx.GetDal()
 			commit := &models.GithubCommit{}
-			err = db.First(commit, dal.Where("sha = ?", body.Sha), dal.Limit(1))
+			err := db.First(commit, dal.Where("sha = ?", body.Sha), dal.Limit(1))
 			if err != nil && !db.IsErrorNotFound(err) {
 				return nil, err
 			}
-
 			commit.Additions = body.Stats.Additions
 			commit.Deletions = body.Stats.Deletions
-
 			commitStat := &models.GithubCommitStat{
 				ConnectionId:  data.Options.ConnectionId,
 				Additions:     body.Stats.Additions,
@@ -105,13 +88,7 @@ func ExtractApiCommitStats(taskCtx plugin.SubTaskContext) errors.Error {
 				CommittedDate: body.Commit.Committer.Date.ToTime(),
 				Sha:           body.Sha,
 			}
-
-			results := make([]interface{}, 0, 2)
-
-			results = append(results, commit)
-			results = append(results, commitStat)
-
-			return results, nil
+			return []any{commit, commitStat}, nil
 		},
 	})
 

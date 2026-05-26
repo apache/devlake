@@ -1,0 +1,3 @@
+connection_id,project_id,issue_id,ref,subject,status,issue_type_name,priority,severity,is_closed,created_date,modified_date,finished_date,assigned_to,assigned_to_name,milestone_id
+1,1,301,1,Login page crash on mobile,New,Bug,High,Critical,0,2024-01-14T08:00:00.000+00:00,2024-01-19T14:00:00.000+00:00,,5,Alice Smith,0
+1,1,302,2,Add dark mode support,Closed,Enhancement,Normal,Minor,1,2024-01-08T10:00:00.000+00:00,2024-01-16T13:00:00.000+00:00,2024-01-16T13:00:00.000+00:00,6,Bob Jones,1

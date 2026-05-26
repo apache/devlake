@@ -1,0 +1,6 @@
+board_id,issue_id
+rootly:Service:1:svc_01,rootly:Incident:1:inc_01
+rootly:Service:1:svc_01,rootly:Incident:1:inc_02
+rootly:Service:1:svc_01,rootly:Incident:1:inc_03
+rootly:Service:1:svc_01,rootly:Incident:1:inc_05
+rootly:Service:1:svc_01,rootly:Incident:1:inc_06

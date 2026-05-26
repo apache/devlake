@@ -78,8 +78,14 @@ func makeScopeV200(
 		gitlabProject, scopeConfig := scope.Scope, scope.ScopeConfig
 		id := didgen.NewDomainIdGenerator(&models.GitlabProject{}).Generate(connectionId, gitlabProject.GitlabId)
 
+		// if no entities specified, use all entities enabled by default
+		if len(scopeConfig.Entities) == 0 {
+			scopeConfig.Entities = plugin.DOMAIN_TYPES
+		}
+
 		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE_REVIEW) ||
-			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) {
+			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) ||
+			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CROSS) {
 			// if we don't need to collect gitex, we need to add repo to scopes here
 			scopeRepo := code.NewRepo(id, gitlabProject.PathWithNamespace)
 

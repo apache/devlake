@@ -80,8 +80,11 @@ func makeDataSourcePipelinePlanV200(
 	scopeDetails []*srvhelper.ScopeDetail[models.GithubRepo, models.GithubScopeConfig],
 	connection *models.GithubConnection,
 ) (coreModels.PipelinePlan, errors.Error) {
-	plan := make(coreModels.PipelinePlan, len(scopeDetails))
+	plan := make(coreModels.PipelinePlan, 0, len(scopeDetails)+1)
 	for i, scopeDetail := range scopeDetails {
+		if i == len(plan) {
+			plan = append(plan, nil)
+		}
 		githubRepo, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 		stage := plan[i]
 		if stage == nil {
@@ -128,13 +131,14 @@ func makeDataSourcePipelinePlanV200(
 			stage = append(stage, &coreModels.PipelineTask{
 				Plugin: "gitextractor",
 				Options: map[string]interface{}{
-					"url":          cloneUrl.String(),
-					"name":         githubRepo.FullName,
-					"fullName":     githubRepo.FullName,
-					"repoId":       didgen.NewDomainIdGenerator(&models.GithubRepo{}).Generate(connection.ID, githubRepo.GithubId),
-					"proxy":        connection.Proxy,
-					"connectionId": githubRepo.ConnectionId,
-					"pluginName":   "github",
+					"url":                   cloneUrl.String(),
+					"name":                  githubRepo.FullName,
+					"fullName":              githubRepo.FullName,
+					"repoId":                didgen.NewDomainIdGenerator(&models.GithubRepo{}).Generate(connection.ID, githubRepo.GithubId),
+					"proxy":                 connection.Proxy,
+					"connectionId":          githubRepo.ConnectionId,
+					"pluginName":            "github",
+					"excludeFileExtensions": scopeConfig.PrSizeExcludedFileExtensions,
 				},
 			})
 

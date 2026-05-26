@@ -400,7 +400,7 @@ func (r *GogitRepoCollector) storeParentCommits(commitSha string, commit *object
 	for i := 0; i < commit.NumParents(); i++ {
 		parent, err := commit.Parent(i)
 		if err != nil {
-			// parent commit might not exist when repo is shallow cloned (tradeoff of supporting timeAfter paramenter)
+			// parent commit might not exist when repo is shallow cloned (tradeoff of supporting timeAfter parameter)
 			if err.Error() == "object not found" {
 				continue
 			}
@@ -524,6 +524,11 @@ func (r *GogitRepoCollector) storeRepoSnapshot(subtaskCtx plugin.SubTaskContext,
 	ctx := subtaskCtx.GetContext()
 	snapshot := make(map[string][]string) // {"filePathAndName": ["line1 commit sha", "line2 commit sha"]}
 	for _, commit := range commitList {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		commitTree, firstParentTree, err := r.getCurrentAndParentTree(ctx, commit)
 		if err != nil {
 			return err
@@ -533,6 +538,11 @@ func (r *GogitRepoCollector) storeRepoSnapshot(subtaskCtx plugin.SubTaskContext,
 			return err
 		}
 		for _, p := range patch.Stats() {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
 			fileName := p.Name
 			if _, ok := snapshot[fileName]; !ok {
 				snapshot[fileName] = []string{}

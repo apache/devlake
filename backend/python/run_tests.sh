@@ -15,14 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-cd "${0%/*}" # make sure we're in the correct dir
+SCRIPT_DIR=$(CDPATH= cd -- "${0%/*}" && pwd)
 
-for test_dir in $(find . -type f -name "*_test.py" | xargs dirname | sort -u); do
+for test_dir in $(find "$SCRIPT_DIR" -path '*/.venv' -prune -o -type f -name "*_test.py" -print | xargs dirname | sort -u); do
+  project_dir=$(dirname "$test_dir")
   printf "Running Python tests in $test_dir\n"
-  cd $test_dir
-  poetry run pytest
+  sh "$SCRIPT_DIR/uv.sh" sync "$project_dir"
+  sh "$SCRIPT_DIR/uv.sh" pytest "$project_dir" "$test_dir"
   if [ $? != 0 ]; then
     exit 1
   fi
-  cd -
 done

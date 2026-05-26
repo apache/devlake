@@ -1,0 +1,2 @@
+connection_id,gid,name,notes,resource_type,resource_subtype,completed,completed_at,due_on,created_at,modified_at,permalink_url,project_gid,section_gid,section_name,assignee_gid,assignee_name,creator_gid,creator_name,parent_gid,num_subtasks,std_type,std_status,priority,story_point,severity,lead_time_minutes
+1,987654321,Test Task,Notes here,task,default_task,0,,2025-02-15T00:00:00.000+00:00,2025-02-01T10:00:00.000+00:00,,https://app.asana.com/0/123/987654321,123456789,111,,,,,,,0,,,,,,

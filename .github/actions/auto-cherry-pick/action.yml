@@ -19,7 +19,7 @@ name: "Auto Cherry Pick"
 description: "cherry pick commits from Pull Requests into Release branch"
 inputs:
   trigger_label_prefix:
-    description: "The trigger label prefic"
+    description: "The trigger label prefix"
     default: "needs-cherrypick-"
     required: false
   author_email:

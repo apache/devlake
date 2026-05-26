@@ -40,7 +40,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard shows the engineering throughput and and cycle time, which helps to identify productivity and bottlenecks of the development process.\n- Data Source Required: GitHub and Jira([transformation](https://devlake.apache.org/docs/UserManuals/ConfigUI/Jira#step-3---adding-transformation-rules-optional) required to tell DevLake what the story_points field is). You also need to do [team configuration](https://devlake.apache.org/docs/Configuration/TeamConfiguration) to use this dashboard.",
+        "content": "- Use Cases: This dashboard shows the engineering throughput and and cycle time, which helps to identify productivity and bottlenecks of the development process.\n- Data Sources Required:\n   - One of the Git tools, e.g. [GitHub](https://devlake.apache.org/docs/Configuration/GitHub), [GitLab](https://devlake.apache.org/docs/Configuration/GitLab), [Bitbucket](https://devlake.apache.org/docs/Configuration/BitBucket) or [Azure DevOps](https://devlake.apache.org/docs/Configuration/AzureDevOps)\n   - One of the issue tracking tools, e.g. [Jira](https://devlake.apache.org/docs/Configuration/Jira) ([Scope Config](https://devlake.apache.org/docs/UserManuals/ConfigUI/Jira#step-3---adding-transformation-rules-optional) required to tell DevLake what the story_points field is)\n- You also need to do [team configuration](https://devlake.apache.org/docs/Configuration/TeamConfiguration) to use this dashboard.",
         "mode": "markdown"
       },
       "pluginVersion": "11.0.0",

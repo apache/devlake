@@ -32,7 +32,7 @@ export const CrossDomain = styled.div`
 
     span {
       padding: 4px 8px;
-      background-color: #efefef;
+      background-color: ${({ theme }) => theme.colors.bgMuted};
     }
 
     span + span {
@@ -53,7 +53,7 @@ export const RemoteLinkWrapper = styled.div`
 
   .error {
     margin-top: 2px;
-    color: #cd4246;
+    color: ${({ theme }) => theme.colors.errorMuted};
   }
 `;
 
@@ -63,7 +63,7 @@ export const DialogBody = styled.div`
     padding: 8px 16px;
     max-height: 240px;
     overflow-y: auto;
-    background: #efefef;
+    background: ${({ theme }) => theme.colors.bgMuted};
   }
 
   .search {

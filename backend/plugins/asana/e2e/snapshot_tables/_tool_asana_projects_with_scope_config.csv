@@ -1,0 +1,2 @@
+connection_id,scope_config_id,gid,name,resource_type,archived,workspace_gid,permalink_url
+1,1,1234567890,Test Project,project,0,ws123,https://app.asana.com/0/1234567890

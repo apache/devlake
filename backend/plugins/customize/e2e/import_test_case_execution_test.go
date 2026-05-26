@@ -71,6 +71,7 @@ func TestImportQaTestCaseExecutionsDataFlow(t *testing.T) {
 			"start_time",
 			"finish_time",
 			"creator_id",
+			"is_invalid",
 			"status",
 		})
 	dataflowTester.VerifyTableWithRawData(
@@ -104,6 +105,7 @@ func TestImportQaTestCaseExecutionsDataFlow(t *testing.T) {
 			"start_time",
 			"finish_time",
 			"creator_id",
+			"is_invalid",
 			"status",
 		})
 
@@ -116,4 +118,52 @@ func TestImportQaTestCaseExecutionsDataFlow(t *testing.T) {
 			"user_name",
 		},
 	)
+}
+
+// TestImportQaTestCaseExecutions_NoIsInvalidColumn tests backward compatibility:
+// Verifies that importing CSV files without the is_invalid column works correctly,
+// and the is_invalid field defaults to false.
+func TestImportQaTestCaseExecutions_NoIsInvalidColumn(t *testing.T) {
+	var plugin impl.Customize
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "customize", plugin)
+
+	// Flush the relevant table
+	dataflowTester.FlushTabler(&qa.QaTestCaseExecution{})
+	dataflowTester.FlushTabler(&crossdomain.Account{})
+
+	// Create a new service instance
+	svc := service.NewService(dataflowTester.Dal)
+
+	// Use the existing CSV file that does NOT contain is_invalid column
+	// This simulates backward compatibility with old CSV files
+	qaTestCaseExecutionsFile, err := os.Open("raw_tables/qa_test_case_executions_input.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer qaTestCaseExecutionsFile.Close()
+
+	// Define a dummy qaProjectId
+	qaProjectId := "test-backward-compat-project"
+
+	// Import data from the CSV file (which has no is_invalid column)
+	err = svc.ImportQaTestCaseExecutions(qaProjectId, qaTestCaseExecutionsFile, false)
+	if err != nil {
+		t.Fatalf("ImportQaTestCaseExecutions failed: %v", err)
+	}
+
+	// Verify the imported data has is_invalid defaulted to false
+	dataflowTester.VerifyTableWithRawData(
+		&qa.QaTestCaseExecution{},
+		"snapshot_tables/qa_test_case_executions_output_no_is_invalid_column.csv",
+		[]string{
+			"id",
+			"qa_project_id",
+			"qa_test_case_id",
+			"create_time",
+			"start_time",
+			"finish_time",
+			"creator_id",
+			"is_invalid",
+			"status",
+		})
 }

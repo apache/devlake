@@ -1,0 +1,2 @@
+id,connection_id,name,entities,issue_type_requirement,issue_type_bug,issue_type_incident
+1,1,default,"[""TICKET""]",(feat|feature|story|requirement),(bug|defect|broken),(incident|outage|failure)

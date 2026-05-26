@@ -25,12 +25,12 @@ import (
 
 // QDevUserData 存储从CSV中提取的原始数据
 type QDevUserData struct {
-	common.Model
+	common.NoPKModel
 	ConnectionId uint64    `gorm:"primaryKey"`
-	UserId       string    `gorm:"index" json:"userId"`
-	Date         time.Time `gorm:"index" json:"date"`
-	DisplayName  string    `gorm:"type:varchar(255)" json:"displayName"` // New field for user display name
-	ScopeId      string    `gorm:"index;type:varchar(255)" json:"scopeId"`
+	ScopeId      string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	UserId       string    `gorm:"primaryKey;type:varchar(255)" json:"userId"`
+	Date         time.Time `gorm:"primaryKey;type:date" json:"date"`
+	DisplayName  string    `gorm:"type:varchar(255)" json:"displayName"`
 
 	CodeReview_FindingsCount             int
 	CodeReview_SucceededEventCount       int

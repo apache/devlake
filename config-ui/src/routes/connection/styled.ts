@@ -18,7 +18,7 @@
 
 import styled from 'styled-components';
 
-export const Wrapper = styled.div<{ theme: string }>`
+export const Wrapper = styled.div`
   h2 {
     margin-top: 36px;
   }
@@ -39,7 +39,7 @@ export const Wrapper = styled.div<{ theme: string }>`
       left: 0;
       width: 48px;
       height: 4px;
-      background-color: ${({ theme }) => theme};
+      background-color: ${({ theme }) => theme.colors.primary};
     }
   }
   ul {
@@ -58,13 +58,15 @@ export const Wrapper = styled.div<{ theme: string }>`
     padding: 20px 0;
     width: 160px;
     border-radius: 8px;
+    border: 1px solid ${({ theme }) => (theme.mode === 'dark' ? theme.colors.border : 'transparent')};
+    background-color: ${({ theme }) => theme.colors.bgContainer};
     box-shadow: 0px 2.4px 4.8px -0.8px rgba(0, 0, 0, 0.1), 0px 1.6px 8px rgba(0, 0, 0, 0.07);
     box-sizing: border-box;
     cursor: pointer;
     transition: all 0.2s linear;
 
     &:hover {
-      background-color: #eeeeee;
+      background-color: ${({ theme }) => theme.colors.bgHover};
     }
 
     & > .beta {
@@ -73,8 +75,8 @@ export const Wrapper = styled.div<{ theme: string }>`
       right: 0;
       padding: 4px 8px;
       font-size: 12px;
-      color: #fff;
-      background-color: #f5a623;
+      color: ${({ theme }) => theme.colors.textInverse};
+      background-color: ${({ theme }) => theme.colors.warning};
       border-radius: 8px;
     }
 
@@ -102,12 +104,12 @@ export const Wrapper = styled.div<{ theme: string }>`
         content: '';
         width: 88px;
         height: 1px;
-        background-color: #dbdcdf;
+        background-color: ${({ theme }) => theme.colors.border};
       }
     }
 
     & > .count {
-      color: #70727f;
+      color: ${({ theme }) => theme.colors.textMuted};
     }
   }
 `;

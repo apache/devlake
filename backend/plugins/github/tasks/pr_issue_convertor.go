@@ -19,7 +19,6 @@ package tasks
 
 import (
 	"github.com/spf13/cast"
-	"reflect"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -52,32 +51,34 @@ func ConvertPullRequestIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubPrIssue{}),
-		dal.Join(`left join _tool_github_pull_requests on _tool_github_pull_requests.github_id = _tool_github_pull_request_issues.pull_request_id`),
-		dal.Where("_tool_github_pull_requests.repo_id = ? and _tool_github_pull_requests.connection_id = ?", repoId, data.Options.ConnectionId),
-		dal.Orderby("pull_request_id ASC"),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
 	prIdGen := didgen.NewDomainIdGenerator(&models.GithubPullRequest{})
 	issueIdGen := didgen.NewDomainIdGenerator(&models.GithubIssue{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubPrIssue{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubPrIssue]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_PULL_REQUEST_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_PULL_REQUEST_TABLE,
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubPrIssue := inputRow.(*models.GithubPrIssue)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubPrIssue{}),
+				dal.Join(`left join _tool_github_pull_requests on _tool_github_pull_requests.github_id = _tool_github_pull_request_issues.pull_request_id`),
+				dal.Where("_tool_github_pull_requests.repo_id = ? and _tool_github_pull_requests.connection_id = ?", repoId, data.Options.ConnectionId),
+				dal.Orderby("pull_request_id ASC"),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("_tool_github_pull_requests.github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubPrIssue *models.GithubPrIssue) ([]interface{}, errors.Error) {
 			pullRequestIssue := &crossdomain.PullRequestIssue{
 				PullRequestId:  prIdGen.Generate(data.Options.ConnectionId, githubPrIssue.PullRequestId),
 				IssueId:        issueIdGen.Generate(data.Options.ConnectionId, githubPrIssue.IssueId),

@@ -51,7 +51,7 @@ func firstLineFromFile(path string) string {
 	for scanner.Scan() {
 		return scanner.Text()
 	}
-	panic(fmt.Errorf("empty file: " + path))
+	panic(fmt.Errorf("empty file: %s", path))
 }
 
 const (

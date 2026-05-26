@@ -255,6 +255,9 @@ func (scopeSrv *ScopeSrvHelper[C, S, SC]) deleteScopeData(scope plugin.ToolLayer
 	}
 	tables := errors.Must1(scopeSrv.getAffectedTables())
 	for _, table := range tables {
+		if err := dal.ValidateTableName(table); err != nil {
+			panic(errors.Default.Wrap(err, fmt.Sprintf("unsafe table name %q when deleting scope data", table)))
+		}
 		where, params := generateWhereClause(table)
 		scopeSrv.log.Info("deleting data from table %s with WHERE \"%s\" and params: \"%v\"", table, where, params)
 		sql := fmt.Sprintf("DELETE FROM %s WHERE %s", table, where)

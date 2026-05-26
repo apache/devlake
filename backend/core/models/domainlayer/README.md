@@ -57,7 +57,7 @@ The following rules make sure Domain Layer Entities serve its purpose
 
 - Read data from platform specific table, convert and store record into one(or multiple) domain table(s)
 - Generate its own `Id` accordingly
-- Generate foreign key accordlingly
+- Generate foreign key accordingly
 - Fields conversion
 
 Sample code:

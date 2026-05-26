@@ -72,6 +72,70 @@ func TestMakeScopes(t *testing.T) {
 	assert.Equal(t, actualScopes[2].ScopeId(), expectDomainScopeId)
 }
 
+func TestMakeScopesWithEmptyEntities(t *testing.T) {
+	mockGitlabPlugin(t)
+
+	const connectionId = 1
+	const gitlabProjectId = 37
+	const expectDomainScopeId = "gitlab:GitlabProject:1:37"
+
+	actualScopes, err := makeScopeV200(
+		connectionId,
+		[]*srvhelper.ScopeDetail[models.GitlabProject, models.GitlabScopeConfig]{
+			{
+				Scope: models.GitlabProject{
+					Scope: common.Scope{
+						ConnectionId: connectionId,
+					},
+					GitlabId: gitlabProjectId,
+				},
+				ScopeConfig: &models.GitlabScopeConfig{
+					ScopeConfig: common.ScopeConfig{
+						Entities: []string{},
+					},
+				},
+			},
+		},
+	)
+	assert.Nil(t, err)
+	// empty entities should default to all domain types, producing repo + cicd + board scopes
+	assert.Equal(t, 3, len(actualScopes))
+	assert.Equal(t, actualScopes[0].ScopeId(), expectDomainScopeId)
+}
+
+func TestMakeScopesWithCrossEntity(t *testing.T) {
+	mockGitlabPlugin(t)
+
+	const connectionId = 1
+	const gitlabProjectId = 37
+	const expectDomainScopeId = "gitlab:GitlabProject:1:37"
+
+	actualScopes, err := makeScopeV200(
+		connectionId,
+		[]*srvhelper.ScopeDetail[models.GitlabProject, models.GitlabScopeConfig]{
+			{
+				Scope: models.GitlabProject{
+					Scope: common.Scope{
+						ConnectionId: connectionId,
+					},
+					GitlabId: gitlabProjectId,
+				},
+				ScopeConfig: &models.GitlabScopeConfig{
+					ScopeConfig: common.ScopeConfig{
+						Entities: []string{plugin.DOMAIN_TYPE_CROSS, plugin.DOMAIN_TYPE_TICKET},
+					},
+				},
+			},
+		},
+	)
+	assert.Nil(t, err)
+	// CROSS entity should trigger repo scope creation, plus ticket = board scope
+	assert.Equal(t, 2, len(actualScopes))
+	assert.Equal(t, actualScopes[0].ScopeId(), expectDomainScopeId)
+	assert.Equal(t, "repos", actualScopes[0].TableName())
+	assert.Equal(t, "boards", actualScopes[1].TableName())
+}
+
 func TestMakeDataSourcePipelinePlanV200(t *testing.T) {
 	mockGitlabPlugin(t)
 

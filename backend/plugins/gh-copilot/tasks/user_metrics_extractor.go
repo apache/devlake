@@ -33,6 +33,7 @@ type userDailyReport struct {
 	ReportStartDay                string                 `json:"report_start_day"`
 	ReportEndDay                  string                 `json:"report_end_day"`
 	Day                           string                 `json:"day"`
+	OrganizationId                string                 `json:"organization_id"`
 	EnterpriseId                  string                 `json:"enterprise_id"`
 	UserId                        int64                  `json:"user_id"`
 	UserLogin                     string                 `json:"user_login"`
@@ -78,11 +79,6 @@ func ExtractUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	connection := data.Connection
 	connection.Normalize()
 
-	if !connection.HasEnterprise() {
-		taskCtx.GetLogger().Info("No enterprise configured, skipping user metrics extraction")
-		return nil
-	}
-
 	params := copilotRawParams{
 		ConnectionId: data.Options.ConnectionId,
 		ScopeId:      data.Options.ScopeId,
@@ -111,14 +107,15 @@ func ExtractUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 			// Main user daily metrics
 			results = append(results, &models.GhCopilotUserDailyMetrics{
-				ConnectionId: data.Options.ConnectionId,
-				ScopeId:      data.Options.ScopeId,
-				Day:          day,
-				UserId:       u.UserId,
-				EnterpriseId: u.EnterpriseId,
-				UserLogin:    u.UserLogin,
-				UsedAgent:    u.UsedAgent,
-				UsedChat:     u.UsedChat,
+				ConnectionId:   data.Options.ConnectionId,
+				ScopeId:        data.Options.ScopeId,
+				Day:            day,
+				UserId:         u.UserId,
+				OrganizationId: u.OrganizationId,
+				EnterpriseId:   u.EnterpriseId,
+				UserLogin:      u.UserLogin,
+				UsedAgent:      u.UsedAgent,
+				UsedChat:       u.UsedChat,
 				CopilotActivityMetrics: models.CopilotActivityMetrics{
 					UserInitiatedInteractionCount: u.UserInitiatedInteractionCount,
 					CodeGenerationActivityCount:   u.CodeGenerationActivityCount,

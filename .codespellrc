@@ -1,0 +1,28 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+[codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = .git,.gitignore,.gitattributes,*.svg,go.sum,*.lock,*.css,.codespellrc,.cache,.npm,.yarn,*/e2e/raw_tables/*,*/e2e/snapshot_tables/*
+check-hidden = true
+# Ignore camelCase and PascalCase identifiers (common in Go and TypeScript code)
+ignore-regex = \b[a-z]+[A-Z]\w*\b|\b[A-Z][a-z]+[A-Z]\w*\b
+# convertor,convertors - project's deliberate spelling for Go types and filenames (DataConvertor, etc.)
+# crypted - variable name in AES encrypt/decrypt functions
+# te - Tapd API field name (Te/te struct fields)
+# thur - Thursday abbreviation in Grafana dashboard SQL column alias
+ignore-words-list = convertor,convertors,crypted,te,thur

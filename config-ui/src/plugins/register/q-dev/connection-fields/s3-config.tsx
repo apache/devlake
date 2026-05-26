@@ -70,7 +70,7 @@ export const S3Config = ({ initialValues, values, setValues, setErrors }: Props)
         onChange={handleBucketChange}
         status={bucketError ? 'error' : ''}
       />
-      {bucketError && <div style={{ marginTop: 4, color: '#f5222d' }}>{bucketError}</div>}
+      {bucketError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{bucketError}</div>}
     </Block>
   );
 };

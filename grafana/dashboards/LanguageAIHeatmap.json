@@ -1,0 +1,156 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Completion requests, avg context size, and completion rate per language",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "cellHeight": "sm", "showHeader": true, "sortBy": [{ "desc": true, "displayName": "Requests" }] },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS 'Language',\n  COUNT(*) AS 'Requests',\n  ROUND(AVG(completions_count), 2) AS 'Avg Completions',\n  ROUND(AVG(left_context_length)) AS 'Avg Left Context',\n  ROUND(AVG(right_context_length)) AS 'Avg Right Context',\n  ROUND(AVG(left_context_length + right_context_length)) AS 'Avg Total Context',\n  COUNT(DISTINCT user_id) AS 'Users'\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY file_extension\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Language Completion Profile",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily completion requests by language",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
+            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 9 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN file_extension = '' THEN '(unknown)' ELSE file_extension END AS metric,\n  COUNT(*) AS value\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), file_extension\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Completions by Language",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Which file types are most active during chat sessions",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "id": 3,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file)' ELSE active_file_extension END AS 'File Type',\n  COUNT(*) AS 'Chat Events'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY active_file_extension\nORDER BY COUNT(*) DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Active File Types During Chat",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Context size trends for top languages",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  file_extension AS metric,\n  ROUND(AVG(left_context_length + right_context_length)) AS value\nFROM _tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\n  AND file_extension IN (SELECT file_extension FROM _tool_q_dev_completion_log GROUP BY file_extension ORDER BY COUNT(*) DESC LIMIT 5)\nGROUP BY DATE(timestamp), file_extension\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Context Size by Language (Top 5)",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "kiro", "language", "completions"],
+  "templating": { "list": [] },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro Language AI Heatmap",
+  "uid": "kiro_language_heatmap",
+  "version": 1
+}

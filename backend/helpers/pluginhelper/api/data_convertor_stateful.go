@@ -192,7 +192,7 @@ func (converter *StatefulDataConverter[InputType]) Execute() errors.Error {
 	if err != nil {
 		return err
 	}
-	// save the incremantal state
+	// save the incremental state
 	return converter.SubtaskStateManager.Close()
 }
 

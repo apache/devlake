@@ -34,14 +34,16 @@ export const layoutLoader = async ({ request }: Props) => {
   }
 
   let fePlugins = getRegisterPlugins();
-  const bePlugins = await API.plugin.list();
-
   try {
     const envPlugins = import.meta.env.DEVLAKE_PLUGINS.split(',').filter(Boolean);
     fePlugins = fePlugins.filter((plugin) => !envPlugins.length || envPlugins.includes(plugin));
   } catch (err) {}
 
-  const res = await API.version(request.signal);
+  const [bePlugins, res, user] = await Promise.all([
+    API.plugin.list(),
+    API.version(request.signal),
+    API.auth.userinfo().catch(() => null),
+  ]);
 
   return {
     version: res.version,
@@ -49,5 +51,6 @@ export const layoutLoader = async ({ request }: Props) => {
       fePlugins,
       bePlugins.map((it) => it.plugin),
     ),
+    user,
   };
 };

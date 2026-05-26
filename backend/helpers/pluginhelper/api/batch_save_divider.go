@@ -73,10 +73,10 @@ func (d *BatchSaveDivider) ForType(rowType reflect.Type) (*BatchSave, errors.Err
 		rowElemType := rowType.Elem()
 		d.log.Debug("missing BatchSave for type %s", rowElemType.Name())
 		row := reflect.New(rowElemType).Interface()
-		// check if rowType had RawDataOrigin embeded
+		// check if rowType had RawDataOrigin embedded
 		field, hasField := rowElemType.FieldByName("RawDataOrigin")
 		if !hasField || field.Type != reflect.TypeOf(common.RawDataOrigin{}) {
-			return nil, errors.Default.New(fmt.Sprintf("type %s must have RawDataOrigin embeded", rowElemType.Name()))
+			return nil, errors.Default.New(fmt.Sprintf("type %s must have RawDataOrigin embedded", rowElemType.Name()))
 		}
 		d.batches[rowType] = batch
 		if !d.incrementalMode {

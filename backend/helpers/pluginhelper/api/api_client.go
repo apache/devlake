@@ -432,7 +432,7 @@ func UnmarshalResponse(res *http.Response, v interface{}) errors.Error {
 	if err != nil {
 		statusCode := res.StatusCode
 		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-			statusCode = http.StatusBadRequest // to avoid Basic Auth Dialog poping up
+			statusCode = http.StatusBadRequest // to avoid Basic Auth Dialog popping up
 		}
 		return errors.HttpStatus(statusCode).Wrap(err, fmt.Sprintf("error decoding response from %s: raw response: %s", res.Request.URL.String(), string(resBody)))
 	}

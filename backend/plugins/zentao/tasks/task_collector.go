@@ -88,7 +88,7 @@ func CollectTask(taskCtx plugin.SubTaskContext) errors.Error {
 				// extract task's children
 				childTasks, err := extractChildrenWithDFS(task)
 				if err != nil {
-					return nil, errors.Default.New(fmt.Sprintf("extract task: %v chidren err: %v", task, err))
+					return nil, errors.Default.New(fmt.Sprintf("extract task: %v children err: %v", task, err))
 				}
 				for _, task := range childTasks {
 					allTaskRecords[task.Id] = task

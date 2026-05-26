@@ -19,6 +19,7 @@ package migrationscripts
 
 import (
 	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 )
@@ -32,29 +33,24 @@ func (*addScopeIdFields) Up(basicRes context.BasicRes) errors.Error {
 
 	// Add scope_id column to _tool_q_dev_user_data table
 	// This field links user data to QDevS3Slice scope, which can then be mapped to projects via project_mapping
-	err := db.Exec(`
-		ALTER TABLE _tool_q_dev_user_data
-		ADD COLUMN IF NOT EXISTS scope_id VARCHAR(255) DEFAULT NULL
-	`)
-	if err != nil {
-		// Try alternative syntax for databases that don't support IF NOT EXISTS
-		_ = db.Exec(`ALTER TABLE _tool_q_dev_user_data ADD COLUMN scope_id VARCHAR(255) DEFAULT NULL`)
+	if !db.HasColumn("_tool_q_dev_user_data", "scope_id") {
+		if err := db.AddColumn("_tool_q_dev_user_data", "scope_id", dal.Varchar); err != nil {
+			return errors.Default.Wrap(err, "failed to add scope_id to _tool_q_dev_user_data")
+		}
 	}
 
 	// Add index on scope_id for better query performance
-	_ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_q_dev_user_data_scope_id ON _tool_q_dev_user_data(scope_id)`)
+	_ = db.Exec(`CREATE INDEX idx_q_dev_user_data_scope_id ON _tool_q_dev_user_data(scope_id)`)
 
 	// Add scope_id column to _tool_q_dev_s3_file_meta table
-	err = db.Exec(`
-		ALTER TABLE _tool_q_dev_s3_file_meta
-		ADD COLUMN IF NOT EXISTS scope_id VARCHAR(255) DEFAULT NULL
-	`)
-	if err != nil {
-		_ = db.Exec(`ALTER TABLE _tool_q_dev_s3_file_meta ADD COLUMN scope_id VARCHAR(255) DEFAULT NULL`)
+	if !db.HasColumn("_tool_q_dev_s3_file_meta", "scope_id") {
+		if err := db.AddColumn("_tool_q_dev_s3_file_meta", "scope_id", dal.Varchar); err != nil {
+			return errors.Default.Wrap(err, "failed to add scope_id to _tool_q_dev_s3_file_meta")
+		}
 	}
 
 	// Add index on scope_id
-	_ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_q_dev_s3_file_meta_scope_id ON _tool_q_dev_s3_file_meta(scope_id)`)
+	_ = db.Exec(`CREATE INDEX idx_q_dev_s3_file_meta_scope_id ON _tool_q_dev_s3_file_meta(scope_id)`)
 
 	return nil
 }

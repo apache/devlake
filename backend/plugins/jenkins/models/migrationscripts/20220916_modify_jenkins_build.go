@@ -40,7 +40,7 @@ type jenkinsBuild20220916Before struct {
 	Number            int64     `gorm:"primaryKey"`
 	Result            string    // Result
 	Timestamp         int64     // start time
-	StartTime         time.Time // convered by timestamp
+	StartTime         time.Time // converted by timestamp
 	Type              string    `gorm:"index;type:varchar(255)"`
 	Class             string    `gorm:"index;type:varchar(255)" `
 	TriggeredBy       string    `gorm:"type:varchar(255)"`
@@ -63,7 +63,7 @@ type jenkinsBuild20220916After struct {
 	Number            int64     `gorm:"index"`
 	Result            string    // Result
 	Timestamp         int64     // start time
-	StartTime         time.Time // convered by timestamp
+	StartTime         time.Time // converted by timestamp
 	Type              string    `gorm:"index;type:varchar(255)"`
 	Class             string    `gorm:"index;type:varchar(255)" `
 	TriggeredBy       string    `gorm:"type:varchar(255)"`

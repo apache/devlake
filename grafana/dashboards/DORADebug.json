@@ -2641,7 +2641,7 @@
           ]
         }
       ],
-      "title": "Step 5 - check the median change lead time for each month in Figure 4 (Compare the change_lead_time with the max ranks in GREEN before the first occurence of ORANGE in each month)",
+      "title": "Step 5 - check the median change lead time for each month in Figure 4 (Compare the change_lead_time with the max ranks in GREEN before the first occurrence of ORANGE in each month)",
       "type": "table"
     },
     {
@@ -3464,7 +3464,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "with _deployments as(\n  select\n    distinct d.cicd_deployment_id as deployment_id,\n    d.result,\n    d.environment,\n    d.finished_date,\n    d.cicd_scope_id,\n    pm.project_name\n  from\n    cicd_deployment_commits d\n    join project_mapping pm on d.cicd_scope_id = pm.row_id\n    and pm.`table` = 'cicd_scopes'\n  where\n    -- only result needs to specified, not envioronment\n    d.result = 'SUCCESS' -- choose your project_name\n    and pm.project_name in ($project)\n),\n_incidents as(\n  select\n    distinct i.id as issue_id,\n    i.created_date,\n    pm.project_name\n  from\n    incidents i\n    join project_mapping pm on i.scope_id = pm.row_id\n    and i.`table` = pm.`table`\n  where\n    -- choose your project_name\n    pm.project_name in ($project)\n)\nselect\n  deployment_id as id,\n  'DEPLOYMENT' as type,\n  finished_date as time\nfrom\n  _deployments\nunion\nselect\n  issue_id as id,\n  'INCIDENT' as type,\n  created_date as time\nfrom\n  _incidents\norder by\n  time",
+          "rawSql": "with _deployments as(\n  select\n    distinct d.cicd_deployment_id as deployment_id,\n    d.result,\n    d.environment,\n    d.finished_date,\n    d.cicd_scope_id,\n    pm.project_name\n  from\n    cicd_deployment_commits d\n    join project_mapping pm on d.cicd_scope_id = pm.row_id\n    and pm.`table` = 'cicd_scopes'\n  where\n    -- only result needs to specified, not environment\n    d.result = 'SUCCESS' -- choose your project_name\n    and pm.project_name in ($project)\n),\n_incidents as(\n  select\n    distinct i.id as issue_id,\n    i.created_date,\n    pm.project_name\n  from\n    incidents i\n    join project_mapping pm on i.scope_id = pm.row_id\n    and i.`table` = pm.`table`\n  where\n    -- choose your project_name\n    pm.project_name in ($project)\n)\nselect\n  deployment_id as id,\n  'DEPLOYMENT' as type,\n  finished_date as time\nfrom\n  _deployments\nunion\nselect\n  issue_id as id,\n  'INCIDENT' as type,\n  created_date as time\nfrom\n  _incidents\norder by\n  time",
           "refId": "A",
           "select": [
             [

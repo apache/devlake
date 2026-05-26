@@ -1,0 +1,317 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kiro Usage Dashboard",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "Summary",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(credits_used)) AS 'Total Credits'\nFROM _tool_q_dev_user_report WHERE $__timeFilter(date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Credits Used",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(r.credits_used) / NULLIF(COUNT(DISTINCT pr.id), 0), 1) AS 'Credits / PR'\nFROM _tool_q_dev_user_report r\nCROSS JOIN (\n  SELECT DISTINCT id FROM pull_requests\n  WHERE merged_date IS NOT NULL AND $__timeFilter(merged_date)\n) pr\nWHERE $__timeFilter(r.date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per PR (Overall)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(r.credits_used) / NULLIF(COUNT(DISTINCT cdc.cicd_deployment_id), 0), 1) AS 'Credits / Deploy'\nFROM _tool_q_dev_user_report r\nCROSS JOIN (\n  SELECT DISTINCT cicd_deployment_id\n  FROM cicd_deployment_commits\n  WHERE result = 'SUCCESS' AND environment = 'PRODUCTION'\n    AND $__timeFilter(finished_date)\n) cdc\nWHERE $__timeFilter(r.date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Deployment (Overall)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(r.credits_used) / NULLIF(COUNT(DISTINCT i.id), 0), 1) AS 'Credits / Issue'\nFROM _tool_q_dev_user_report r\nCROSS JOIN (\n  SELECT DISTINCT id FROM issues\n  WHERE resolution_date IS NOT NULL AND type != 'INCIDENT'\n    AND $__timeFilter(resolution_date)\n) i\nWHERE $__timeFilter(r.date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Issue Resolved",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 10,
+      "panels": [],
+      "title": "Weekly Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly cost per merged PR",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 11,
+      "options": {
+        "legend": { "calcs": ["mean", "min"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _credits AS (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS credits\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_prs AS (\n  SELECT DATE_SUB(DATE(merged_date), INTERVAL WEEKDAY(DATE(merged_date)) DAY) AS week_start,\n    COUNT(*) AS prs\n  FROM pull_requests\n  WHERE merged_date IS NOT NULL AND $__timeFilter(merged_date)\n  GROUP BY DATE_SUB(DATE(merged_date), INTERVAL WEEKDAY(DATE(merged_date)) DAY)\n)\nSELECT c.week_start AS time,\n  ROUND(c.credits / NULLIF(p.prs, 0), 1) AS 'Credits per PR'\nFROM _credits c\nLEFT JOIN _prs p ON c.week_start = p.week_start\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Merged PR (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly cost per production deployment",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 12,
+      "options": {
+        "legend": { "calcs": ["mean", "min"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _credits AS (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS credits\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_deploys AS (\n  SELECT DATE_SUB(DATE(finished_date), INTERVAL WEEKDAY(DATE(finished_date)) DAY) AS week_start,\n    COUNT(DISTINCT cicd_deployment_id) AS deploys\n  FROM cicd_deployment_commits\n  WHERE result = 'SUCCESS' AND environment = 'PRODUCTION'\n    AND $__timeFilter(finished_date)\n  GROUP BY DATE_SUB(DATE(finished_date), INTERVAL WEEKDAY(DATE(finished_date)) DAY)\n)\nSELECT c.week_start AS time,\n  ROUND(c.credits / NULLIF(d.deploys, 0), 1) AS 'Credits per Deploy'\nFROM _credits c\nLEFT JOIN _deploys d ON c.week_start = d.week_start\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Deployment (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly cost per resolved issue",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 13,
+      "options": {
+        "legend": { "calcs": ["mean", "min"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _credits AS (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS week_start,\n    SUM(credits_used) AS credits\n  FROM _tool_q_dev_user_report WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n),\n_issues AS (\n  SELECT DATE_SUB(DATE(resolution_date), INTERVAL WEEKDAY(DATE(resolution_date)) DAY) AS week_start,\n    COUNT(*) AS resolved\n  FROM issues\n  WHERE resolution_date IS NOT NULL AND type != 'INCIDENT'\n    AND $__timeFilter(resolution_date)\n  GROUP BY DATE_SUB(DATE(resolution_date), INTERVAL WEEKDAY(DATE(resolution_date)) DAY)\n)\nSELECT c.week_start AS time,\n  ROUND(c.credits / NULLIF(i.resolved, 0), 1) AS 'Credits per Issue'\nFROM _credits c\nLEFT JOIN _issues i ON c.week_start = i.week_start\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits per Issue Resolved (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Is cost efficiency improving over time?",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 14,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  SUM(credits_used) AS 'Credits',\n  SUM(total_messages) AS 'Messages',\n  SUM(chat_conversations) AS 'Conversations'\nFROM _tool_q_dev_user_report\nWHERE $__timeFilter(date)\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly AI Activity Volume",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "kiro", "cost", "efficiency"],
+  "templating": { "list": [] },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "AI Cost-Efficiency",
+  "uid": "ai_cost_efficiency",
+  "version": 1
+}

@@ -43,6 +43,8 @@ export const getPluginScopeId = (plugin: string, scope: any) => {
       return `${scope.planKey}`;
     case 'argocd':
       return `${scope.name}`;
+    case 'asana':
+      return `${scope.gid}`;
     default:
       return `${scope.id}`;
   }

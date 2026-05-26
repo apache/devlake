@@ -26,6 +26,11 @@ import (
 // On 401's the round tripper will:
 // - Force a refresh of the OAuth token via the TokenProvider
 // - Retry the original request with the new token
+//
+// Note: When active, the RefreshRoundTripper overwrites the Authorization header
+// on every request, superseding any header previously set by SetupAuthentication.
+// This is intentional — for connections using token refresh (OAuth or GitHub App),
+// the round tripper is the single source of truth for the current bearer token.
 type RefreshRoundTripper struct {
 	base          http.RoundTripper
 	tokenProvider *TokenProvider

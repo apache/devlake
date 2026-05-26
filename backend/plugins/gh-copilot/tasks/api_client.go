@@ -28,6 +28,8 @@ import (
 	"github.com/apache/incubator-devlake/plugins/gh-copilot/models"
 )
 
+const gitHubApiVersion = "2026-03-10"
+
 type nowFunc func() time.Time
 type sleepFunc func(time.Duration)
 
@@ -65,7 +67,7 @@ func CreateApiClient(taskCtx plugin.TaskContext, connection *models.GhCopilotCon
 
 	apiClient.SetHeaders(map[string]string{
 		"Accept":               "application/vnd.github+json",
-		"X-GitHub-Api-Version": "2022-11-28",
+		"X-GitHub-Api-Version": gitHubApiVersion,
 	})
 
 	rateLimiter := &helper.ApiRateLimitCalculator{UserRateLimitPerHour: connection.RateLimitPerHour}

@@ -75,7 +75,7 @@ export const Connections = () => {
   };
 
   return (
-    <S.Wrapper theme={colorPrimary}>
+    <S.Wrapper>
       <h1>Connections</h1>
       <h5>
         Create and manage data connections from the following data sources or Webhooks to be used in syncing data in

@@ -78,9 +78,9 @@ type DataSourcePluginBlueprintV200 interface {
 // BlueprintConnectionV200 contains the pluginName/connectionId  and related Scopes,
 
 // MetricPluginBlueprintV200 is similar to the DataSourcePluginBlueprintV200
-// but for Metric Plugin, take dora as an example, it doens't have any scope,
+// but for Metric Plugin, take dora as an example, it doesn't have any scope,
 // nor does it produce any, however, it does require other plugin to be
-// executed beforehand, like calcuating refdiff before it can connect PR to the
+// executed beforehand, like calculating refdiff before it can connect PR to the
 // right Deployment keep in mind it would be called IFF the plugin was enabled
 // for the project.
 type MetricPluginBlueprintV200 interface {

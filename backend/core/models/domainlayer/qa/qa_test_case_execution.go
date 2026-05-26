@@ -33,6 +33,7 @@ type QaTestCaseExecution struct {
 	FinishTime   time.Time `gorm:"comment:Test finish time"`
 	CreatorId    string    `gorm:"type:varchar(255);comment:Executor ID"`
 	Status       string    `gorm:"type:varchar(255);comment:Test execution status | PENDING | IN_PROGRESS | SUCCESS | FAILED"` // enum, using string
+	IsInvalid    bool
 }
 
 func (QaTestCaseExecution) TableName() string {

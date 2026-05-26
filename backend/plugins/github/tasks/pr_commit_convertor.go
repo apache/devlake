@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/code"
@@ -54,30 +52,31 @@ func ConvertPullRequestCommits(taskCtx plugin.SubTaskContext) (err errors.Error)
 
 	pullIdGen := didgen.NewDomainIdGenerator(&models.GithubPullRequest{})
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubPrCommit{}),
-		dal.Join(`left join _tool_github_pull_requests on _tool_github_pull_requests.github_id = _tool_github_pull_request_commits.pull_request_id`),
-		dal.Where("_tool_github_pull_requests.repo_id = ? and _tool_github_pull_requests.connection_id = ?", repoId, data.Options.ConnectionId),
-		dal.Orderby("pull_request_id ASC"),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubPrCommit{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubPrCommit]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_PR_COMMIT_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_PR_COMMIT_TABLE,
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubPullRequestCommit := inputRow.(*models.GithubPrCommit)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubPrCommit{}),
+				dal.Join(`left join _tool_github_pull_requests on _tool_github_pull_requests.github_id = _tool_github_pull_request_commits.pull_request_id`),
+				dal.Where("_tool_github_pull_requests.repo_id = ? and _tool_github_pull_requests.connection_id = ?", repoId, data.Options.ConnectionId),
+				dal.Orderby("pull_request_id ASC"),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("_tool_github_pull_requests.github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubPullRequestCommit *models.GithubPrCommit) ([]interface{}, errors.Error) {
 			domainPrCommit := &code.PullRequestCommit{
 				CommitSha:          githubPullRequestCommit.CommitSha,
 				PullRequestId:      pullIdGen.Generate(data.Options.ConnectionId, githubPullRequestCommit.PullRequestId),

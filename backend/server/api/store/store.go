@@ -33,7 +33,7 @@ import (
 // @Description Get the value by given key
 // @Tags framework/projects
 // @Param storeKey path string true "storeKey"
-// @Success 200  {object} json.RawMessage
+// @Success 200  {object} interface{}
 // @Failure 400  {string} errcode.Error "Bad Request"
 // @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /store/{storeKey} [get]
@@ -53,8 +53,8 @@ func GetStore(c *gin.Context) {
 // @Tags framework/projects
 // @Accept application/json
 // @Param storeKey path string true "storeKey"
-// @Param project body json.RawMessage false "json"
-// @Success 200  {object} json.RawMessage
+// @Param project body interface{} false "json"
+// @Success 200  {object} interface{}
 // @Failure 400  {string} errcode.Error "Bad Request"
 // @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /store/{storeKey} [PUT]

@@ -1,0 +1,3 @@
+id,url,icon_url,issue_key,title,description,epic_key,type,original_type,status,original_status,story_point,resolution_date,created_date,updated_date,lead_time_minutes,original_estimate_minutes,time_spent_minutes,time_remaining_minutes,creator_id,creator_name,assignee_id,assignee_name,parent_issue_id,priority,severity,urgency,component,original_project,is_subtask,due_date,fix_versions
+taiga:TaigaEpic:1:401,,,Platform v2.0,Platform v2.0,,,EPIC,Epic,In Progress,In Progress,,,2024-01-05T09:00:00.000+00:00,2024-01-20T10:00:00.000+00:00,,,,,,,,,,,,,,,0,,
+taiga:TaigaEpic:1:402,,,Mobile App,Mobile App,,,EPIC,Epic,Open,Open,,,2024-01-07T11:00:00.000+00:00,2024-01-18T09:00:00.000+00:00,,,,,,,,,,,,,,,0,,

@@ -621,7 +621,7 @@
           "metricColumn": "none",
           "queryType": "randomWalk",
           "rawQuery": true,
-          "rawSql": "SELECT\n  timestamp(DATE_ADD(date(gitlab_created_at), INTERVAL -$interval(date(gitlab_created_at))+1 DAY)) as time,\n  avg(review_rounds) as \"Pull Request Reveiw Round\"\nFROM\n  gitlab_merge_requests gmr\n  LEFT JOIN jira_board_gitlab_projects jbgp ON jbgp.gitlab_project_id = gmr.project_id\nWHERE\n  state = 'merged'\n  and review_rounds > 0\n  and jbgp.jira_board_id = $board_id\n  and $__timeFilter(gitlab_created_at)\nGROUP BY 1\nORDER BY 1",
+          "rawSql": "SELECT\n  timestamp(DATE_ADD(date(gitlab_created_at), INTERVAL -$interval(date(gitlab_created_at))+1 DAY)) as time,\n  avg(review_rounds) as \"Pull Request Review Round\"\nFROM\n  gitlab_merge_requests gmr\n  LEFT JOIN jira_board_gitlab_projects jbgp ON jbgp.gitlab_project_id = gmr.project_id\nWHERE\n  state = 'merged'\n  and review_rounds > 0\n  and jbgp.jira_board_id = $board_id\n  and $__timeFilter(gitlab_created_at)\nGROUP BY 1\nORDER BY 1",
           "refId": "A",
           "select": [
             [

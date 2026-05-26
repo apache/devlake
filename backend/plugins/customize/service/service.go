@@ -541,12 +541,16 @@ func (s *Service) qaTestCaseExecutionHandler(qaProjectId string) func(record map
 		}
 		delete(record, "creator_name")
 		record["qa_project_id"] = qaProjectId
+		// Set default value for is_invalid if not present or empty in the CSV
+		if isInvalid, exists := record["is_invalid"]; !exists || isInvalid == "" {
+			record["is_invalid"] = false
+		}
 		return s.dal.CreateWithMap(&qa.QaTestCaseExecution{}, record)
 	}
 }
 
 // issueRepoCommitHandlerFactory returns a handler that will populate the `issue_commits` and `issue_repo_commits` table
-// ths issueCommitsFields is used to filter the fields that should be inserted into the `issue_commits` table
+// the issueCommitsFields is used to filter the fields that should be inserted into the `issue_commits` table
 func (s *Service) issueRepoCommitHandler(record map[string]interface{}) errors.Error {
 	err := s.dal.CreateWithMap(&crossdomain.IssueRepoCommit{}, record)
 	if err != nil {

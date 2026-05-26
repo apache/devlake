@@ -326,7 +326,7 @@ export const QDevDataScope = ({
           const timePart = meta.month ? `${meta.year}/${ensureLeadingZero(meta.month)}` : `${meta.year}`;
           return (
             <Tooltip
-              title={`Scans both by_user_analytic and user_report under AWSLogs/${meta.accountId}/KiroLogs/…/${timePart}`}
+              title={`Scans user-report (by_user_analytic + user_report) and logging (chat + completions) under AWSLogs/${meta.accountId}/KiroLogs/…/${timePart}`}
             >
               <Typography.Text code>
                 {meta.basePath}/…/{meta.accountId}/…/{timePart}

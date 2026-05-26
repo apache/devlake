@@ -43,6 +43,11 @@ func (script *addIndexToGithubJobs) Up(basicRes context.BasicRes) errors.Error {
 		if err := db.Exec(sql); err != nil {
 			return err
 		}
+	} else if u.Scheme == "postgres" || u.Scheme == "postgresql" {
+		sql := "CREATE INDEX IF NOT EXISTS idx_repo_id_connection_id ON _tool_github_jobs (repo_id, connection_id)"
+		if err := db.Exec(sql); err != nil {
+			return err
+		}
 	}
 	return nil
 }

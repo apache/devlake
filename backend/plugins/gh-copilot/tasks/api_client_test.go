@@ -75,3 +75,8 @@ func TestHandleGitHubRetryAfterNoopOnNon429(t *testing.T) {
 	require.Equal(t, time.Duration(0), slept)
 	require.Len(t, logger.warnings, 0)
 }
+
+func TestGitHubApiVersionHeaderValue(t *testing.T) {
+	require.Equal(t, "2026-03-10", gitHubApiVersion,
+		"GitHub API version header was changed; verify the new version is supported and update this test")
+}

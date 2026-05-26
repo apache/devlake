@@ -20,10 +20,15 @@ package services
 import (
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/server/services/pushapiaccess"
 )
 
 // InsertRow FIXME ...
 func InsertRow(table string, rows []map[string]interface{}) (int64, errors.Error) {
+	if err := pushapiaccess.ValidateTable(table, cfg.GetString("PUSH_API_ALLOWED_TABLES")); err != nil {
+		return 0, err
+	}
+
 	err := db.Create(rows, dal.From(table))
 	if err != nil {
 		return 0, err

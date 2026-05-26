@@ -36,7 +36,7 @@ func (c *DefaultBasicRes) GetConfigReader() config.ConfigReader {
 	return c.cfg
 }
 
-// GetConfig returns the value of the specificed name
+// GetConfig returns the value of the specified name
 func (c *DefaultBasicRes) GetConfig(name string) string {
 	return c.cfg.GetString(name)
 }

@@ -96,7 +96,7 @@ id,params,data,url,input,created_at
     ""started_by"" : ""1c762fc2-b0fb-4fe2-97d2-5e54ddd1eba7"",
     ""pipeline_number"" : 8,
     ""created_at"" : ""2023-03-25T18:06:13Z"",
-    ""stopped_at"" : ""2023-03-25T18:06:28Z""
+    ""stopped_at"" : ""2023-03-25T18:05:28Z""
   }",https://circleci.com/api/v2/pipeline/afe0cabe-e7ee-4eb7-bf13-bb6170d139f0/workflow,"{""id"": ""afe0cabe-e7ee-4eb7-bf13-bb6170d139f0"", ""vcs"": {""tag"": """", ""branch"": """", ""commit"": {""body"": """", ""subject"": """"}, ""revision"": """", ""review_id"": """", ""review_url"": """", ""provider_name"": """", ""origin_repository_url"": """", ""target_repository_url"": """"}, ""state"": """", ""errors"": null, ""number"": 0, ""trigger"": {""type"": """", ""actor"": {""login"": """", ""avatar_url"": """"}, ""received_at"": """"}, ""createdAt"": ""0001-01-01T00:00:00Z"", ""updatedAt"": ""0001-01-01T00:00:00Z"", ""created_at"": null, ""updated_at"": null, ""ConnectionId"": 0, ""_raw_data_id"": 0, ""project_slug"": """", ""_raw_data_table"": """", ""_raw_data_params"": """", ""_raw_data_remark"": """", ""trigger_parameters"": null}",2023-03-28 15:39:58.245
 28,"{""ConnectionId"":1,""ProjectSlug"":""github/coldgust/coldgust.github.io""}","{
     ""pipeline_id"" : ""f5a2a6e8-4430-4935-8bec-77ca2b26c61d"",

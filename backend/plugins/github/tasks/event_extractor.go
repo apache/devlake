@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -54,21 +52,16 @@ type IssueEvent struct {
 func ExtractApiEvents(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[IssueEvent]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_EVENTS_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			body := &IssueEvent{}
-			err := errors.Convert(json.Unmarshal(row.Data, body))
-			if err != nil {
-				return nil, err
-			}
+		Extract: func(body *IssueEvent, row *api.RawData) ([]any, errors.Error) {
 			results := make([]interface{}, 0, 1)
 			if body.GithubId == 0 || body.Actor == nil {
 				return nil, nil
@@ -80,22 +73,15 @@ func ExtractApiEvents(taskCtx plugin.SubTaskContext) errors.Error {
 				Type:            body.Event,
 				GithubCreatedAt: body.GithubCreatedAt.ToTime(),
 			}
-
 			if body.Actor != nil {
 				githubIssueEvent.AuthorUsername = body.Actor.Login
-
 				githubAccount, err := convertAccount(body.Actor, data.Options.GithubId, data.Options.ConnectionId)
 				if err != nil {
 					return nil, err
 				}
 				results = append(results, githubAccount)
 			}
-
-			if err != nil {
-				return nil, err
-			}
 			results = append(results, githubIssueEvent)
-
 			return results, nil
 		},
 	})

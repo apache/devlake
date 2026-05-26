@@ -106,7 +106,7 @@ func CreateProject(projectInput *models.ApiInputProject) (*models.ApiOutputProje
 		return nil, err
 	}
 
-	// create transaction to updte multiple tables
+	// create transaction to update multiple tables
 	var err errors.Error
 	tx := db.Begin()
 	defer func() {

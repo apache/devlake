@@ -35,6 +35,7 @@ import (
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 	"github.com/apache/incubator-devlake/impls/logruslog"
+	"github.com/apache/incubator-devlake/server/api/auth"
 	_ "github.com/apache/incubator-devlake/server/api/docs"
 	"github.com/apache/incubator-devlake/server/api/ping"
 	"github.com/apache/incubator-devlake/server/api/shared"
@@ -53,9 +54,9 @@ const DB_MIGRATING = `Database migration is in progress. Please wait until it is
 var basicRes context.BasicRes
 
 func Init() {
-	// Initialize services
 	services.Init()
 	basicRes = services.GetBasicRes()
+	auth.Init(basicRes)
 }
 
 func InjectCustomService(pipelineNotifier services.PipelineNotificationService, projectService services.ProjectService) errors.Error {
@@ -104,9 +105,16 @@ func CreateApiServer() *gin.Engine {
 	router.GET("/health", ping.Health)
 	router.GET("/version", version.Get)
 
-	// Api keys
+	// Auth chain order matters: REST API key first (its own short-circuit),
+	// then the push API key gate, then OIDC session, then oauth2-proxy header
+	// (only sets USER if not yet set and the forwarded secret matches), then the terminal 401 gate,
+	// finally CSRF on unsafe methods.
 	router.Use(RestAuthentication(router, basicRes))
+	router.Use(RequirePushAuthentication(basicRes))
+	router.Use(auth.OIDCAuthentication())
 	router.Use(OAuth2ProxyAuthentication(basicRes))
+	router.Use(auth.RequireAuth())
+	router.Use(auth.CSRFProtect())
 
 	return router
 }

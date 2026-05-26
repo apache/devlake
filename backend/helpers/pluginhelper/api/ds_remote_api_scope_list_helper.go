@@ -31,7 +31,7 @@ const (
 	RAS_ENTRY_TYPE_SCOPE = "scope"
 )
 
-// DsListRemoteScopes is the function type for listing remote scopes that must be implmeneted by the plugin
+// DsListRemoteScopes is the function type for listing remote scopes that must be implemented by the plugin
 type DsListRemoteScopes[C plugin.ToolLayerApiConnection, S plugin.ToolLayerScope, P any] func(
 	connection *C, apiClient plugin.ApiClient, groupId string, page P) (children []models.DsRemoteApiScopeListEntry[S], nextPage *P, errr errors.Error)
 

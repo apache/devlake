@@ -28,6 +28,7 @@ type ArgocdSyncOperation struct {
 	ApplicationName string `gorm:"primaryKey;type:varchar(255)"`
 	DeploymentId    int64  `gorm:"primaryKey"`        // History ID from ArgoCD
 	Revision        string `gorm:"type:varchar(255)"` // Git SHA
+	RepoURL         string `gorm:"type:varchar(500)"` // Git repo URL resolved from source/sources at extraction time
 	Kind            string `gorm:"type:varchar(100)"` // Kubernetes resource kind: Deployment, ReplicaSet, Rollout, StatefulSet, DaemonSet, etc.
 	StartedAt       *time.Time
 	FinishedAt      *time.Time

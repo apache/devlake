@@ -96,7 +96,7 @@ func makeScopesV200(
 		// get workspace and scope config from db
 		tapdWorkspace, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 
-		// add wrokspace to scopes
+		// add workspace to scopes
 		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_TICKET) {
 			id := idgen.Generate(connection.ID, tapdWorkspace.Id)
 			board := ticket.NewBoard(id, tapdWorkspace.Name)

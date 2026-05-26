@@ -730,7 +730,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(display_name, user_id) as 'User',\n  SUM(chat_ai_code_lines) as 'Accepted Lines (Chat)',\n  SUM(transformation_lines_ingested) as 'Lines Ingested (Java Transform)',\n  SUM(transformation_lines_generated) as 'Lines Generated (Java Transform)',\n  SUM(transformation_event_count) as 'Event Count (Java Transform)',\n  SUM(code_review_findings_count) as 'Findings (Code Review)',\n  SUM(code_fix_accepted_lines) as 'Accepted Lines (Code Fix)',\n  SUM(code_fix_generated_lines) as 'Generated Lines (Code Fix)',\n  SUM(code_fix_acceptance_event_count) as 'Accepted Count (Code Fix)',\n  SUM(code_fix_generation_event_count) as 'Generated Count (Code Fix)',\n  CONCAT(ROUND(SUM(code_fix_acceptance_event_count) / NULLIF(SUM(code_fix_generation_event_count), 0) * 100, 2), '%') as 'Acceptance Rate (Code Fix)',\n  SUM(inline_ai_code_lines) as 'Accepted Lines (Inline Suggestion)',\n  SUM(inline_acceptance_count) as 'Accepted Count (Inline Suggestion)',\n  SUM(inline_suggestions_count) as 'Total Count (Inline Suggestion)',\n  CONCAT(ROUND(SUM(inline_acceptance_count) / NULLIF(SUM(inline_suggestions_count), 0) * 100, 2), '%') as 'Acceptance Rate (Inline Suggestion)',\n  SUM(inline_chat_accepted_line_additions) as 'Accepted Line Additions (Inline Chat)',\n  SUM(inline_chat_accepted_line_deletions) as 'Accepted Line Deletions (Inline Chat)',\n  SUM(inline_chat_acceptance_event_count) as 'Accepted Events (Inline Chat)',\n  SUM(inline_chat_total_event_count) as 'Total Events (Inline Chat)',\n  CONCAT(ROUND(SUM(inline_chat_acceptance_event_count) / NULLIF(SUM(inline_chat_total_event_count), 0) * 100, 2), '%') as 'Acceptance Rate (Inline Chat)',\n  MIN(date) as 'First Activity',\n  MAX(date) as 'Last Activity'\nFROM lake._tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY user_id, display_name\nORDER BY SUM(inline_ai_code_lines) DESC",
+          "rawSql": "SELECT\n  COALESCE(MAX(display_name), user_id) as 'User',\n  SUM(chat_ai_code_lines) as 'Accepted Lines (Chat)',\n  SUM(transformation_lines_ingested) as 'Lines Ingested (Java Transform)',\n  SUM(transformation_lines_generated) as 'Lines Generated (Java Transform)',\n  SUM(transformation_event_count) as 'Event Count (Java Transform)',\n  SUM(code_review_findings_count) as 'Findings (Code Review)',\n  SUM(code_fix_accepted_lines) as 'Accepted Lines (Code Fix)',\n  SUM(code_fix_generated_lines) as 'Generated Lines (Code Fix)',\n  SUM(code_fix_acceptance_event_count) as 'Accepted Count (Code Fix)',\n  SUM(code_fix_generation_event_count) as 'Generated Count (Code Fix)',\n  CONCAT(ROUND(SUM(code_fix_acceptance_event_count) / NULLIF(SUM(code_fix_generation_event_count), 0) * 100, 2), '%') as 'Acceptance Rate (Code Fix)',\n  SUM(inline_ai_code_lines) as 'Accepted Lines (Inline Suggestion)',\n  SUM(inline_acceptance_count) as 'Accepted Count (Inline Suggestion)',\n  SUM(inline_suggestions_count) as 'Total Count (Inline Suggestion)',\n  CONCAT(ROUND(SUM(inline_acceptance_count) / NULLIF(SUM(inline_suggestions_count), 0) * 100, 2), '%') as 'Acceptance Rate (Inline Suggestion)',\n  SUM(inline_chat_accepted_line_additions) as 'Accepted Line Additions (Inline Chat)',\n  SUM(inline_chat_accepted_line_deletions) as 'Accepted Line Deletions (Inline Chat)',\n  SUM(inline_chat_acceptance_event_count) as 'Accepted Events (Inline Chat)',\n  SUM(inline_chat_total_event_count) as 'Total Events (Inline Chat)',\n  CONCAT(ROUND(SUM(inline_chat_acceptance_event_count) / NULLIF(SUM(inline_chat_total_event_count), 0) * 100, 2), '%') as 'Acceptance Rate (Inline Chat)',\n  SUM(doc_generation_event_count) as 'Doc Gen Events',\n  SUM(test_generation_event_count) as 'Test Gen Events',\n  SUM(dev_accepted_lines) as 'Dev Accepted Lines',\n  MIN(date) as 'First Activity',\n  MAX(date) as 'Last Activity'\nFROM lake._tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY user_id\nORDER BY SUM(inline_ai_code_lines) DESC",
           "refId": "A",
           "select": [
             [
@@ -771,6 +771,393 @@
       ],
       "title": "User Interactions",
       "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily doc generation events and accepted/rejected lines",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date as time,\n  SUM(doc_generation_event_count) as 'Doc Generation Events',\n  SUM(doc_generation_accepted_line_additions) as 'Accepted Line Additions',\n  SUM(doc_generation_accepted_line_updates) as 'Accepted Line Updates',\n  SUM(doc_generation_rejected_line_additions) as 'Rejected Line Additions',\n  SUM(doc_generation_rejected_line_updates) as 'Rejected Line Updates'\nFROM lake._tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY date\nORDER BY date",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Doc Generation Metrics",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily test generation events and lines",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date as time,\n  SUM(test_generation_event_count) as 'Test Generation Events',\n  SUM(test_generation_accepted_tests) as 'Accepted Tests',\n  SUM(test_generation_generated_tests) as 'Generated Tests',\n  SUM(test_generation_accepted_lines) as 'Accepted Lines',\n  SUM(test_generation_generated_lines) as 'Generated Lines'\nFROM lake._tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY date\nORDER BY date",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Test Generation Metrics",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily agentic dev events and lines",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  date as time,\n  SUM(dev_generation_event_count) as 'Dev Generation Events',\n  SUM(dev_acceptance_event_count) as 'Dev Acceptance Events',\n  SUM(dev_generated_lines) as 'Dev Generated Lines',\n  SUM(dev_accepted_lines) as 'Dev Accepted Lines'\nFROM lake._tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY date\nORDER BY date",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Dev (Agentic) Metrics",
+      "type": "timeseries"
     }
   ],
   "preload": false,

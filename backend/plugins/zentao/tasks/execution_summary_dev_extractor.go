@@ -33,7 +33,7 @@ var ExtractExecutionSummaryDevMeta = plugin.SubTaskMeta{
 	Name:             "extractExecutionSummaryDev",
 	EntryPoint:       ExtractExecutionSummaryDev,
 	EnabledByDefault: true,
-	Description:      "extract Zentao execution summary from build-in page api",
+	Description:      "extract Zentao execution summary from built-in page api",
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
 }
 

@@ -122,7 +122,7 @@ func CreateAsyncApiClient(
 		return nil, errors.Default.Wrap(err, "failed to create scheduler")
 	}
 
-	// finally, wrap around api client with async sematic
+	// finally, wrap around api client with async semantic
 	return &ApiAsyncClient{
 		apiClient,
 		scheduler,

@@ -1,0 +1,1118 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Overview of logging event metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) as 'Chat Events',\n  (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) as 'Chat Users',\n  (SELECT COUNT(DISTINCT conversation_id) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp) AND conversation_id != '') as 'Conversations',\n  (SELECT COUNT(*) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) as 'Completion Events',\n  (SELECT COUNT(DISTINCT user_id) FROM lake._tool_q_dev_completion_log WHERE $__timeFilter(timestamp)) as 'Completion Users',\n  (SELECT SUM(code_reference_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) as 'Code References',\n  (SELECT SUM(web_link_count) FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) as 'Web Links Cited'",
+          "refId": "A"
+        }
+      ],
+      "title": "Logging Overview",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Hourly distribution of AI usage activity (chat + completions)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hour of Day",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.8,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  LPAD(CAST(hour_of_day AS CHAR), 2, '0') as 'Hour',\n  SUM(chat_count) as 'Chat Events',\n  SUM(completion_count) as 'Completion Events'\nFROM (\n  SELECT HOUR(timestamp) as hour_of_day, COUNT(*) as chat_count, 0 as completion_count\n  FROM lake._tool_q_dev_chat_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY HOUR(timestamp)\n  UNION ALL\n  SELECT HOUR(timestamp) as hour_of_day, 0 as chat_count, COUNT(*) as completion_count\n  FROM lake._tool_q_dev_completion_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY HOUR(timestamp)\n) combined\nGROUP BY hour_of_day\nORDER BY hour_of_day",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Hours Distribution",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of chat trigger types: MANUAL (chat window) vs INLINE_CHAT",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 14
+      },
+      "id": 11,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN chat_trigger_type = '' OR chat_trigger_type IS NULL THEN '(unknown)'\n    ELSE chat_trigger_type\n  END as 'Trigger Type',\n  COUNT(*) as 'Events'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY chat_trigger_type\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Trigger Type Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of model usage across chat events",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 14
+      },
+      "id": 3,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Requests$/",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN model_id = '' OR model_id IS NULL THEN '(unknown)'\n    ELSE model_id\n  END as 'Model',\n  COUNT(*) as 'Requests'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY model_id\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Model Usage Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Top file extensions used with inline completions",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 14
+      },
+      "id": 4,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN file_extension = '' THEN '(unknown)'\n    ELSE file_extension\n  END as 'File Type',\n  COUNT(*) as 'Completions'\nFROM lake._tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY file_extension\nORDER BY COUNT(*) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "File Type Usage (Completions)",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average number of chat events per conversation",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE(timestamp) as time,\n  COUNT(*) / NULLIF(COUNT(DISTINCT CASE WHEN conversation_id != '' THEN conversation_id END), 0) as 'Avg Turns per Conversation',\n  COUNT(DISTINCT CASE WHEN conversation_id != '' THEN conversation_id END) as 'Unique Conversations',\n  COUNT(*) as 'Total Chat Events'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp)\nORDER BY DATE(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Conversation Depth Analysis",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily chat and completion events over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(chat) as 'Chat Events', SUM(completions) as 'Completion Events'\nFROM (\n  SELECT DATE(timestamp) as time, COUNT(*) as chat, 0 as completions\n  FROM lake._tool_q_dev_chat_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY DATE(timestamp)\n  UNION ALL\n  SELECT DATE(timestamp) as time, 0 as chat, COUNT(*) as completions\n  FROM lake._tool_q_dev_completion_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY DATE(timestamp)\n) combined\nGROUP BY time\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Event Trends",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Per-user logging activity summary",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COALESCE(u.display_name, u.user_id) as 'User',\n  u.user_id as 'User ID',\n  u.chat_events as 'Chat Events',\n  u.conversations as 'Conversations',\n  ROUND(u.chat_events / NULLIF(u.conversations, 0), 1) as 'Avg Turns',\n  COALESCE(c.completion_events, 0) as 'Completion Events',\n  COALESCE(c.files_count, 0) as 'Distinct Files',\n  ROUND(u.avg_prompt_len) as 'Avg Prompt Len',\n  ROUND(u.avg_response_len) as 'Avg Response Len',\n  u.steering_count as 'Steering Uses',\n  u.spec_count as 'Spec Mode Uses',\n  u.code_ref_count as 'Code Refs',\n  u.web_link_count as 'Web Links',\n  u.models_used as 'Models Used',\n  u.first_seen as 'First Seen',\n  GREATEST(u.last_seen, COALESCE(c.last_seen, u.last_seen)) as 'Last Seen'\nFROM (\n  SELECT\n    user_id,\n    MAX(display_name) as display_name,\n    COUNT(*) as chat_events,\n    COUNT(DISTINCT CASE WHEN conversation_id != '' THEN conversation_id END) as conversations,\n    AVG(prompt_length) as avg_prompt_len,\n    AVG(response_length) as avg_response_len,\n    GROUP_CONCAT(DISTINCT CASE WHEN model_id != '' AND model_id IS NOT NULL THEN model_id END ORDER BY model_id SEPARATOR ', ') as models_used,\n    SUM(CASE WHEN has_steering = 1 THEN 1 ELSE 0 END) as steering_count,\n    SUM(CASE WHEN is_spec_mode = 1 THEN 1 ELSE 0 END) as spec_count,\n    SUM(code_reference_count) as code_ref_count,\n    SUM(web_link_count) as web_link_count,\n    MIN(timestamp) as first_seen,\n    MAX(timestamp) as last_seen\n  FROM lake._tool_q_dev_chat_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY user_id\n) u\nLEFT JOIN (\n  SELECT\n    user_id,\n    COUNT(*) as completion_events,\n    COUNT(DISTINCT file_name) as files_count,\n    MAX(timestamp) as last_seen\n  FROM lake._tool_q_dev_completion_log\n  WHERE $__timeFilter(timestamp)\n  GROUP BY user_id\n) c ON u.user_id = c.user_id\nORDER BY u.user_id",
+          "refId": "A"
+        }
+      ],
+      "title": "Per-User Activity",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of Kiro feature adoption: Steering, Spec Mode, and Plain Chat",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 48
+      },
+      "id": 8,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  SUM(CASE WHEN has_steering = 1 THEN 1 ELSE 0 END) as 'Using Steering',\n  SUM(CASE WHEN is_spec_mode = 1 THEN 1 ELSE 0 END) as 'Using Spec Mode',\n  SUM(CASE WHEN has_steering = 0 AND is_spec_mode = 0 THEN 1 ELSE 0 END) as 'Plain Chat'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Kiro Feature Adoption",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Top file extensions active during chat events",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 48
+      },
+      "id": 9,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN active_file_extension = '' OR active_file_extension IS NULL THEN '(no file active)'\n    ELSE active_file_extension\n  END as 'File Type',\n  COUNT(*) as 'Chat Events'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY active_file_extension\nORDER BY COUNT(*) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Active File Types in Chat",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "How often Kiro responses include code references and web links",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 48
+      },
+      "id": 12,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  SUM(CASE WHEN code_reference_count > 0 THEN 1 ELSE 0 END) as 'With Code References',\n  SUM(CASE WHEN web_link_count > 0 THEN 1 ELSE 0 END) as 'With Web Links',\n  SUM(CASE WHEN has_followup_prompts = 1 THEN 1 ELSE 0 END) as 'With Followup Prompts',\n  SUM(CASE WHEN code_reference_count = 0 AND web_link_count = 0 AND has_followup_prompts = 0 THEN 1 ELSE 0 END) as 'Plain Response'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Response Enrichment Breakdown",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average and maximum prompt/response lengths over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE(timestamp) as time,\n  AVG(prompt_length) as 'Avg Prompt Length',\n  AVG(response_length) as 'Avg Response Length',\n  MAX(prompt_length) as 'Max Prompt Length',\n  MAX(response_length) as 'Max Response Length'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp)\nORDER BY DATE(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Prompt & Response Length Trends",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average code context size provided to inline completions over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Characters",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE(timestamp) as time,\n  ROUND(AVG(left_context_length)) as 'Avg Left Context',\n  ROUND(AVG(right_context_length)) as 'Avg Right Context',\n  ROUND(AVG(left_context_length + right_context_length)) as 'Avg Total Context'\nFROM lake._tool_q_dev_completion_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp)\nORDER BY DATE(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Completion Context Size Trends",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily trend of code references and web links in chat responses",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE(timestamp) as time,\n  SUM(code_reference_count) as 'Code References',\n  SUM(web_link_count) as 'Web Links',\n  SUM(CASE WHEN has_followup_prompts = 1 THEN 1 ELSE 0 END) as 'Followup Prompts'\nFROM lake._tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp)\nORDER BY DATE(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Response Enrichment Trends",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [
+    "q_dev",
+    "logging",
+    "kiro"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro AI Activity Insights",
+  "uid": "qdev_logging",
+  "version": 1
+}

@@ -1,0 +1,299 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kiro Usage",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Copilot Adoption",
+      "type": "link",
+      "url": "/d/copilot_adoption"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "## Multi-AI Tool Comparison: Copilot vs Kiro\nCompare GitHub Copilot and Kiro (Amazon Q Developer) adoption and usage side by side.\n\n**Note:** Copilot metrics come from `_tool_copilot_enterprise_daily_metrics` (enterprise-level aggregates). Kiro metrics come from `_tool_q_dev_user_report` and `_tool_q_dev_user_data`. Select the Copilot connection and scope using the dropdowns above.",
+        "mode": "markdown"
+      },
+      "title": "About",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 3 },
+      "id": 2,
+      "panels": [],
+      "title": "Active Users",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly active users for both tools",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  COUNT(DISTINCT user_id) AS 'Kiro Active Users'\nFROM _tool_q_dev_user_report\nWHERE $__timeFilter(date)\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "A"
+        },
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) AS time,\n  MAX(daily_active_users) AS 'Copilot Active Users'\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${copilot_connection_id}\n  AND scope_id = '${copilot_scope_id}'\n  AND $__timeFilter(day)\nGROUP BY DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY)\nORDER BY time",
+          "refId": "B"
+        }
+      ],
+      "title": "Weekly Active Users Comparison",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+      "id": 10,
+      "panels": [],
+      "title": "Code Generation",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly code generation and acceptance events",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "id": 11,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  SUM(inline_suggestions_count) AS 'Kiro: Suggestions',\n  SUM(inline_acceptance_count) AS 'Kiro: Accepted'\nFROM _tool_q_dev_user_data\nWHERE $__timeFilter(date)\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Kiro: Code Suggestions & Acceptance",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly Copilot code generation and acceptance events",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "id": 12,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) AS time,\n  SUM(code_generation_activity_count) AS 'Copilot: Suggestions',\n  SUM(code_acceptance_activity_count) AS 'Copilot: Accepted'\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${copilot_connection_id}\n  AND scope_id = '${copilot_scope_id}'\n  AND $__timeFilter(day)\nGROUP BY DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Copilot: Code Suggestions & Acceptance",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 20,
+      "panels": [],
+      "title": "Lines of Code & Acceptance Rate",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Weekly AI-generated lines of code accepted",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "id": 21,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(kiro_loc) AS 'Kiro LOC Accepted', SUM(copilot_loc) AS 'Copilot LOC Added'\nFROM (\n  SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n    SUM(inline_ai_code_lines + chat_ai_code_lines) AS kiro_loc, 0 AS copilot_loc\n  FROM _tool_q_dev_user_data WHERE $__timeFilter(date)\n  GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\n  UNION ALL\n  SELECT DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) AS time,\n    0 AS kiro_loc, SUM(loc_added_sum) AS copilot_loc\n  FROM _tool_copilot_enterprise_daily_metrics\n  WHERE connection_id = ${copilot_connection_id}\n    AND scope_id = '${copilot_scope_id}'\n    AND $__timeFilter(day)\n  GROUP BY DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY)\n) combined\nGROUP BY time ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Accepted: Kiro vs Copilot",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Overall acceptance rates for both tools",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "id": 22,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.5,
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Kiro' AS Tool,\n  ROUND(SUM(inline_acceptance_count) * 100.0 / NULLIF(SUM(inline_suggestions_count), 0), 1) AS 'Acceptance Rate'\nFROM _tool_q_dev_user_data\nWHERE $__timeFilter(date)\nUNION ALL\nSELECT 'Copilot' AS Tool,\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1)\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${copilot_connection_id}\n  AND scope_id = '${copilot_scope_id}'\n  AND $__timeFilter(day)",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate Comparison",
+      "type": "bargauge"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "copilot", "kiro", "comparison"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "hide": 0,
+        "label": "Copilot Connection",
+        "name": "copilot_connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT id FROM _tool_copilot_scopes WHERE connection_id = CAST('${copilot_connection_id}' AS UNSIGNED)",
+        "hide": 0,
+        "label": "Copilot Scope",
+        "name": "copilot_scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id FROM _tool_copilot_scopes WHERE connection_id = CAST('${copilot_connection_id}' AS UNSIGNED)",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Multi-AI Tool Comparison",
+  "uid": "multi_ai_comparison",
+  "version": 1
+}

@@ -25,7 +25,7 @@ import (
 
 const RAW_DEPLOYMENTS_TABLE = `dora_deplyments`
 
-//TODO Please modify the folowing code to adapt to your plugin
+//TODO Please modify the following code to adapt to your plugin
 /*
 POST /plugins/dora/deployments
 {
@@ -39,7 +39,7 @@ func PostDeployments(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 
 const RAW_ISSUES_TABLE = `dora_issues`
 
-//TODO Please modify the folowing code to adapt to your plugin
+//TODO Please modify the following code to adapt to your plugin
 /*
 POST /plugins/dora/issues
 {
@@ -51,7 +51,7 @@ func PostIssues(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, erro
 	return &plugin.ApiResourceOutput{Body: nil, Status: http.StatusOK}, nil
 }
 
-//TODO Please modify the folowing code to adapt to your plugin
+//TODO Please modify the following code to adapt to your plugin
 /*
 POST /plugins/dora/issues/:id/close
 {

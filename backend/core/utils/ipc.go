@@ -238,6 +238,7 @@ func scanOutputPipe(pipe io.ReadCloser, wg *sync.WaitGroup, onReceive func([]byt
 	responseCreator func([]byte) *ProcessResponse, outboundChannel chan<- *ProcessResponse) func() {
 	return func() {
 		scanner := bufio.NewScanner(pipe)
+		scanner.Buffer(make([]byte, 5*1024*1024), 5*1024*1024)
 		scanner.Split(bufio.ScanLines)
 		for scanner.Scan() {
 			src := scanner.Bytes()
@@ -256,6 +257,7 @@ func scanErrorPipe(pipe io.ReadCloser, onReceive func([]byte), outboundChannel c
 	remoteErrorMsg := &strings.Builder{}
 	return func() {
 		scanner := bufio.NewScanner(pipe)
+		scanner.Buffer(make([]byte, 5*1024*1024), 5*1024*1024)
 		scanner.Split(bufio.ScanLines)
 		for scanner.Scan() {
 			src := scanner.Bytes()

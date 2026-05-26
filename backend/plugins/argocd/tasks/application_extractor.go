@@ -38,6 +38,13 @@ var ExtractApplicationsMeta = plugin.SubTaskMeta{
 	ProductTables:    []string{models.ArgocdApplication{}.TableName()},
 }
 
+type ArgocdApiApplicationSource struct {
+	RepoURL        string `json:"repoURL"`
+	Path           string `json:"path"`
+	TargetRevision string `json:"targetRevision"`
+	Chart          string `json:"chart"`
+}
+
 type ArgocdApiApplication struct {
 	Metadata struct {
 		Name              string    `json:"name"`
@@ -46,11 +53,9 @@ type ArgocdApiApplication struct {
 	} `json:"metadata"`
 	Spec struct {
 		Project string `json:"project"`
-		Source  struct {
-			RepoURL        string `json:"repoURL"`
-			Path           string `json:"path"`
-			TargetRevision string `json:"targetRevision"`
-		} `json:"source"`
+		// Single-source apps use Source; multi-source apps use Sources.
+		Source      ArgocdApiApplicationSource   `json:"source"`
+		Sources     []ArgocdApiApplicationSource `json:"sources"`
 		Destination struct {
 			Server    string `json:"server"`
 			Namespace string `json:"namespace"`
@@ -88,13 +93,31 @@ func ExtractApplications(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, errors.Default.Wrap(err, "error unmarshaling application")
 			}
 
+			// Resolve the primary source. Multi-source apps populate spec.sources[]
+			// instead of spec.source; we prefer the first git-hosted source so that
+			// cicd_deployment_commits.repo_url is a browsable repository URL rather
+			// than a Helm chart registry address.
+			primarySource := apiApp.Spec.Source
+			if primarySource.RepoURL == "" && len(apiApp.Spec.Sources) > 0 {
+				for _, src := range apiApp.Spec.Sources {
+					if isGitHostedURL(src.RepoURL) {
+						primarySource = src
+						break
+					}
+				}
+				// Fallback: use the first source if none matched the git-host heuristic.
+				if primarySource.RepoURL == "" {
+					primarySource = apiApp.Spec.Sources[0]
+				}
+			}
+
 			application := &models.ArgocdApplication{
 				Name:           apiApp.Metadata.Name,
 				Namespace:      apiApp.Metadata.Namespace,
 				Project:        apiApp.Spec.Project,
-				RepoURL:        apiApp.Spec.Source.RepoURL,
-				Path:           apiApp.Spec.Source.Path,
-				TargetRevision: apiApp.Spec.Source.TargetRevision,
+				RepoURL:        primarySource.RepoURL,
+				Path:           primarySource.Path,
+				TargetRevision: primarySource.TargetRevision,
 				DestServer:     apiApp.Spec.Destination.Server,
 				DestNamespace:  apiApp.Spec.Destination.Namespace,
 				SyncStatus:     apiApp.Status.Sync.Status,

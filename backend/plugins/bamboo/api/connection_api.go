@@ -108,7 +108,7 @@ func TestExistingConnection(input *plugin.ApiResourceInput) (*plugin.ApiResource
 // @Param body body models.BambooConnection true "json body"
 // @Success 200  {object} models.BambooConnection
 // @Failure 400  {string} errcode.Error "Bad Request"
-// @Failure 500  {string} errcode.Error "Internel Error"
+// @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /plugins/bamboo/connections [POST]
 func PostConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.Post(input)
@@ -121,7 +121,7 @@ func PostConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 // @Param connectionId path int true "connection ID"
 // @Success 200  {object} models.BambooConnection
 // @Failure 400  {string} errcode.Error "Bad Request"
-// @Failure 500  {string} errcode.Error "Internel Error"
+// @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /plugins/bamboo/connections/{connectionId} [PATCH]
 func PatchConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.Patch(input)
@@ -134,7 +134,7 @@ func PatchConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 // @Success 200  {object} models.BambooConnection
 // @Failure 400  {string} errcode.Error "Bad Request"
 // @Failure 409  {object} services.BlueprintProjectPairs "References exist to this connection"
-// @Failure 500  {string} errcode.Error "Internel Error"
+// @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /plugins/bamboo/connections/{connectionId} [DELETE]
 func DeleteConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.Delete(input)
@@ -145,7 +145,7 @@ func DeleteConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput
 // @Tags plugins/bamboo
 // @Success 200  {object} []models.BambooConnection
 // @Failure 400  {string} errcode.Error "Bad Request"
-// @Failure 500  {string} errcode.Error "Internel Error"
+// @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /plugins/bamboo/connections [GET]
 func ListConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.GetAll(input)
@@ -157,7 +157,7 @@ func ListConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 // @Param connectionId path int true "connection ID"
 // @Success 200  {object} models.BambooConnection
 // @Failure 400  {string} errcode.Error "Bad Request"
-// @Failure 500  {string} errcode.Error "Internel Error"
+// @Failure 500  {string} errcode.Error "Internal Error"
 // @Router /plugins/bamboo/connections/{connectionId} [GET]
 func GetConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.GetDetail(input)

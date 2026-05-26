@@ -105,7 +105,7 @@ export const IdentityCenterConfig = ({ initialValues, values, setValues, setErro
           onChange={handleStoreIdChange}
           status={storeIdError ? 'error' : ''}
         />
-        {storeIdError && <div style={{ marginTop: 4, color: '#f5222d' }}>{storeIdError}</div>}
+        {storeIdError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{storeIdError}</div>}
       </Block>
 
       <Block
@@ -119,7 +119,7 @@ export const IdentityCenterConfig = ({ initialValues, values, setValues, setErro
           onChange={handleRegionChange}
           status={regionError ? 'error' : ''}
         />
-        {regionError && <div style={{ marginTop: 4, color: '#f5222d' }}>{regionError}</div>}
+        {regionError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{regionError}</div>}
       </Block>
     </>
   );

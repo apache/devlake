@@ -221,7 +221,7 @@ class Paginator:
         """
         Extracts or compute the id of the next page from the response,
         e.g. incrementing the value of `page` of a JSON body.
-        This id will be suplied to the next request via `set_next_page_param`.
+        This id will be supplied to the next request via `set_next_page_param`.
         Returning None indicates that the response is the last page.
         """
         pass

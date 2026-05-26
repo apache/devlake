@@ -84,7 +84,7 @@ func NewWorkerScheduler(
 // It doesn't return error because it wouldn't be any when with a Blocking semantic, returned error does nothing but
 // causing confusion, more often, people thought it is returned by the task.
 // Since it is async task, the callframes would not be available for production mode, you can export Environment
-// Varaible ASYNC_CF=true to enable callframes capturing when debugging.
+// Variable ASYNC_CF=true to enable callframes capturing when debugging.
 // IMPORTANT: do NOT call SubmitBlocking inside the async task, it is likely to cause a deadlock, call
 // SubmitNonBlocking instead when number of tasks is relatively small.
 func (s *WorkerScheduler) SubmitBlocking(task func() errors.Error) {
@@ -118,7 +118,7 @@ func (s *WorkerScheduler) SubmitBlocking(task func() errors.Error) {
 
 /*
 func (s *WorkerScheduler) gatherCallFrames() string {
-	cf := "set Environment Varaible ASYNC_CF=true to enable callframes capturing"
+	cf := "set Environment Variable ASYNC_CF=true to enable callframes capturing"
 	if callframeEnabled {
 		cf = utils.GatherCallFrames(1)
 	}

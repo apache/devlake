@@ -139,7 +139,7 @@ func generateFakeRepoUrl(endpoint string, repoId int) (string, error) {
 	return fmt.Sprintf("fake://%s/repos/%d", endpointURL.Host, repoId), nil
 }
 
-// covertError will indentify some known errors and transform it to a simple form.
+// covertError will identify some known errors and transform it to a simple form.
 func covertError(err errors.Error) errors.Error {
 	if err == nil {
 		return nil

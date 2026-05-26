@@ -39,6 +39,9 @@ type DbtOptions struct {
 	// deprecated, dbt run args
 	Args  []string `json:"args"`
 	Tasks []string `json:"tasks,omitempty"`
+
+	ProjectBaseDir    string `json:"-"`
+	ManagedProjectDir bool   `json:"-"`
 }
 
 type DbtTaskData struct {

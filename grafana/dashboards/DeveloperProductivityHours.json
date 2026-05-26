@@ -1,0 +1,162 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Chat and completion events by hour of day",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
+            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT LPAD(CAST(hr AS CHAR), 2, '0') AS 'Hour',\n  SUM(chat) AS 'Chat Events', SUM(comp) AS 'Completion Events'\nFROM (\n  SELECT HOUR(timestamp) AS hr, COUNT(*) AS chat, 0 AS comp\n  FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)\n  GROUP BY HOUR(timestamp)\n  UNION ALL\n  SELECT HOUR(timestamp) AS hr, 0 AS chat, COUNT(*) AS comp\n  FROM _tool_q_dev_completion_log WHERE $__timeFilter(timestamp)\n  GROUP BY HOUR(timestamp)\n) t GROUP BY hr ORDER BY hr",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Activity by Hour of Day (UTC)",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average prompt complexity and response richness by hour",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "showPoints": "auto", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT LPAD(CAST(HOUR(timestamp) AS CHAR), 2, '0') AS 'Hour',\n  ROUND(AVG(prompt_length)) AS 'Avg Prompt Length',\n  ROUND(AVG(response_length)) AS 'Avg Response Length'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY HOUR(timestamp)\nORDER BY HOUR(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Prompt & Response Length by Hour",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Steering and spec mode usage concentration by hour",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
+            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT LPAD(CAST(HOUR(timestamp) AS CHAR), 2, '0') AS 'Hour',\n  SUM(CASE WHEN has_steering = 1 THEN 1 ELSE 0 END) AS 'Steering',\n  SUM(CASE WHEN is_spec_mode = 1 THEN 1 ELSE 0 END) AS 'Spec Mode',\n  SUM(CASE WHEN has_steering = 0 AND is_spec_mode = 0 THEN 1 ELSE 0 END) AS 'Plain Chat'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY HOUR(timestamp)\nORDER BY HOUR(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature Usage by Hour",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Day-of-week activity pattern",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
+            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE DAYOFWEEK(timestamp)\n    WHEN 1 THEN 'Sun' WHEN 2 THEN 'Mon' WHEN 3 THEN 'Tue'\n    WHEN 4 THEN 'Wed' WHEN 5 THEN 'Thu' WHEN 6 THEN 'Fri' WHEN 7 THEN 'Sat'\n  END AS 'Day',\n  SUM(chat) AS 'Chat Events', SUM(comp) AS 'Completions'\nFROM (\n  SELECT timestamp, COUNT(*) AS chat, 0 AS comp FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp) GROUP BY timestamp\n  UNION ALL\n  SELECT timestamp, 0, COUNT(*) FROM _tool_q_dev_completion_log WHERE $__timeFilter(timestamp) GROUP BY timestamp\n) t\nGROUP BY DAYOFWEEK(timestamp)\nORDER BY DAYOFWEEK(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Activity by Day of Week",
+      "type": "barchart"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": ["q_dev", "kiro", "productivity", "hours"],
+  "templating": { "list": [] },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Developer AI Productivity Hours",
+  "uid": "kiro_productivity_hours",
+  "version": 1
+}

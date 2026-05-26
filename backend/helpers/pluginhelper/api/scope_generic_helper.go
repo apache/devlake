@@ -565,6 +565,9 @@ func (gs *GenericScopeApiHelper[Conn, Scope, ScopeConfig]) transactionalDelete(t
 	}
 	tx := gs.db.Begin()
 	for _, table := range tables {
+		if err := dal.ValidateTableName(table); err != nil {
+			return errors.Default.Wrap(err, fmt.Sprintf("unsafe table name %q when deleting scope data", table))
+		}
 		where, params := generateWhereClause(table)
 		gs.log.Info("deleting data from table %s with WHERE \"%s\" and params: \"%v\"", table, where, params)
 		sql := fmt.Sprintf("DELETE FROM %s WHERE %s", table, where)

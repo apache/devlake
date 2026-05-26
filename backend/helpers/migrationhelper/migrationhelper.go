@@ -32,7 +32,7 @@ import (
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
 )
 
-// AutoMigrateTables runs AutoMigrate for muliple tables
+// AutoMigrateTables runs AutoMigrate for multiple tables
 func AutoMigrateTables(basicRes context.BasicRes, dst ...interface{}) errors.Error {
 	db := basicRes.GetDal()
 	for _, entity := range dst {
@@ -74,14 +74,14 @@ func ChangeColumnsType[D any](
 
 	err = db.AutoMigrate(new(D), dal.From(tableName))
 	if err != nil {
-		return errors.Default.Wrap(err, "AutoMigrate for Add Colume Error")
+		return errors.Default.Wrap(err, "AutoMigrate for Add Column Error")
 	}
 
 	defer func() {
 		if err != nil {
 			err1 := db.DropColumns(tableName, columns...)
 			if err1 != nil {
-				err = errors.Default.Wrap(err, fmt.Sprintf("RollBack by DropColume failed.Relevant data needs to be repaired manually.%s", err1.Error()))
+				err = errors.Default.Wrap(err, fmt.Sprintf("RollBack by DropColumn failed.Relevant data needs to be repaired manually.%s", err1.Error()))
 			}
 		}
 	}()

@@ -71,7 +71,7 @@ func TestGitlabJobDataFlow(t *testing.T) {
 		),
 	)
 
-	// verifi when production regex is omitted
+	// verify when production regex is omitted
 	dataflowTester.FlushTabler(&devops.CICDTask{})
 	dataflowTester.Subtask(tasks.ConvertJobMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(&devops.CICDTask{}, e2ehelper.TableOptions{

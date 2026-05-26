@@ -41,18 +41,18 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           docker system prune -af
           docker volume prune -f
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
       - name: Build and push lake image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: ./backend
           push: true
@@ -73,18 +73,18 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           docker system prune -af
           docker volume prune -f
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
       - name: Build and push lake image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: ./backend
           push: true
@@ -109,25 +109,25 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           docker system prune -af
           docker volume prune -f
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Get short sha
         id: get_short_sha
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: /tmp/devlake-build-cache-${{ matrix.platform }}
           key: buildx-devlake-build-cache-${{ github.run_id }}-${{ matrix.platform }}
       - name: Build and cache lake build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: ./backend
           push: false
@@ -161,24 +161,24 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           docker system prune -af
           docker volume prune -f
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Get short sha
         id: get_short_sha
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: /tmp/devlake-build-cache-amd64
           key: buildx-devlake-build-cache-${{ github.run_id }}-amd64
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: /tmp/devlake-build-cache-arm64
           key: buildx-devlake-build-cache-${{ github.run_id }}-arm64
@@ -194,7 +194,7 @@ jobs:
               echo "TAGS=${image_name}:${{ github.ref_name }}_${{ needs.get-timestamp.outputs.timestamp }}_${{ steps.get_short_sha.outputs.SHORT_SHA }}" >> $GITHUB_OUTPUT
           fi
       - name: Build and push lake image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: ./backend
           push: true
@@ -209,7 +209,7 @@ jobs:
             TAG=${{ github.ref_name }}
             SHA=${{ steps.get_short_sha.outputs.SHORT_SHA }}
       - name: Clear cache
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         if: always()
         with:
           script: |
@@ -248,16 +248,16 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           docker system prune -af
           docker volume prune -f
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Get short sha
         id: get_short_sha
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
@@ -273,7 +273,7 @@ jobs:
               echo "TAGS=${image_name}:${{ github.ref_name }}_${{ needs.get-timestamp.outputs.timestamp }}_${{ steps.get_short_sha.outputs.SHORT_SHA }}" >> $GITHUB_OUTPUT
           fi
       - name: Build and push ${{ matrix.build.name }} image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
         with:
           context: ${{ matrix.build.context }}
           push: true

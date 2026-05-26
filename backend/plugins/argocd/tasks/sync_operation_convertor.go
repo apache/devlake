@@ -137,8 +137,14 @@ func ConvertSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 			results = append(results, deployment)
 
 			if syncOp.Revision != "" {
+				// Priority: repo_url resolved at extraction time (always present for
+				// multi-source apps) → application-level repo_url → deployment name
+				// as a last-resort non-empty placeholder.
 				repoUrl := deployment.Name
-				if application != nil && application.RepoURL != "" {
+				switch {
+				case syncOp.RepoURL != "":
+					repoUrl = syncOp.RepoURL
+				case application != nil && application.RepoURL != "":
 					repoUrl = application.RepoURL
 				}
 

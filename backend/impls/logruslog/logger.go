@@ -72,11 +72,11 @@ func (l *DefaultLogger) Info(format string, a ...interface{}) {
 }
 
 func (l *DefaultLogger) Warn(err error, format string, a ...interface{}) {
-	l.Log(log.LOG_WARN, formatMessage(err, format, a...))
+	l.Log(log.LOG_WARN, "%s", formatMessage(err, format, a...))
 }
 
 func (l *DefaultLogger) Error(err error, format string, a ...interface{}) {
-	l.Log(log.LOG_ERROR, formatMessage(err, format, a...))
+	l.Log(log.LOG_ERROR, "%s", formatMessage(err, format, a...))
 }
 
 func (l *DefaultLogger) SetStream(config *log.LoggerStreamConfig) {

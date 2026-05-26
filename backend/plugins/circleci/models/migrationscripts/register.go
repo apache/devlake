@@ -24,5 +24,6 @@ func All() []plugin.MigrationScript {
 	return []plugin.MigrationScript{
 		new(addInitTables),
 		new(addFieldsToCircleciJob20231129),
+		new(renameCreatedAtToCreatedDate20260322),
 	}
 }

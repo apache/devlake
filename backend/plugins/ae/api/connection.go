@@ -52,7 +52,7 @@ func testConnection(ctx context.Context, connection models.AeConn) (*plugin.ApiR
 		return &plugin.ApiResourceOutput{Body: true, Status: 200}, nil
 	case 401: // error secretKey or nonceStr
 		return &plugin.ApiResourceOutput{Body: false, Status: http.StatusBadRequest}, nil
-	default: // unknow what happen , back to user
+	default: // unknown what happen , back to user
 		return &plugin.ApiResourceOutput{Body: res.Body, Status: res.StatusCode}, nil
 	}
 }

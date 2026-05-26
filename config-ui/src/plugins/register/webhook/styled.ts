@@ -27,7 +27,7 @@ export const Wrapper = styled.div`
     margin-bottom: 16px;
     padding: 0;
     font-weight: 600;
-    color: #4db764;
+    color: ${({ theme }) => theme.colors.success};
   }
 
   h5 {
@@ -35,12 +35,12 @@ export const Wrapper = styled.div`
   }
 
   p {
-    color: #292b3f;
+    color: ${({ theme }) => theme.colors.text};
   }
 `;
 
 export const Action = styled.div`
-  color: #7497f7;
+  color: ${({ theme }) => theme.colors.primary};
 
   span {
     cursor: pointer;

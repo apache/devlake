@@ -163,7 +163,7 @@ func extractIssues(data *JiraTaskData, mappings *typeMappings, apiIssue *apiv2mo
 	if value, ok := mappings.StandardStatusMappings[issue.Type][issue.StatusKey]; ok {
 		issue.StdStatus = value.StandardStatus
 	}
-	// issue commments
+	// issue comments
 	results = append(results, issue)
 	for _, comment := range comments {
 		results = append(results, comment)

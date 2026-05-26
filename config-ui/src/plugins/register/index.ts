@@ -19,6 +19,7 @@
 import { IPluginConfig } from '@/types';
 
 import { ArgoCDConfig } from './argocd';
+import { AsanaConfig } from './asana';
 import { AzureConfig, AzureGoConfig } from './azure';
 import { BambooConfig } from './bamboo';
 import { BitbucketConfig } from './bitbucket';
@@ -31,6 +32,7 @@ import { GitLabConfig } from './gitlab';
 import { JenkinsConfig } from './jenkins';
 import { JiraConfig } from './jira';
 import { PagerDutyConfig } from './pagerduty';
+import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
 import { TAPDConfig } from './tapd';
 import { WebhookConfig } from './webhook';
@@ -43,6 +45,7 @@ import { SlackConfig } from './slack/config';
 
 export const pluginConfigs: IPluginConfig[] = [
   ArgoCDConfig,
+  AsanaConfig,
   AzureConfig,
   AzureGoConfig,
   BambooConfig,
@@ -56,6 +59,7 @@ export const pluginConfigs: IPluginConfig[] = [
   JenkinsConfig,
   JiraConfig,
   PagerDutyConfig,
+  RootlyConfig,
   SlackConfig,
   QDevConfig,
   SonarQubeConfig,

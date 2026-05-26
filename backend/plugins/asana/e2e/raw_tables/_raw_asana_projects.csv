@@ -1,0 +1,2 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""ProjectId"":""1234567890""}","{""gid"":""1234567890"",""name"":""Test Project"",""resource_type"":""project"",""archived"":false,""permalink_url"":""https://app.asana.com/0/1234567890"",""workspace"":{""gid"":""ws123""}}",https://app.asana.com/api/1.0/projects/1234567890,null,2025-02-03 12:00:00

@@ -65,9 +65,9 @@ type ghCopilotScope20250100 struct {
 	ScopeConfigId      uint64     `json:"scopeConfigId,omitempty"`
 	Id                 string     `json:"id" gorm:"primaryKey;type:varchar(255)"`
 	Organization       string     `json:"organization" gorm:"type:varchar(255)"`
-	ImplementationDate *time.Time `json:"implementationDate" gorm:"type:datetime"`
+	ImplementationDate *time.Time `json:"implementationDate"`
 	BaselinePeriodDays int        `json:"baselinePeriodDays" gorm:"default:90"`
-	SeatsLastSyncedAt  *time.Time `json:"seatsLastSyncedAt" gorm:"type:datetime"`
+	SeatsLastSyncedAt  *time.Time `json:"seatsLastSyncedAt"`
 }
 
 func (ghCopilotScope20250100) TableName() string {

@@ -67,3 +67,24 @@ func TestComputeReportDateRangeClampsFutureSince(t *testing.T) {
 	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), until)
 	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), start)
 }
+
+func TestIsEmptyReport(t *testing.T) {
+	tests := []struct {
+		name string
+		body []byte
+		want bool
+	}{
+		{"empty JSON string", []byte(`""`), true},
+		{"null", []byte("null"), true},
+		{"empty body", []byte{}, true},
+		{"whitespace only", []byte("   "), true},
+		{"padded empty string", []byte(`  ""  `), true},
+		{"valid metadata", []byte(`{"download_links":["https://example.com/report.json"],"report_day":"2026-03-19"}`), false},
+		{"valid metadata empty links", []byte(`{"download_links":[],"report_day":"2026-03-19"}`), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, isEmptyReport(tt.body))
+		})
+	}
+}

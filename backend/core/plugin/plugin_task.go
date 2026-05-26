@@ -53,6 +53,7 @@ type ExecContext interface {
 	GetData() interface{}
 	SetProgress(current int, total int)
 	IncProgress(quantity int)
+	GetProgress() int
 }
 
 // SubTaskContext This interface define all resources that needed for subtask execution
@@ -106,7 +107,7 @@ type SubTaskMeta struct {
 	Dependencies     []*SubTaskMeta
 	DependencyTables []string
 	ProductTables    []string
-	ForceRunOnResume bool // Should a subtask be ran dispite it was finished before
+	ForceRunOnResume bool // Should a subtask be ran despite it was finished before
 }
 
 // PluginTask Implement this interface to let framework run tasks for you

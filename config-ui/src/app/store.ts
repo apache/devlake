@@ -18,11 +18,12 @@
 
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 
-import { connectionsSlice } from '@/features';
+import { connectionsSlice, themeSlice } from '@/features';
 
 export const store = configureStore({
   reducer: {
     connections: connectionsSlice.reducer,
+    theme: themeSlice.reducer,
   },
 });
 

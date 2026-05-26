@@ -226,11 +226,11 @@ func parsePagination[P any](input *plugin.ApiResourceInput) (*P, errors.Error) {
 	pagination := new(P)
 	err := utils.DecodeMapStruct(input.Query, pagination, false)
 	if err != nil {
-		return nil, errors.BadInput.Wrap(err, "faild to decode pagination from query string")
+		return nil, errors.BadInput.Wrap(err, "failed to decode pagination from query string")
 	}
 	err = utils.DecodeMapStruct(input.Params, pagination, false)
 	if err != nil {
-		return nil, errors.BadInput.Wrap(err, "faild to decode pagination from path variables")
+		return nil, errors.BadInput.Wrap(err, "failed to decode pagination from path variables")
 	}
 	if e := vld.Struct(pagination); e != nil {
 		return nil, errors.BadInput.Wrap(e, "invalid pagination parameters")

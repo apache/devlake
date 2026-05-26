@@ -121,7 +121,7 @@ func (rs RefsReverseSemver) Swap(i, j int) {
 func CalculateTagPattern(db dal.Dal, tagsPattern string, tagsLimit int, tagsOrder string) (Refs, errors.Error) {
 	rs := Refs{}
 
-	// caculate Pattern part
+	// calculate Pattern part
 	if tagsPattern == "" || tagsLimit <= 1 {
 		return rs, nil
 	}
@@ -176,7 +176,7 @@ func CalculateCommitPairs(db dal.Dal, repoId string, pairs []models.RefPair, rs 
 		commitPairs = append(commitPairs, [4]string{rs[i-1].CommitSha, rs[i].CommitSha, rs[i-1].Name, rs[i].Name})
 	}
 
-	// caculate pairs part
+	// calculate pairs part
 	// convert ref pairs into commit pairs
 	ref2sha := func(refName string) (string, error) {
 		ref := &code.Ref{}
@@ -186,7 +186,7 @@ func CalculateCommitPairs(db dal.Dal, repoId string, pairs []models.RefPair, rs 
 		ref.Id = fmt.Sprintf("%s:%s", repoId, refName)
 		err := db.First(ref)
 		if err != nil && !db.IsErrorNotFound(err) {
-			return "", errors.NotFound.Wrap(err, fmt.Sprintf("faild to load Ref info for repoId:%s, refName:%s", repoId, refName))
+			return "", errors.NotFound.Wrap(err, fmt.Sprintf("failed to load Ref info for repoId:%s, refName:%s", repoId, refName))
 		}
 		return ref.CommitSha, nil
 	}

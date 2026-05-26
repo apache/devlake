@@ -81,13 +81,15 @@ func (conn *GithubConn) PrepareApiClient(apiClient plugin.ApiClient) errors.Erro
 	}
 
 	if conn.AuthMethod == AppKey && conn.InstallationID != 0 {
-		token, err := conn.getInstallationAccessToken(apiClient)
+		token, err := conn.GetInstallationAccessToken(apiClient)
 		if err != nil {
 			return err
 		}
-
-		conn.Token = token.Token
-		conn.tokens = []string{token.Token}
+		var expiresAt *time.Time
+		if !token.ExpiresAt.IsZero() {
+			expiresAt = &token.ExpiresAt
+		}
+		conn.UpdateToken(token.Token, "", expiresAt, nil)
 	}
 
 	return nil
@@ -130,6 +132,16 @@ const (
 
 func (connection GithubConnection) TableName() string {
 	return "_tool_github_connections"
+}
+
+func (connection GithubConnection) GetHash() string {
+	if connection.AuthMethod == AppKey {
+		// GitHub App installation tokens expire after ~1 hour, disable API client caching
+		// to ensure fresh tokens are fetched for admin APIs (remote-scopes, test-connection)
+		return ""
+	}
+	// Use default caching for PAT connections (they don't expire)
+	return connection.BaseConnection.GetHash()
 }
 
 func (connection *GithubConnection) MergeFromRequest(target *GithubConnection, body map[string]interface{}) error {
@@ -354,7 +366,8 @@ type GithubUserOfToken struct {
 }
 
 type InstallationToken struct {
-	Token string `json:"token"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 type GithubApp struct {
@@ -397,7 +410,7 @@ func (gak *GithubAppKey) CreateJwt() (string, errors.Error) {
 	return tokenString, nil
 }
 
-func (gak *GithubAppKey) getInstallationAccessToken(
+func (gak *GithubAppKey) GetInstallationAccessToken(
 	apiClient plugin.ApiClient,
 ) (*InstallationToken, errors.Error) {
 
@@ -417,11 +430,17 @@ func (gak *GithubAppKey) getInstallationAccessToken(
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+		return nil, errors.HttpStatus(resp.StatusCode).New(fmt.Sprintf("unexpected status code while getting installation access token: %s", string(body)))
+	}
 
 	var installationToken InstallationToken
 	err = errors.Convert(json.Unmarshal(body, &installationToken))
 	if err != nil {
 		return nil, err
+	}
+	if installationToken.Token == "" {
+		return nil, errors.Default.New("empty installation access token returned")
 	}
 
 	return &installationToken, nil

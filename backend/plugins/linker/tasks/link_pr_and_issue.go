@@ -18,10 +18,11 @@ limitations under the License.
 package tasks
 
 import (
+	"strings"
+
 	"github.com/apache/incubator-devlake/core/models/domainlayer/code"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/ticket"
-	"strings"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -51,13 +52,23 @@ func clearHistoryData(db dal.Dal, data *LinkerTaskData) errors.Error {
 		WHERE pull_request_id IN (
 			SELECT pr.id
 				FROM pull_requests pr
-					LEFT JOIN project_mapping pm
+					INNER JOIN project_mapping pm
 					ON pm.table = 'repos'
 						AND pm.row_id = pr.base_repo_id
-						AND pm.project_name = ?
-	)
+				WHERE pm.project_name = ?
+		)
+		AND issue_id IN (
+			SELECT bi.issue_id
+				FROM board_issues bi
+					INNER JOIN project_mapping pm2
+					ON pm2.table = 'boards'
+						AND pm2.row_id = bi.board_id
+				WHERE pm2.project_name = ?
+		)
+		AND (_raw_data_table = '' OR _raw_data_table IS NULL)
+		AND _raw_data_remark LIKE '%pull_requests,%'
 `
-	return db.Exec(sql, data.Options.ProjectName)
+	return db.Exec(sql, data.Options.ProjectName, data.Options.ProjectName)
 }
 
 func LinkPrToIssue(taskCtx plugin.SubTaskContext) errors.Error {
@@ -97,7 +108,7 @@ func LinkPrToIssue(taskCtx plugin.SubTaskContext) errors.Error {
 		Enrich: func(pullRequest *code.PullRequest) ([]interface{}, errors.Error) {
 
 			var issueKeys []string
-			for _, text := range []string{pullRequest.Title, pullRequest.Description} {
+			for _, text := range []string{pullRequest.Title, pullRequest.Description, pullRequest.HeadRef} {
 				foundIssueKeys := data.PrToIssueRegexp.FindAllString(text, -1)
 				if len(foundIssueKeys) > 0 {
 					for _, issueKey := range foundIssueKeys {

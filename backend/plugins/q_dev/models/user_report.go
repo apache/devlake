@@ -24,13 +24,13 @@ import (
 )
 
 type QDevUserReport struct {
-	common.Model
+	common.NoPKModel
 	ConnectionId       uint64    `gorm:"primaryKey"`
-	UserId             string    `gorm:"index" json:"userId"`
-	Date               time.Time `gorm:"index" json:"date"`
+	ScopeId            string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	UserId             string    `gorm:"primaryKey;type:varchar(255)" json:"userId"`
+	Date               time.Time `gorm:"primaryKey;type:date" json:"date"`
+	ClientType         string    `gorm:"primaryKey;type:varchar(50)" json:"clientType"`
 	DisplayName        string    `gorm:"type:varchar(255)" json:"displayName"`
-	ScopeId            string    `gorm:"index;type:varchar(255)" json:"scopeId"`
-	ClientType         string    `gorm:"type:varchar(50)" json:"clientType"`
 	SubscriptionTier   string    `gorm:"type:varchar(50)" json:"subscriptionTier"`
 	ProfileId          string    `gorm:"type:varchar(512)" json:"profileId"`
 	ChatConversations  int       `json:"chatConversations"`

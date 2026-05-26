@@ -1,3 +1,4 @@
 "board_id","issue_id","created_at","updated_at","_raw_data_params","_raw_data_table","_raw_data_id","_raw_data_remark"
 "github:GithubRepo:1:384111310","github:GithubIssue:1:1237324696","2024-05-14 10:42:37.541","2024-05-28 00:25:41.436","{""ConnectionId"":1,""Name"":""apache/incubator-devlake""}","_raw_github_graphql_issues",69,""
 "github:GithubRepo:1:384111310","github:GithubIssue:1:1237324697","2024-05-14 10:42:37.541","2024-05-28 00:25:41.436","{""ConnectionId"":1,""Name"":""apache/incubator-devlake""}","_raw_github_graphql_issues",69,""
+"github:GithubRepo:1:384111310","github:GithubIssue:1:1237324698","2024-05-14 10:42:37.541","2024-05-28 00:25:41.436","{""ConnectionId"":1,""Name"":""apache/incubator-devlake""}","_raw_github_graphql_issues",69,""

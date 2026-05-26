@@ -35,14 +35,18 @@ func CreateApiClient(taskCtx plugin.TaskContext, connection *models.GithubConnec
 		return nil, err
 	}
 
-	// Inject TokenProvider if refresh token is present
+	logger := taskCtx.GetLogger()
+	db := taskCtx.GetDal()
+	encryptionSecret := taskCtx.GetConfig(plugin.EncodeKeyEnvStr)
+
+	// Inject TokenProvider for OAuth refresh or GitHub App installation tokens.
+	var tp *token.TokenProvider
 	if connection.RefreshToken != "" {
-		logger := taskCtx.GetLogger()
-		db := taskCtx.GetDal()
-
-		// Create TokenProvider
-		tp := token.NewTokenProvider(connection, db, apiClient.GetClient(), logger)
-
+		tp = token.NewTokenProvider(connection, db, apiClient.GetClient(), logger, encryptionSecret)
+	} else if connection.AuthMethod == models.AppKey && connection.InstallationID != 0 {
+		tp = token.NewAppInstallationTokenProvider(connection, db, apiClient.GetClient(), logger, encryptionSecret)
+	}
+	if tp != nil {
 		// Wrap the transport
 		baseTransport := apiClient.GetClient().Transport
 		if baseTransport == nil {
@@ -51,6 +55,20 @@ func CreateApiClient(taskCtx plugin.TaskContext, connection *models.GithubConnec
 
 		rt := token.NewRefreshRoundTripper(baseTransport, tp)
 		apiClient.GetClient().Transport = rt
+		logger.Info("Installed token refresh round tripper for connection %d (authMethod=%s)",
+			connection.ID, connection.AuthMethod)
+	}
+
+	// Persist the freshly minted token so the DB has a correctly encrypted value.
+	// PrepareApiClient (called by NewApiClientFromConnection) mints the token
+	// in-memory but does not persist it; without this, the DB may contain a stale
+	// or corrupted token that breaks GET /connections.
+	if connection.AuthMethod == models.AppKey && connection.Token != "" {
+		if err := token.PersistEncryptedTokenColumns(db, connection, encryptionSecret, logger, false); err != nil {
+			logger.Warn(err, "Failed to persist initial token for connection %d", connection.ID)
+		} else {
+			logger.Info("Persisted initial token for connection %d", connection.ID)
+		}
 	}
 
 	// create rate limit calculator

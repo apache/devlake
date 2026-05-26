@@ -132,7 +132,7 @@ func TestTransformTable(t *testing.T) {
 		assert.Equal(t, dts[2].Id, "fd61a03af4f77d870fc21e05e7e80678095c92d808cfb3b5c279ee04c74aca1357ef3d346f24f386216563752b0c447a35c041e0b7143f929dc4de27742e3307")
 	}).Return(nil).Once()
 
-	// for Primarykey  autoincrement cheking
+	// for Primarykey  autoincrement checking
 	mockDal.On("GetColumns", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName := args.Get(0).(dal.Tabler).TableName()
 		assert.Equal(t, tableName, TestTableNameSrc)
@@ -188,7 +188,7 @@ func TestTransformTable_RollBack(t *testing.T) {
 		assert.NotEqual(t, oldname, tmpname)
 	}).Return(nil).Once()
 
-	// checking if Rename and Drop RollBack working with rigth table
+	// checking if Rename and Drop RollBack working with right table
 	mockDal.On("RenameTable", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tmpname, ok := args.Get(0).(string)
 		assert.Equal(t, ok, true)
@@ -203,7 +203,7 @@ func TestTransformTable_RollBack(t *testing.T) {
 		assert.Equal(t, oldname, TestTableNameSrc)
 	}).Return(nil).Once()
 
-	// for Primarykey  autoincrement cheking
+	// for Primarykey  autoincrement checking
 	mockDal.On("GetColumns", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName := args.Get(0).(dal.Tabler).TableName()
 		assert.Equal(t, tableName, TestTableNameSrc)
@@ -296,7 +296,7 @@ func TestCopyTableColumns(t *testing.T) {
 		assert.Equal(t, dts[2].Id, "fd61a03af4f77d870fc21e05e7e80678095c92d808cfb3b5c279ee04c74aca1357ef3d346f24f386216563752b0c447a35c041e0b7143f929dc4de27742e3307")
 	}).Return(nil).Once()
 
-	// for Primarykey  autoincrement cheking
+	// for Primarykey  autoincrement checking
 	mockDal.On("GetColumns", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName := args.Get(0).(dal.Tabler).TableName()
 		assert.Equal(t, tableName, TestTableNameSrc)
@@ -352,7 +352,7 @@ func TestCopyTableColumns_RollBack(t *testing.T) {
 		assert.NotEqual(t, oldname, tmpname)
 	}).Return(nil).Once()
 
-	// checking if Rename and Drop RollBack working with rigth table
+	// checking if Rename and Drop RollBack working with right table
 	mockDal.On("RenameTable", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tmpname, ok := args.Get(0).(string)
 		assert.Equal(t, ok, true)
@@ -367,7 +367,7 @@ func TestCopyTableColumns_RollBack(t *testing.T) {
 		assert.Equal(t, oldname, TestTableNameSrc)
 	}).Return(nil).Once()
 
-	// for Primarykey  autoincrement cheking
+	// for Primarykey  autoincrement checking
 	mockDal.On("GetColumns", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName := args.Get(0).(dal.Tabler).TableName()
 		assert.Equal(t, tableName, TestTableNameSrc)
@@ -521,7 +521,7 @@ func TestTransformColumns_RollBack(t *testing.T) {
 		assert.NotEqual(t, columnName, tmpColumnName)
 	}).Return(nil).Once()
 
-	// checking if Rename and Drop RollBack working with rigth table
+	// checking if Rename and Drop RollBack working with right table
 	mockDal.On("RenameColumn", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName, ok := args.Get(0).(string)
 		assert.Equal(t, ok, true)
@@ -634,7 +634,7 @@ func TestChangeColumnsType_Rollback(t *testing.T) {
 		assert.NotEqual(t, columnName, tmpColumnName)
 	}).Return(nil).Once()
 
-	// checking if Rename and Drop RollBack working with rigth table
+	// checking if Rename and Drop RollBack working with right table
 	mockDal.On("RenameColumn", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		tableName, ok := args.Get(0).(string)
 		assert.Equal(t, ok, true)

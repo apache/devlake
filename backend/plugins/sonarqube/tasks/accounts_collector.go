@@ -36,11 +36,20 @@ func CollectAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 	logger := taskCtx.GetLogger()
 	logger.Info("collect accounts")
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_ACCOUNTS_TABLE)
+
+	// SonarCloud removed api/users/search - use organizations/search_members instead
+	// The "organization" query param is auto-added by PrepareApiClient
+	urlTemplate := "users/search"
+	if data.IsCloud {
+		urlTemplate = "organizations/search_members"
+		logger.Info("using organizations/search_members for SonarCloud")
+	}
+
 	collector, err := helper.NewApiCollector(helper.ApiCollectorArgs{
 		RawDataSubTaskArgs: *rawDataSubTaskArgs,
 		ApiClient:          data.ApiClient,
 		PageSize:           100,
-		UrlTemplate:        "users/search",
+		UrlTemplate:        urlTemplate,
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			query.Set("p", fmt.Sprintf("%v", reqData.Pager.Page))

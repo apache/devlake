@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,27 +61,42 @@ func EnrichPullRequestIssues(taskCtx plugin.SubTaskContext) (err errors.Error) {
 		}
 	}
 	charPattern := regexp.MustCompile(`[\/a-zA-Z\s,]+`)
-	cursor, err := db.Cursor(dal.From(&models.GithubPullRequest{}),
-		dal.Where("repo_id = ? and connection_id = ?", repoId, data.Options.ConnectionId))
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-	// iterate all rows
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubPullRequest{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubPullRequest]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_PULL_REQUEST_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_PULL_REQUEST_TABLE,
+			SubtaskConfig: map[string]string{
+				"prBodyClosePattern": prBodyClosePattern,
+			},
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubPullRequst := inputRow.(*models.GithubPullRequest)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubPullRequest{}),
+				dal.Where("repo_id = ? and connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		BeforeConvert: func(githubPullRequest *models.GithubPullRequest, stateManager *api.SubtaskStateManager) errors.Error {
+			if !stateManager.IsIncremental() {
+				return nil
+			}
+			return db.Delete(
+				&models.GithubPrIssue{},
+				dal.Where("connection_id = ? AND pull_request_id = ?", data.Options.ConnectionId, githubPullRequest.GithubId),
+			)
+		},
+		Convert: func(githubPullRequst *models.GithubPullRequest) ([]interface{}, errors.Error) {
 			results := make([]interface{}, 0, 1)
 
 			//find the matched string in body

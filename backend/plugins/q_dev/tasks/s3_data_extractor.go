@@ -40,10 +40,11 @@ func ExtractQDevS3Data(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*QDevTaskData)
 	db := taskCtx.GetDal()
 
-	// 查询未处理的文件元数据
+	// 查询未处理的CSV文件元数据（排除.json.gz日志文件）
 	cursor, err := db.Cursor(
 		dal.From(&models.QDevS3FileMeta{}),
-		dal.Where("connection_id = ? AND processed = ?", data.Options.ConnectionId, false),
+		dal.Where("connection_id = ? AND processed = ? AND file_name LIKE ?",
+			data.Options.ConnectionId, false, "%.csv"),
 	)
 	if err != nil {
 		return errors.Default.Wrap(err, "failed to get file metadata cursor")
@@ -147,7 +148,7 @@ func processCSVData(taskCtx plugin.SubTaskContext, db dal.Dal, reader io.ReadClo
 			if err != nil {
 				return errors.Default.Wrap(err, "failed to create user report data")
 			}
-			err = db.Create(reportData)
+			err = db.CreateOrUpdate(reportData)
 			if err != nil {
 				return errors.Default.Wrap(err, "failed to save user report data")
 			}
@@ -158,8 +159,7 @@ func processCSVData(taskCtx plugin.SubTaskContext, db dal.Dal, reader io.ReadClo
 				return errors.Default.Wrap(err, "failed to create user data")
 			}
 
-			// Save to database - no need to check for duplicates since we're processing each file only once
-			err = db.Create(userData)
+			err = db.CreateOrUpdate(userData)
 			if err != nil {
 				return errors.Default.Wrap(err, "failed to save user data")
 			}
@@ -203,8 +203,8 @@ func createUserReportData(logger interface {
 		}
 	}
 
-	// UserId
-	report.UserId = getStringField(fieldMap, "UserId")
+	// UserId (normalize to strip "d-{directoryId}." prefix if present)
+	report.UserId = normalizeUserId(getStringField(fieldMap, "UserId"))
 	if report.UserId == "" {
 		return nil, errors.Default.New("UserId not found in CSV record")
 	}
@@ -304,11 +304,12 @@ func createUserDataWithDisplayName(logger interface {
 	var err error
 	var ok bool
 
-	// 设置UserId
-	userData.UserId, ok = fieldMap["UserId"]
+	// 设置UserId (normalize to strip "d-{directoryId}." prefix if present)
+	rawUserId, ok := fieldMap["UserId"]
 	if !ok {
 		return nil, errors.Default.New("UserId not found in CSV record")
 	}
+	userData.UserId = normalizeUserId(rawUserId)
 
 	// 设置DisplayName (new functionality)
 	userData.DisplayName = resolveDisplayName(logger, userData.UserId, identityClient)

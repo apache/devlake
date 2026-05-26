@@ -58,6 +58,8 @@ func (p QDev) GetTablesInfo() []dal.Tabler {
 		&models.QDevS3FileMeta{},
 		&models.QDevS3Slice{},
 		&models.QDevUserReport{},
+		&models.QDevChatLog{},
+		&models.QDevCompletionLog{},
 	}
 }
 
@@ -85,6 +87,7 @@ func (p QDev) SubTaskMetas() []plugin.SubTaskMeta {
 	return []plugin.SubTaskMeta{
 		tasks.CollectQDevS3FilesMeta,
 		tasks.ExtractQDevS3DataMeta,
+		tasks.ExtractQDevLoggingDataMeta,
 	}
 }
 
@@ -127,10 +130,21 @@ func (p QDev) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]int
 		if op.Month != nil {
 			timePart = fmt.Sprintf("%04d/%02d", op.Year, *op.Month)
 		}
-		base := fmt.Sprintf("%s/AWSLogs/%s/KiroLogs", op.BasePath, op.AccountId)
+		// Kiro exports data to two well-known S3 prefixes:
+		//   {basePath}/AWSLogs/{accountId}/KiroLogs/  — user report CSVs
+		//   logging/AWSLogs/{accountId}/KiroLogs/      — interaction logs (JSON.gz)
+		// When basePath is empty, default to "user-report" for CSV data.
+		reportBase := op.BasePath
+		if reportBase == "" {
+			reportBase = "user-report"
+		}
+		csvBase := fmt.Sprintf("%s/AWSLogs/%s/KiroLogs", reportBase, op.AccountId)
+		logBase := fmt.Sprintf("logging/AWSLogs/%s/KiroLogs", op.AccountId)
 		s3Prefixes = []string{
-			fmt.Sprintf("%s/by_user_analytic/%s/%s", base, region, timePart),
-			fmt.Sprintf("%s/user_report/%s/%s", base, region, timePart),
+			fmt.Sprintf("%s/by_user_analytic/%s/%s", csvBase, region, timePart),
+			fmt.Sprintf("%s/user_report/%s/%s", csvBase, region, timePart),
+			fmt.Sprintf("%s/GenerateAssistantResponse/%s/%s", logBase, region, timePart),
+			fmt.Sprintf("%s/GenerateCompletions/%s/%s", logBase, region, timePart),
 		}
 	} else {
 		// Legacy scope: use S3Prefix directly

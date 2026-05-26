@@ -136,6 +136,7 @@ func (p Sonarqube) PrepareTaskData(taskCtx plugin.TaskContext, options map[strin
 		Options:       op,
 		ApiClient:     apiClient,
 		TaskStartTime: time.Now(),
+		IsCloud:       connection.IsCloud(),
 	}
 	// even we have project in _tool_sonaqube_projects, we still need to collect project to update LastAnalysisDate
 	var apiProject *models.SonarqubeApiProject

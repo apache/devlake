@@ -117,6 +117,7 @@ export const GitHubConfig: IPluginConfig = {
         tagsLimit: 10,
         tagsPattern: '/v\\d+\\.\\d+(\\.\\d+(-rc)*\\d*)*$/',
       },
+      prSizeExcludedFileExtensions: [],
     },
   },
 };

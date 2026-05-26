@@ -35,7 +35,7 @@ type JenkinsBuild struct {
 	Number            int64     `gorm:"primaryKey"`
 	Result            string    // Result
 	Timestamp         int64     // start time
-	StartTime         time.Time // convered by timestamp
+	StartTime         time.Time // converted by timestamp
 	CommitSha         string    `gorm:"type:varchar(255)"`
 }
 

@@ -146,12 +146,17 @@ func collectMultiBranchJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error 
 	logger := taskCtx.GetLogger()
 
 	// Jobs added through the multi-branch workflow have _raw_data_table set to "jenkins_api_jobs".
-	// This check works, but it's not very robust. It would be better to use a more explicit check like a "source" column.
+	// Filter by _raw_data_params to scope to only this multi-branch project's branch jobs,
+	// preventing cross-project data mixing when multiple multi-branch pipelines exist.
+	jobParams := plugin.MarshalScopeParams(JenkinsApiParams{
+		ConnectionId: data.Options.ConnectionId,
+		FullName:     data.Options.JobFullName,
+	})
 	clauses := []dal.Clause{
 		dal.Select("j.full_name,j.name,j.path,j.class,j.url"),
 		dal.From("_tool_jenkins_jobs as j"),
-		dal.Where(`j.connection_id = ? and j.class = ? and j._raw_data_table = ?`,
-			data.Options.ConnectionId, WORKFLOW_JOB, fmt.Sprintf("_raw_%s", RAW_JOB_TABLE)),
+		dal.Where(`j.connection_id = ? and j.class = ? and j._raw_data_table = ? and j._raw_data_params = ?`,
+			data.Options.ConnectionId, WORKFLOW_JOB, fmt.Sprintf("_raw_%s", RAW_JOB_TABLE), jobParams),
 	}
 	cursor, err := db.Cursor(clauses...)
 	if err != nil {

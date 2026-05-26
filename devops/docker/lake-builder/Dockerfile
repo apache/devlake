@@ -18,7 +18,7 @@ FROM --platform=linux/amd64 debian:bullseye as debian-amd64
 RUN apt-get -y update && apt -y upgrade &&\
     apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
 
-FROM golang:1.20.4-bullseye as builder
+FROM golang:1.26-bullseye as builder
 
 # Base dependencies
 RUN apt-get -y update && apt -y upgrade &&\
@@ -55,14 +55,14 @@ COPY --from=builder /tmp/deps/include/ /usr/include/
 ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
 
 # Install Golang
-RUN curl -L https://git.io/vQhTU | bash -s -- --version 1.20.4
+RUN curl -L https://git.io/vQhTU | bash -s -- --version 1.26.2
 RUN mv /root/go /go &&\
     mv /root/.go /usr/local/go &&\
     ln -sf /usr/local/go/bin/* /usr/bin
 
 # Install Golang Tools
 RUN export GOPATH=/go &&  \
-    go install github.com/vektra/mockery/v2@v2.20.0 &&  \
+    go install github.com/vektra/mockery/v2@v2.53.6 &&  \
     go install github.com/swaggo/swag/cmd/swag@v1.16.1
 
 # Golang Env
@@ -71,6 +71,5 @@ ENV GOPATH=/go
 ENV GOROOT=
 ENV PATH=${GOPATH}/bin:${PATH}
 
-# Python Poetry package manager
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN ln -sf /root/.local/bin/poetry /usr/local/bin
+# Python package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/usr/local/bin sh

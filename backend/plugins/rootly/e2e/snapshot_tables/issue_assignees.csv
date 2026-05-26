@@ -1,0 +1,6 @@
+issue_id,assignee_id,assignee_name
+rootly:Incident:1:inc_01,rootly:User:1:u1,Alice
+rootly:Incident:1:inc_02,rootly:User:1:u1,Alice
+rootly:Incident:1:inc_02,rootly:User:1:u2,Bob
+rootly:Incident:1:inc_03,rootly:User:1:u1,Alice
+rootly:Incident:1:inc_06,rootly:User:1:u3,Carol

@@ -174,7 +174,7 @@ export const QDevConnectionTest = ({ plugin, connectionId, values, initialValues
                 <div>✓ S3 Access: Verified</div>
                 {testResult.details.identityCenterAccess && <div>✓ IAM Identity Center: Configured</div>}
                 {!values.identityStoreId && (
-                  <div style={{ marginTop: 8, color: '#faad14' }}>
+                  <div style={{ marginTop: 8, color: 'var(--devlake-color-warning-alt)' }}>
                     ⚠️ IAM Identity Center not configured - user display names will show as user IDs
                   </div>
                 )}

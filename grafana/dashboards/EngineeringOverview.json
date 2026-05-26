@@ -40,7 +40,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard is to overview the Git and project management metrics.\n- Data Source Required: Jira + GitHub, or Jira + GitLab.",
+        "content": "- Use Cases: This dashboard is to overview the Git and project management metrics.\n- Data Sources Required:\n   - One of the Git tools, e.g. [GitHub](https://devlake.apache.org/docs/Configuration/GitHub), [GitLab](https://devlake.apache.org/docs/Configuration/GitLab), [Bitbucket](https://devlake.apache.org/docs/Configuration/BitBucket) or [Azure DevOps](https://devlake.apache.org/docs/Configuration/AzureDevOps)\n   - One of the issue tracking tools, e.g. [Jira](https://devlake.apache.org/docs/Configuration/Jira)",
         "mode": "markdown"
       },
       "pluginVersion": "11.0.0",

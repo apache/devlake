@@ -23,6 +23,10 @@ const URLS = {
   },
   DORA: 'https://devlake.apache.org/docs/DORA/',
   PLUGIN: {
+    ASANA: {
+      BASIS: 'https://devlake.apache.org/docs/Configuration/Asana',
+      TRANSFORMATION: 'https://devlake.apache.org/docs/Configuration/Asana',
+    },
     ARGOCD: {
       BASIS: 'https://devlake.apache.org/docs/Configuration/ArgoCD',
       TRANSFORMATION:
@@ -102,6 +106,10 @@ const URLS = {
     PAGERDUTY: {
       BASIS: 'https://devlake.apache.org/docs/Configuration/PagerDuty',
       RATE_LIMIT: 'https://devlake.apache.org/docs/Configuration/PagerDuty/#custom-rate-limit-optional',
+    },
+    ROOTLY: {
+      BASIS: 'https://devlake.apache.org/docs/Configuration/Rootly',
+      RATE_LIMIT: 'https://devlake.apache.org/docs/Configuration/Rootly#fixed-rate-limit-optional',
     },
     SLACK: {
       BASIS: 'https://devlake.apache.org/docs/Configuration/Slack',

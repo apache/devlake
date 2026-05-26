@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"regexp"
 
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -85,6 +86,7 @@ type GithubApiPullRequest struct {
 
 func ExtractApiPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
+	db := taskCtx.GetDal()
 	config := data.Options.ScopeConfig
 	var labelTypeRegex *regexp.Regexp
 	var labelComponentRegex *regexp.Regexp
@@ -104,45 +106,44 @@ func ExtractApiPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 		}
 	}
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraIssues by Board
-			*/
+	extractor, extErr := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[GithubApiPullRequest]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_PULL_REQUEST_TABLE,
+			SubtaskConfig: map[string]string{
+				"prType":      prType,
+				"prComponent": prComponent,
+			},
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			rawL := &GithubApiPullRequest{}
-			err := errors.Convert(json.Unmarshal(row.Data, rawL))
-			if err != nil {
-				return nil, err
+		BeforeExtract: func(body *GithubApiPullRequest, stateManager *api.SubtaskStateManager) errors.Error {
+			if stateManager.IsIncremental() {
+				return errors.Convert(db.Delete(
+					&models.GithubPrLabel{},
+					dal.Where("connection_id = ? AND pull_id = ?", data.Options.ConnectionId, body.GithubId),
+				))
 			}
-			// need to extract 2 kinds of entities here
+			return nil
+		},
+		Extract: func(body *GithubApiPullRequest, row *api.RawData) ([]any, errors.Error) {
 			results := make([]interface{}, 0, 1)
-			if rawL.GithubId == 0 {
+			if body.GithubId == 0 {
 				return nil, nil
 			}
 			// Filter bot PRs by username
-			if rawL.User != nil && shouldSkipByUsername(rawL.User.Login) {
-				taskCtx.GetLogger().Debug("Skipping PR #%d from bot user: %s", rawL.Number, rawL.User.Login)
+			if body.User != nil && shouldSkipByUsername(body.User.Login) {
+				taskCtx.GetLogger().Debug("Skipping PR #%d from bot user: %s", body.Number, body.User.Login)
 				return nil, nil
 			}
-			//If this is a pr, ignore
-			githubPr, err := convertGithubPullRequest(rawL, data.Options.ConnectionId, data.Options.GithubId)
+			githubPr, err := convertGithubPullRequest(body, data.Options.ConnectionId, data.Options.GithubId)
 			if err != nil {
 				return nil, err
 			}
-			if rawL.User != nil {
-				githubUser, err := convertAccount(rawL.User, data.Options.GithubId, data.Options.ConnectionId)
+			if body.User != nil {
+				githubUser, err := convertAccount(body.User, data.Options.GithubId, data.Options.ConnectionId)
 				if err != nil {
 					return nil, err
 				}
@@ -150,33 +151,31 @@ func ExtractApiPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 				githubPr.AuthorName = githubUser.Login
 				githubPr.AuthorId = githubUser.AccountId
 			}
-			for _, label := range rawL.Labels {
+			for _, label := range body.Labels {
 				results = append(results, &models.GithubPrLabel{
 					ConnectionId: data.Options.ConnectionId,
 					PullId:       githubPr.GithubId,
 					LabelName:    label.Name,
 				})
-				// if pr.Type has not been set and prType is set in .env, process the below
 				if labelTypeRegex != nil && labelTypeRegex.MatchString(label.Name) {
 					githubPr.Type = label.Name
 				}
-				// if pr.Component has not been set and prComponent is set in .env, process
 				if labelComponentRegex != nil && labelComponentRegex.MatchString(label.Name) {
 					githubPr.Component = label.Name
 				}
 			}
 			results = append(results, githubPr)
-
 			return results, nil
 		},
 	})
 
-	if err != nil {
-		return errors.Default.Wrap(err, "error initializing Github PR extractor")
+	if extErr != nil {
+		return errors.Default.Wrap(extErr, "error initializing Github PR extractor")
 	}
 
 	return extractor.Execute()
 }
+
 func convertGithubPullRequest(pull *GithubApiPullRequest, connId uint64, repoId int) (*models.GithubPullRequest, errors.Error) {
 	githubPull := &models.GithubPullRequest{
 		ConnectionId:    connId,
