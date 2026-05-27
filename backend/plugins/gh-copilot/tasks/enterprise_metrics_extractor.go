@@ -30,14 +30,14 @@ import (
 // --- Enterprise report JSON structures ---
 
 type enterpriseDayTotal struct {
-	Day                           string                 `json:"day"`
-	EnterpriseId                  string                 `json:"enterprise_id"`
-	DailyActiveUsers              int                    `json:"daily_active_users"`
-	WeeklyActiveUsers             int                    `json:"weekly_active_users"`
-	MonthlyActiveUsers            int                    `json:"monthly_active_users"`
-	MonthlyActiveChatUsers        int                    `json:"monthly_active_chat_users"`
-	MonthlyActiveAgentUsers       int                    `json:"monthly_active_agent_users"`
-	DailyActiveCliUsers           int                    `json:"daily_active_cli_users"`
+	Day                     string `json:"day"`
+	EnterpriseId            string `json:"enterprise_id"`
+	DailyActiveUsers        int    `json:"daily_active_users"`
+	WeeklyActiveUsers       int    `json:"weekly_active_users"`
+	MonthlyActiveUsers      int    `json:"monthly_active_users"`
+	MonthlyActiveChatUsers  int    `json:"monthly_active_chat_users"`
+	MonthlyActiveAgentUsers int    `json:"monthly_active_agent_users"`
+	DailyActiveCliUsers     int    `json:"daily_active_cli_users"`
 
 	// Code review user counts
 	DailyActiveCopilotCodeReviewUsers    int `json:"daily_active_copilot_code_review_users"`
@@ -116,27 +116,27 @@ type totalsByLangModel struct {
 }
 
 type pullRequestStats struct {
-	TotalReviewed                     int     `json:"total_reviewed"`
-	TotalCreated                      int     `json:"total_created"`
-	TotalMerged                       int     `json:"total_merged"`
-	MedianMinutesToMerge              float64 `json:"median_minutes_to_merge"`
-	TotalSuggestions                  int     `json:"total_suggestions"`
-	TotalAppliedSuggestions           int     `json:"total_applied_suggestions"`
-	TotalCreatedByCopilot             int     `json:"total_created_by_copilot"`
-	TotalReviewedByCopilot            int     `json:"total_reviewed_by_copilot"`
-	TotalMergedCreatedByCopilot       int     `json:"total_merged_created_by_copilot"`
-	TotalMergedReviewedByCopilot      int     `json:"total_merged_reviewed_by_copilot"`
-	MedianMinToMergeCopilotAuthored   float64 `json:"median_minutes_to_merge_copilot_authored"`
-	MedianMinToMergeCopilotReviewed   float64 `json:"median_minutes_to_merge_copilot_reviewed"`
-	TotalCopilotSuggestions           int     `json:"total_copilot_suggestions"`
-	TotalCopilotAppliedSuggestions    int     `json:"total_copilot_applied_suggestions"`
+	TotalReviewed                   int     `json:"total_reviewed"`
+	TotalCreated                    int     `json:"total_created"`
+	TotalMerged                     int     `json:"total_merged"`
+	MedianMinutesToMerge            float64 `json:"median_minutes_to_merge"`
+	TotalSuggestions                int     `json:"total_suggestions"`
+	TotalAppliedSuggestions         int     `json:"total_applied_suggestions"`
+	TotalCreatedByCopilot           int     `json:"total_created_by_copilot"`
+	TotalReviewedByCopilot          int     `json:"total_reviewed_by_copilot"`
+	TotalMergedCreatedByCopilot     int     `json:"total_merged_created_by_copilot"`
+	TotalMergedReviewedByCopilot    int     `json:"total_merged_reviewed_by_copilot"`
+	MedianMinToMergeCopilotAuthored float64 `json:"median_minutes_to_merge_copilot_authored"`
+	MedianMinToMergeCopilotReviewed float64 `json:"median_minutes_to_merge_copilot_reviewed"`
+	TotalCopilotSuggestions         int     `json:"total_copilot_suggestions"`
+	TotalCopilotAppliedSuggestions  int     `json:"total_copilot_applied_suggestions"`
 }
 
 type totalsByCli struct {
-	SessionCount int          `json:"session_count"`
-	RequestCount int          `json:"request_count"`
-	PromptCount  int          `json:"prompt_count"`
-	TokenUsage   *cliTokens   `json:"token_usage"`
+	SessionCount int        `json:"session_count"`
+	RequestCount int        `json:"request_count"`
+	PromptCount  int        `json:"prompt_count"`
+	TokenUsage   *cliTokens `json:"token_usage"`
 }
 
 type cliTokens struct {

@@ -26,11 +26,11 @@ import (
 // GhCopilotUserTeam maps users to teams per day from the user-teams-1-day report.
 // This enables team-level metrics aggregation by joining with per-user daily metrics.
 type GhCopilotUserTeam struct {
-	ConnectionId   uint64    `gorm:"primaryKey" json:"connectionId"`
-	ScopeId        string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
-	Day            time.Time `gorm:"primaryKey;type:date" json:"day"`
-	UserId         int64     `gorm:"primaryKey" json:"userId"`
-	TeamId         int64     `gorm:"primaryKey" json:"teamId"`
+	ConnectionId uint64    `gorm:"primaryKey" json:"connectionId"`
+	ScopeId      string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
+	UserId       int64     `gorm:"primaryKey" json:"userId"`
+	TeamId       int64     `gorm:"primaryKey" json:"teamId"`
 
 	UserLogin      string `json:"userLogin" gorm:"type:varchar(255);index"`
 	OrganizationId string `json:"organizationId" gorm:"type:varchar(100)"`

@@ -86,20 +86,20 @@ type GhCopilotEnterpriseDailyMetrics struct {
 	ChatPanelUnknownMode int `json:"chatPanelUnknownMode" gorm:"comment:Chat panel unknown mode interactions"`
 
 	// Pull request metrics (expanded)
-	PRTotalReviewed                     int     `json:"prTotalReviewed" gorm:"comment:Total PRs reviewed"`
-	PRTotalCreated                      int     `json:"prTotalCreated" gorm:"comment:Total PRs created"`
-	PRTotalMerged                       int     `json:"prTotalMerged" gorm:"comment:Total PRs merged"`
-	PRMedianMinutesToMerge              float64 `json:"prMedianMinutesToMerge" gorm:"comment:Median minutes to merge PRs"`
-	PRTotalSuggestions                  int     `json:"prTotalSuggestions" gorm:"comment:Total PR review suggestions"`
-	PRTotalAppliedSuggestions           int     `json:"prTotalAppliedSuggestions" gorm:"comment:Total applied PR suggestions"`
-	PRTotalCreatedByCopilot             int     `json:"prTotalCreatedByCopilot" gorm:"comment:PRs created by Copilot"`
-	PRTotalReviewedByCopilot            int     `json:"prTotalReviewedByCopilot" gorm:"comment:PRs reviewed by Copilot"`
-	PRTotalMergedCreatedByCopilot       int     `json:"prTotalMergedCreatedByCopilot" gorm:"comment:Merged PRs created by Copilot"`
-	PRTotalMergedReviewedByCopilot      int     `json:"prTotalMergedReviewedByCopilot" gorm:"comment:Merged PRs reviewed by Copilot"`
-	PRMedianMinToMergeCopilotAuthored   float64 `json:"prMedianMinToMergeCopilotAuthored" gorm:"comment:Median min to merge Copilot-authored PRs"`
-	PRMedianMinToMergeCopilotReviewed   float64 `json:"prMedianMinToMergeCopilotReviewed" gorm:"comment:Median min to merge Copilot-reviewed PRs"`
-	PRTotalCopilotSuggestions           int     `json:"prTotalCopilotSuggestions" gorm:"comment:Total Copilot review suggestions"`
-	PRTotalCopilotAppliedSuggestions    int     `json:"prTotalCopilotAppliedSuggestions" gorm:"comment:Total Copilot applied suggestions"`
+	PRTotalReviewed                   int     `json:"prTotalReviewed" gorm:"comment:Total PRs reviewed"`
+	PRTotalCreated                    int     `json:"prTotalCreated" gorm:"comment:Total PRs created"`
+	PRTotalMerged                     int     `json:"prTotalMerged" gorm:"comment:Total PRs merged"`
+	PRMedianMinutesToMerge            float64 `json:"prMedianMinutesToMerge" gorm:"comment:Median minutes to merge PRs"`
+	PRTotalSuggestions                int     `json:"prTotalSuggestions" gorm:"comment:Total PR review suggestions"`
+	PRTotalAppliedSuggestions         int     `json:"prTotalAppliedSuggestions" gorm:"comment:Total applied PR suggestions"`
+	PRTotalCreatedByCopilot           int     `json:"prTotalCreatedByCopilot" gorm:"comment:PRs created by Copilot"`
+	PRTotalReviewedByCopilot          int     `json:"prTotalReviewedByCopilot" gorm:"comment:PRs reviewed by Copilot"`
+	PRTotalMergedCreatedByCopilot     int     `json:"prTotalMergedCreatedByCopilot" gorm:"comment:Merged PRs created by Copilot"`
+	PRTotalMergedReviewedByCopilot    int     `json:"prTotalMergedReviewedByCopilot" gorm:"comment:Merged PRs reviewed by Copilot"`
+	PRMedianMinToMergeCopilotAuthored float64 `json:"prMedianMinToMergeCopilotAuthored" gorm:"comment:Median min to merge Copilot-authored PRs"`
+	PRMedianMinToMergeCopilotReviewed float64 `json:"prMedianMinToMergeCopilotReviewed" gorm:"comment:Median min to merge Copilot-reviewed PRs"`
+	PRTotalCopilotSuggestions         int     `json:"prTotalCopilotSuggestions" gorm:"comment:Total Copilot review suggestions"`
+	PRTotalCopilotAppliedSuggestions  int     `json:"prTotalCopilotAppliedSuggestions" gorm:"comment:Total Copilot applied suggestions"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
 	CopilotCliMetrics      `mapstructure:",squash"`

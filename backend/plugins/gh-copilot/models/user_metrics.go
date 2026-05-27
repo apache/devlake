@@ -30,14 +30,14 @@ type GhCopilotUserDailyMetrics struct {
 	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
 	UserId       int64     `gorm:"primaryKey" json:"userId"`
 
-	OrganizationId string `json:"organizationId" gorm:"type:varchar(100)"`
-	EnterpriseId   string `json:"enterpriseId" gorm:"type:varchar(100)"`
-	UserLogin      string `json:"userLogin" gorm:"type:varchar(255);index"`
-	UsedAgent      bool   `json:"usedAgent"`
-	UsedChat       bool   `json:"usedChat"`
-	UsedCli                       bool `json:"usedCli" gorm:"comment:Whether user used Copilot CLI"`
-	UsedCopilotCodeReviewActive   bool `json:"usedCopilotCodeReviewActive" gorm:"comment:Whether user actively used code review"`
-	UsedCopilotCodeReviewPassive  bool `json:"usedCopilotCodeReviewPassive" gorm:"comment:Whether user passively used code review"`
+	OrganizationId               string `json:"organizationId" gorm:"type:varchar(100)"`
+	EnterpriseId                 string `json:"enterpriseId" gorm:"type:varchar(100)"`
+	UserLogin                    string `json:"userLogin" gorm:"type:varchar(255);index"`
+	UsedAgent                    bool   `json:"usedAgent"`
+	UsedChat                     bool   `json:"usedChat"`
+	UsedCli                      bool   `json:"usedCli" gorm:"comment:Whether user used Copilot CLI"`
+	UsedCopilotCodeReviewActive  bool   `json:"usedCopilotCodeReviewActive" gorm:"comment:Whether user actively used code review"`
+	UsedCopilotCodeReviewPassive bool   `json:"usedCopilotCodeReviewPassive" gorm:"comment:Whether user passively used code review"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
 	CopilotCliMetrics      `mapstructure:",squash"`

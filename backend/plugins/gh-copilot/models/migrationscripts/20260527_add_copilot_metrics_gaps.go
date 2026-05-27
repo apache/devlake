@@ -51,16 +51,16 @@ type enterpriseDailyMetrics20260527 struct {
 	ChatPanelUnknownMode int
 
 	// Expanded PR metrics
-	PRTotalMerged                       int
-	PRMedianMinutesToMerge              float64
-	PRTotalSuggestions                  int
-	PRTotalAppliedSuggestions           int
-	PRTotalMergedCreatedByCopilot       int
-	PRTotalMergedReviewedByCopilot      int
-	PRMedianMinToMergeCopilotAuthored   float64
-	PRMedianMinToMergeCopilotReviewed   float64
-	PRTotalCopilotSuggestions           int
-	PRTotalCopilotAppliedSuggestions    int
+	PRTotalMerged                     int
+	PRMedianMinutesToMerge            float64
+	PRTotalSuggestions                int
+	PRTotalAppliedSuggestions         int
+	PRTotalMergedCreatedByCopilot     int
+	PRTotalMergedReviewedByCopilot    int
+	PRMedianMinToMergeCopilotAuthored float64
+	PRMedianMinToMergeCopilotReviewed float64
+	PRTotalCopilotSuggestions         int
+	PRTotalCopilotAppliedSuggestions  int
 
 	// CLI breakdown
 	CliSessionCount   int
@@ -77,9 +77,9 @@ func (enterpriseDailyMetrics20260527) TableName() string {
 // --- User daily metrics: new columns ---
 
 type userDailyMetrics20260527 struct {
-	UsedCli                       bool
-	UsedCopilotCodeReviewActive   bool
-	UsedCopilotCodeReviewPassive  bool
+	UsedCli                      bool
+	UsedCopilotCodeReviewActive  bool
+	UsedCopilotCodeReviewPassive bool
 
 	// CLI breakdown
 	CliSessionCount   int
@@ -110,11 +110,11 @@ func (seat20260527) TableName() string {
 // --- User-teams: new table ---
 
 type userTeam20260527 struct {
-	ConnectionId   uint64    `gorm:"primaryKey"`
-	ScopeId        string    `gorm:"primaryKey;type:varchar(255)"`
-	Day            time.Time `gorm:"primaryKey;type:date"`
-	UserId         int64     `gorm:"primaryKey"`
-	TeamId         int64     `gorm:"primaryKey"`
+	ConnectionId uint64    `gorm:"primaryKey"`
+	ScopeId      string    `gorm:"primaryKey;type:varchar(255)"`
+	Day          time.Time `gorm:"primaryKey;type:date"`
+	UserId       int64     `gorm:"primaryKey"`
+	TeamId       int64     `gorm:"primaryKey"`
 
 	UserLogin      string `gorm:"type:varchar(255);index"`
 	OrganizationId string `gorm:"type:varchar(100)"`
