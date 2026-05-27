@@ -35,8 +35,12 @@ type GhCopilotUserDailyMetrics struct {
 	UserLogin      string `json:"userLogin" gorm:"type:varchar(255);index"`
 	UsedAgent      bool   `json:"usedAgent"`
 	UsedChat       bool   `json:"usedChat"`
+	UsedCli                       bool `json:"usedCli" gorm:"comment:Whether user used Copilot CLI"`
+	UsedCopilotCodeReviewActive   bool `json:"usedCopilotCodeReviewActive" gorm:"comment:Whether user actively used code review"`
+	UsedCopilotCodeReviewPassive  bool `json:"usedCopilotCodeReviewPassive" gorm:"comment:Whether user passively used code review"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
+	CopilotCliMetrics      `mapstructure:",squash"`
 	common.NoPKModel
 }
 
