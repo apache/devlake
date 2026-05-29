@@ -32,8 +32,10 @@ type LinearIssueHistory struct {
 	ActorId       string    `gorm:"type:varchar(255)" json:"actorId"`
 	FromStateId   string    `gorm:"type:varchar(255)" json:"fromStateId"`
 	FromStateName string    `gorm:"type:varchar(255)" json:"fromStateName"`
+	FromStateType string    `gorm:"type:varchar(100)" json:"fromStateType"`
 	ToStateId     string    `gorm:"type:varchar(255)" json:"toStateId"`
 	ToStateName   string    `gorm:"type:varchar(255)" json:"toStateName"`
+	ToStateType   string    `gorm:"type:varchar(100)" json:"toStateType"`
 	CreatedAt     time.Time `gorm:"index" json:"createdAt"`
 	common.NoPKModel
 }

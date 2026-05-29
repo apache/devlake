@@ -156,8 +156,10 @@ type LinearIssueHistory struct {
 	ActorId       string    `gorm:"type:varchar(255)"`
 	FromStateId   string    `gorm:"type:varchar(255)"`
 	FromStateName string    `gorm:"type:varchar(255)"`
+	FromStateType string    `gorm:"type:varchar(100)"`
 	ToStateId     string    `gorm:"type:varchar(255)"`
 	ToStateName   string    `gorm:"type:varchar(255)"`
+	ToStateType   string    `gorm:"type:varchar(100)"`
 	CreatedAt     time.Time `gorm:"index"`
 	archived.NoPKModel
 }
