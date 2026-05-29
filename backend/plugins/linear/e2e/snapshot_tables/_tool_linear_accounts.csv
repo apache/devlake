@@ -1,0 +1,4 @@
+connection_id,id,name,display_name,email,avatar_url,active
+1,user-1,alice,Alice Anderson,alice@example.com,https://linear.app/avatars/alice.png,1
+1,user-2,bob,Bob Brown,bob@example.com,https://linear.app/avatars/bob.png,1
+1,user-3,carol,Carol Clark,carol@example.com,https://linear.app/avatars/carol.png,0

@@ -1,0 +1,4 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""user-1"",""Name"":""alice"",""DisplayName"":""Alice Anderson"",""Email"":""alice@example.com"",""AvatarUrl"":""https://linear.app/avatars/alice.png"",""Active"":true}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+2,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""user-2"",""Name"":""bob"",""DisplayName"":""Bob Brown"",""Email"":""bob@example.com"",""AvatarUrl"":""https://linear.app/avatars/bob.png"",""Active"":true}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+3,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""user-3"",""Name"":""carol"",""DisplayName"":""Carol Clark"",""Email"":""carol@example.com"",""AvatarUrl"":""https://linear.app/avatars/carol.png"",""Active"":false}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000

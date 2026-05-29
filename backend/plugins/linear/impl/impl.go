@@ -96,8 +96,11 @@ func (p Linear) GetTablesInfo() []dal.Tabler {
 }
 
 func (p Linear) SubTaskMetas() []plugin.SubTaskMeta {
-	// Subtasks are registered incrementally as each entity is implemented.
-	return []plugin.SubTaskMeta{}
+	return []plugin.SubTaskMeta{
+		tasks.CollectAccountsMeta,
+		tasks.ExtractAccountsMeta,
+		tasks.ConvertAccountsMeta,
+	}
 }
 
 func (p Linear) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]interface{}) (interface{}, errors.Error) {

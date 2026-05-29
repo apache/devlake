@@ -1,0 +1,4 @@
+id,email,full_name,user_name,avatar_url,organization,created_date,status
+linear:LinearAccount:1:user-1,alice@example.com,Alice Anderson,alice,https://linear.app/avatars/alice.png,,,1
+linear:LinearAccount:1:user-2,bob@example.com,Bob Brown,bob,https://linear.app/avatars/bob.png,,,1
+linear:LinearAccount:1:user-3,carol@example.com,Carol Clark,carol,https://linear.app/avatars/carol.png,,,0
