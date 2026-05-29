@@ -100,7 +100,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	since := apiCollector.GetSince()
 	err = apiCollector.InitGraphQLCollector(helper.GraphqlCollectorArgs{
 		GraphqlClient: data.GraphqlClient,
-		PageSize:      50,
+		PageSize:      100,
 		BuildQuery: func(reqData *helper.GraphqlRequestData) (interface{}, map[string]interface{}, error) {
 			query := &GraphqlQueryIssueWrapper{}
 			if reqData == nil {
