@@ -1,0 +1,3 @@
+sprint_id,issue_id
+linear:LinearCycle:1:cycle-1,linear:LinearIssue:1:issue-1
+linear:LinearCycle:1:cycle-1,linear:LinearIssue:1:issue-4
