@@ -106,7 +106,11 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 				domainIssue.ResolutionDate = issue.CanceledAt
 			}
 			// Fallback lead time when no history-derived value is present.
-			if domainIssue.LeadTimeMinutes == nil && domainIssue.ResolutionDate != nil {
+			// Guard against a resolution that precedes creation (clock skew or
+			// migrated/imported issues): a negative duration cast to uint yields
+			// platform-dependent garbage, so leave lead time unset instead.
+			if domainIssue.LeadTimeMinutes == nil && domainIssue.ResolutionDate != nil &&
+				domainIssue.ResolutionDate.After(issue.CreatedAt) {
 				minutes := uint(domainIssue.ResolutionDate.Sub(issue.CreatedAt).Minutes())
 				domainIssue.LeadTimeMinutes = &minutes
 			}
