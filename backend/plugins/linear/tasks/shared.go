@@ -54,12 +54,17 @@ func PriorityLabel(priority int) string {
 // issue status. Linear's state types are standardized, so no user-supplied
 // mapping is required:
 //
-//	backlog, unstarted -> TODO
-//	started            -> IN_PROGRESS
-//	completed, canceled -> DONE
+//	triage, backlog, unstarted -> TODO
+//	started                    -> IN_PROGRESS
+//	completed, canceled        -> DONE
+//
+// "triage" is the inbox state issues land in before they are accepted into a
+// workflow; it is treated as not-yet-started (TODO). Any unrecognized type
+// falls back to OTHER so unexpected API values surface rather than silently
+// masquerading as a known status.
 func StatusFromStateType(stateType string) string {
 	switch stateType {
-	case "backlog", "unstarted":
+	case "triage", "backlog", "unstarted":
 		return ticket.TODO
 	case "started":
 		return ticket.IN_PROGRESS
