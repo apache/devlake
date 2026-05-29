@@ -19,6 +19,7 @@ package tasks
 
 import (
 	"reflect"
+	"time"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -99,5 +100,69 @@ func ConvertIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 	if err != nil {
 		return err
 	}
-	return converter.Execute()
+	if err := converter.Execute(); err != nil {
+		return err
+	}
+
+	return deriveLeadTimeFromHistory(db, connectionId, data.Options.TeamId, issueIdGen)
+}
+
+// deriveLeadTimeFromHistory refines each issue's lead time from its recorded
+// state transitions: the span from the issue's first transition into an
+// in-progress state to its first transition into a done state thereafter (the
+// active cycle time). This is the value that genuinely requires history and is
+// more accurate than the coarse createdAt -> resolutionDate fallback set by
+// ConvertIssues, so it overrides that fallback when the transitions exist.
+// Issues whose history lacks an in-progress -> done sequence keep the fallback.
+func deriveLeadTimeFromHistory(db dal.Dal, connectionId uint64, teamId string, issueIdGen *didgen.DomainIdGenerator) errors.Error {
+	var events []models.LinearIssueHistory
+	if err := db.All(&events,
+		dal.Select("h.*"),
+		dal.From("_tool_linear_issue_history h"),
+		dal.Join("LEFT JOIN _tool_linear_issues i ON (i.connection_id = h.connection_id AND i.id = h.issue_id)"),
+		dal.Where("h.connection_id = ? AND i.team_id = ?", connectionId, teamId),
+		dal.Orderby("h.issue_id, h.created_at"),
+	); err != nil {
+		return err
+	}
+
+	type leadWindow struct {
+		startedAt *time.Time
+		doneAt    *time.Time
+	}
+	windows := map[string]*leadWindow{}
+	for i := range events {
+		event := events[i]
+		window := windows[event.IssueId]
+		if window == nil {
+			window = &leadWindow{}
+			windows[event.IssueId] = window
+		}
+		switch StatusFromStateType(event.ToStateType) {
+		case ticket.IN_PROGRESS:
+			if window.startedAt == nil {
+				createdAt := event.CreatedAt
+				window.startedAt = &createdAt
+			}
+		case ticket.DONE:
+			if window.startedAt != nil && window.doneAt == nil {
+				createdAt := event.CreatedAt
+				window.doneAt = &createdAt
+			}
+		}
+	}
+
+	for issueId, window := range windows {
+		if window.startedAt == nil || window.doneAt == nil || !window.doneAt.After(*window.startedAt) {
+			continue
+		}
+		minutes := uint(window.doneAt.Sub(*window.startedAt).Minutes())
+		if err := db.UpdateColumn(
+			&ticket.Issue{}, "lead_time_minutes", minutes,
+			dal.Where("id = ?", issueIdGen.Generate(connectionId, issueId)),
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }
