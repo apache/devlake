@@ -28,6 +28,8 @@ import (
 var vld *validator.Validate
 var basicRes context.BasicRes
 var dsHelper *api.DsHelper[models.LinearConnection, models.LinearTeam, models.LinearScopeConfig]
+var raProxy *api.DsRemoteApiProxyHelper[models.LinearConnection]
+var raScopeList *api.DsRemoteApiScopeListHelper[models.LinearConnection, models.LinearTeam, LinearRemotePagination]
 
 func Init(br context.BasicRes, p plugin.PluginMeta) {
 	basicRes = br
@@ -44,4 +46,6 @@ func Init(br context.BasicRes, p plugin.PluginMeta) {
 		nil,
 		nil,
 	)
+	raProxy = api.NewDsRemoteApiProxyHelper[models.LinearConnection](dsHelper.ConnApi.ModelApiHelper)
+	raScopeList = api.NewDsRemoteApiScopeListHelper[models.LinearConnection, models.LinearTeam, LinearRemotePagination](raProxy, listLinearRemoteScopes)
 }

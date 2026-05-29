@@ -173,6 +173,12 @@ func (p Linear) ApiResources() map[string]map[string]plugin.ApiResourceHandler {
 		"connections/:connectionId/test": {
 			"POST": api.TestExistingConnection,
 		},
+		"connections/:connectionId/remote-scopes": {
+			"GET": api.RemoteScopes,
+		},
+		"connections/:connectionId/proxy/rest/*path": {
+			"GET": api.Proxy,
+		},
 		"connections/:connectionId/scope-configs": {
 			"POST": api.PostScopeConfig,
 			"GET":  api.GetScopeConfigList,
