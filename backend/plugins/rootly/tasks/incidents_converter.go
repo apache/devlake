@@ -90,7 +90,7 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 				logger.Warn(nil, "unknown rootly incident status: %s", incident.Status)
 			}
 
-			leadTime, resolutionDate := computeLeadTime(incident.StartedDate, incident.ResolvedDate)
+			leadTime, resolutionDate := computeLeadTime(incident.StartedDate, incident.ResolvedDate, incident.UpdatedDate, incident.Status)
 
 			domainIssueId := idGen.Generate(data.Options.ConnectionId, incident.Id)
 
@@ -183,18 +183,24 @@ func mapSeverityToPriority(severity string) string {
 	}
 }
 
-func computeLeadTime(started time.Time, resolved *time.Time) (*uint, *time.Time) {
-	if resolved == nil {
+func computeLeadTime(started time.Time, resolved *time.Time, updated time.Time, status string) (*uint, *time.Time) {
+	// For "completed" incidents Rootly may not populate resolved_date; fall
+	// back to updated_date which reflects when the incident was last actioned.
+	effective := resolved
+	if effective == nil && status == "completed" {
+		effective = &updated
+	}
+	if effective == nil {
 		return nil, nil
 	}
 	// Clock skew / backfill can place resolved before started. A naive
 	// uint() cast on a negative duration wraps to huge garbage and
 	// silently corrupts MTTR; treat as unresolved instead.
-	if resolved.Before(started) {
+	if effective.Before(started) {
 		return nil, nil
 	}
-	minutes := uint(resolved.Sub(started).Minutes())
-	resolutionDate := *resolved
+	minutes := uint(effective.Sub(started).Minutes())
+	resolutionDate := *effective
 	return &minutes, &resolutionDate
 }
 
