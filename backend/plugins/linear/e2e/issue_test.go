@@ -53,9 +53,14 @@ func TestLinearIssueDataFlow(t *testing.T) {
 		IgnoreTypes: []interface{}{common.NoPKModel{}},
 	})
 
-	// verify conversion: tool layer -> domain layer (issues + board_issues)
+	// accounts must be present so the convertor can resolve assignee/creator
+	// display names and emit issue_assignees rows.
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_linear_accounts.csv", &models.LinearAccount{})
+
+	// verify conversion: tool layer -> domain layer (issues + board_issues + issue_assignees)
 	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertIssuesMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(ticket.Issue{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/issues.csv",
@@ -63,6 +68,10 @@ func TestLinearIssueDataFlow(t *testing.T) {
 	})
 	dataflowTester.VerifyTableWithOptions(ticket.BoardIssue{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/board_issues.csv",
+		IgnoreTypes: []interface{}{common.NoPKModel{}},
+	})
+	dataflowTester.VerifyTableWithOptions(ticket.IssueAssignee{}, e2ehelper.TableOptions{
+		CSVRelPath:  "./snapshot_tables/issue_assignees.csv",
 		IgnoreTypes: []interface{}{common.NoPKModel{}},
 	})
 }

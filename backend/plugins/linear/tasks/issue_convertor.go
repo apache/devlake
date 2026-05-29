@@ -37,7 +37,7 @@ var ConvertIssuesMeta = plugin.SubTaskMeta{
 	Description:      "Convert tool layer table _tool_linear_issues into domain layer tables issues and board_issues",
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
 	DependencyTables: []string{models.LinearIssue{}.TableName(), RAW_ISSUES_TABLE},
-	ProductTables:    []string{ticket.Issue{}.TableName(), ticket.BoardIssue{}.TableName()},
+	ProductTables:    []string{ticket.Issue{}.TableName(), ticket.BoardIssue{}.TableName(), ticket.IssueAssignee{}.TableName()},
 }
 
 var _ plugin.SubTaskEntryPoint = ConvertIssues
@@ -51,6 +51,22 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	accountIdGen := didgen.NewDomainIdGenerator(&models.LinearAccount{})
 	boardIdGen := didgen.NewDomainIdGenerator(&models.LinearTeam{})
 	boardId := boardIdGen.Generate(connectionId, data.Options.TeamId)
+
+	// Preload account display names so issues can carry assignee/creator names
+	// and emit issue_assignees rows, mirroring how the account convertor derives
+	// the domain account's full name (displayName, falling back to name).
+	var accounts []models.LinearAccount
+	if err := db.All(&accounts, dal.Where("connection_id = ?", connectionId)); err != nil {
+		return err
+	}
+	accountNames := make(map[string]string, len(accounts))
+	for _, account := range accounts {
+		name := account.Name
+		if account.DisplayName != "" {
+			name = account.DisplayName
+		}
+		accountNames[account.Id] = name
+	}
 
 	cursor, err := db.Cursor(
 		dal.From(&models.LinearIssue{}),
@@ -91,9 +107,11 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			if issue.CreatorId != "" {
 				domainIssue.CreatorId = accountIdGen.Generate(connectionId, issue.CreatorId)
+				domainIssue.CreatorName = accountNames[issue.CreatorId]
 			}
 			if issue.AssigneeId != "" {
 				domainIssue.AssigneeId = accountIdGen.Generate(connectionId, issue.AssigneeId)
+				domainIssue.AssigneeName = accountNames[issue.AssigneeId]
 			}
 			if issue.ParentId != "" {
 				domainIssue.ParentIssueId = issueIdGen.Generate(connectionId, issue.ParentId)
@@ -118,7 +136,15 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 				BoardId: boardId,
 				IssueId: domainIssue.Id,
 			}
-			return []interface{}{domainIssue, boardIssue}, nil
+			results := []interface{}{domainIssue, boardIssue}
+			if domainIssue.AssigneeId != "" {
+				results = append(results, &ticket.IssueAssignee{
+					IssueId:      domainIssue.Id,
+					AssigneeId:   domainIssue.AssigneeId,
+					AssigneeName: domainIssue.AssigneeName,
+				})
+			}
+			return results, nil
 		},
 	})
 	if err != nil {

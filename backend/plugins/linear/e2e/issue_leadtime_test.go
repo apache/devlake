@@ -45,6 +45,9 @@ func TestLinearIssueNegativeLeadTime(t *testing.T) {
 	}
 
 	// extraction: raw -> tool layer
+	// Flush accounts so this lead-time-focused test is independent of any
+	// account rows left behind by other tests sharing the DB.
+	dataflowTester.FlushTabler(&models.LinearAccount{})
 	dataflowTester.FlushTabler(&models.LinearIssue{})
 	dataflowTester.FlushTabler(&models.LinearIssueLabel{})
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_linear_issues_negative_leadtime.csv", "_raw_linear_issues")
