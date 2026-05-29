@@ -1,0 +1,4 @@
+id,issue_id,body,account_id,created_date,updated_date
+linear:LinearComment:1:comment-1,linear:LinearIssue:1:issue-1,Looking into this,linear:LinearAccount:1:user-2,2026-05-02T10:00:00.000+00:00,2026-05-02T10:00:00.000+00:00
+linear:LinearComment:1:comment-2,linear:LinearIssue:1:issue-1,Fixed in PR 42,linear:LinearAccount:1:user-1,2026-05-03T09:00:00.000+00:00,2026-05-03T09:30:00.000+00:00
+linear:LinearComment:1:comment-3,linear:LinearIssue:1:issue-2,Any update?,linear:LinearAccount:1:user-1,2026-05-02T11:00:00.000+00:00,2026-05-02T11:00:00.000+00:00

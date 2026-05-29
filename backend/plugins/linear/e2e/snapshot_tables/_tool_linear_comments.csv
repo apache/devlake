@@ -1,0 +1,4 @@
+connection_id,id,issue_id,body,author_id
+1,comment-1,issue-1,Looking into this,user-2
+1,comment-2,issue-1,Fixed in PR 42,user-1
+1,comment-3,issue-2,Any update?,user-1

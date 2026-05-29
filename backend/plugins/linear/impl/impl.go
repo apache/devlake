@@ -103,8 +103,11 @@ func (p Linear) SubTaskMetas() []plugin.SubTaskMeta {
 		tasks.ExtractWorkflowStatesMeta,
 		tasks.CollectIssuesMeta,
 		tasks.ExtractIssuesMeta,
+		tasks.CollectCommentsMeta,
+		tasks.ExtractCommentsMeta,
 		tasks.ConvertAccountsMeta,
 		tasks.ConvertIssuesMeta,
+		tasks.ConvertCommentsMeta,
 	}
 }
 
