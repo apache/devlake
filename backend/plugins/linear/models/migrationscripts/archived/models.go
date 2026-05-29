@@ -71,30 +71,29 @@ type LinearAccount struct {
 func (LinearAccount) TableName() string { return "_tool_linear_accounts" }
 
 type LinearIssue struct {
-	ConnectionId    uint64 `gorm:"primaryKey"`
-	Id              string `gorm:"primaryKey;type:varchar(255)"`
-	TeamId          string `gorm:"index;type:varchar(255)"`
-	Identifier      string `gorm:"type:varchar(255)"`
-	Number          int
-	Title           string `gorm:"type:varchar(255)"`
-	Description     string
-	Url             string `gorm:"type:varchar(255)"`
-	Priority        int
-	PriorityLabel   string `gorm:"type:varchar(100)"`
-	Estimate        *float64
-	StateId         string `gorm:"index;type:varchar(255)"`
-	StateName       string `gorm:"type:varchar(255)"`
-	StateType       string `gorm:"type:varchar(100)"`
-	CreatorId       string `gorm:"type:varchar(255)"`
-	AssigneeId      string `gorm:"type:varchar(255)"`
-	CycleId         string `gorm:"index;type:varchar(255)"`
-	ParentId        string `gorm:"type:varchar(255)"`
-	LeadTimeMinutes *uint
-	CreatedAt       time.Time
-	UpdatedAt       time.Time `gorm:"index"`
-	StartedAt       *time.Time
-	CompletedAt     *time.Time
-	CanceledAt      *time.Time
+	ConnectionId  uint64 `gorm:"primaryKey"`
+	Id            string `gorm:"primaryKey;type:varchar(255)"`
+	TeamId        string `gorm:"index;type:varchar(255)"`
+	Identifier    string `gorm:"type:varchar(255)"`
+	Number        int
+	Title         string `gorm:"type:varchar(255)"`
+	Description   string
+	Url           string `gorm:"type:varchar(255)"`
+	Priority      int
+	PriorityLabel string `gorm:"type:varchar(100)"`
+	Estimate      *float64
+	StateId       string `gorm:"index;type:varchar(255)"`
+	StateName     string `gorm:"type:varchar(255)"`
+	StateType     string `gorm:"type:varchar(100)"`
+	CreatorId     string `gorm:"type:varchar(255)"`
+	AssigneeId    string `gorm:"type:varchar(255)"`
+	CycleId       string `gorm:"index;type:varchar(255)"`
+	ParentId      string `gorm:"type:varchar(255)"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time `gorm:"index"`
+	StartedAt     *time.Time
+	CompletedAt   *time.Time
+	CanceledAt    *time.Time
 	archived.NoPKModel
 }
 

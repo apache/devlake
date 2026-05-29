@@ -91,19 +91,18 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			issue := inputRow.(*models.LinearIssue)
 			domainIssue := &ticket.Issue{
-				DomainEntity:    domainlayer.DomainEntity{Id: issueIdGen.Generate(connectionId, issue.Id)},
-				IssueKey:        issue.Identifier,
-				Title:           issue.Title,
-				Description:     issue.Description,
-				Url:             issue.Url,
-				Type:            ticket.REQUIREMENT,
-				Status:          StatusFromStateType(issue.StateType),
-				OriginalStatus:  issue.StateName,
-				StoryPoint:      issue.Estimate,
-				Priority:        issue.PriorityLabel,
-				LeadTimeMinutes: issue.LeadTimeMinutes,
-				CreatedDate:     &issue.CreatedAt,
-				UpdatedDate:     &issue.UpdatedAt,
+				DomainEntity:   domainlayer.DomainEntity{Id: issueIdGen.Generate(connectionId, issue.Id)},
+				IssueKey:       issue.Identifier,
+				Title:          issue.Title,
+				Description:    issue.Description,
+				Url:            issue.Url,
+				Type:           ticket.REQUIREMENT,
+				Status:         StatusFromStateType(issue.StateType),
+				OriginalStatus: issue.StateName,
+				StoryPoint:     issue.Estimate,
+				Priority:       issue.PriorityLabel,
+				CreatedDate:    &issue.CreatedAt,
+				UpdatedDate:    &issue.UpdatedAt,
 			}
 			if issue.CreatorId != "" {
 				domainIssue.CreatorId = accountIdGen.Generate(connectionId, issue.CreatorId)

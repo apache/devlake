@@ -25,30 +25,29 @@ import (
 
 // LinearIssue is the tool-layer representation of a Linear issue.
 type LinearIssue struct {
-	ConnectionId    uint64     `gorm:"primaryKey"`
-	Id              string     `gorm:"primaryKey;type:varchar(255)" json:"id"`
-	TeamId          string     `gorm:"index;type:varchar(255)" json:"teamId"`
-	Identifier      string     `gorm:"type:varchar(255)" json:"identifier"`
-	Number          int        `json:"number"`
-	Title           string     `gorm:"type:varchar(255)" json:"title"`
-	Description     string     `json:"description"`
-	Url             string     `gorm:"type:varchar(255)" json:"url"`
-	Priority        int        `json:"priority"`
-	PriorityLabel   string     `gorm:"type:varchar(100)" json:"priorityLabel"`
-	Estimate        *float64   `json:"estimate"`
-	StateId         string     `gorm:"index;type:varchar(255)" json:"stateId"`
-	StateName       string     `gorm:"type:varchar(255)" json:"stateName"`
-	StateType       string     `gorm:"type:varchar(100)" json:"stateType"`
-	CreatorId       string     `gorm:"type:varchar(255)" json:"creatorId"`
-	AssigneeId      string     `gorm:"type:varchar(255)" json:"assigneeId"`
-	CycleId         string     `gorm:"index;type:varchar(255)" json:"cycleId"`
-	ParentId        string     `gorm:"type:varchar(255)" json:"parentId"`
-	LeadTimeMinutes *uint      `json:"leadTimeMinutes"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `gorm:"index" json:"updatedAt"`
-	StartedAt       *time.Time `json:"startedAt"`
-	CompletedAt     *time.Time `json:"completedAt"`
-	CanceledAt      *time.Time `json:"canceledAt"`
+	ConnectionId  uint64     `gorm:"primaryKey"`
+	Id            string     `gorm:"primaryKey;type:varchar(255)" json:"id"`
+	TeamId        string     `gorm:"index;type:varchar(255)" json:"teamId"`
+	Identifier    string     `gorm:"type:varchar(255)" json:"identifier"`
+	Number        int        `json:"number"`
+	Title         string     `gorm:"type:varchar(255)" json:"title"`
+	Description   string     `json:"description"`
+	Url           string     `gorm:"type:varchar(255)" json:"url"`
+	Priority      int        `json:"priority"`
+	PriorityLabel string     `gorm:"type:varchar(100)" json:"priorityLabel"`
+	Estimate      *float64   `json:"estimate"`
+	StateId       string     `gorm:"index;type:varchar(255)" json:"stateId"`
+	StateName     string     `gorm:"type:varchar(255)" json:"stateName"`
+	StateType     string     `gorm:"type:varchar(100)" json:"stateType"`
+	CreatorId     string     `gorm:"type:varchar(255)" json:"creatorId"`
+	AssigneeId    string     `gorm:"type:varchar(255)" json:"assigneeId"`
+	CycleId       string     `gorm:"index;type:varchar(255)" json:"cycleId"`
+	ParentId      string     `gorm:"type:varchar(255)" json:"parentId"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `gorm:"index" json:"updatedAt"`
+	StartedAt     *time.Time `json:"startedAt"`
+	CompletedAt   *time.Time `json:"completedAt"`
+	CanceledAt    *time.Time `json:"canceledAt"`
 	common.NoPKModel
 }
 
