@@ -49,6 +49,28 @@ func ConvertSprintIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	issueIdGen := didgen.NewDomainIdGenerator(&models.LinearIssue{})
 	cycleIdGen := didgen.NewDomainIdGenerator(&models.LinearCycle{})
 
+	// Sprint membership is derived from each issue's cycle_id. Clear this team's
+	// existing sprint_issues up front so issues that have since left their cycle
+	// leave no stale rows: the batch divider only deletes outdated records when
+	// it produces at least one row of the type, which misses the case where
+	// every issue has been removed from its cycle.
+	var teamIssues []models.LinearIssue
+	if err := db.All(&teamIssues,
+		dal.Select("id"),
+		dal.Where("connection_id = ? AND team_id = ?", connectionId, data.Options.TeamId),
+	); err != nil {
+		return err
+	}
+	if len(teamIssues) > 0 {
+		issueIds := make([]string, len(teamIssues))
+		for i, issue := range teamIssues {
+			issueIds[i] = issueIdGen.Generate(connectionId, issue.Id)
+		}
+		if err := db.Delete(&ticket.SprintIssue{}, dal.Where("issue_id IN ?", issueIds)); err != nil {
+			return err
+		}
+	}
+
 	cursor, err := db.Cursor(
 		dal.From(&models.LinearIssue{}),
 		dal.Where("connection_id = ? AND team_id = ? AND cycle_id != ''", connectionId, data.Options.TeamId),
