@@ -161,7 +161,7 @@ func mapStatus(status string) (mapped string, known bool) {
 		return ticket.TODO, true
 	case "mitigated":
 		return ticket.IN_PROGRESS, true
-	case "resolved", "closed", "cancelled":
+	case "resolved", "closed", "cancelled", "completed":
 		return ticket.DONE, true
 	default:
 		return ticket.IN_PROGRESS, false
