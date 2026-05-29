@@ -31,15 +31,40 @@ import (
 const RAW_ISSUES_TABLE = "linear_issues"
 
 // GraphqlQueryIssueWrapper is the team-scoped, paginated `issues` query.
-// Issues are ordered by updatedAt (descending) so incremental runs can stop
-// once they reach data older than the previous collection.
+// Incremental runs filter server-side on updatedAt ($filter) rather than
+// relying on result ordering, so collection no longer depends on an undocumented
+// default sort direction.
 type GraphqlQueryIssueWrapper struct {
 	Team struct {
 		Issues struct {
 			Nodes    []GraphqlQueryIssue `graphql:"nodes"`
 			PageInfo *helper.GraphqlQueryPageInfo
-		} `graphql:"issues(first: $pageSize, after: $skipCursor, orderBy: updatedAt)"`
+		} `graphql:"issues(first: $pageSize, after: $skipCursor, orderBy: updatedAt, filter: $filter)"`
 	} `graphql:"team(id: $teamId)"`
+}
+
+// IssueFilter mirrors the subset of Linear's GraphQL IssueFilter input used to
+// restrict collection to issues updated after a point in time. The Go type
+// name is significant: the GraphQL client emits it as the variable's type
+// ($filter:IssueFilter!).
+type IssueFilter struct {
+	UpdatedAt *DateComparator `json:"updatedAt,omitempty"`
+}
+
+// DateComparator mirrors Linear's DateComparator input (only the `gt` operator
+// is needed here).
+type DateComparator struct {
+	Gt *time.Time `json:"gt,omitempty"`
+}
+
+// buildIssueFilter returns an IssueFilter restricting to issues updated after
+// `since`. When `since` is nil (a full sync) it returns the empty filter, which
+// Linear treats as "match all".
+func buildIssueFilter(since *time.Time) IssueFilter {
+	if since == nil {
+		return IssueFilter{}
+	}
+	return IssueFilter{UpdatedAt: &DateComparator{Gt: since}}
 }
 
 type GraphqlQueryIssue struct {
@@ -110,6 +135,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 				"pageSize":   graphql.Int(reqData.Pager.Size),
 				"skipCursor": (*graphql.String)(reqData.Pager.SkipCursor),
 				"teamId":     graphql.String(data.Options.TeamId),
+				"filter":     buildIssueFilter(since),
 			}
 			return query, variables, nil
 		},
@@ -119,13 +145,13 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		ResponseParser: func(queryWrapper interface{}) (messages []json.RawMessage, err errors.Error) {
 			query := queryWrapper.(*GraphqlQueryIssueWrapper)
+			// The server-side $filter already restricts to issues updated after
+			// `since`, so every returned issue is in scope -- no client-side
+			// early-stop (and thus no dependency on sort direction) is needed.
 			for _, issue := range query.Team.Issues.Nodes {
 				issue.CompletedAt = utils.NilIfZeroTime(issue.CompletedAt)
 				issue.CanceledAt = utils.NilIfZeroTime(issue.CanceledAt)
 				issue.StartedAt = utils.NilIfZeroTime(issue.StartedAt)
-				if since != nil && since.After(issue.UpdatedAt) {
-					return messages, helper.ErrFinishCollect
-				}
 				messages = append(messages, errors.Must1(json.Marshal(issue)))
 			}
 			return
