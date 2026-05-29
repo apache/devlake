@@ -18,8 +18,29 @@ limitations under the License.
 package tasks
 
 import (
+	"time"
+
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/ticket"
+	"github.com/apache/incubator-devlake/plugins/linear/models"
 )
+
+// issuesToCollectChildrenClauses builds the cursor clauses that drive per-issue
+// child collection (comments, history). When `since` is non-nil (an incremental
+// run), it restricts the sweep to issues updated since the last successful
+// collection, so unchanged issues no longer trigger a request every run. On a
+// full sync `since` is nil and all of the team's issues are swept.
+func issuesToCollectChildrenClauses(connectionId uint64, teamId string, since *time.Time) []dal.Clause {
+	clauses := []dal.Clause{
+		dal.Select("id"),
+		dal.From(&models.LinearIssue{}),
+		dal.Where("connection_id = ? AND team_id = ?", connectionId, teamId),
+	}
+	if since != nil {
+		clauses = append(clauses, dal.Where("updated_at > ?", *since))
+	}
+	return clauses
+}
 
 // priorityLabels maps Linear's integer priority to its human-readable label.
 // Linear: 0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.

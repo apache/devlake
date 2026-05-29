@@ -22,11 +22,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
-	"github.com/apache/incubator-devlake/plugins/linear/models"
 	"github.com/merico-ai/graphql"
 )
 
@@ -73,11 +71,23 @@ func CollectIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	data := taskCtx.GetData().(*LinearTaskData)
 
-	cursor, err := db.Cursor(
-		dal.Select("id"),
-		dal.From(&models.LinearIssue{}),
-		dal.Where("connection_id = ? AND team_id = ?", data.Options.ConnectionId, data.Options.TeamId),
-	)
+	apiCollector, err := helper.NewStatefulApiCollector(helper.RawDataSubTaskArgs{
+		Ctx: taskCtx,
+		Params: LinearApiParams{
+			ConnectionId: data.Options.ConnectionId,
+			TeamId:       data.Options.TeamId,
+		},
+		Table: RAW_ISSUE_HISTORY_TABLE,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Only sweep issues updated since the last successful collection: an
+	// unchanged issue's history cannot have changed, so re-fetching it every
+	// run wastes a request per issue against Linear's hourly budget.
+	since := apiCollector.GetSince()
+	cursor, err := db.Cursor(issuesToCollectChildrenClauses(data.Options.ConnectionId, data.Options.TeamId, since)...)
 	if err != nil {
 		return err
 	}
@@ -86,15 +96,7 @@ func CollectIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	collector, err := helper.NewGraphqlCollector(helper.GraphqlCollectorArgs{
-		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			Params: LinearApiParams{
-				ConnectionId: data.Options.ConnectionId,
-				TeamId:       data.Options.TeamId,
-			},
-			Table: RAW_ISSUE_HISTORY_TABLE,
-		},
+	err = apiCollector.InitGraphQLCollector(helper.GraphqlCollectorArgs{
 		GraphqlClient: data.GraphqlClient,
 		Input:         iterator,
 		InputStep:     1,
@@ -131,5 +133,5 @@ func CollectIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 	if err != nil {
 		return err
 	}
-	return collector.Execute()
+	return apiCollector.Execute()
 }
