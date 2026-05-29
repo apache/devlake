@@ -21,17 +21,6 @@ import (
 	"github.com/apache/incubator-devlake/core/models/domainlayer/ticket"
 )
 
-// GraphqlInlineAccount is the shared shape used to collect a Linear user that
-// is referenced inline on another entity (issue creator/assignee, comment
-// author, history actor).
-type GraphqlInlineAccount struct {
-	Id          string
-	Name        string
-	DisplayName string
-	Email       string
-	AvatarUrl   string
-}
-
 // priorityLabels maps Linear's integer priority to its human-readable label.
 // Linear: 0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
 var priorityLabels = map[int]string{
