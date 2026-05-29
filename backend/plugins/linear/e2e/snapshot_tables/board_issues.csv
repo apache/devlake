@@ -1,0 +1,6 @@
+board_id,issue_id
+linear:LinearTeam:1:team-1,linear:LinearIssue:1:issue-1
+linear:LinearTeam:1:team-1,linear:LinearIssue:1:issue-2
+linear:LinearTeam:1:team-1,linear:LinearIssue:1:issue-3
+linear:LinearTeam:1:team-1,linear:LinearIssue:1:issue-4
+linear:LinearTeam:1:team-1,linear:LinearIssue:1:issue-5

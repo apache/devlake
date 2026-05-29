@@ -1,0 +1,6 @@
+connection_id,id,team_id,identifier,number,title,description,url,priority,priority_label,estimate,state_id,state_name,state_type,creator_id,assignee_id,cycle_id,parent_id,lead_time_minutes,started_at,completed_at,canceled_at
+1,issue-1,team-1,ENG-1,1,Fix login bug,Users cannot log in,https://linear.app/eng/issue/ENG-1,1,Urgent,3,state-done,Done,completed,user-2,user-1,cycle-1,,,2026-05-02T00:00:00.000+00:00,2026-05-03T00:00:00.000+00:00,
+1,issue-2,team-1,ENG-2,2,Add dark mode,Theme support,https://linear.app/eng/issue/ENG-2,2,High,5,state-inprogress,In Progress,started,user-1,,,,,2026-05-02T00:00:00.000+00:00,,
+1,issue-3,team-1,ENG-3,3,Investigate flakiness,,https://linear.app/eng/issue/ENG-3,0,No priority,,state-backlog,Backlog,backlog,user-1,,,,,,,
+1,issue-4,team-1,ENG-4,4,Deprecated feature,No longer needed,https://linear.app/eng/issue/ENG-4,3,Medium,2,state-canceled,Canceled,canceled,user-1,user-3,cycle-1,,,,,2026-05-02T00:00:00.000+00:00
+1,issue-5,team-1,ENG-5,5,Write docs,User guide,https://linear.app/eng/issue/ENG-5,4,Low,1,state-todo,Todo,unstarted,user-2,,,,,,,

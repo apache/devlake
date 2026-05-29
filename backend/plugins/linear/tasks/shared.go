@@ -17,6 +17,10 @@ limitations under the License.
 
 package tasks
 
+import (
+	"github.com/apache/incubator-devlake/core/models/domainlayer/ticket"
+)
+
 // GraphqlInlineAccount is the shared shape used to collect a Linear user that
 // is referenced inline on another entity (issue creator/assignee, comment
 // author, history actor).
@@ -44,4 +48,24 @@ func PriorityLabel(priority int) string {
 		return label
 	}
 	return "No priority"
+}
+
+// StatusFromStateType maps a Linear WorkflowState.type to a DevLake standard
+// issue status. Linear's state types are standardized, so no user-supplied
+// mapping is required:
+//
+//	backlog, unstarted -> TODO
+//	started            -> IN_PROGRESS
+//	completed, canceled -> DONE
+func StatusFromStateType(stateType string) string {
+	switch stateType {
+	case "backlog", "unstarted":
+		return ticket.TODO
+	case "started":
+		return ticket.IN_PROGRESS
+	case "completed", "canceled":
+		return ticket.DONE
+	default:
+		return ticket.OTHER
+	}
 }
