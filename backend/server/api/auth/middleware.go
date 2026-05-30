@@ -34,16 +34,15 @@ import (
 // and clear its session even when the cookie has lapsed; both handlers
 // short-circuit gracefully when no user is set.
 var publicPaths = map[string]struct{}{
-	"/ping":                 {},
-	"/ready":                {},
-	"/health":               {},
-	"/version":              {},
-	"/proceed-db-migration": {},
-	PathMethods:             {},
-	PathLogin:               {},
-	PathCallback:            {},
-	PathLogout:              {},
-	PathUserInfo:            {},
+    "/ping":                 {},
+    "/ready":                {},
+    "/health":               {},
+    "/version":              {},
+    PathMethods:             {},
+    PathLogin:               {},
+    PathCallback:            {},
+    PathLogout:              {},
+    PathUserInfo:            {},
 }
 
 func OIDCAuthentication() gin.HandlerFunc { return defaultService.OIDCAuthentication() }

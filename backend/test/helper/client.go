@@ -180,6 +180,7 @@ func ConnectLocalServer(t *testing.T, clientConfig *LocalClientConfig) *DevlakeC
 				api.CreateAndRunApiServer()
 			})
 		}()
+		// NOTE: /proceed-db-migration now requires authentication. If AUTH_ENABLED=true, this test must provide credentials.
 		req, err2 := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/proceed-db-migration", addr), nil)
 		require.NoError(t, err2)
 		d.forceSendHttpRequest(100, req, func(err errors.Error) bool {
