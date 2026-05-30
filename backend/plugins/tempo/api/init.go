@@ -22,10 +22,7 @@ import (
 	"github.com/apache/incubator-devlake/core/plugin"
 	"github.com/apache/incubator-devlake/helpers/pluginhelper/api"
 	"github.com/apache/incubator-devlake/plugins/tempo/models"
-	"github.com/go-playground/validator/v10"
 )
-
-var vld *validator.Validate
 
 var basicRes context.BasicRes
 var dsHelper *api.DsHelper[models.TempoConnection, models.TempoTeam, models.TempoScopeConfig]
@@ -35,7 +32,6 @@ var raScopeSearch *api.DsRemoteApiScopeSearchHelper[models.TempoConnection, mode
 
 func Init(br context.BasicRes, p plugin.PluginMeta) {
 	basicRes = br
-	vld = validator.New()
 	dsHelper = api.NewDataSourceHelper[
 		models.TempoConnection,
 		models.TempoTeam,
