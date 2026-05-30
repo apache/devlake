@@ -50,9 +50,13 @@ export const test = (
       | 'appId'
       | 'secretKey'
       | 'proxy'
+      | 'rateLimitPerHour'
       | 'dbUrl'
       | 'companyId'
+      | 'adminApiKey'
       | 'organization'
+      | 'organizationId'
+      | 'customHeaders'
     >
   >,
 ): Promise<IConnectionTestResult> =>
@@ -70,7 +74,11 @@ export const testOld = (
     | 'appId'
     | 'secretKey'
     | 'proxy'
+    | 'rateLimitPerHour'
     | 'dbUrl'
+    | 'adminApiKey'
     | 'organization'
+    | 'organizationId'
+    | 'customHeaders'
   >,
 ): Promise<IConnectionOldTestResult> => request(`/plugins/${plugin}/test`, { method: 'post', data: payload });

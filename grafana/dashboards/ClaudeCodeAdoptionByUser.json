@@ -1,0 +1,1301 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "mysql",
+      "description": "Org-level daily active user count; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT daily_active_user_count as \"Org Daily Active Users\"\nFROM _tool_claude_code_activity_summary\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nORDER BY `date` DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Org Daily Active Users",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Org-level assigned seat count; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT assigned_seat_count as \"Org Assigned Seats\"\nFROM _tool_claude_code_activity_summary\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nORDER BY `date` DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Org Assigned Seats",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Org-level session total for the selected time range; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_session_count), 0) as \"Org Sessions\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Org Sessions",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Days since the freshest Claude analytics row across the registered metric tables; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 4
+              },
+              {
+                "color": "red",
+                "value": 8
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(TIMESTAMPDIFF(DAY, MAX(latest_date), UTC_DATE()), 9999) as \"Days Since Latest Data\"\nFROM (\n  SELECT MAX(`date`) as latest_date\n  FROM _tool_claude_code_user_activity\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT MAX(`date`) as latest_date\n  FROM _tool_claude_code_activity_summary\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT MAX(`date`) as latest_date\n  FROM _tool_claude_code_chat_project\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT MAX(`date`) as latest_date\n  FROM _tool_claude_code_skill_usage\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT MAX(`date`) as latest_date\n  FROM _tool_claude_code_connector_usage\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n) latest_dates",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Freshness",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "panels": [],
+      "title": "Selected User Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Sessions for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_session_count), 0) as \"Selected User Sessions\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Sessions",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Tool acceptance rate for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n  SUM(edit_tool_accepted + multi_edit_tool_accepted + write_tool_accepted + notebook_edit_tool_accepted) * 100.0\n    / NULLIF(\n        SUM(\n          edit_tool_accepted + multi_edit_tool_accepted + write_tool_accepted + notebook_edit_tool_accepted\n          + edit_tool_rejected + multi_edit_tool_rejected + write_tool_rejected + notebook_edit_tool_rejected\n        ),\n        0\n      ),\n  1\n) as \"Selected User Acceptance Rate %\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Tool Acceptance Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Lines added for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_lines_added), 0) as \"Selected User Lines Added\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Lines Added",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Lines removed for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_lines_removed), 0) as \"Selected User Lines Removed\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Lines Removed",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Commits for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_commit_count), 0) as \"Selected User Commits\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Commits",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Pull requests for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(cc_pull_request_count), 0) as \"Selected User PRs\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User PRs",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Days with recorded Claude activity for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT CASE\n    WHEN (\n      cc_session_count > 0\n      OR cc_commit_count > 0\n      OR cc_pull_request_count > 0\n      OR cc_lines_added > 0\n      OR cc_lines_removed > 0\n      OR chat_conversation_count > 0\n      OR web_search_count > 0\n      OR edit_tool_accepted + edit_tool_rejected + multi_edit_tool_accepted + multi_edit_tool_rejected + write_tool_accepted + write_tool_rejected + notebook_edit_tool_accepted + notebook_edit_tool_rejected > 0\n    ) THEN `date`\n    ELSE NULL\n  END) as \"Selected User Active Days\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Active Days",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Chat conversations for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(chat_conversation_count), 0) as \"Selected User Chat Conversations\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Chat Conversations",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Selected User Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Sessions, commits, pull requests, and chat conversations over time for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT `date` as time,\n  SUM(cc_session_count) as \"Sessions\",\n  SUM(cc_commit_count) as \"Commits\",\n  SUM(cc_pull_request_count) as \"PRs\",\n  SUM(chat_conversation_count) as \"Chat Conversations\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )\nGROUP BY `date`\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Activity Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Code churn over time for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT `date` as time,\n  SUM(cc_lines_added) as \"Lines Added\",\n  SUM(cc_lines_removed) as \"Lines Removed\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )\nGROUP BY `date`\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Code Churn Over Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 17,
+      "panels": [],
+      "title": "Selected User Breakdowns",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Accepted and rejected tool actions for the selected user; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 18,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT tool_name as \"Tool\",\n  SUM(accepted) as \"Accepted\",\n  SUM(rejected) as \"Rejected\",\n  ROUND(SUM(accepted) * 100.0 / NULLIF(SUM(accepted + rejected), 0), 1) as \"Acceptance Rate %\"\nFROM (\n  SELECT `date`, connection_id, scope_id, 'edit_tool' as tool_name, edit_tool_accepted as accepted, edit_tool_rejected as rejected, user_id, user_email\n  FROM _tool_claude_code_user_activity\n  UNION ALL\n  SELECT `date`, connection_id, scope_id, 'multi_edit_tool' as tool_name, multi_edit_tool_accepted as accepted, multi_edit_tool_rejected as rejected, user_id, user_email\n  FROM _tool_claude_code_user_activity\n  UNION ALL\n  SELECT `date`, connection_id, scope_id, 'write_tool' as tool_name, write_tool_accepted as accepted, write_tool_rejected as rejected, user_id, user_email\n  FROM _tool_claude_code_user_activity\n  UNION ALL\n  SELECT `date`, connection_id, scope_id, 'notebook_edit_tool' as tool_name, notebook_edit_tool_accepted as accepted, notebook_edit_tool_rejected as rejected, user_id, user_email\n  FROM _tool_claude_code_user_activity\n) tool_actions\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )\nGROUP BY tool_name\nORDER BY SUM(accepted + rejected) DESC, tool_name",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Tool Acceptance by Tool",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily activity details for the selected user without exposing user identity columns; admins and managers can inspect any user, other viewers are restricted to their own email-matched data",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 19,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT `date` as \"Day\",\n  SUM(cc_session_count) as \"Sessions\",\n  SUM(chat_conversation_count) as \"Chat Conversations\",\n  SUM(web_search_count) as \"Web Searches\",\n  SUM(cc_lines_added) as \"Lines Added\",\n  SUM(cc_lines_removed) as \"Lines Removed\",\n  SUM(cc_commit_count) as \"Commits\",\n  SUM(cc_pull_request_count) as \"PRs\",\n  ROUND(\n    SUM(edit_tool_accepted + multi_edit_tool_accepted + write_tool_accepted + notebook_edit_tool_accepted) * 100.0\n      / NULLIF(\n          SUM(\n            edit_tool_accepted + multi_edit_tool_accepted + write_tool_accepted + notebook_edit_tool_accepted\n            + edit_tool_rejected + multi_edit_tool_rejected + write_tool_rejected + notebook_edit_tool_rejected\n          ),\n          0\n        ),\n    1\n  ) as \"Tool Acceptance Rate %\"\nFROM _tool_claude_code_user_activity\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND (\n    ixd_get_user_role('${__user.email}') IN ('admin', 'manager')\n    OR user_email = '${__user.email}'\n  )\n  AND (\n    '${user:csv}' = '0'\n    OR COALESCE(NULLIF(user_email, ''), user_id) = ${user:sqlstring}\n  )\nGROUP BY `date`\nORDER BY `date` DESC\nLIMIT 60",
+          "refId": "A"
+        }
+      ],
+      "title": "Selected User Daily Activity",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Org Context",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Org-level active user counts over time; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT `date` as time,\n  daily_active_user_count as \"Daily Active Users\",\n  weekly_active_user_count as \"Weekly Active Users\",\n  monthly_active_user_count as \"Monthly Active Users\"\nFROM _tool_claude_code_activity_summary\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Org Active Users Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Org-level assigned seats and pending invites over time; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT `date` as time,\n  assigned_seat_count as \"Assigned Seats\",\n  pending_invite_count as \"Pending Invites\"\nFROM _tool_claude_code_activity_summary\nWHERE $__timeFilter(`date`)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Org Seats and Pending Invites Over Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 23,
+      "panels": [],
+      "title": "Diagnostics",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Diagnostics table for row counts and freshest available date per Claude metric table; intentionally ignores the Selected User filter",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 24,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT *\nFROM (\n  SELECT '_tool_claude_code_activity_summary' as table_name,\n    COUNT(*) as row_count,\n    MAX(`date`) as latest_date,\n    COALESCE(TIMESTAMPDIFF(DAY, MAX(`date`), UTC_DATE()), 9999) as days_lag\n  FROM _tool_claude_code_activity_summary\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_claude_code_user_activity' as table_name,\n    COUNT(*) as row_count,\n    MAX(`date`) as latest_date,\n    COALESCE(TIMESTAMPDIFF(DAY, MAX(`date`), UTC_DATE()), 9999) as days_lag\n  FROM _tool_claude_code_user_activity\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_claude_code_skill_usage' as table_name,\n    COUNT(*) as row_count,\n    MAX(`date`) as latest_date,\n    COALESCE(TIMESTAMPDIFF(DAY, MAX(`date`), UTC_DATE()), 9999) as days_lag\n  FROM _tool_claude_code_skill_usage\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_claude_code_connector_usage' as table_name,\n    COUNT(*) as row_count,\n    MAX(`date`) as latest_date,\n    COALESCE(TIMESTAMPDIFF(DAY, MAX(`date`), UTC_DATE()), 9999) as days_lag\n  FROM _tool_claude_code_connector_usage\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_claude_code_chat_project' as table_name,\n    COUNT(*) as row_count,\n    MAX(`date`) as latest_date,\n    COALESCE(TIMESTAMPDIFF(DAY, MAX(`date`), UTC_DATE()), 9999) as days_lag\n  FROM _tool_claude_code_chat_project\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n) data_volume\nORDER BY row_count DESC, table_name",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Volume by Table",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "claude-code",
+    "devlake",
+    "user",
+    "org"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_claude_code_scopes ORDER BY connection_id DESC",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "multi": false,
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_claude_code_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT id as scope_id FROM _tool_claude_code_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "multi": false,
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id as scope_id FROM _tool_claude_code_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "0",
+        "current": {
+          "selected": true,
+          "text": "All Accessible Users",
+          "value": "0"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT user_key as __value, user_key as __text FROM (SELECT COALESCE(NULLIF(user_email, ''), user_id) as user_key, user_email FROM _tool_claude_code_user_activity WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}') accessible_users WHERE ixd_get_user_role('${__user.email}') IN ('admin', 'manager') OR user_email = '${__user.email}' ORDER BY user_key",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Selected User",
+        "multi": false,
+        "name": "user",
+        "options": [],
+        "query": "SELECT DISTINCT user_key as __value, user_key as __text FROM (SELECT COALESCE(NULLIF(user_email, ''), user_id) as user_key, user_email FROM _tool_claude_code_user_activity WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}') accessible_users WHERE ixd_get_user_role('${__user.email}') IN ('admin', 'manager') OR user_email = '${__user.email}' ORDER BY user_key",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Claude Code Adoption by User",
+  "uid": "claude_code_adoption_by_user",
+  "version": 2,
+  "weekStart": ""
+}

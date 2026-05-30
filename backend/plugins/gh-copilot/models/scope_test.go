@@ -136,7 +136,7 @@ func TestGhCopilotScope_BeforeSave_BaselinePeriodDays(t *testing.T) {
 				Id:                 "test-org",
 				BaselinePeriodDays: tt.input,
 			}
-				err := s.BeforeSave(nil)
+			err := s.BeforeSave(nil)
 			if err != nil {
 				t.Errorf("BeforeSave() error = %v, want nil", err)
 			}
