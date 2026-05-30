@@ -151,6 +151,16 @@ func ExtractApiPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 				githubPr.AuthorName = githubUser.Login
 				githubPr.AuthorId = githubUser.AccountId
 			}
+			// Emit a repo_account for the merged-by user too, so pull_requests.merged_by_id
+			// resolves to a domain account instead of an orphan FK (ConvertAccounts sources
+			// every referenced user from _tool_github_repo_accounts).
+			if body.MergedBy != nil {
+				mergedByUser, err := convertAccount(body.MergedBy, data.Options.GithubId, data.Options.ConnectionId)
+				if err != nil {
+					return nil, err
+				}
+				results = append(results, mergedByUser)
+			}
 			for _, label := range body.Labels {
 				results = append(results, &models.GithubPrLabel{
 					ConnectionId: data.Options.ConnectionId,
