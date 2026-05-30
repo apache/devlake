@@ -68,63 +68,63 @@ func BenchmarkGenJobID(b *testing.B) {
 }
 
 func TestConvertJobs_SkipNoStartedAt(t *testing.T) {
-	   job := &models.GithubJob{
-			   ID:        123,
-			   RunID:     456,
-			   Name:      "test-job",
-			   StartedAt: nil,
-	   }
+	job := &models.GithubJob{
+		ID:        123,
+		RunID:     456,
+		Name:      "test-job",
+		StartedAt: nil,
+	}
 
-	   convert := func(inputRow interface{}) ([]interface{}, error) {
-			   line := inputRow.(*models.GithubJob)
-			   if line.StartedAt == nil {
-					   return nil, nil
-			   }
-			   createdAt := *line.StartedAt
-			   domainJob := &devops.CICDTask{
-					   Name: line.Name,
-					   TaskDatesInfo: devops.TaskDatesInfo{
-							   CreatedDate:  createdAt,
-							   StartedDate:  line.StartedAt,
-							   FinishedDate: line.CompletedAt,
-					   },
-			   }
-			   return []interface{}{domainJob}, nil
-	   }
+	convert := func(inputRow interface{}) ([]interface{}, error) {
+		line := inputRow.(*models.GithubJob)
+		if line.StartedAt == nil {
+			return nil, nil
+		}
+		createdAt := *line.StartedAt
+		domainJob := &devops.CICDTask{
+			Name: line.Name,
+			TaskDatesInfo: devops.TaskDatesInfo{
+				CreatedDate:  createdAt,
+				StartedDate:  line.StartedAt,
+				FinishedDate: line.CompletedAt,
+			},
+		}
+		return []interface{}{domainJob}, nil
+	}
 
-	   result, err := convert(job)
-	   assert.Nil(t, err)
-	   assert.Nil(t, result)
+	result, err := convert(job)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
 }
 
 func TestConvertJobs_WithStartedAt(t *testing.T) {
-	   now := time.Now()
-	   job := &models.GithubJob{
-			   ID:        123,
-			   RunID:     456,
-			   Name:      "test-job",
-			   StartedAt: &now,
-	   }
+	now := time.Now()
+	job := &models.GithubJob{
+		ID:        123,
+		RunID:     456,
+		Name:      "test-job",
+		StartedAt: &now,
+	}
 
-	   convert := func(inputRow interface{}) ([]interface{}, error) {
-			   line := inputRow.(*models.GithubJob)
-			   if line.StartedAt == nil {
-					   return nil, nil
-			   }
-			   createdAt := *line.StartedAt
-			   domainJob := &devops.CICDTask{
-					   Name: line.Name,
-					   TaskDatesInfo: devops.TaskDatesInfo{
-							   CreatedDate:  createdAt,
-							   StartedDate:  line.StartedAt,
-							   FinishedDate: line.CompletedAt,
-					   },
-			   }
-			   return []interface{}{domainJob}, nil
-	   }
+	convert := func(inputRow interface{}) ([]interface{}, error) {
+		line := inputRow.(*models.GithubJob)
+		if line.StartedAt == nil {
+			return nil, nil
+		}
+		createdAt := *line.StartedAt
+		domainJob := &devops.CICDTask{
+			Name: line.Name,
+			TaskDatesInfo: devops.TaskDatesInfo{
+				CreatedDate:  createdAt,
+				StartedDate:  line.StartedAt,
+				FinishedDate: line.CompletedAt,
+			},
+		}
+		return []interface{}{domainJob}, nil
+	}
 
-	   result, err := convert(job)
-	   assert.Nil(t, err)
-	   assert.NotNil(t, result)
-	   assert.Equal(t, "test-job", result[0].(*devops.CICDTask).Name)
+	result, err := convert(job)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "test-job", result[0].(*devops.CICDTask).Name)
 }

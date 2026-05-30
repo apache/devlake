@@ -91,16 +91,16 @@ func TestEpicCollectorBatchSizeLogic(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test the batch size logic from CollectEpics function
 			batchSize := 100
-			
+
 			// Replicate the exact logic from CollectEpics
-			if strings.EqualFold(string(tt.deploymentType), string(models.DeploymentServer)) && 
-			   len(tt.versionNumbers) == 3 && 
-			   tt.versionNumbers[0] <= 8 {
+			if strings.EqualFold(string(tt.deploymentType), string(models.DeploymentServer)) &&
+				len(tt.versionNumbers) == 3 &&
+				tt.versionNumbers[0] <= 8 {
 				batchSize = 1
 			}
 
 			if batchSize != tt.expectedBatch {
-				t.Errorf("Batch size for %s with version %v: got %d, want %d", 
+				t.Errorf("Batch size for %s with version %v: got %d, want %d",
 					tt.deploymentType, tt.versionNumbers, batchSize, tt.expectedBatch)
 			}
 		})
@@ -162,7 +162,7 @@ func TestEpicCollectorDeploymentTypeLogic(t *testing.T) {
 			isServer := strings.EqualFold(string(tt.deploymentType), string(models.DeploymentServer))
 
 			if isServer != tt.expectServer {
-				t.Errorf("Deployment type detection for %s: got isServer=%v, want %v", 
+				t.Errorf("Deployment type detection for %s: got isServer=%v, want %v",
 					tt.deploymentType, isServer, tt.expectServer)
 			}
 		})
@@ -201,7 +201,7 @@ func TestEpicCollectorApiEndpointSelection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test the API endpoint selection logic from CollectEpics function
 			var selectedEndpoint string
-			
+
 			if strings.EqualFold(string(tt.deploymentType), string(models.DeploymentServer)) {
 				selectedEndpoint = "api/2/search"
 			} else {
@@ -209,7 +209,7 @@ func TestEpicCollectorApiEndpointSelection(t *testing.T) {
 			}
 
 			if selectedEndpoint != tt.expectedEndpoint {
-				t.Errorf("API endpoint selection for %s: got %s, want %s", 
+				t.Errorf("API endpoint selection for %s: got %s, want %s",
 					tt.deploymentType, selectedEndpoint, tt.expectedEndpoint)
 			}
 		})
