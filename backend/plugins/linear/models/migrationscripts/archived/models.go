@@ -76,9 +76,9 @@ type LinearIssue struct {
 	TeamId        string `gorm:"index;type:varchar(255)"`
 	Identifier    string `gorm:"type:varchar(255)"`
 	Number        int
-	Title         string `gorm:"type:varchar(255)"`
+	Title         string
 	Description   string
-	Url           string `gorm:"type:varchar(255)"`
+	Url           string
 	Priority      int
 	PriorityLabel string `gorm:"type:varchar(100)"`
 	Estimate      *float64

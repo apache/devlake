@@ -30,9 +30,9 @@ type LinearIssue struct {
 	TeamId        string     `gorm:"index;type:varchar(255)" json:"teamId"`
 	Identifier    string     `gorm:"type:varchar(255)" json:"identifier"`
 	Number        int        `json:"number"`
-	Title         string     `gorm:"type:varchar(255)" json:"title"`
+	Title         string     `json:"title"`
 	Description   string     `json:"description"`
-	Url           string     `gorm:"type:varchar(255)" json:"url"`
+	Url           string     `json:"url"`
 	Priority      int        `json:"priority"`
 	PriorityLabel string     `gorm:"type:varchar(100)" json:"priorityLabel"`
 	Estimate      *float64   `json:"estimate"`
