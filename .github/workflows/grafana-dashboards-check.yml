@@ -29,9 +29,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      - name: Check grafana dashboards whether using mysql uid
+      - name: Check grafana dashboards use modern datasource object format
         run: |
-          if grep '"type": "mysql"' grafana/dashboards/*; then
-              echo "There are dashboards which use mysql uid as datasource"
+          if grep -rP '"datasource":\s*"mysql"' grafana/dashboards/; then
+              echo "FAILED: found legacy bare string datasource reference"
               exit 1
           fi
+          if grep -rP '"datasource":\s*\{\s*"type":\s*"mysql"\s*\}' grafana/dashboards/; then
+              echo "FAILED: found datasource object missing uid field"
+              exit 1
+          fi
+          echo "PASSED: all dashboards use modern datasource object format"
