@@ -30,6 +30,7 @@ import { GhCopilotConfig } from './gh-copilot';
 import { GitLabConfig } from './gitlab';
 import { JenkinsConfig } from './jenkins';
 import { JiraConfig } from './jira';
+import { LinearConfig } from './linear';
 import { PagerDutyConfig } from './pagerduty';
 import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
@@ -56,6 +57,7 @@ export const pluginConfigs: IPluginConfig[] = [
   GitLabConfig,
   JenkinsConfig,
   JiraConfig,
+  LinearConfig,
   PagerDutyConfig,
   RootlyConfig,
   SlackConfig,
