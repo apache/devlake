@@ -19,12 +19,16 @@
   "links": [],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Requests, avg prompt/response length, and usage share per model",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true
+          },
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
         },
         "overrides": []
@@ -34,7 +38,7 @@
       "options": { "cellHeight": "sm", "showHeader": true, "sortBy": [] },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "table",
           "rawQuery": true,
           "rawSql": "SELECT\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS 'Model',\n  COUNT(*) AS 'Requests',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM _tool_q_dev_chat_log WHERE $__timeFilter(timestamp)), 1) AS 'Share %',\n  ROUND(AVG(prompt_length)) AS 'Avg Prompt Len',\n  ROUND(AVG(response_length)) AS 'Avg Response Len',\n  ROUND(AVG(response_length) / NULLIF(AVG(prompt_length), 0), 2) AS 'Response/Prompt Ratio',\n  SUM(CASE WHEN has_steering = 1 THEN 1 ELSE 0 END) AS 'Steering Uses',\n  SUM(CASE WHEN is_spec_mode = 1 THEN 1 ELSE 0 END) AS 'Spec Mode Uses'\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY model_id\nORDER BY COUNT(*) DESC",
@@ -45,14 +49,17 @@
       "type": "table"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Request volume by model over time",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
-            "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1,
-            "stacking": { "mode": "normal" }, "thresholdsStyle": { "mode": "off" }
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "stacking": { "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "unit": "short"
         },
@@ -61,12 +68,17 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
       "id": 2,
       "options": {
-        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "legend": {
+          "calcs": ["sum"],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi" }
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric,\n  COUNT(*) AS value\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), model_id\nORDER BY time",
@@ -77,15 +89,20 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Average response length per model over time — proxy for output quality",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
-            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
-            "showPoints": "never", "spanNulls": true,
-            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "unit": "short"
         },
@@ -94,12 +111,17 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
       "id": 3,
       "options": {
-        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "legend": {
+          "calcs": ["mean"],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi" }
       },
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT DATE(timestamp) AS time,\n  CASE WHEN model_id = '' OR model_id IS NULL THEN '(unknown)' ELSE model_id END AS metric,\n  ROUND(AVG(response_length)) AS value\nFROM _tool_q_dev_chat_log\nWHERE $__timeFilter(timestamp)\nGROUP BY DATE(timestamp), model_id\nORDER BY time",

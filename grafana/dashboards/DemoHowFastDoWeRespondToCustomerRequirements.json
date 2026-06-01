@@ -32,7 +32,7 @@
   ],
   "panels": [
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -113,9 +113,7 @@
           "select": [
             [
               {
-                "params": [
-                  "progress"
-                ],
+                "params": ["progress"],
                 "type": "column"
               }
             ]

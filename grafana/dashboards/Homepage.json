@@ -112,9 +112,7 @@
         "showRecentlyViewed": false,
         "showSearch": true,
         "showStarred": false,
-        "tags": [
-          "Highlights"
-        ]
+        "tags": ["Highlights"]
       },
       "pluginVersion": "9.5.15",
       "targets": [
@@ -175,9 +173,7 @@
         "showRecentlyViewed": false,
         "showSearch": true,
         "showStarred": false,
-        "tags": [
-          "Engineering Leads Dashboard"
-        ]
+        "tags": ["Engineering Leads Dashboard"]
       },
       "pluginVersion": "9.5.15",
       "title": "For Engineering Leads",
@@ -202,9 +198,7 @@
         "showRecentlyViewed": false,
         "showSearch": true,
         "showStarred": false,
-        "tags": [
-          "OSS Maintainer Dashboard"
-        ]
+        "tags": ["OSS Maintainer Dashboard"]
       },
       "pluginVersion": "9.5.15",
       "title": "For OSS Maintainers",
@@ -229,9 +223,7 @@
         "showRecentlyViewed": false,
         "showSearch": true,
         "showStarred": false,
-        "tags": [
-          "Developer"
-        ]
+        "tags": ["Developer"]
       },
       "pluginVersion": "9.5.15",
       "title": "For Developers",
@@ -282,9 +274,7 @@
         "showRecentlyViewed": false,
         "showSearch": true,
         "showStarred": false,
-        "tags": [
-          "Data Source Dashboard"
-        ]
+        "tags": ["Data Source Dashboard"]
       },
       "pluginVersion": "9.5.15",
       "type": "dashlist"

@@ -116,7 +116,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Total number of user stories created in the selected time range and board.",
       "fieldConfig": {
         "defaults": {
@@ -168,7 +168,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -218,7 +218,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Total number of issues that have been marked as Done/Closed in the selected time range.",
       "fieldConfig": {
         "defaults": {
@@ -271,7 +271,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -321,7 +321,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Monthly distribution of open vs. closed issues.",
       "fieldConfig": {
         "defaults": {
@@ -407,7 +407,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -439,7 +439,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Issue Delivery Rate = count(Closed Issues) / count(All Issues)",
       "fieldConfig": {
         "defaults": {
@@ -496,7 +496,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -528,7 +528,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Monthly trend of issue delivery rate.",
       "fieldConfig": {
         "defaults": {
@@ -612,7 +612,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -670,7 +670,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Average number of days from story creation to resolution.",
       "fieldConfig": {
         "defaults": {
@@ -724,7 +724,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -755,7 +755,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "80% of stories are resolved within this many days.",
       "fieldConfig": {
         "defaults": {
@@ -808,7 +808,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -839,7 +839,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Mean lead time per month for resolved stories.",
       "fieldConfig": {
         "defaults": {
@@ -923,7 +923,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -954,7 +954,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "The cumulative distribution of story lead time. Each point shows the percent rank of a given lead time value.",
       "fieldConfig": {
         "defaults": {
@@ -1036,7 +1036,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "time_series",
           "group": [],
@@ -1121,7 +1121,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Total story points for all user stories in the selected time range.",
       "fieldConfig": {
         "defaults": {
@@ -1167,7 +1167,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1206,7 +1206,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Total story points for closed/completed user stories.",
       "fieldConfig": {
         "defaults": {
@@ -1252,7 +1252,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "group": [],
@@ -1291,7 +1291,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Story points allocated to each milestone/sprint. Requires milestone data from Taiga.",
       "fieldConfig": {
         "defaults": {
@@ -1364,7 +1364,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1395,7 +1395,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Story points distributed across assignees.",
       "fieldConfig": {
         "defaults": {
@@ -1468,7 +1468,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1499,7 +1499,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Distribution of story points across open vs. closed stories.",
       "fieldConfig": {
         "defaults": {
@@ -1553,7 +1553,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1610,7 +1610,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Breakdown of all Taiga issues by their current status, across all issue types (User Story, Task, Issue/Requirement, Epic).",
       "fieldConfig": {
         "defaults": {
@@ -1660,7 +1660,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT\n  now() as time,\n  count(distinct case when i.status = 'TODO' then i.id end) as 'To Do',\n  count(distinct case when i.status = 'IN_PROGRESS' then i.id end) as 'In Progress',\n  count(distinct case when i.status = 'DONE' then i.id end) as 'Done',\n  count(distinct case when i.status not in ('TODO','IN_PROGRESS','DONE') then i.id end) as 'Other'\nFROM issues i\n  join board_issues bi on i.id = bi.issue_id\nWHERE bi.board_id in (${board_id})",
@@ -1671,7 +1671,7 @@
       "type": "piechart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Number of user stories assigned to each team member.",
       "fieldConfig": {
         "defaults": {
@@ -1743,7 +1743,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1774,7 +1774,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Number of user stories in each milestone/sprint.",
       "fieldConfig": {
         "defaults": {
@@ -1846,7 +1846,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -1877,7 +1877,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Milestone progress: open vs. closed user stories per sprint.",
       "fieldConfig": {
         "defaults": {
@@ -1948,7 +1948,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -2039,7 +2039,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Distribution of all Taiga items across issue types (User Story, Task, Issue/Requirement, Epic).",
       "fieldConfig": {
         "defaults": {
@@ -2066,7 +2066,7 @@
       "pluginVersion": "9.5.15",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT\n  now() as time,\n  count(distinct case when i.type = 'USER_STORY' then i.id end) as 'User Story',\n  count(distinct case when i.type = 'TASK' then i.id end) as 'Task',\n  count(distinct case when i.type = 'REQUIREMENT' then i.id end) as 'Issue',\n  count(distinct case when i.type = 'EPIC' then i.id end) as 'Epic'\nFROM issues i\n  join board_issues bi on i.id = bi.issue_id\nWHERE bi.board_id in (${board_id})",
@@ -2077,7 +2077,7 @@
       "type": "piechart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Open vs closed count for each Taiga issue type in the selected time range.",
       "fieldConfig": {
         "defaults": {
@@ -2121,7 +2121,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -2133,7 +2133,7 @@
       "type": "barchart"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Monthly count of items created, broken down by issue type (User Stories, Tasks, Issues, Epics).",
       "fieldConfig": {
         "defaults": {
@@ -2175,7 +2175,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "format": "time_series",
           "rawQuery": true,
           "rawSql": "SELECT\n  DATE_ADD(date(i.created_date), INTERVAL -DAYOFMONTH(date(i.created_date))+1 DAY) as time,\n  count(distinct case when i.type='USER_STORY' then i.id end) as 'User Stories',\n  count(distinct case when i.type='TASK' then i.id end) as 'Tasks',\n  count(distinct case when i.type='REQUIREMENT' then i.id end) as 'Issues',\n  count(distinct case when i.type='EPIC' then i.id end) as 'Epics'\nFROM issues i\n  join board_issues bi on i.id = bi.issue_id\nWHERE\n  bi.board_id in (${board_id})\n  AND $__timeFilter(i.created_date)\nGROUP BY 1\nORDER BY 1",
@@ -2186,7 +2186,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": {"type": "mysql", "uid": "mysql"},
       "description": "Average lead time in days from creation to resolution, broken down by issue type (resolved issues only).",
       "fieldConfig": {
         "defaults": {
@@ -2231,7 +2231,7 @@
       "pluginVersion": "8.0.6",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": {"type": "mysql", "uid": "mysql"},
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -2261,7 +2261,7 @@
             "$__all"
           ]
         },
-        "datasource": "mysql",
+        "datasource": {"type": "mysql", "uid": "mysql"},
         "definition": "select concat(name, '--', id) from boards where id like 'taiga%'",
         "hide": 0,
         "includeAll": true,
@@ -2286,7 +2286,7 @@
             "$__all"
           ]
         },
-        "datasource": "mysql",
+        "datasource": {"type": "mysql", "uid": "mysql"},
         "definition": "select distinct i.type from issues i join board_issues bi on i.id = bi.issue_id where bi.board_id like 'taiga%'",
         "hide": 0,
         "includeAll": true,

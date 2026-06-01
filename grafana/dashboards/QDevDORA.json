@@ -82,7 +82,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Number of unique users who used Q Dev AI features",
       "fieldConfig": {
         "defaults": {
@@ -126,7 +126,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -138,7 +138,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Total AI-generated code lines accepted (Inline + Chat)",
       "fieldConfig": {
         "defaults": {
@@ -183,7 +183,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -195,7 +195,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Acceptance rate of inline AI suggestions",
       "fieldConfig": {
         "defaults": {
@@ -248,7 +248,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -260,7 +260,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Number of production deployments in selected period",
       "fieldConfig": {
         "defaults": {
@@ -304,7 +304,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -316,7 +316,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Median lead time for changes in hours",
       "fieldConfig": {
         "defaults": {
@@ -369,7 +369,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -381,7 +381,7 @@
       "type": "stat"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Percentage of deployments that caused incidents",
       "fieldConfig": {
         "defaults": {
@@ -434,7 +434,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -459,7 +459,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Compare AI code generation trends with Lead Time for Changes. A negative correlation (AI lines up, Lead Time down) suggests AI is helping accelerate delivery.",
       "fieldConfig": {
         "defaults": {
@@ -582,7 +582,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -594,7 +594,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Compare AI suggestion acceptance rate with deployment frequency. Higher acceptance rate may indicate better AI integration and potentially more deployments.",
       "fieldConfig": {
         "defaults": {
@@ -721,7 +721,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -733,7 +733,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Compare AI-generated tests with Change Failure Rate. More AI-generated tests might correlate with lower failure rates.",
       "fieldConfig": {
         "defaults": {
@@ -860,7 +860,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -872,7 +872,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Compare active Q Dev users with Code Review findings. More AI-assisted code review might catch issues earlier.",
       "fieldConfig": {
         "defaults": {
@@ -995,7 +995,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1020,7 +1020,7 @@
       "type": "row"
     },
     {
-      "datasource": "mysql",
+      "datasource": { "type": "mysql", "uid": "mysql" },
       "description": "Monthly summary comparing Q Dev AI metrics with DORA metrics side by side",
       "fieldConfig": {
         "defaults": {
@@ -1145,7 +1145,7 @@
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "datasource": "mysql",
+          "datasource": { "type": "mysql", "uid": "mysql" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
@@ -1160,12 +1160,7 @@
   "preload": false,
   "refresh": "5m",
   "schemaVersion": 39,
-  "tags": [
-    "q_dev",
-    "DORA",
-    "AI",
-    "correlation"
-  ],
+  "tags": ["q_dev", "DORA", "AI", "correlation"],
   "templating": {
     "list": [
       {
@@ -1174,7 +1169,7 @@
           "text": ["All"],
           "value": ["$__all"]
         },
-        "datasource": "mysql",
+        "datasource": { "type": "mysql", "uid": "mysql" },
         "definition": "SELECT DISTINCT name FROM projects",
         "hide": 0,
         "includeAll": true,

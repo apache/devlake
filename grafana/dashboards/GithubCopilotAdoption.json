@@ -1,1 +1,1703 @@
-{"annotations":{"list":[{"builtIn":1,"datasource":{"type":"datasource","uid":"grafana"},"enable":true,"hide":true,"iconColor":"rgba(0, 211, 255, 1)","name":"Annotations & Alerts","type":"dashboard"}]},"editable":true,"fiscalYearStartMonth":0,"graphTooltip":0,"links":[],"liveNow":false,"panels":[{"datasource":"mysql","description":"Latest daily active users count","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":50},{"color":"red","value":100}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":0,"y":0},"id":1,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT daily_active_users as \"Daily Active Users\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY day DESC LIMIT 1","refId":"A"}],"title":"Daily Active Users","type":"stat"},{"datasource":"mysql","description":"Code acceptance rate across the selected time range","fieldConfig":{"defaults":{"mappings":[],"min":0,"max":100,"unit":"percent","thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"yellow","value":20},{"color":"green","value":40}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":6,"y":0},"id":2,"options":{"minVizHeight":75,"minVizWidth":75,"orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showThresholdLabels":false,"showThresholdMarkers":true,"sizing":"auto"},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"Code Acceptance Rate","type":"gauge"},{"datasource":"mysql","description":"Total lines of code added by Copilot in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":12,"y":0},"id":3,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT SUM(loc_added_sum) as \"Lines Added\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"Lines of Code Added","type":"stat"},{"datasource":"mysql","description":"Total pull requests created by Copilot in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"blue","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":18,"y":0},"id":4,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT SUM(pr_total_created_by_copilot) as \"PRs by Copilot\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"PRs Created by Copilot","type":"stat"},{"datasource":"mysql","description":"Latest weekly active users count","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":0,"y":4},"id":15,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(DISTINCT user_login) as \"Weekly Active Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE day >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)\n  AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n","refId":"A"}],"title":"Weekly Active Users (WAU)","type":"stat"},{"datasource":"mysql","description":"Latest monthly active users count","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":6,"y":4},"id":16,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(DISTINCT user_login) as \"Monthly Active Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE day >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)\n  AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n","refId":"A"}],"title":"Monthly Active Users (MAU)","type":"stat"},{"datasource":"mysql","description":"Total pull requests reviewed by Copilot in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"blue","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":12,"y":4},"id":17,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT SUM(pr_total_reviewed_by_copilot) as \"PRs Reviewed by Copilot\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"PRs Reviewed by Copilot","type":"stat"},{"datasource":"mysql","description":"Total user-initiated interactions in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"purple","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":18,"y":4},"id":18,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT SUM(user_initiated_interaction_count) as \"User-Initiated Interactions\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"User-Initiated Interactions","type":"stat"},{"datasource":"mysql","description":"Daily and monthly active users over time","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Users","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":8},"id":5,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time, daily_active_users as \"Daily Active\", monthly_active_users as \"Monthly Active\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"Active Users Over Time","type":"timeseries"},{"datasource":"mysql","description":"Code suggestions generated vs accepted over time","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Count","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":8},"id":6,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time, code_generation_activity_count as \"Suggestions\", code_acceptance_activity_count as \"Acceptances\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"Code Suggestions & Acceptances","type":"timeseries"},{"datasource":"mysql","description":"Lines of code suggested to add versus lines added over time","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Lines of Code","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":16},"id":19,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time, loc_suggested_to_add_sum as \"LOC Suggested\", loc_added_sum as \"LOC Added\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"LOC Suggested vs LOC Added Over Time","type":"timeseries"},{"datasource":"mysql","description":"Pull request activity over time","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Pull Requests","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":16},"id":20,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time, pr_total_created as \"PRs Created\", pr_total_created_by_copilot as \"PRs Created by Copilot\", pr_total_reviewed as \"PRs Reviewed\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"PR Activity Over Time","type":"timeseries"},{"datasource":"mysql","description":"Weekly user-initiated interactions by top Copilot features","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Interactions","axisPlacement":"auto","barAlignment":0,"drawStyle":"bars","fillOpacity":80,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":0,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"mode":"normal","group":"A"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":24},"id":7,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"},"stacking":{"mode":"normal","group":"A"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT DATE(DATE_SUB(day, INTERVAL WEEKDAY(day) DAY)) as time,\n  CASE\n    WHEN feature IN (\n      SELECT feature FROM (\n        SELECT feature\n        FROM _tool_copilot_metrics_by_feature\n        WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n        GROUP BY feature\n        HAVING SUM(user_initiated_interaction_count) > 0\n        ORDER BY SUM(user_initiated_interaction_count) DESC\n        LIMIT 4\n      ) top_features\n    ) THEN REPLACE(REPLACE(feature, 'chat_panel_', ''), '_mode', '')\n    ELSE 'Other'\n  END as metric,\n  SUM(user_initiated_interaction_count) as value\nFROM _tool_copilot_metrics_by_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY time, metric\nORDER BY time","refId":"A"}],"title":"Feature Mix Over Time","type":"timeseries","transformations":[{"id":"prepareTimeSeries","options":{"format":"many"}},{"id":"renameByRegex","options":{"regex":"^value (.+)$","renamePattern":"$1"}}]},{"datasource":"mysql","description":"Weekly user-initiated interactions by top IDEs (Top 5 + Other)","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Weekly Interactions","axisPlacement":"auto","barAlignment":0,"drawStyle":"bars","fillOpacity":80,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":0,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"mode":"normal","group":"A"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":24},"id":8,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"},"stacking":{"mode":"normal","group":"A"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT DATE(DATE_SUB(day, INTERVAL WEEKDAY(day) DAY)) as time,\n  CASE\n    WHEN ide IN (\n      SELECT ide FROM (\n        SELECT ide\n        FROM _tool_copilot_metrics_by_ide\n        WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n        GROUP BY ide\n        HAVING SUM(user_initiated_interaction_count) > 0\n        ORDER BY SUM(user_initiated_interaction_count) DESC\n        LIMIT 4\n      ) top_ides\n    ) THEN ide\n    ELSE 'Other'\n  END as metric,\n  SUM(user_initiated_interaction_count) as value\nFROM _tool_copilot_metrics_by_ide\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY time, metric\nORDER BY time","refId":"A"}],"title":"IDE Adoption Over Time","type":"timeseries","transformations":[{"id":"prepareTimeSeries","options":{"format":"many"}},{"id":"renameByRegex","options":{"regex":"^value (.+)$","renamePattern":"$1"}}]},{"datasource":"mysql","description":"Top languages ranked by code acceptance rate","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":40},"id":9,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT language as \"Language\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 15","refId":"A"}],"title":"Top Languages by Acceptance Rate","type":"table"},{"datasource":"mysql","description":"Top models ranked by code acceptance rate","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":40},"id":10,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT model as \"Model\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY model\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 10","refId":"A"}],"title":"Top Models by Acceptance Rate","type":"table"},{"datasource":"mysql","description":"Matrix-style breakdown of suggestions and acceptances by language and feature","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":24,"x":0,"y":48},"id":21,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT language as \"Language\",\n  feature as \"Feature\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language, feature\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY language, SUM(code_generation_activity_count) DESC\nLIMIT 100","refId":"A"}],"title":"Feature x Language Matrix","type":"table"},{"datasource":"mysql","description":"Count of distinct users active in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":0,"y":56},"id":11,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(DISTINCT user_login) as \"Unique Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"Unique Users (Period)","type":"stat"},{"datasource":"mysql","description":"Users who have used Copilot agent mode","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"purple","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":6,"y":56},"id":12,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(DISTINCT user_login) as \"Agent Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_agent = 1","refId":"A"}],"title":"Agent Mode Adopters","type":"stat"},{"datasource":"mysql","description":"Users who have used Copilot chat","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"orange","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":12,"y":56},"id":13,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(DISTINCT user_login) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_chat = 1","refId":"A"}],"title":"Chat Adopters","type":"stat"},{"datasource":"mysql","description":"Percentage of seats with recorded activity","fieldConfig":{"defaults":{"mappings":[],"min":0,"max":100,"unit":"percent","thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"yellow","value":50},{"color":"green","value":75}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":18,"y":56},"id":14,"options":{"minVizHeight":75,"minVizWidth":75,"orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showThresholdLabels":false,"showThresholdMarkers":true,"sizing":"auto"},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT\n  COUNT(CASE WHEN last_activity_at IS NOT NULL THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as \"Utilization %\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id}","refId":"A"}],"title":"Seat Utilization","type":"gauge"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":60},"id":22,"panels":[],"title":"Quality & Efficiency Ratios","type":"row"},{"datasource":"mysql","description":"Daily acceptance rate trend computed as acceptances divided by suggestions","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"mappings":[],"max":1,"min":0,"unit":"percentunit","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":61},"id":23,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time,\n  code_acceptance_activity_count / NULLIF(code_generation_activity_count, 0) as \"Acceptance Rate\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"Overall Acceptance Rate Trend","type":"timeseries"},{"datasource":"mysql","description":"Daily LOC yield trend computed as added LOC divided by suggested LOC","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"mappings":[],"min":0,"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":61},"id":24,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time,\n  ROUND(loc_added_sum / NULLIF(loc_suggested_to_add_sum, 0), 2) as \"LOC Yield\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1","refId":"A"}],"title":"LOC Yield Trend","type":"timeseries"},{"datasource":"mysql","description":"Acceptance ratio by Copilot feature","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":0,"y":69},"id":25,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT feature as \"Feature\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY feature\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20","refId":"A"}],"title":"Acceptance Rate by Feature","type":"table"},{"datasource":"mysql","description":"Acceptance ratio by programming language","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":8,"y":69},"id":26,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT language as \"Language\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20","refId":"A"}],"title":"Acceptance Rate by Language","type":"table"},{"datasource":"mysql","description":"Acceptance ratio by model","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":16,"y":69},"id":27,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT model as \"Model\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY model\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20","refId":"A"}],"title":"Acceptance Rate by Model","type":"table"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":77},"id":28,"panels":[],"title":"User Behavior","type":"row"},{"datasource":"mysql","description":"Top users ranked by code generation activity in the selected time range","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":78},"id":29,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT user_login as \"user_login\",\n  SUM(code_generation_activity_count) as \"suggestions\",\n  SUM(code_acceptance_activity_count) as \"acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"acceptance %\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY user_login\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY SUM(code_generation_activity_count) DESC\nLIMIT 25","refId":"A"}],"title":"Top Users by Code Generations","type":"table"},{"datasource":"mysql","description":"Daily trend of distinct users engaging with agent mode versus chat","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Users","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":78},"id":30,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT day as time,\n  COUNT(DISTINCT CASE WHEN used_agent = 1 THEN user_login END) as \"Agent Users\",\n  COUNT(DISTINCT CASE WHEN used_chat = 1 THEN user_login END) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY day\nORDER BY 1","refId":"A"}],"title":"Agent Users vs Chat Users Trend","type":"timeseries"},{"datasource":"mysql","description":"First-seen daily trend of users becoming active for the first time","fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"axisBorderShow":false,"axisCenteredZero":false,"axisColorMode":"text","axisLabel":"Users","axisPlacement":"auto","barAlignment":0,"drawStyle":"line","fillOpacity":10,"gradientMode":"none","hideFrom":{"legend":false,"tooltip":false,"viz":false},"insertNulls":false,"lineInterpolation":"linear","lineWidth":2,"pointSize":5,"scaleDistribution":{"type":"linear"},"showPoints":"never","spanNulls":false,"stacking":{"group":"A","mode":"none"},"thresholdsStyle":{"mode":"off"}},"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":24,"x":0,"y":86},"id":31,"options":{"legend":{"calcs":[],"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT first_day as time,\n  COUNT(*) as \"New Active Users\"\nFROM (\n  SELECT user_login,\n    MIN(day) as first_day\n  FROM _tool_copilot_user_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  GROUP BY user_login\n) first_seen\nWHERE $__timeFilter(first_day)\nGROUP BY first_day\nORDER BY 1","refId":"A"}],"title":"New Active Users per Day","type":"timeseries"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":94},"id":32,"panels":[],"title":"Seat Effectiveness","type":"row"},{"datasource":"mysql","description":"Distribution of seat activity by last recorded editor","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":0,"y":95},"id":33,"options":{"displayLabels":["name","percent"],"legend":{"displayMode":"list","placement":"right","showLegend":true},"pieType":"pie","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"tooltip":{"mode":"single","sort":"none"}},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COALESCE(NULLIF(last_activity_editor, ''), 'unknown') as \"Editor\",\n  COUNT(*) as \"Seats\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\nGROUP BY COALESCE(NULLIF(last_activity_editor, ''), 'unknown')\nORDER BY COUNT(*) DESC","refId":"A"}],"title":"Seat Activity by Editor","type":"piechart"},{"datasource":"mysql","description":"Total, active (last 30 days), and inactive seats for the selected scope","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":8,"y":95},"id":34,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COUNT(*) as \"total_seats\",\n  SUM(CASE WHEN last_activity_at IS NOT NULL AND last_activity_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"active_seats\",\n  SUM(CASE WHEN last_activity_at IS NULL OR last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"inactive_seats\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')","refId":"A"}],"title":"Seats Summary","type":"table"},{"datasource":"mysql","description":"Seats with no activity or activity older than 30 days","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":8,"x":16,"y":95},"id":35,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT user_login as \"user_login\",\n  last_activity_at as \"last_activity_at\",\n  plan_type as \"plan_type\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id}\n  AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\n  AND (last_activity_at IS NULL OR last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY))\nORDER BY last_activity_at IS NULL DESC, last_activity_at ASC\nLIMIT 100","refId":"A"}],"title":"Inactive Seats","type":"table"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":103},"id":36,"panels":[],"title":"Diagnostics","type":"row"},{"datasource":"mysql","description":"Latest available day in enterprise-level Copilot metrics","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":0,"y":104},"id":37,"options":{"colorMode":"value","graphMode":"none","justifyMode":"auto","orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showPercentChange":false,"textMode":"auto","wideLayout":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT COALESCE(TIMESTAMPDIFF(DAY, MAX(day), UTC_DATE()), 9999) as \"Days Since Latest Data\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"Data Freshness","type":"stat"},{"datasource":"mysql","description":"Share of generated suggestions tied to unknown model/feature taxonomy","fieldConfig":{"defaults":{"mappings":[],"min":0,"max":100,"unit":"percent","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":5},{"color":"red","value":20}]}},"overrides":[]},"gridPos":{"h":4,"w":6,"x":6,"y":104},"id":38,"options":{"minVizHeight":75,"minVizWidth":75,"orientation":"auto","reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"showThresholdLabels":false,"showThresholdMarkers":true,"sizing":"auto"},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT ROUND(\n  SUM(CASE WHEN LOWER(COALESCE(model, '')) = 'unknown' OR LOWER(COALESCE(feature, '')) LIKE '%unknown%' THEN code_generation_activity_count ELSE 0 END) * 100.0\n  / NULLIF(SUM(code_generation_activity_count), 0),\n  2\n) as \"Unknown Taxonomy %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'","refId":"A"}],"title":"Unknown Taxonomy Share","type":"gauge"},{"datasource":"mysql","description":"Row counts for core Copilot metrics tables","fieldConfig":{"defaults":{"mappings":[],"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]}},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":104},"id":39,"options":{"cellHeight":"sm","footer":{"countRows":false,"fields":"","reducer":["sum"],"show":false},"showHeader":true},"pluginVersion":"11.0.0","targets":[{"datasource":"mysql","format":"table","rawQuery":true,"rawSql":"SELECT *\nFROM (\n  SELECT '_tool_copilot_enterprise_daily_metrics' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_enterprise_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_user_daily_metrics' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_user_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_metrics_by_feature' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_metrics_by_feature\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_metrics_by_model_feature' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_metrics_by_model_feature\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_seats' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_seats\n  WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\n) data_volume\nORDER BY row_count DESC","refId":"A"}],"title":"Data Volume by Table","type":"table"}],"refresh":"","schemaVersion":38,"tags":["copilot","devlake"],"templating":{"list":[{"current":{"selected":false,"text":"","value":""},"datasource":"mysql","definition":"SELECT DISTINCT connection_id FROM _tool_copilot_enterprise_daily_metrics ORDER BY 1","hide":0,"includeAll":false,"label":"Connection ID","multi":false,"name":"connection_id","options":[],"query":"SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC","refresh":1,"regex":"","skipUrlSync":false,"sort":0,"type":"query"},{"current":{"selected":false,"text":"","value":""},"datasource":"mysql","definition":"SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1","hide":0,"includeAll":false,"label":"Scope ID","multi":false,"name":"scope_id","options":[],"query":"SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1","refresh":2,"regex":"","skipUrlSync":false,"sort":0,"type":"query"}]},"time":{"from":"now-90d","to":"now"},"timepicker":{},"timezone":"utc","title":"GitHub Copilot Adoption","uid":"copilot_adoption","version":1,"weekStart":""}
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "datasource", "uid": "grafana" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Latest daily active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT daily_active_users as \"Daily Active Users\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY day DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Active Users",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Code acceptance rate across the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "green", "value": 40 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Acceptance Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Total lines of code added by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(loc_added_sum) as \"Lines Added\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Lines of Code Added",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Total pull requests created by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(pr_total_created_by_copilot) as \"PRs by Copilot\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Created by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Latest weekly active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) as \"Weekly Active Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE day >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)\n  AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users (WAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Latest monthly active users count",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) as \"Monthly Active Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE day >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)\n  AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Active Users (MAU)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Total pull requests reviewed by Copilot in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(pr_total_reviewed_by_copilot) as \"PRs Reviewed by Copilot\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs Reviewed by Copilot",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Total user-initiated interactions in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "purple", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(user_initiated_interaction_count) as \"User-Initiated Interactions\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "User-Initiated Interactions",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Daily and monthly active users over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time, daily_active_users as \"Daily Active\", monthly_active_users as \"Monthly Active\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Users Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Code suggestions generated vs accepted over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Count",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time, code_generation_activity_count as \"Suggestions\", code_acceptance_activity_count as \"Acceptances\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Code Suggestions & Acceptances",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Lines of code suggested to add versus lines added over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Lines of Code",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time, loc_suggested_to_add_sum as \"LOC Suggested\", loc_added_sum as \"LOC Added\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Suggested vs LOC Added Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Pull request activity over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Pull Requests",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time, pr_total_created as \"PRs Created\", pr_total_created_by_copilot as \"PRs Created by Copilot\", pr_total_reviewed as \"PRs Reviewed\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "PR Activity Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Weekly user-initiated interactions by top Copilot features",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "normal", "group": "A" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" },
+        "stacking": { "mode": "normal", "group": "A" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(DATE_SUB(day, INTERVAL WEEKDAY(day) DAY)) as time,\n  CASE\n    WHEN feature IN (\n      SELECT feature FROM (\n        SELECT feature\n        FROM _tool_copilot_metrics_by_feature\n        WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n        GROUP BY feature\n        HAVING SUM(user_initiated_interaction_count) > 0\n        ORDER BY SUM(user_initiated_interaction_count) DESC\n        LIMIT 4\n      ) top_features\n    ) THEN REPLACE(REPLACE(feature, 'chat_panel_', ''), '_mode', '')\n    ELSE 'Other'\n  END as metric,\n  SUM(user_initiated_interaction_count) as value\nFROM _tool_copilot_metrics_by_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY time, metric\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature Mix Over Time",
+      "type": "timeseries",
+      "transformations": [
+        { "id": "prepareTimeSeries", "options": { "format": "many" } },
+        {
+          "id": "renameByRegex",
+          "options": { "regex": "^value (.+)$", "renamePattern": "$1" }
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Weekly user-initiated interactions by top IDEs (Top 5 + Other)",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Weekly Interactions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "normal", "group": "A" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" },
+        "stacking": { "mode": "normal", "group": "A" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(DATE_SUB(day, INTERVAL WEEKDAY(day) DAY)) as time,\n  CASE\n    WHEN ide IN (\n      SELECT ide FROM (\n        SELECT ide\n        FROM _tool_copilot_metrics_by_ide\n        WHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\n        GROUP BY ide\n        HAVING SUM(user_initiated_interaction_count) > 0\n        ORDER BY SUM(user_initiated_interaction_count) DESC\n        LIMIT 4\n      ) top_ides\n    ) THEN ide\n    ELSE 'Other'\n  END as metric,\n  SUM(user_initiated_interaction_count) as value\nFROM _tool_copilot_metrics_by_ide\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY time, metric\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "IDE Adoption Over Time",
+      "type": "timeseries",
+      "transformations": [
+        { "id": "prepareTimeSeries", "options": { "format": "many" } },
+        {
+          "id": "renameByRegex",
+          "options": { "regex": "^value (.+)$", "renamePattern": "$1" }
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Top languages ranked by code acceptance rate",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language as \"Language\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Languages by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Top models ranked by code acceptance rate",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model as \"Model\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY model\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Models by Acceptance Rate",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Matrix-style breakdown of suggestions and acceptances by language and feature",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 48 },
+      "id": 21,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language as \"Language\",\n  feature as \"Feature\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language, feature\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY language, SUM(code_generation_activity_count) DESC\nLIMIT 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Feature x Language Matrix",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Count of distinct users active in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 56 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) as \"Unique Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Unique Users (Period)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Users who have used Copilot agent mode",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "purple", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 56 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) as \"Agent Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_agent = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Mode Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Users who have used Copilot chat",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "orange", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 56 },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_login) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}' AND used_chat = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Adopters",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Percentage of seats with recorded activity",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 75 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 56 },
+      "id": 14,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(CASE WHEN last_activity_at IS NOT NULL THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as \"Utilization %\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id}",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Utilization",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 60 },
+      "id": 22,
+      "panels": [],
+      "title": "Quality & Efficiency Ratios",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Daily acceptance rate trend computed as acceptances divided by suggestions",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 61 },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time,\n  code_acceptance_activity_count / NULLIF(code_generation_activity_count, 0) as \"Acceptance Rate\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Acceptance Rate Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Daily LOC yield trend computed as added LOC divided by suggested LOC",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 61 },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time,\n  ROUND(loc_added_sum / NULLIF(loc_suggested_to_add_sum, 0), 2) as \"LOC Yield\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "LOC Yield Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Acceptance ratio by Copilot feature",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 69 },
+      "id": 25,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT feature as \"Feature\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY feature\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Feature",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Acceptance ratio by programming language",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 69 },
+      "id": 26,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT language as \"Language\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_language_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY language\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Language",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Acceptance ratio by model",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 69 },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model as \"Model\",\n  SUM(code_generation_activity_count) as \"Suggestions\",\n  SUM(code_acceptance_activity_count) as \"Acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"Acceptance Rate %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY model\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) DESC, SUM(code_generation_activity_count) DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by Model",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 77 },
+      "id": 28,
+      "panels": [],
+      "title": "User Behavior",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Top users ranked by code generation activity in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 78 },
+      "id": 29,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_login as \"user_login\",\n  SUM(code_generation_activity_count) as \"suggestions\",\n  SUM(code_acceptance_activity_count) as \"acceptances\",\n  ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) as \"acceptance %\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY user_login\nHAVING SUM(code_generation_activity_count) > 0\nORDER BY SUM(code_generation_activity_count) DESC\nLIMIT 25",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Users by Code Generations",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Daily trend of distinct users engaging with agent mode versus chat",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 78 },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT day as time,\n  COUNT(DISTINCT CASE WHEN used_agent = 1 THEN user_login END) as \"Agent Users\",\n  COUNT(DISTINCT CASE WHEN used_chat = 1 THEN user_login END) as \"Chat Users\"\nFROM _tool_copilot_user_daily_metrics\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'\nGROUP BY day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Users vs Chat Users Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "First-seen daily trend of users becoming active for the first time",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Users",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 86 },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT first_day as time,\n  COUNT(*) as \"New Active Users\"\nFROM (\n  SELECT user_login,\n    MIN(day) as first_day\n  FROM _tool_copilot_user_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  GROUP BY user_login\n) first_seen\nWHERE $__timeFilter(first_day)\nGROUP BY first_day\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "New Active Users per Day",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 94 },
+      "id": 32,
+      "panels": [],
+      "title": "Seat Effectiveness",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Distribution of seat activity by last recorded editor",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 95 },
+      "id": 33,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(NULLIF(last_activity_editor, ''), 'unknown') as \"Editor\",\n  COUNT(*) as \"Seats\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\nGROUP BY COALESCE(NULLIF(last_activity_editor, ''), 'unknown')\nORDER BY COUNT(*) DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Seat Activity by Editor",
+      "type": "piechart"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Total, active (last 30 days), and inactive seats for the selected scope",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 95 },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as \"total_seats\",\n  SUM(CASE WHEN last_activity_at IS NOT NULL AND last_activity_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"active_seats\",\n  SUM(CASE WHEN last_activity_at IS NULL OR last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as \"inactive_seats\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')",
+          "refId": "A"
+        }
+      ],
+      "title": "Seats Summary",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Seats with no activity or activity older than 30 days",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 95 },
+      "id": 35,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_login as \"user_login\",\n  last_activity_at as \"last_activity_at\",\n  plan_type as \"plan_type\"\nFROM _tool_copilot_seats\nWHERE connection_id = ${connection_id}\n  AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\n  AND (last_activity_at IS NULL OR last_activity_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY))\nORDER BY last_activity_at IS NULL DESC, last_activity_at ASC\nLIMIT 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Inactive Seats",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 103 },
+      "id": 36,
+      "panels": [],
+      "title": "Diagnostics",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Latest available day in enterprise-level Copilot metrics",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 104 },
+      "id": 37,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(TIMESTAMPDIFF(DAY, MAX(day), UTC_DATE()), 9999) as \"Days Since Latest Data\"\nFROM _tool_copilot_enterprise_daily_metrics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Freshness",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Share of generated suggestions tied to unknown model/feature taxonomy",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 104 },
+      "id": 38,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n  SUM(CASE WHEN LOWER(COALESCE(model, '')) = 'unknown' OR LOWER(COALESCE(feature, '')) LIKE '%unknown%' THEN code_generation_activity_count ELSE 0 END) * 100.0\n  / NULLIF(SUM(code_generation_activity_count), 0),\n  2\n) as \"Unknown Taxonomy %\"\nFROM _tool_copilot_metrics_by_model_feature\nWHERE $__timeFilter(day) AND connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Unknown Taxonomy Share",
+      "type": "gauge"
+    },
+    {
+      "datasource": {"type": "mysql", "uid": "mysql"},
+      "description": "Row counts for core Copilot metrics tables",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 104 },
+      "id": 39,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "mysql", "uid": "mysql"},
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT *\nFROM (\n  SELECT '_tool_copilot_enterprise_daily_metrics' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_enterprise_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_user_daily_metrics' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_user_daily_metrics\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_metrics_by_feature' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_metrics_by_feature\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_metrics_by_model_feature' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_metrics_by_model_feature\n  WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT '_tool_copilot_seats' as table_name,\n    COUNT(*) as row_count\n  FROM _tool_copilot_seats\n  WHERE connection_id = ${connection_id} AND ('${scope_id}' = '' OR organization = '${scope_id}' OR organization = '')\n) data_volume\nORDER BY row_count DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Volume by Table",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": ["copilot", "devlake"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "", "value": "" },
+        "datasource": {"type": "mysql", "uid": "mysql"},
+        "definition": "SELECT DISTINCT connection_id FROM _tool_copilot_enterprise_daily_metrics ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "multi": false,
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_copilot_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "", "value": "" },
+        "datasource": {"type": "mysql", "uid": "mysql"},
+        "definition": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "multi": false,
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id as scope_id FROM _tool_copilot_scopes WHERE connection_id = ${connection_id} ORDER BY 1",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "GitHub Copilot Adoption",
+  "uid": "copilot_adoption",
+  "version": 1,
+  "weekStart": ""
+}
