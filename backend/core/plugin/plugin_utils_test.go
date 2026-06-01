@@ -18,8 +18,13 @@ limitations under the License.
 package plugin
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/base64"
 	"testing"
 
+	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,4 +74,68 @@ func TestEncode(t *testing.T) {
 			t.Log(got)
 		})
 	}
+}
+
+func TestGCMEncDec(t *testing.T) {
+	TestStr := "The string for testing"
+	encryptionSecret, _ := RandomEncryptionSecret()
+
+	// Encrypt with the new GCM format.
+	newCiphertext, err := Encrypt(encryptionSecret, TestStr)
+	assert.Empty(t, err)
+
+	// Decrypt the new format.
+	decodedNew, err := Decrypt(encryptionSecret, newCiphertext)
+	assert.Empty(t, err)
+	assert.Equal(t, TestStr, decodedNew)
+
+	// Ensure two encryptions of the same plaintext produce different ciphertexts (random nonce).
+	newCiphertext2, err := Encrypt(encryptionSecret, TestStr)
+	assert.Empty(t, err)
+	assert.NotEqual(t, newCiphertext, newCiphertext2)
+}
+
+// AesEncrypt AES encryption, CBC
+func oldAesEncrypt(origData, key []byte) ([]byte, errors.Error) {
+	// data alignment fill and encryption
+	sha256Key := sha256.Sum256(key)
+	key = sha256Key[:]
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, errors.Convert(err)
+	}
+	// data alignment fill and encryption
+	blockSize := block.BlockSize()
+	origData = PKCS7Padding(origData, blockSize)
+	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	crypted := make([]byte, len(origData))
+	blockMode.CryptBlocks(crypted, origData)
+	return crypted, nil
+}
+
+func oldEncrypt(encryptionSecret, plainText string) (string, errors.Error) {
+	// add suffix to the data part
+	inputBytes := append([]byte(plainText), 123, 110, 100, 100, 116, 102, 125)
+	// perform encryption
+	output, err := oldAesEncrypt(inputBytes, []byte(encryptionSecret))
+	if err != nil {
+		return plainText, err
+	}
+	// Return the result after Base64 processing
+	return base64.StdEncoding.EncodeToString(output), nil
+}
+
+func TestBackwardCompatibility(t *testing.T) {
+	TestStr := "The string for testing"
+	encryptionSecret, _ := RandomEncryptionSecret()
+
+	// Encrypt with the new GCM format.
+	newCiphertext, err := oldEncrypt(encryptionSecret, TestStr)
+	assert.Empty(t, err)
+
+	// Decrypt the new format.
+	decodedNew, err := Decrypt(encryptionSecret, newCiphertext)
+	assert.Empty(t, err)
+	assert.Equal(t, TestStr, decodedNew)
+
 }

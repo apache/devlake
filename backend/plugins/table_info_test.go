@@ -28,12 +28,13 @@ import (
 	bamboo "github.com/apache/incubator-devlake/plugins/bamboo/impl"
 	bitbucket "github.com/apache/incubator-devlake/plugins/bitbucket/impl"
 	bitbucket_server "github.com/apache/incubator-devlake/plugins/bitbucket_server/impl"
+	claudeCode "github.com/apache/incubator-devlake/plugins/claude_code/impl"
 	circleci "github.com/apache/incubator-devlake/plugins/circleci/impl"
-	copilot "github.com/apache/incubator-devlake/plugins/gh-copilot/impl"
 	customize "github.com/apache/incubator-devlake/plugins/customize/impl"
 	dbt "github.com/apache/incubator-devlake/plugins/dbt/impl"
 	dora "github.com/apache/incubator-devlake/plugins/dora/impl"
 	feishu "github.com/apache/incubator-devlake/plugins/feishu/impl"
+	copilot "github.com/apache/incubator-devlake/plugins/gh-copilot/impl"
 	gitee "github.com/apache/incubator-devlake/plugins/gitee/impl"
 	gitextractor "github.com/apache/incubator-devlake/plugins/gitextractor/impl"
 	github "github.com/apache/incubator-devlake/plugins/github/impl"
@@ -100,6 +101,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("trello/models", trello.Trello{}.GetTablesInfo)
 	checker.FeedIn("webhook/models", webhook.Webhook{}.GetTablesInfo)
 	checker.FeedIn("zentao/models", zentao.Zentao{}.GetTablesInfo)
+	checker.FeedIn("claude_code/models", claudeCode.ClaudeCode{}.GetTablesInfo)
 	checker.FeedIn("circleci/models", circleci.Circleci{}.GetTablesInfo)
 	checker.FeedIn("opsgenie/models", opsgenie.Opsgenie{}.GetTablesInfo)
 	checker.FeedIn("linker/models", linker.Linker{}.GetTablesInfo)

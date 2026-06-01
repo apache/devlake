@@ -21,9 +21,11 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io"
 
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/utils"
@@ -31,8 +33,11 @@ import (
 
 const EncodeKeyEnvStr = "ENCRYPTION_SECRET"
 
-// TODO: maybe move encryption/decryption into helper?
-// AES + Base64 encryption using ENCRYPTION_SECRET in .env as key
+// gcmNonceSize is the standard nonce size for AES-GCM.
+const gcmNonceSize = 12
+
+// Encrypt AES-GCM encrypts plaintext using ENCRYPTION_SECRET, then base64-encodes the result.
+// The output format is: base64(nonce || ciphertext || tag).
 func Encrypt(encryptionSecret, plainText string) (string, errors.Error) {
 	// add suffix to the data part
 	inputBytes := append([]byte(plainText), 123, 110, 100, 100, 116, 102, 125)
@@ -45,7 +50,8 @@ func Encrypt(encryptionSecret, plainText string) (string, errors.Error) {
 	return base64.StdEncoding.EncodeToString(output), nil
 }
 
-// Base64 + AES decryption using ENCRYPTION_SECRET in .env as key
+// Decrypt base64-decodes then AES-GCM decrypts ciphertext using ENCRYPTION_SECRET.
+// For backward compatibility, it also attempts AES-CBC decryption if the data looks like legacy format.
 func Decrypt(encryptionSecret, encryptedText string) (string, errors.Error) {
 	// when encryption key is not set
 	if encryptionSecret == "" {
@@ -98,41 +104,59 @@ func PKCS7UnPadding(origData []byte) []byte {
 	return origData[:(length - unpadding)]
 }
 
-// AesEncrypt AES encryption, CBC
+// AesEncrypt AES-256-GCM encrypts origData using key.
+// The returned bytes are: nonce (12 bytes) || ciphertext || tag.
 func AesEncrypt(origData, key []byte) ([]byte, errors.Error) {
-	// data alignment fill and encryption
 	sha256Key := sha256.Sum256(key)
-	key = sha256Key[:]
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(sha256Key[:])
 	if err != nil {
 		return nil, errors.Convert(err)
 	}
-	// data alignment fill and encryption
-	blockSize := block.BlockSize()
-	origData = PKCS7Padding(origData, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
-	crypted := make([]byte, len(origData))
-	blockMode.CryptBlocks(crypted, origData)
-	return crypted, nil
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, errors.Convert(err)
+	}
+	nonce := make([]byte, gcmNonceSize)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, errors.Convert(err)
+	}
+	ciphertext := gcm.Seal(nonce, nonce, origData, nil)
+	return ciphertext, nil
 }
 
-// AesDecrypt AES decryption
+// AesDecrypt decrypts crypted data using key.
+// It first tries AES-256-GCM (expects a 12-byte nonce prefix).
+// If that fails and the data length is a multiple of the AES block size (legacy CBC format),
+// it falls back to AES-256-CBC for backward compatibility.
 func AesDecrypt(crypted, key []byte) ([]byte, errors.Error) {
-	// Uniformly use sha256 to process as 32-bit Byte (256-bit bit)
 	sha256Key := sha256.Sum256(key)
-	key = sha256Key[:]
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(sha256Key[:])
 	if err != nil {
 		return nil, errors.Convert(err)
 	}
-	// Get the block size and check whether the ciphertext length is legal
 	blockSize := block.BlockSize()
+
+	// Try GCM first if the data is long enough to contain a nonce.
+	if len(crypted) >= gcmNonceSize+blockSize {
+		gcm, err := cipher.NewGCM(block)
+		if err != nil {
+			return nil, errors.Convert(err)
+		}
+		nonce := crypted[:gcmNonceSize]
+		ciphertext := crypted[gcmNonceSize:]
+		plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+		if err == nil {
+			return plaintext, nil
+		}
+		// GCM decryption failed; fall through to try legacy CBC.
+	}
+
+	// Legacy CBC fallback.
 	if len(crypted)%blockSize != 0 {
 		return nil, errors.Default.New(fmt.Sprintf("The length of the data to be decrypted is [%d], so cannot match the required block size [%d]", len(crypted), blockSize))
 	}
 
-	// Decrypt and unalign data
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCDecrypter(block, sha256Key[:blockSize])
 	origData := make([]byte, len(crypted))
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS7UnPadding(origData)

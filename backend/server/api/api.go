@@ -127,8 +127,8 @@ func SetupApiServer(router *gin.Engine) {
 	router.UseRawPath = true
 	// router.UnescapePathValues = false
 
-	// Endpoint to proceed database migration
-	router.GET("/proceed-db-migration", func(ctx *gin.Context) {
+	// Endpoint to proceed database migration (now requires authentication)
+	router.GET("/proceed-db-migration", auth.RequireAuth(), func(ctx *gin.Context) {
 		// Execute database migration
 		errors.Must(services.ExecuteMigration())
 		// Return success response
