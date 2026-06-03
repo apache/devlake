@@ -126,7 +126,9 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 // `filter[service_ids]`) is caught by a unit test.
 func buildIncidentsQuery(serviceId string, pageSize, pageNumber int, createdAfter *time.Time) url.Values {
 	query := url.Values{}
-	query.Set("filter[service_ids]", serviceId)
+	if serviceId != "" {
+		query.Set("filter[service_ids]", serviceId)
+	}
 	query.Set("page[size]", fmt.Sprintf("%d", pageSize))
 	// Rootly's JSON:API pagination is 1-based.
 	query.Set("page[number]", fmt.Sprintf("%d", pageNumber))

@@ -34,6 +34,13 @@ func TestBuildIncidentsQuery_FirstPageNoSince(t *testing.T) {
 	assert.Equal(t, "", q.Get("filter[services]"), "regression guard: must be filter[service_ids], not filter[services]")
 }
 
+func TestBuildIncidentsQuery_NoServiceFilter(t *testing.T) {
+	q := buildIncidentsQuery("", 100, 1, nil)
+	assert.Equal(t, "", q.Get("filter[service_ids]"), "empty serviceId must omit the service filter entirely")
+	assert.Equal(t, "100", q.Get("page[size]"))
+	assert.Equal(t, "1", q.Get("page[number]"))
+}
+
 func TestBuildIncidentsQuery_SubsequentPage(t *testing.T) {
 	q := buildIncidentsQuery("svc_42", 100, 3, nil)
 	assert.Equal(t, "3", q.Get("page[number]"))
