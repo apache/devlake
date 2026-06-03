@@ -35,8 +35,7 @@ type JenkinsJob struct {
 	Base         string `gorm:"type:varchar(255)" mapstructure:"base,omitempty" json:"base"`
 	Url          string `mapstructure:"url,omitempty" json:"url"`
 	Description  string `mapstructure:"description,omitempty" json:"description"`
-	PrimaryView  string `gorm:"type:varchar(255)" mapstructure:"primaryView,omitempty" json:"primaryView"`
-}
+	PrimaryView  string `gorm:"type:text" mapstructure:"primaryView,omitempty" json:"primaryView"`
 
 func (JenkinsJob) TableName() string {
 	return "_tool_jenkins_jobs"
