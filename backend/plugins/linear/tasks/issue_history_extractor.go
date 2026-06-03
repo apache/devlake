@@ -59,7 +59,7 @@ func ExtractIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 			event := &models.LinearIssueHistory{
 				ConnectionId: data.Options.ConnectionId,
 				Id:           apiEvent.Id,
-				IssueId:      issueRef.Id,
+				IssueId:      issueRef.OwningIssueId(),
 				CreatedAt:    apiEvent.CreatedAt,
 			}
 			if apiEvent.Actor != nil {

@@ -60,7 +60,7 @@ func ExtractComments(taskCtx plugin.SubTaskContext) errors.Error {
 			comment := &models.LinearComment{
 				ConnectionId: data.Options.ConnectionId,
 				Id:           apiComment.Id,
-				IssueId:      issueRef.Id,
+				IssueId:      issueRef.OwningIssueId(),
 				Body:         apiComment.Body,
 				CreatedAt:    apiComment.CreatedAt,
 				UpdatedAt:    apiComment.UpdatedAt,

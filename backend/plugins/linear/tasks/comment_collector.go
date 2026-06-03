@@ -34,7 +34,23 @@ const RAW_COMMENTS_TABLE = "linear_comments"
 // of child resources (comments, history). Its JSON form is stored in the raw
 // row's `input` column so extractors can recover the owning issue id.
 type SimpleLinearIssue struct {
-	Id string
+	// Id is populated by the DalCursorIterator (the _tool_linear_issues.id column)
+	// when driving per-issue child collection.
+	Id string `json:"Id"`
+	// IssueId is populated when parsing a raw row's `input` column: the GraphQL
+	// collector stores the query variables there (which carry `issueId`), not the
+	// iterator element. OwningIssueId resolves whichever is present.
+	IssueId string `json:"issueId" gorm:"-"`
+}
+
+// OwningIssueId returns the issue id this child row belongs to, tolerating both
+// the iterator element shape ({"Id":...}) and the collector's stored variables
+// shape ({"issueId":...}).
+func (s SimpleLinearIssue) OwningIssueId() string {
+	if s.IssueId != "" {
+		return s.IssueId
+	}
+	return s.Id
 }
 
 // GraphqlQueryCommentWrapper is the per-issue, paginated `comments` query.
