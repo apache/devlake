@@ -64,9 +64,12 @@ func extractRootlyIncident(rawData []byte, op *RootlyOptions) ([]interface{}, er
 
 	// Safety net: filter[service_ids] in the collector is the primary
 	// scope filter, but a regression there would let multi-service
-	// incidents leak into a wrong scope's tool table.
-	if services := rawIncident.Relationships.Services.Data; len(services) > 0 && !containsServiceId(services, op.ServiceId) {
-		return nil, nil
+	// incidents leak into a wrong scope's tool table. When ServiceId is
+	// empty we are collecting all incidents globally, so skip this check.
+	if op.ServiceId != "" {
+		if services := rawIncident.Relationships.Services.Data; len(services) > 0 && !containsServiceId(services, op.ServiceId) {
+			return nil, nil
+		}
 	}
 
 	if rawIncident.Attributes.StartedAt.IsZero() {

@@ -85,7 +85,8 @@ func TestMapSeverityToPriority(t *testing.T) {
 func TestComputeLeadTime_Resolved(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
 	resolved := time.Date(2026, 5, 10, 11, 30, 0, 0, time.UTC)
-	leadTime, resolutionDate := computeLeadTime(started, &resolved)
+	updated := time.Date(2026, 5, 10, 12, 0, 0, 0, time.UTC)
+	leadTime, resolutionDate := computeLeadTime(started, &resolved, updated, "resolved")
 	require.NotNil(t, leadTime)
 	require.NotNil(t, resolutionDate)
 	assert.Equal(t, uint(90), *leadTime)
@@ -94,15 +95,26 @@ func TestComputeLeadTime_Resolved(t *testing.T) {
 
 func TestComputeLeadTime_Unresolved(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
-	leadTime, resolutionDate := computeLeadTime(started, nil)
+	updated := time.Date(2026, 5, 10, 12, 0, 0, 0, time.UTC)
+	leadTime, resolutionDate := computeLeadTime(started, nil, updated, "started")
 	assert.Nil(t, leadTime)
 	assert.Nil(t, resolutionDate)
+}
+
+func TestComputeLeadTime_CompletedFallsBackToUpdated(t *testing.T) {
+	started := time.Date(2026, 3, 27, 20, 0, 0, 0, time.UTC)
+	updated := time.Date(2026, 3, 31, 14, 0, 0, 0, time.UTC)
+	leadTime, resolutionDate := computeLeadTime(started, nil, updated, "completed")
+	require.NotNil(t, leadTime)
+	require.NotNil(t, resolutionDate)
+	assert.Equal(t, updated, *resolutionDate)
 }
 
 func TestComputeLeadTime_ZeroDuration(t *testing.T) {
 	started := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
 	resolved := started
-	leadTime, resolutionDate := computeLeadTime(started, &resolved)
+	updated := started
+	leadTime, resolutionDate := computeLeadTime(started, &resolved, updated, "resolved")
 	require.NotNil(t, leadTime)
 	require.NotNil(t, resolutionDate)
 	assert.Equal(t, uint(0), *leadTime)
@@ -111,7 +123,8 @@ func TestComputeLeadTime_ZeroDuration(t *testing.T) {
 func TestComputeLeadTime_ResolvedBeforeStarted(t *testing.T) {
 	started := time.Date(2026, 5, 10, 11, 0, 0, 0, time.UTC)
 	resolved := time.Date(2026, 5, 10, 10, 0, 0, 0, time.UTC)
-	leadTime, resolutionDate := computeLeadTime(started, &resolved)
+	updated := started
+	leadTime, resolutionDate := computeLeadTime(started, &resolved, updated, "resolved")
 	assert.Nil(t, leadTime)
 	assert.Nil(t, resolutionDate)
 }

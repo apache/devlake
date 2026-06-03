@@ -37,9 +37,13 @@ type RootlyTaskData struct {
 }
 
 func (p *RootlyOptions) GetParams() any {
+	scopeId := p.ServiceId
+	if scopeId == "" {
+		scopeId = "all"
+	}
 	return models.RootlyParams{
 		ConnectionId: p.ConnectionId,
-		ScopeId:      p.ServiceId,
+		ScopeId:      scopeId,
 	}
 }
 
@@ -65,9 +69,6 @@ func DecodeTaskOptions(options map[string]interface{}) (*RootlyOptions, errors.E
 }
 
 func ValidateTaskOptions(op *RootlyOptions) errors.Error {
-	if op.ServiceId == "" {
-		return errors.BadInput.New("not enough info for Rootly execution")
-	}
 	if op.ConnectionId == 0 {
 		return errors.BadInput.New("connectionId is invalid")
 	}
