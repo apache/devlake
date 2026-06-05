@@ -243,6 +243,7 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - mocks$
 formatters:
   enable:
     - gofmt

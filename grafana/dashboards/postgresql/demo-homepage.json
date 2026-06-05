@@ -1,0 +1,191 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 10,
+  "links": [],
+  "panels": [
+    {
+      "cacheTimeout": null,
+      "datasource": null,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "interval": null,
+      "links": [],
+      "options": {
+        "content": "<a href=\"/grafana/d/SupYz7c7z/demo-how-fast-do-we-respond-to-customer-requirements?orgId=1\">\n    <div style=\"vertical-align:center;text-align:center;margin:40px;padding-top:60px;\">\n        <p style=\"text-align:center;font-size:20px;margin:10px;\"><b>How fast do we respond to customer requirements?</b></p>\n    </div>\n</a>",
+        "mode": "html"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": false,
+          "rawSql": "SELECT create_time AS \"time\", progress FROM ca_analysis WHERE $__timeFilter(create_time) ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "type": "text"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": null,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "interval": null,
+      "links": [],
+      "options": {
+        "content": "<a href=\"/grafana/d/G4DEk75nz/demo-was-our-quality-improved-or-not?orgId=1\">\n    <div style=\"vertical-align:center;text-align:center;margin:40px;padding-top:60px;\">\n        <p style=\"text-align:center;font-size:18px;margin:10px;\"><b>Was our quality improved or not?</b></p>\n    </div>\n</a>",
+        "mode": "html"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": false,
+          "rawSql": "SELECT create_time AS \"time\", progress FROM ca_analysis WHERE $__timeFilter(create_time) ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "type": "text"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": null,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 4,
+      "interval": null,
+      "links": [],
+      "options": {
+        "content": "<a href=\"/d/ddREk75nk/demo-is-this-month-more-productive-than-last?orgId=1\">\n    <div style=\"vertical-align:center;text-align:center;margin:40px;padding-top:60px;\">\n        <p style=\"text-align:center;font-size:18px;margin:10px;\"><b>Is this month more productive than last?</b></p>\n    </div>\n</a>",
+        "mode": "html"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": false,
+          "rawSql": "SELECT create_time AS \"time\", progress FROM ca_analysis WHERE $__timeFilter(create_time) ORDER BY 1 NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Demo-Homepage",
+  "uid": "0Rjxknc7z-pg",
+  "version": 2
+}

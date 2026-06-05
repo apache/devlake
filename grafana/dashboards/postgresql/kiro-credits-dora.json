@@ -1,0 +1,709 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "DORA Dashboard",
+      "type": "link",
+      "url": "/d/qNo8_0M4z/dora"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kiro Usage Dashboard",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "## Kiro Credits + DORA Correlation\nThis dashboard correlates **Kiro AI usage (credits and messages)** with **DORA** performance indicators at a weekly aggregate level.\n\n- **Pearson's r** measures linear correlation: negative r suggests higher AI usage may correlate with shorter cycle times.\n- Data is aggregated by **week** and joined on `week_start`.",
+        "mode": "markdown"
+      },
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Pearson correlation coefficient between weekly Kiro credits and PR cycle time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Need more data"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": -0.3
+              },
+              {
+                "color": "orange",
+                "value": 0.3
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, SUM(credits_used) AS weekly_credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day'), _pr_weekly AS (SELECT CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, CAST(AVG(pr_cycle_time) AS NUMERIC) / NULLIF(60.0, 0) AS avg_cycle_hours FROM project_pr_metrics WHERE NOT pr_merged_date IS NULL AND NOT pr_cycle_time IS NULL AND $__timeFilter(pr_merged_date) GROUP BY CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day'), _joined AS (SELECT k.weekly_credits AS x, p.avg_cycle_hours AS y FROM _kiro_weekly AS k INNER JOIN _pr_weekly AS p ON k.week_start = p.week_start), _stats AS (SELECT COUNT(*) AS n, AVG(x) AS mx, AVG(y) AS my, STDDEV_POP(x) AS sx, STDDEV_POP(y) AS sy FROM _joined) SELECT CASE WHEN s.n < 4 THEN NULL WHEN s.sx = '0' OR s.sy = '0' THEN 0 ELSE ROUND(CAST((SELECT SUM((j.x - s.mx) * (j.y - s.my)) FROM _joined AS j) AS NUMERIC) / NULLIF((s.n * s.sx * s.sy), 0), 2) END AS \"r\" FROM _stats AS s",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits vs Cycle Time (r)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Total Kiro credits consumed in period",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(credits_used) AS \"Credits Used\" FROM _tool_q_dev_user_report WHERE $__timeFilter(date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Credits",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Median PR cycle time in hours",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _ranked AS (SELECT CAST(pr_cycle_time AS NUMERIC) / NULLIF(60.0, 0) AS ct, PERCENT_RANK() OVER (ORDER BY pr_cycle_time NULLS FIRST) AS prank FROM project_pr_metrics WHERE NOT pr_merged_date IS NULL AND NOT pr_cycle_time IS NULL AND $__timeFilter(pr_merged_date)) SELECT ROUND(MAX(ct), 1) AS \"Median Cycle Time\" FROM _ranked WHERE prank <= 0.5",
+          "refId": "A"
+        }
+      ],
+      "title": "Median Cycle Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Cycle time comparison: weeks with above-median vs below-median AI credits usage",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.6,
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, SUM(credits_used) AS weekly_credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day'), _pr_weekly AS (SELECT CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, CAST(AVG(pr_cycle_time) AS NUMERIC) / NULLIF(60.0, 0) AS avg_ct FROM project_pr_metrics WHERE NOT pr_merged_date IS NULL AND NOT pr_cycle_time IS NULL AND $__timeFilter(pr_merged_date) GROUP BY CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day'), _joined AS (SELECT k.weekly_credits, p.avg_ct FROM _kiro_weekly AS k INNER JOIN _pr_weekly AS p ON k.week_start = p.week_start), _med AS (SELECT weekly_credits AS med FROM _joined ORDER BY weekly_credits NULLS FIRST LIMIT 1 OFFSET (SELECT FLOOR(CAST(COUNT(*) AS NUMERIC) / NULLIF(2, 0)) FROM _joined)) SELECT CASE WHEN j.weekly_credits >= m.med THEN 'High AI Usage' ELSE 'Low AI Usage' END AS \"Tier\", ROUND(CAST(AVG(j.avg_ct) AS DECIMAL), 1) AS \"Avg Cycle Time\" FROM _joined AS j, _med AS m GROUP BY CASE WHEN j.weekly_credits >= m.med THEN 'High AI Usage' ELSE 'Low AI Usage' END",
+          "refId": "A"
+        }
+      ],
+      "title": "Cycle Time: High vs Low AI Usage",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Weekly Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly Kiro credits consumed",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(credits_used) AS \"Credits Used\", COUNT(DISTINCT user_id) AS \"Active Users\" FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Kiro Credits & Active Users",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly average PR cycle time in hours",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day' AS time, ROUND(CAST(CAST(AVG(pr_cycle_time) AS NUMERIC) / NULLIF(60.0, 0) AS DECIMAL), 1) AS \"Avg Cycle Time (hrs)\", COUNT(*) AS \"PRs Merged\" FROM project_pr_metrics WHERE NOT pr_merged_date IS NULL AND NOT pr_cycle_time IS NULL AND $__timeFilter(pr_merged_date) GROUP BY CAST(pr_merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(pr_merged_date AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly PR Cycle Time & Volume",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Deployment Frequency",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Pearson correlation between weekly credits and deployment count",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Need more data"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 20
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH _kiro_weekly AS (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, SUM(credits_used) AS weekly_credits FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day'), _deploy_weekly AS (SELECT CAST(cdc.finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(cdc.finished_date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, COUNT(DISTINCT cdc.cicd_deployment_id) AS deploys FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' AND $__timeFilter(cdc.finished_date) GROUP BY CAST(cdc.finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(cdc.finished_date AS DATE)) - 1) * INTERVAL '1 day'), _joined AS (SELECT k.weekly_credits AS x, d.deploys AS y FROM _kiro_weekly AS k INNER JOIN _deploy_weekly AS d ON k.week_start = d.week_start), _stats AS (SELECT COUNT(*) AS n, AVG(x) AS mx, AVG(y) AS my, STDDEV_POP(x) AS sx, STDDEV_POP(y) AS sy FROM _joined) SELECT CASE WHEN s.n < 4 THEN NULL WHEN s.sx = '0' OR s.sy = '0' THEN 0 ELSE ROUND(CAST((SELECT SUM((j.x - s.mx) * (j.y - s.my)) FROM _joined AS j) AS NUMERIC) / NULLIF((s.n * s.sx * s.sy), 0), 2) END AS \"r\" FROM _stats AS s",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits vs Deploy Freq (r)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly credits overlaid with deployment count",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 20
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(credits) AS \"Credits Used\", SUM(deploys) AS \"Deployments\" FROM (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(credits_used) AS credits, 0 AS deploys FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(cdc.finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(cdc.finished_date AS DATE)) - 1) * INTERVAL '1 day' AS time, 0 AS credits, COUNT(DISTINCT cdc.cicd_deployment_id) AS deploys FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' AND $__timeFilter(cdc.finished_date) GROUP BY CAST(cdc.finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(cdc.finished_date AS DATE)) - 1) * INTERVAL '1 day') AS combined GROUP BY time ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Credits vs Deployments",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Change Failure Rate",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Change failure rate: % of deployments that caused incidents",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, SUM(credits) AS \"Credits Used\", SUM(cfr) AS \"Change Failure Rate\" FROM (SELECT CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(credits_used) AS credits, 0 AS cfr FROM _tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY CAST(date AS DATE) - (EXTRACT(ISODOW FROM CAST(date AS DATE)) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(d.deployment_finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(d.deployment_finished_date AS DATE)) - 1) * INTERVAL '1 day' AS time, 0 AS credits, CAST(SUM(CASE WHEN NOT i.id IS NULL THEN 1 ELSE 0 END) AS NUMERIC) / NULLIF(COUNT(DISTINCT d.deployment_id), 0) AS cfr FROM (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' AND $__timeFilter(cdc.finished_date) GROUP BY cdc.cicd_deployment_id) AS d LEFT JOIN project_incident_deployment_relationships AS pidr ON d.deployment_id = pidr.deployment_id LEFT JOIN incidents AS i ON pidr.id = i.id GROUP BY CAST(d.deployment_finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(d.deployment_finished_date AS DATE)) - 1) * INTERVAL '1 day') AS combined GROUP BY time ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Credits vs Change Failure Rate",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [
+    "q_dev",
+    "dora",
+    "kiro",
+    "correlation"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro Credits + DORA Correlation",
+  "uid": "kiro_credits_dora-pg",
+  "version": 1
+}

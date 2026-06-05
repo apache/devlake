@@ -38,4 +38,4 @@ providers:
     # <string, required> path to dashboard files on disk. Required
     path: /etc/grafana/dashboards
     # <bool> use folder names from filesystem to create folders in Grafana
-    foldersFromFilesStructure: true
+    foldersFromFilesStructure: false

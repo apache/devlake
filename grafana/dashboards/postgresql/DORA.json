@@ -1,0 +1,1517 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 60,
+  "links": [],
+  "panels": [
+    {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 16,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- See [how to config](https://devlake.apache.org/docs/DORA) this dashboard\n- Data Sources Required: \n  - `Deployments` from Jenkins, GitLab CI, GitHub Action, webhook, etc. \n  - `Pull Requests` from GitHub PRs, GitLab MRs, BitBucket PRs, Azure DevOps PRs, etc.\n  - `Incidents` from Jira issues, GitHub issues, TAPD issues, PagerDuty Incidents, etc. \n- Transformation Required: Define `deployments` and `incidents` in [data transformations](https://devlake.apache.org/docs/Configuration/Tutorial#step-3---add-transformations-optional) while configuring the blueprint of a project.\n- You can validate/debug this dashboard with the [DORA validation dashboard](/grafana/d/KGkUnV-Vz/dora-dashboard-validation)\n- DORA benchmarks vary in different years. You can switch the benchmarks to change them.\n- In DORA's official report in 2023, metric 'failed deployment recovery time' has replaced 'MTTR'.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.6.2",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "-",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "elite"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "",
+                    "url": "/d/${__data.fields[\"metric_hidden\"]}?${project:queryparam}&from=${__from}&to=${__to}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric_hidden"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Optimized DORA Metrics Query for PostgreSQL/Grafana */\r\n\r\n/* Metric 1: Deployment Frequency */\r\nWITH last_few_calendar_months AS (\r\n    /* Generate calendar days efficiently using generate_series instead of cartesian product */\r\n    SELECT date::DATE AS day\r\n    FROM generate_series(\r\n        $__timeFrom()::timestamp,\r\n        ($__timeTo()::timestamp - interval '1 day'),\r\n        interval '1 day'\r\n    ) AS date\r\n),\r\n\r\n_production_deployment_days AS (\r\n    /* Get deployment days with single pass aggregation */\r\n    SELECT\r\n        cdc.cicd_deployment_id AS deployment_id,\r\n        MAX(cdc.finished_date::DATE) AS day\r\n    FROM cicd_deployment_commits cdc\r\n    INNER JOIN project_mapping pm ON\r\n        cdc.cicd_scope_id = pm.row_id\r\n        AND pm.\"table\" = 'cicd_scopes'\r\n    WHERE\r\n        cdc.result = 'SUCCESS'\r\n        AND cdc.environment = 'PRODUCTION'\r\n        AND cdc.finished_date BETWEEN $__timeFrom() AND $__timeTo()\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name = ANY(ARRAY[${project:singlequote}]::text[])\r\n        )\r\n    GROUP BY cdc.cicd_deployment_id\r\n),\r\n\r\n_deployment_stats AS (\r\n    /* Consolidate weekly, monthly, and six-monthly stats in single pass */\r\n    SELECT\r\n        DATE_TRUNC('week', cal.day)::DATE AS week,\r\n        DATE_TRUNC('month', cal.day)::DATE AS month,\r\n        cal.day,\r\n        dep.day AS deployment_day\r\n    FROM last_few_calendar_months cal\r\n    LEFT JOIN _production_deployment_days dep ON dep.day = cal.day\r\n),\r\n\r\n_weekly_summary AS (\r\n    /* Aggregate weekly deployment days */\r\n    SELECT\r\n        week,\r\n        MAX(CASE WHEN deployment_day IS NOT NULL THEN 1 ELSE 0 END) AS weeks_deployed,\r\n        COUNT(DISTINCT deployment_day) AS days_deployed\r\n    FROM _deployment_stats\r\n    GROUP BY week\r\n),\r\n\r\n_monthly_summary AS (\r\n    /* Aggregate monthly deployment days */\r\n    SELECT\r\n        month,\r\n        MAX(CASE WHEN deployment_day IS NOT NULL THEN 1 ELSE NULL END) AS months_deployed,\r\n        COUNT(DISTINCT deployment_day) AS days_deployed\r\n    FROM _deployment_stats\r\n    GROUP BY month\r\n),\r\n\r\n_six_months_rolling AS (\r\n    /* Calculate rolling 6-month windows */\r\n    SELECT\r\n        month,\r\n        SUM(days_deployed) OVER (\r\n            ORDER BY month\r\n            ROWS BETWEEN 5 PRECEDING AND CURRENT ROW\r\n        ) AS days_deployed_per_six_months,\r\n        COUNT(months_deployed) OVER (\r\n            ORDER BY month\r\n            ROWS BETWEEN 5 PRECEDING AND CURRENT ROW\r\n        ) AS months_deployed_count,\r\n        ROW_NUMBER() OVER (\r\n            PARTITION BY (EXTRACT(YEAR FROM month)::INTEGER * 12 + EXTRACT(MONTH FROM month)::INTEGER) / 6\r\n            ORDER BY month DESC\r\n        ) AS rn\r\n    FROM _monthly_summary\r\n),\r\n\r\n_six_months_summary AS (\r\n    /* Filter to one record per 6-month period */\r\n    SELECT\r\n        month,\r\n        days_deployed_per_six_months,\r\n        months_deployed_count\r\n    FROM _six_months_rolling\r\n    WHERE rn = 1\r\n),\r\n\r\n_median_deployment_frequency AS (\r\n    /* Calculate all medians using percentile_cont for efficiency */\r\n    SELECT\r\n        (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days_deployed)\r\n         FROM _weekly_summary) AS median_weekly,\r\n        (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days_deployed)\r\n         FROM _monthly_summary) AS median_monthly,\r\n        (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days_deployed_per_six_months)\r\n         FROM _six_months_summary) AS median_six_monthly,\r\n        (SELECT MIN(months_deployed_count)\r\n         FROM _six_months_summary\r\n         WHERE months_deployed_count > 0) AS is_collected\r\n),\r\n\r\n_metric_deployment_frequency AS (\r\n    SELECT\r\n        'Deployment frequency' AS metric,\r\n        CASE '$dora_report'\r\n            WHEN '2023' THEN\r\n                CASE\r\n                    WHEN median_weekly >= 5 THEN 'On-demand(elite)'\r\n                    WHEN median_weekly >= 1 THEN 'Between once per day and once per week(high)'\r\n                    WHEN median_monthly >= 1 THEN 'Between once per week and once per month(medium)'\r\n                    WHEN median_monthly < 1 AND is_collected IS NOT NULL THEN 'Fewer than once per month(low)'\r\n                    ELSE 'N/A. Please check if you have collected deployments.'\r\n                END\r\n            WHEN '2021' THEN\r\n                CASE\r\n                    WHEN median_weekly >= 5 THEN 'On-demand(elite)'\r\n                    WHEN median_monthly >= 1 THEN 'Between once per day and once per month(high)'\r\n                    WHEN median_six_monthly >= 1 THEN 'Between once per month and once every 6 months(medium)'\r\n                    WHEN median_six_monthly < 1 AND is_collected IS NOT NULL THEN 'Fewer than once per six months(low)'\r\n                    ELSE 'N/A. Please check if you have collected deployments.'\r\n                END\r\n            ELSE 'Invalid dora report'\r\n        END AS value\r\n    FROM _median_deployment_frequency\r\n),\r\n\r\n/* Metric 2: Lead Time for Changes - Direct from PRs (Webhook-friendly) */\r\n_pr_cycle_times AS (\r\n    /* Calculate lead time directly from merged PRs without deployment dependency */\r\n    SELECT ppm.pr_cycle_time\r\n    FROM pull_requests pr\r\n    INNER JOIN project_pr_metrics ppm ON ppm.id = pr.id\r\n    INNER JOIN project_mapping pm ON\r\n        pr.base_repo_id = pm.row_id\r\n        AND pm.\"table\" = 'repos'\r\n    WHERE\r\n        pr.merged_date IS NOT NULL\r\n        AND ppm.pr_cycle_time IS NOT NULL\r\n        AND $__timeFilter(pr.merged_date)  -- Filter by PR merge date instead of deployment\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name = ANY(ARRAY[${project:singlequote}]::text[])\r\n        )\r\n),\r\n\r\n_metric_change_lead_time AS (\r\n    SELECT\r\n        'Lead time for changes' AS metric,\r\n        CASE '$dora_report'\r\n            WHEN '2023' THEN\r\n                CASE\r\n                    WHEN median_lt IS NULL THEN 'N/A. Please check if you have collected pull_requests.'\r\n                    WHEN median_lt < 24 * 60 THEN 'Less than one day(elite)'\r\n                    WHEN median_lt < 7 * 24 * 60 THEN 'Between one day and one week(high)'\r\n                    WHEN median_lt < 30 * 24 * 60 THEN 'Between one week and one month(medium)'\r\n                    ELSE 'More than one month(low)'\r\n                END\r\n            WHEN '2021' THEN\r\n                CASE\r\n                    WHEN median_lt IS NULL THEN 'N/A. Please check if you have collected pull_requests.'\r\n                    WHEN median_lt < 60 THEN 'Less than one hour(elite)'\r\n                    WHEN median_lt < 7 * 24 * 60 THEN 'Less than one week(high)'\r\n                    WHEN median_lt < 180 * 24 * 60 THEN 'Between one week and six months(medium)'\r\n                    ELSE 'More than six months(low)'\r\n                END\r\n            ELSE 'Invalid dora report'\r\n        END AS value\r\n    FROM (\r\n        SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY pr_cycle_time) AS median_lt\r\n        FROM _pr_cycle_times\r\n    ) AS medians\r\n),\r\n\r\n/* Metric 3: Change Failure Rate */\r\n_deployments AS (\r\n    SELECT\r\n        cdc.cicd_deployment_id AS deployment_id,\r\n        MAX(cdc.finished_date) AS deployment_finished_date\r\n    FROM cicd_deployment_commits cdc\r\n    INNER JOIN project_mapping pm ON\r\n        cdc.cicd_scope_id = pm.row_id\r\n        AND pm.\"table\" = 'cicd_scopes'\r\n    WHERE\r\n        cdc.result = 'SUCCESS'\r\n        AND cdc.environment = 'PRODUCTION'\r\n        AND cdc.finished_date BETWEEN $__timeFrom() AND $__timeTo()\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name = ANY(ARRAY[${project:singlequote}]::text[])\r\n        )\r\n    GROUP BY cdc.cicd_deployment_id\r\n),\r\n\r\n_change_failure_rate AS (\r\n    SELECT\r\n        COALESCE(\r\n            COUNT(DISTINCT CASE WHEN i.id IS NOT NULL THEN d.deployment_id END)::NUMERIC\r\n            / NULLIF(COUNT(DISTINCT d.deployment_id), 0),\r\n            0\r\n        ) AS cfr,\r\n        COUNT(DISTINCT d.deployment_id) AS deployment_count,\r\n        COUNT(DISTINCT i.id) AS incident_count\r\n    FROM _deployments d\r\n    LEFT JOIN project_incident_deployment_relationships pim ON d.deployment_id = pim.deployment_id\r\n    LEFT JOIN incidents i ON pim.id = i.id\r\n),\r\n\r\n_metric_cfr AS (\r\n    SELECT\r\n        'Change failure rate' AS metric,\r\n        CASE\r\n            WHEN deployment_count = 0 AND incident_count = 0 THEN\r\n                'N/A. Please check if you have collected deployments/incidents.'\r\n            WHEN incident_count = 0 THEN\r\n                'N/A. Please check if you have collected incidents.'\r\n            WHEN deployment_count = 0 THEN\r\n                'N/A. Please check if you have collected deployments.'\r\n            WHEN '$dora_report' = '2023' THEN\r\n                CASE\r\n                    WHEN cfr <= 0.05 THEN '0-5%(elite)'\r\n                    WHEN cfr <= 0.10 THEN '5%-10%(high)'\r\n                    WHEN cfr <= 0.15 THEN '10%-15%(medium)'\r\n                    ELSE '> 15%(low)'\r\n                END\r\n            WHEN '$dora_report' = '2021' THEN\r\n                CASE\r\n                    WHEN cfr <= 0.15 THEN '0-15%(elite)'\r\n                    WHEN cfr <= 0.20 THEN '16%-20%(high)'\r\n                    WHEN cfr <= 0.30 THEN '21%-30%(medium)'\r\n                    ELSE '> 30%(low)'\r\n                END\r\n            ELSE 'Invalid dora report'\r\n        END AS value\r\n    FROM _change_failure_rate\r\n),\r\n\r\n/* Metric 4: Recovery Time (2023) / MTTR (2021) */\r\n_recovery_times_2023 AS (\r\n    SELECT\r\n        EXTRACT(EPOCH FROM (i.resolution_date - d.deployment_finished_date)) / 60 AS recovery_minutes\r\n    FROM incidents i\r\n    INNER JOIN project_incident_deployment_relationships pim ON i.id = pim.id\r\n    INNER JOIN _deployments d ON pim.deployment_id = d.deployment_id\r\n    WHERE\r\n        i.resolution_date IS NOT NULL\r\n        AND $__timeFilter(i.resolution_date)\r\n),\r\n\r\n_metric_recovery_time_2023 AS (\r\n    SELECT\r\n        'Failed deployment recovery time' AS metric,\r\n        CASE\r\n            WHEN median_rt < 60 THEN 'Less than one hour(elite)'\r\n            WHEN median_rt < 24 * 60 THEN 'Less than one day(high)'\r\n            WHEN median_rt < 7 * 24 * 60 THEN 'Between one day and one week(medium)'\r\n            WHEN median_rt >= 7 * 24 * 60 THEN 'More than one week(low)'\r\n            ELSE 'N/A. Please check if you have collected deployments or incidents.'\r\n        END AS value\r\n    FROM (\r\n        SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY recovery_minutes) AS median_rt\r\n        FROM _recovery_times_2023\r\n    ) AS medians\r\n    WHERE '$dora_report' = '2023'\r\n),\r\n\r\n_mttr_2021 AS (\r\n    SELECT\r\n        'Time to restore service' AS metric,\r\n        CASE\r\n            WHEN median_mttr < 60 THEN 'Less than one hour(elite)'\r\n            WHEN median_mttr < 24 * 60 THEN 'Less than one day(high)'\r\n            WHEN median_mttr < 7 * 24 * 60 THEN 'Between one day and one week(medium)'\r\n            WHEN median_mttr >= 7 * 24 * 60 THEN 'More than one week(low)'\r\n            ELSE 'N/A. Please check if you have collected incidents.'\r\n        END AS value\r\n    FROM (\r\n        SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY lead_time_minutes) AS median_mttr\r\n        FROM incidents i\r\n        INNER JOIN project_mapping pm ON\r\n            i.scope_id = pm.row_id\r\n            AND pm.\"table\" = i.\"table\"\r\n        WHERE\r\n            i.lead_time_minutes IS NOT NULL\r\n            AND $__timeFilter(i.resolution_date)\r\n            AND (\r\n                '${project:csv}' = ''\r\n                OR pm.project_name = ANY(ARRAY[${project:singlequote}]::text[])\r\n            )\r\n    ) AS medians\r\n    WHERE '$dora_report' = '2021'\r\n),\r\n\r\n_all_metrics AS (\r\n    SELECT metric, value FROM _metric_deployment_frequency\r\n    UNION ALL\r\n    SELECT metric, value FROM _metric_change_lead_time\r\n    UNION ALL\r\n    SELECT metric, value FROM _metric_cfr\r\n    UNION ALL\r\n    SELECT metric, value FROM _metric_recovery_time_2023\r\n    UNION ALL\r\n    SELECT metric, value FROM _mttr_2021\r\n)\r\n\r\n/* Final output with benchmark comparison */\r\nSELECT\r\n    db.metric,\r\n    REPLACE(db.metric, ' ', '-') AS metric_hidden,\r\n    CASE WHEN db.low = m.value THEN db.low END AS low,\r\n    CASE WHEN db.medium = m.value THEN db.medium END AS medium,\r\n    CASE WHEN db.high = m.value THEN db.high END AS high,\r\n    CASE WHEN db.elite = m.value THEN db.elite END AS elite\r\nFROM dora_benchmarks db\r\nINNER JOIN _all_metrics m ON db.metric = m.metric\r\nWHERE db.dora_report = '$dora_report'\r\nORDER BY db.id;\r\n\r\n/* Recommended indexes for optimal performance:\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cicd_deployment_commits_lookup\r\n    ON cicd_deployment_commits(cicd_scope_id, result, environment, finished_date)\r\n    INCLUDE (cicd_deployment_id);\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_mapping_scope\r\n    ON project_mapping(row_id, \"table\", project_name);\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pull_requests_merge\r\n    ON pull_requests(base_repo_id, merged_date)\r\n    WHERE merged_date IS NOT NULL;\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_pr_metrics_deployment\r\n    ON project_pr_metrics(deployment_commit_id, pr_cycle_time)\r\n    WHERE pr_cycle_time IS NOT NULL;\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_incidents_resolution\r\n    ON incidents(scope_id, resolution_date, lead_time_minutes)\r\n    WHERE resolution_date IS NOT NULL;\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_incident_deployment\r\n    ON project_incident_deployment_relationships(deployment_id, id);\r\n*/\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Overall DORA Metrics",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "How often an organization deploys code to production or release it to end users\n\n# 2023 Benchmarks\n- **Elite**: >= 7 deployment days per week\n- **High**: >= 1 deployment day per week\n- **Medium**: >= 1 deployment day per month\n- **Low**: < 1 deployment day per month\n# 2021 Benchmarks\n- **Elite**: >= 7 deployment days per week\n- **High**: >= 1 deployment day per month\n- **Medium**: >= 1  deployment day per six months\n- **Low**: < 1 deployment day per six months",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 13
+      },
+      "id": 11,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "link",
+          "url": "/d/Deployment-frequency/dora-drill-down-deployment-frequency?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Deployment Frequency$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Optimized Deployment Frequency Query for PostgreSQL/Grafana */\r\n\r\nWITH last_few_calendar_months AS (\r\n    /* Generate calendar days efficiently using generate_series */\r\n    SELECT date::DATE AS day\r\n    FROM generate_series(\r\n        $__timeFrom()::timestamp,\r\n        ($__timeTo()::timestamp - INTERVAL '1 day'),\r\n        INTERVAL '1 day'\r\n    ) AS date\r\n),\r\n\r\n_production_deployment_days AS (\r\n    /* Get unique deployment days - GitLab/BitBucket may generate multiple deployments for one pipeline */\r\n    SELECT\r\n        cdc.cicd_deployment_id AS deployment_id,\r\n        MAX(cdc.finished_date::DATE) AS day\r\n    FROM cicd_deployment_commits cdc\r\n    INNER JOIN project_mapping pm ON\r\n        cdc.cicd_scope_id = pm.row_id\r\n        AND pm.\"table\" = 'cicd_scopes'\r\n    WHERE\r\n        cdc.result = 'SUCCESS'\r\n        AND cdc.environment = 'PRODUCTION'\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name = ANY(ARRAY[${project:singlequote}]::text[])\r\n        )\r\n    GROUP BY cdc.cicd_deployment_id\r\n),\r\n\r\n_days_weekly_deploy AS (\r\n    /* Calculate deployment days per week */\r\n    SELECT\r\n        DATE_TRUNC('week', cal.day)::DATE AS week,\r\n        MAX(CASE WHEN dep.day IS NOT NULL THEN 1 ELSE NULL END) AS weeks_deployed,\r\n        COUNT(DISTINCT dep.day) AS days_deployed\r\n    FROM last_few_calendar_months cal\r\n    LEFT JOIN _production_deployment_days dep ON dep.day = cal.day\r\n    GROUP BY week\r\n),\r\n\r\n_days_monthly_deploy AS (\r\n    /* Calculate deployment days per month */\r\n    SELECT\r\n        DATE_TRUNC('month', cal.day)::DATE AS month,\r\n        MAX(CASE WHEN dep.day IS NOT NULL THEN 1 ELSE NULL END) AS months_deployed,\r\n        COUNT(DISTINCT dep.day) AS days_deployed\r\n    FROM last_few_calendar_months cal\r\n    LEFT JOIN _production_deployment_days dep ON dep.day = cal.day\r\n    GROUP BY month\r\n),\r\n\r\n_days_six_months_rolling AS (\r\n    /* Calculate rolling 6-month deployment windows */\r\n    SELECT\r\n        month,\r\n        SUM(days_deployed) OVER (\r\n            ORDER BY month\r\n            ROWS BETWEEN 5 PRECEDING AND CURRENT ROW\r\n        ) AS days_deployed_per_six_months,\r\n        COUNT(months_deployed) OVER (\r\n            ORDER BY month\r\n            ROWS BETWEEN 5 PRECEDING AND CURRENT ROW\r\n        ) AS months_deployed_count,\r\n        ROW_NUMBER() OVER (\r\n            PARTITION BY (EXTRACT(YEAR FROM month)::INTEGER * 12 + EXTRACT(MONTH FROM month)::INTEGER) / 6\r\n            ORDER BY month DESC\r\n        ) AS rn\r\n    FROM _days_monthly_deploy\r\n),\r\n\r\n_days_per_six_months_deploy_by_filter AS (\r\n    /* Filter to one record per 6-month period */\r\n    SELECT\r\n        month,\r\n        days_deployed_per_six_months,\r\n        months_deployed_count\r\n    FROM _days_six_months_rolling\r\n    WHERE rn = 1\r\n),\r\n\r\n_medians AS (\r\n    /* Calculate all medians in one pass using percentile_cont */\r\n    SELECT\r\n        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY w.days_deployed) AS median_weekly,\r\n        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY m.days_deployed) AS median_monthly,\r\n        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY s.days_deployed_per_six_months) AS median_six_monthly,\r\n        MIN(s.months_deployed_count) AS is_collected\r\n    FROM _days_weekly_deploy w\r\n    CROSS JOIN _days_monthly_deploy m\r\n    CROSS JOIN _days_per_six_months_deploy_by_filter s\r\n)\r\n\r\n/* Final output with classification */\r\nSELECT\r\n    CASE '$dora_report'\r\n        WHEN '2023' THEN\r\n            CASE\r\n                WHEN median_weekly >= 5 THEN\r\n                    median_weekly || ' deployment days per week(elite)'\r\n                WHEN median_weekly >= 1 THEN\r\n                    median_weekly || ' deployment days per week(high)'\r\n                WHEN median_monthly >= 1 THEN\r\n                    median_monthly || ' deployment days per month(medium)'\r\n                WHEN median_monthly < 1 AND is_collected IS NOT NULL THEN\r\n                    median_monthly || ' deployment days per month(low)'\r\n                ELSE\r\n                    'N/A. Please check if you have collected deployments.'\r\n            END\r\n        WHEN '2021' THEN\r\n            CASE\r\n                WHEN median_weekly >= 5 THEN\r\n                    median_weekly || ' deployment days per week(elite)'\r\n                WHEN median_monthly >= 1 THEN\r\n                    median_monthly || ' deployment days per month(high)'\r\n                WHEN median_six_monthly >= 1 THEN\r\n                    median_six_monthly || ' deployment days per six months(medium)'\r\n                WHEN median_six_monthly < 1 AND is_collected IS NOT NULL THEN\r\n                    median_six_monthly || ' deployment days per six months(low)'\r\n                ELSE\r\n                    'N/A. Please check if you have collected deployments.'\r\n            END\r\n        ELSE\r\n            'Invalid dora report'\r\n    END AS \"Deployment Frequency\"\r\nFROM _medians;\r\n\r\n/* Performance tip: Consider creating these indexes:\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cicd_deployment_commits_prod\r\n    ON cicd_deployment_commits(cicd_scope_id, result, environment, finished_date)\r\n    WHERE result = 'SUCCESS' AND environment = 'PRODUCTION';\r\n\r\nCREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_mapping_cicd_scopes\r\n    ON project_mapping(row_id, project_name)\r\n    WHERE \"table\" = 'cicd_scopes';\r\n*/\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Deployment Frequency",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "The median amount of time for a code change to be deployed into production.\n\n\n# 2023 Benchmarks\n- **Elite**: Less than one day\n- **High**: Between one day and one week\n- **Medium**: Between one week and one month\n- **Low**: More than one month\n# 2021 Benchmarks\n- **Elite**: Less than one hour\n- **High**: Less than one week\n- **Medium**: Between one week and six months\n- **Low**: More than six months\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 13
+      },
+      "id": 12,
+      "links": [
+        {
+          "title": "link",
+          "url": "/d/Lead-time-for-changes/dora-drill-down-lead-time-for-changes?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Optimized Lead Time for Changes - PostgreSQL + Grafana */\r\n/* Webhook-friendly version with formatted DORA output */\r\n\r\nWITH _pr_cycle_times AS (\r\n\r\n    SELECT DISTINCT\r\n        pr.id,\r\n        ppm.pr_cycle_time\r\n    FROM pull_requests pr\r\n\r\n    INNER JOIN project_pr_metrics ppm\r\n        ON ppm.id = pr.id\r\n\r\n    INNER JOIN project_mapping pm\r\n        ON pr.base_repo_id = pm.row_id\r\n        AND pm.\"table\" = 'repos'\r\n\r\n    /* Optional deployment validation */\r\n    LEFT JOIN cicd_deployment_commits cdc\r\n        ON ppm.deployment_commit_id = cdc.id\r\n\r\n    WHERE\r\n        pr.merged_date IS NOT NULL\r\n        AND ppm.pr_cycle_time IS NOT NULL\r\n\r\n        /* Better for webhook scenarios */\r\n        AND $__timeFilter(pr.merged_date)\r\n\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name::text = ANY(\r\n                ARRAY[${project:singlequote}]::text[]\r\n            )\r\n        )\r\n\r\n),\r\n\r\n_median_change_lead_time_ranks AS (\r\n\r\n    SELECT\r\n        *,\r\n        PERCENT_RANK() OVER (\r\n            ORDER BY pr_cycle_time NULLS FIRST\r\n        ) AS ranks\r\n    FROM _pr_cycle_times\r\n\r\n),\r\n\r\n_median_change_lead_time AS (\r\n\r\n    SELECT\r\n        MAX(pr_cycle_time) AS median_change_lead_time\r\n    FROM _median_change_lead_time_ranks\r\n    WHERE ranks <= 0.5\r\n\r\n)\r\n\r\nSELECT\r\n\r\n    CASE\r\n\r\n        WHEN ('${dora_report}') = '2023' THEN\r\n\r\n            CASE\r\n\r\n                WHEN median_change_lead_time < 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (elite)'\r\n\r\n                WHEN median_change_lead_time < 7 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (high)'\r\n\r\n                WHEN median_change_lead_time < 30 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (medium)'\r\n\r\n                WHEN median_change_lead_time >= 30 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (low)'\r\n\r\n                ELSE\r\n                    'N/A. Please check if you have collected pull_requests.'\r\n\r\n            END\r\n\r\n        WHEN ('${dora_report}') = '2021' THEN\r\n\r\n            CASE\r\n\r\n                WHEN median_change_lead_time < 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (elite)'\r\n\r\n                WHEN median_change_lead_time < 7 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (high)'\r\n\r\n                WHEN median_change_lead_time < 180 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (medium)'\r\n\r\n                WHEN median_change_lead_time >= 180 * 24 * 60 THEN\r\n                    ROUND(\r\n                        CAST(\r\n                            CAST(median_change_lead_time AS NUMERIC) / 60\r\n                            AS DECIMAL\r\n                        ),\r\n                        1\r\n                    ) || ' hours (low)'\r\n\r\n                ELSE\r\n                    'N/A. Please check if you have collected pull_requests.'\r\n\r\n            END\r\n\r\n        ELSE\r\n            'Invalid dora report'\r\n\r\n    END AS median_change_lead_time\r\n\r\nFROM _median_change_lead_time;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Median Lead Time for Changes In Hours",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "The percentage of changes that were made to a code that then resulted in incidents, rollbacks, or any type of production failure.\n\n# 2023 Benchmarks\n- **Elite**: (0, 5%]\n- **High**: (5%, 10%]\n- **Medium**: (10%, 15%]\n- **Low**: (15%, 100%]\n# 2021 Benchmarks\n- **Elite**: (0, 15%]\n- **High**: (16%, 20%]\n- **Medium**: (21%, 30%]\n- **Low**: (30%, 100%]\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 13
+      },
+      "id": 14,
+      "links": [
+        {
+          "title": "link",
+          "url": "/d/Change-failure-rate/dora-drill-down-change-failure-rate?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^change_failure_rate$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Metric 3: change failure rate */ WITH _deployments AS (/* When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date. */ SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _failure_caused_by_deployments AS (/* calculate the number of incidents caused by each deployment */ SELECT d.deployment_id, d.deployment_finished_date, COUNT(DISTINCT CASE WHEN NOT i.id IS NULL THEN d.deployment_id ELSE NULL END) AS has_incident FROM _deployments AS d LEFT JOIN project_incident_deployment_relationships AS pim ON d.deployment_id = pim.deployment_id LEFT JOIN incidents AS i ON pim.id = i.id GROUP BY 1, 2), _change_failure_rate AS (SELECT CASE WHEN COUNT(deployment_id) IS NULL THEN NULL ELSE CAST(SUM(has_incident) AS NUMERIC) / NULLIF(COUNT(deployment_id), 0) END AS change_failure_rate FROM _failure_caused_by_deployments), _is_collected_data AS (SELECT CASE WHEN COUNT(i.id) = 0 AND COUNT(cdc.id) = 0 THEN 'No All' WHEN COUNT(i.id) = 0 THEN 'No Incidents' WHEN COUNT(cdc.id) = 0 THEN 'No Deployments' END AS is_collected FROM (SELECT 1) AS dummy LEFT JOIN incidents AS i ON 1 = 1 LEFT JOIN cicd_deployment_commits AS cdc ON 1 = 1) SELECT CASE WHEN ('$dora_report') = '2023' THEN CASE WHEN is_collected = 'No All' THEN 'N/A. Please check if you have collected deployments/incidents.' WHEN is_collected = 'No Incidents' THEN 'N/A. Please check if you have collected incidents.' WHEN is_collected = 'No Deployments' THEN 'N/A. Please check if you have collected deployments.' WHEN change_failure_rate <= 0.05 THEN ROUND(change_failure_rate * 100, 1) || '%(elite)' WHEN change_failure_rate <= 0.10 THEN ROUND(change_failure_rate * 100, 1) || '%(high)' WHEN change_failure_rate <= 0.15 THEN ROUND(change_failure_rate * 100, 1) || '%(medium)' WHEN change_failure_rate > 0.15 THEN ROUND(change_failure_rate * 100, 1) || '%(low)' ELSE 'N/A. Please check if you have collected deployments/incidents.' END WHEN ('$dora_report') = '2021' THEN CASE WHEN is_collected = 'No All' THEN 'N/A. Please check if you have collected deployments/incidents.' WHEN is_collected = 'No Incidents' THEN 'N/A. Please check if you have collected incidents.' WHEN is_collected = 'No Deployments' THEN 'N/A. Please check if you have collected deployments.' WHEN change_failure_rate <= 0.15 THEN ROUND(change_failure_rate * 100, 1) || '%(elite)' WHEN change_failure_rate <= 0.20 THEN ROUND(change_failure_rate * 100, 1) || '%(high)' WHEN change_failure_rate <= 0.30 THEN ROUND(change_failure_rate * 100, 1) || '%(medium)' WHEN change_failure_rate > 0.30 THEN ROUND(change_failure_rate * 100, 1) || '%(low)' ELSE 'N/A. Please check if you have collected deployments/incidents.' END ELSE 'No data' END AS change_failure_rate FROM _change_failure_rate, \"_is_collected_data\"",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Change Failure Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "# MTTR benchmarks:\ndevlake.apache.org/docs/Metrics/MTTR#how-is-it-calculated\n# FDRT benchmarks:\ndevlake.apache.org/docs/Metrics/FailedDeploymentRecoveryTime#how-is-it-calculated\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 13
+      },
+      "id": 17,
+      "links": [
+        {
+          "title": "Failed Deployment Recovery Time",
+          "url": "/d/Failed-deployment-recovery-time/dora-details-failed-deployment-recovery-time?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        },
+        {
+          "title": "Median Time to Restore Service",
+          "url": "/d/Time-to-restore-service/dora-details-median-time-to-restore-service?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(CAST(fd.deployment_finished_date AS TIMESTAMP), 'YY/MM') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _recovery_time_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY (EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60) NULLS FIRST) AS ranks FROM _incidents_for_deployments), _median_recovery_time AS (SELECT MAX((EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60)) AS median_recovery_time FROM _recovery_time_ranks WHERE ranks <= 0.5), _is_collected_data AS (SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM _deployments) AND NOT EXISTS(SELECT 1 FROM incidents) THEN 'No deployments and incidents' WHEN NOT EXISTS(SELECT 1 FROM _deployments) THEN 'No Deployments' WHEN NOT EXISTS(SELECT 1 FROM incidents) THEN 'No Incidents' ELSE 'No incidents are mapped to deployments' END AS is_collected FROM _deployments AS d, _incidents_for_deployments AS i), _metric_recovery_time_2023_report AS (SELECT CASE WHEN ('$dora_report') = '2023' THEN CASE WHEN is_collected = 'No deployments and incidents' THEN 'N/A. Please check if you have collected deployments and incidents.' WHEN is_collected = 'No Deployments' THEN 'N/A. Please check if you have collected deployments.' WHEN is_collected = 'No Incidents' THEN 'N/A. Please check if you have collected incidents.' WHEN median_recovery_time < 60 THEN ROUND(CAST(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(elite)' WHEN median_recovery_time < 24 * 60 THEN ROUND(CAST(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(high)' WHEN median_recovery_time < 7 * 24 * 60 THEN ROUND(CAST(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(medium)' WHEN median_recovery_time >= 7 * 24 * 60 THEN ROUND(CAST(CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(low)' ELSE 'No data' END END AS median_recovery_time FROM _median_recovery_time, _is_collected_data), _incidents /*  ***** 2021 report ***** -- */ /* Metric 4: Median time to restore service */ AS (/* get the incidents created within the selected time period in the top-right corner */ SELECT DISTINCT i.id, CAST(lead_time_minutes AS BIGINT) AS lead_time_minutes FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND pm.\"table\" = i.\"table\" WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(i.resolution_date)), _median_mttr_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY lead_time_minutes NULLS FIRST) AS ranks FROM _incidents), _median_mttr AS (SELECT MAX(lead_time_minutes) AS median_time_to_resolve FROM _median_mttr_ranks WHERE ranks <= 0.5), _metric_mttr_2021_report AS (SELECT CASE WHEN ('$dora_report') = '2021' THEN CASE WHEN median_time_to_resolve < 60 THEN ROUND(CAST(CAST(median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(elite)' WHEN median_time_to_resolve < 24 * 60 THEN ROUND(CAST(CAST(median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(high)' WHEN median_time_to_resolve < 7 * 24 * 60 THEN ROUND(CAST(CAST(median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(medium)' WHEN median_time_to_resolve >= 7 * 24 * 60 THEN (ROUND(CAST(CAST(median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) AS DECIMAL), 1) || '(low)')::TEXT ELSE 'N/A. Please check if you have collected incidents.' END END AS median_time_to_resolve FROM _median_mttr) SELECT median_recovery_time AS median_time_in_hour FROM _metric_recovery_time_2023_report WHERE ('$dora_report') = '2023' UNION SELECT median_time_to_resolve AS median_time_to_resolve FROM _metric_mttr_2021_report WHERE ('$dora_report') = '2021'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "${title_value} In Hours",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 2,
+      "links": [
+        {
+          "title": "link",
+          "url": "/d/Deployment-frequency/dora-drill-down-deployment-frequency?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/* Metric 1: Number of deployments per month */ WITH _deployments AS (/* When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date. */ SELECT TO_CHAR(CAST(deployment_finished_date AS TIMESTAMP), 'YY/MM') AS month, COUNT(cicd_deployment_id) AS deployment_count FROM (SELECT cdc.cicd_deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()) AS _production_deployments GROUP BY 1) SELECT cm.month, CASE WHEN d.deployment_count IS NULL THEN 0 ELSE d.deployment_count END AS \"Deployment Count\" FROM calendar_months AS cm LEFT JOIN _deployments AS d ON cm.month = d.month WHERE month_timestamp BETWEEN CAST(TO_CHAR(CAST($__timeFrom() AS TIMESTAMP), 'YYYY-MM-01') AS DATE) AND CAST(TO_CHAR(CAST($__timeTo() AS TIMESTAMP), 'YYYY-MM-01') AS DATE)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Monthly deployments",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hours",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 6,
+      "links": [
+        {
+          "title": "link",
+          "url": "/d/Lead-time-for-changes/dora-drill-down-lead-time-for-changes?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/* Metric 2: Median Change Lead Time per Month */\r\n/* PostgreSQL + Grafana + Webhook-friendly */\r\n\r\nWITH _pr_stats AS (\r\n\r\n    /* Get PR cycle time grouped by merged month */\r\n    SELECT DISTINCT\r\n        pr.id,\r\n\r\n        TO_CHAR(\r\n            DATE_TRUNC('month', pr.merged_date),\r\n            'YY/MM'\r\n        ) AS month,\r\n\r\n        ppm.pr_cycle_time\r\n\r\n    FROM pull_requests pr\r\n\r\n    INNER JOIN project_pr_metrics ppm\r\n        ON ppm.id = pr.id\r\n\r\n    INNER JOIN project_mapping pm\r\n        ON pr.base_repo_id = pm.row_id\r\n        AND pm.\"table\" = 'repos'\r\n\r\n    /* Optional deployment linkage */\r\n    LEFT JOIN cicd_deployment_commits cdc\r\n        ON ppm.deployment_commit_id = cdc.id\r\n\r\n    WHERE\r\n        pr.merged_date IS NOT NULL\r\n        AND ppm.pr_cycle_time IS NOT NULL\r\n\r\n        /* Better compatibility with webhook deployments */\r\n        AND $__timeFilter(pr.merged_date)\r\n\r\n        AND (\r\n            '${project:csv}' = ''\r\n            OR pm.project_name::text = ANY(\r\n                ARRAY[${project:singlequote}]::text[]\r\n            )\r\n        )\r\n\r\n),\r\n\r\n_find_median_clt_each_month_ranks AS (\r\n\r\n    SELECT\r\n        *,\r\n        PERCENT_RANK() OVER (\r\n            PARTITION BY month\r\n            ORDER BY pr_cycle_time NULLS FIRST\r\n        ) AS ranks\r\n    FROM _pr_stats\r\n\r\n),\r\n\r\n_clt AS (\r\n\r\n    SELECT\r\n        month,\r\n        MAX(pr_cycle_time) AS median_change_lead_time\r\n    FROM _find_median_clt_each_month_ranks\r\n    WHERE ranks <= 0.5\r\n    GROUP BY month\r\n\r\n)\r\n\r\nSELECT\r\n\r\n    cm.month,\r\n\r\n    CASE\r\n        WHEN _clt.median_change_lead_time IS NULL THEN\r\n            0\r\n\r\n        ELSE\r\n            ROUND(\r\n                CAST(\r\n                    _clt.median_change_lead_time AS NUMERIC\r\n                ) / 60,\r\n                1\r\n            )\r\n    END AS \"Median Change Lead Time In Hours\"\r\n\r\nFROM calendar_months cm\r\n\r\nLEFT JOIN _clt\r\n    ON cm.month = _clt.month\r\n\r\nWHERE\r\n    cm.month_timestamp BETWEEN\r\n        DATE_TRUNC(\r\n            'month',\r\n            CAST($__timeFrom() AS TIMESTAMP)\r\n        )\r\n    AND\r\n        DATE_TRUNC(\r\n            'month',\r\n            CAST($__timeTo() AS TIMESTAMP)\r\n        )\r\n\r\nORDER BY cm.month_timestamp;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Median Lead Time for Changes",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "change_failure_rate"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 5,
+      "links": [
+        {
+          "title": "link",
+          "url": "/d/Change-failure-rate/dora-drill-down-change-failure-rate?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/* Metric 3: change failure rate per month */ WITH _deployments AS (/* When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date. */ SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _failure_caused_by_deployments AS (/* calculate the number of incidents caused by each deployment */ SELECT d.deployment_id, d.deployment_finished_date, COUNT(DISTINCT CASE WHEN NOT i.id IS NULL THEN d.deployment_id ELSE NULL END) AS has_incident FROM _deployments AS d LEFT JOIN project_incident_deployment_relationships AS pim ON d.deployment_id = pim.deployment_id LEFT JOIN incidents AS i ON pim.id = i.id GROUP BY 1, 2), _change_failure_rate_for_each_month AS (SELECT TO_CHAR(CAST(deployment_finished_date AS TIMESTAMP), 'YY/MM') AS month, CASE WHEN COUNT(deployment_id) IS NULL THEN NULL ELSE CAST(SUM(has_incident) AS NUMERIC) / NULLIF(COUNT(deployment_id), 0) END AS change_failure_rate FROM _failure_caused_by_deployments GROUP BY 1) SELECT cm.month, cfr.change_failure_rate AS \"Change Failure Rate\" FROM calendar_months AS cm LEFT JOIN _change_failure_rate_for_each_month AS cfr ON cm.month = cfr.month WHERE month_timestamp BETWEEN CAST(TO_CHAR(CAST($__timeFrom() AS TIMESTAMP), 'YYYY-MM-01') AS DATE) AND CAST(TO_CHAR(CAST($__timeTo() AS TIMESTAMP), 'YYYY-MM-01') AS DATE)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Change Failure Rate",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Hours",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "median_time_to_resolve_in_hour"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 9,
+      "links": [
+        {
+          "title": "Failed Deployment Recovery Time",
+          "url": "/d/Failed-deployment-recovery-time/dora-details-failed-deployment-recovery-time?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        },
+        {
+          "title": "Median Time To Restore Service",
+          "url": "/d/Time-to-restore-service/dora-details-median-time-to-restore-service?orgId=1&${project:queryparam}&from=${__from}&to=${__to}"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(CAST(fd.deployment_finished_date AS TIMESTAMP), 'YY/MM') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _recovery_time_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY deployment_finished_month ORDER BY (EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60) NULLS FIRST) AS ranks FROM _incidents_for_deployments), _median_recovery_time AS (SELECT deployment_finished_month, MAX((EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60)) AS median_recovery_time FROM _recovery_time_ranks WHERE ranks <= 0.5 GROUP BY deployment_finished_month), _metric_recovery_time_2023_report AS (SELECT cm.month, CASE WHEN m.median_recovery_time IS NULL THEN 0 ELSE CAST(m.median_recovery_time AS NUMERIC) / NULLIF(60, 0) END AS median_recovery_time_in_hour FROM calendar_months AS cm LEFT JOIN _median_recovery_time AS m ON cm.month = m.deployment_finished_month WHERE month_timestamp BETWEEN CAST(TO_CHAR(CAST($__timeFrom() AS TIMESTAMP), 'YYYY-MM-01') AS DATE) AND CAST(TO_CHAR(CAST($__timeTo() AS TIMESTAMP), 'YYYY-MM-01') AS DATE)), _incidents /*  ***** 2021 report ***** -- */ /* Metric 4: median time to restore service - MTTR */ AS (/* get the number of incidents created each month */ SELECT DISTINCT i.id, TO_CHAR(CAST(i.resolution_date AS TIMESTAMP), 'YY/MM') AS month, CAST(lead_time_minutes AS BIGINT) AS lead_time_minutes FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND pm.\"table\" = i.\"table\" WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT i.lead_time_minutes IS NULL), _find_median_mttr_each_month_ranks AS (SELECT *, PERCENT_RANK() OVER (PARTITION BY month ORDER BY lead_time_minutes NULLS FIRST) AS ranks FROM _incidents), _mttr AS (SELECT month, MAX(lead_time_minutes) AS median_time_to_resolve FROM _find_median_mttr_each_month_ranks WHERE ranks <= 0.5 GROUP BY month), _metric_mttr_2021_report AS (SELECT cm.month, CASE WHEN m.median_time_to_resolve IS NULL THEN 0 ELSE CAST(m.median_time_to_resolve AS NUMERIC) / NULLIF(60, 0) END AS median_time_to_resolve_in_hour FROM calendar_months AS cm LEFT JOIN _mttr AS m ON cm.month = m.month WHERE month_timestamp BETWEEN CAST(TO_CHAR(CAST($__timeFrom() AS TIMESTAMP), 'YYYY-MM-01') AS DATE) AND CAST(TO_CHAR(CAST($__timeTo() AS TIMESTAMP), 'YYYY-MM-01') AS DATE)) SELECT cm.month, CASE WHEN '${dora_report}' = '2023' THEN mrt.median_recovery_time_in_hour WHEN '${dora_report}' = '2021' THEN mm.median_time_to_resolve_in_hour END AS \"${title_value} In Hours\" FROM calendar_months AS cm LEFT JOIN _metric_recovery_time_2023_report AS mrt ON cm.month = mrt.month LEFT JOIN _metric_mttr_2021_report AS mm ON cm.month = mm.month WHERE month_timestamp BETWEEN CAST(TO_CHAR(CAST($__timeFrom() AS TIMESTAMP), 'YYYY-MM-01') AS DATE) AND CAST(TO_CHAR(CAST($__timeTo() AS TIMESTAMP), 'YYYY-MM-01') AS DATE)",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "${title_value}",
+      "type": "barchart"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [
+    "Engineering Leads Dashboard",
+    "Highlights",
+    "DORA"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "2023",
+          "value": "2023"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT dora_report FROM dora_benchmarks",
+        "includeAll": false,
+        "label": "DORA Report",
+        "name": "dora_report",
+        "options": [],
+        "query": "SELECT dora_report FROM dora_benchmarks",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "Failed Deployment Recovery Time",
+          "value": "Failed Deployment Recovery Time"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT CASE WHEN dora_report = '2023' THEN 'Failed Deployment Recovery Time' WHEN dora_report = '2021' THEN 'Median Time to Restore Service' ELSE NULL END AS title_value FROM dora_benchmarks WHERE dora_report = '${dora_report:raw}'",
+        "hide": 2,
+        "includeAll": false,
+        "label": "TitleValue",
+        "name": "title_value",
+        "options": [],
+        "query": "SELECT CASE WHEN dora_report = '2023' THEN 'Failed Deployment Recovery Time' WHEN dora_report = '2021' THEN 'Median Time to Restore Service' ELSE NULL END AS title_value FROM dora_benchmarks WHERE dora_report = '${dora_report:raw}'",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DORA",
+  "uid": "qNo8_0M4z-pgr6",
+  "version": 2
+}

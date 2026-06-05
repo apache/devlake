@@ -1,0 +1,967 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Go Back",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/qNo8_0M4z/dora?orgId=1"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 63,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- This dashboard shows the details about [Lead Time for Changes](https://devlake.apache.org/docs/Metrics/LeadTimeForChanges) in DORA.\n- It displays the statistics for pull requests **deployed** within the selected time range.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 2
+      },
+      "id": 75,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Cycle Time",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCycleTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_cycle_time AS NUMERIC) / NULLIF(60, 0), 0) AS cycle_time /* convert null to 0 if a PR has no cycle_time to make sure cycle_time equals the sum of the four metrics below */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY 1, 2, 3) SELECT AVG(cycle_time) AS \"PR Cycle Time(h)\" FROM _prs",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1. Average PR Cycle Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 8,
+        "y": 2
+      },
+      "id": 71,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Coding Time",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCodingTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_coding_time AS NUMERIC) / NULLIF(60, 0), 0) AS coding_time /* convert null to 0 if a PR has no coding_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY 1, 2, 3) SELECT AVG(coding_time) AS \"Coding Time(h)\" FROM _prs",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1.1 Average PR Coding Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Opened"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Merged"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 12,
+        "y": 2
+      },
+      "id": 72,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Pickup Time",
+          "url": "https://devlake.apache.org/docs/Metrics/PRPickupTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_pickup_time AS NUMERIC) / NULLIF(60, 0), 0) AS pickup_time /* convert null to 0 if a PR has no pickup_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY 1, 2, 3) SELECT AVG(pickup_time) AS \"Pickup Time(h)\" FROM _prs",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1.2 Average PR Pickup Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Opened"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Merged"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 16,
+        "y": 2
+      },
+      "id": 73,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Review Time",
+          "url": "https://devlake.apache.org/docs/Metrics/PRReviewTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_review_time AS NUMERIC) / NULLIF(60, 0), 0) AS review_time /* convert null to 0 if a PR has no review_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY 1, 2, 3) SELECT AVG(review_time) AS \"Review Time(h)\" FROM _prs",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1.3 Average PR Review Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Opened"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR: Merged"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 2
+      },
+      "id": 74,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Deploy Time",
+          "url": "https://devlake.apache.org/docs/Metrics/PRDeployTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _prs AS (SELECT pr.id, pr.created_date AS pr_issued_date, COALESCE(CAST(prm.pr_deploy_time AS NUMERIC) / NULLIF(60, 0), 0) AS deploy_time /* convert null to 0 if a PR has no deploy_time to make sure cycle_time equals the sum of the four sub-metrics */ FROM pull_requests AS pr LEFT JOIN project_pr_metrics AS prm ON pr.id = prm.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(prm.pr_deployed_date) AND /* and pr.created_date >= DATE_ADD(DATE_ADD($__timeFrom(), INTERVAL -EXTRACT(DAY FROM $__timeFrom())+1 DAY), INTERVAL +1 MONTH) */ ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY 1, 2, 3) SELECT AVG(deploy_time) AS \"PR Deploy Time(h)\" FROM _prs",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1.4 Average PR Deploy Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Lead time for changes = median(PR deployed date - PR's first commit's authored date)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 24
+              },
+              {
+                "color": "orange",
+                "value": 168
+              },
+              {
+                "color": "red",
+                "value": 720
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "change_lead_time"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR url"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields[\"metric_hidden\"]}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric_hidden"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 674
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 70,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _pr_stats AS (/* get the cycle time of PRs deployed by the deployments finished each month */ SELECT DISTINCT pr.id, pr.title, pr.url, pr.created_date, ppm.pr_coding_time, ppm.pr_pickup_time, ppm.pr_review_time, ppm.pr_deploy_time, ppm.first_commit_sha, prc.commit_authored_date, cdc.cicd_deployment_id, cdc.name, cdc.finished_date, ppm.pr_cycle_time FROM pull_requests AS pr JOIN project_pr_metrics AS ppm ON ppm.id = pr.id JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.\"table\" = 'repos' JOIN cicd_deployment_commits AS cdc ON ppm.deployment_commit_id = cdc.id JOIN pull_request_commits AS prc ON prc.commit_sha = ppm.first_commit_sha WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND NOT ppm.pr_cycle_time IS NULL AND $__timeFilter(cdc.finished_date)) SELECT title AS \"PR title\" /* id as \"PR id\", */, url AS \"PR url\", url AS metric_hidden, first_commit_sha AS \"First commit sha\" /* created_date as \"PR created_date\", */, commit_authored_date AS \"First commit authored date\", cicd_deployment_id AS \"Deployment id\", finished_date AS \"Deployment finished_date\" /* name as \"Deployment name\", */, CAST(pr_coding_time AS NUMERIC) / NULLIF(60, 0) AS \"pr_coding_time\", CAST(pr_pickup_time AS NUMERIC) / NULLIF(60, 0) AS \"pr_pickup_time\", CAST(pr_review_time AS NUMERIC) / NULLIF(60, 0) AS \"pr_review_time\", CAST(pr_deploy_time AS NUMERIC) / NULLIF(60, 0) AS \"pr_deploy_time\", CAST(pr_cycle_time AS NUMERIC) / NULLIF(60, 0) AS change_lead_time FROM _pr_stats",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ae_projects",
+          "timeColumn": "ae_create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2. PR Details",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "DORA"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "2023",
+          "value": "2023"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT dora_report FROM dora_benchmarks",
+        "hide": 0,
+        "includeAll": false,
+        "label": "DORA Report",
+        "multi": false,
+        "name": "dora_report",
+        "options": [],
+        "query": "SELECT dora_report FROM dora_benchmarks",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Failed Deployment Recovery Time",
+          "value": "Failed Deployment Recovery Time"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT CASE WHEN dora_report = '2023' THEN 'Failed Deployment Recovery Time' WHEN dora_report = '2021' THEN 'Median Time to Restore Service' ELSE NULL END AS title_value FROM dora_benchmarks WHERE dora_report = '${dora_report:raw}'",
+        "hide": 2,
+        "includeAll": false,
+        "label": "TitleValue",
+        "multi": false,
+        "name": "title_value",
+        "options": [],
+        "query": "SELECT CASE WHEN dora_report = '2023' THEN 'Failed Deployment Recovery Time' WHEN dora_report = '2021' THEN 'Median Time to Restore Service' ELSE NULL END AS title_value FROM dora_benchmarks WHERE dora_report = '${dora_report:raw}'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DORA Details - Lead Time for Changes",
+  "uid": "Lead-time-for-changes-pg",
+  "version": 7,
+  "weekStart": ""
+}
