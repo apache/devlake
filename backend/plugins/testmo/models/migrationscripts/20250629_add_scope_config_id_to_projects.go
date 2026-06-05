@@ -21,13 +21,21 @@ import (
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
+	"github.com/apache/incubator-devlake/helpers/migrationhelper"
 )
 
 type addScopeConfigIdToProjects struct{}
 
+type TestmoProject20250629 struct {
+	ScopeConfigId uint64 `gorm:"type:BIGINT NOT NULL DEFAULT 0"`
+}
+
+func (TestmoProject20250629) TableName() string {
+	return "_tool_testmo_projects"
+}
+
 func (*addScopeConfigIdToProjects) Up(basicRes context.BasicRes) errors.Error {
-	db := basicRes.GetDal()
-	return db.Exec("ALTER TABLE `_tool_testmo_projects` ADD COLUMN `scope_config_id` bigint unsigned NOT NULL DEFAULT 0")
+	return migrationhelper.AutoMigrateTables(basicRes, &TestmoProject20250629{})
 }
 
 func (*addScopeConfigIdToProjects) Version() uint64 {

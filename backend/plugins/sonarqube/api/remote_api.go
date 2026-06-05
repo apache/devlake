@@ -20,6 +20,7 @@ package api
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -31,6 +32,16 @@ import (
 type SonarqubeRemotePagination struct {
 	Page     int `json:"p"`
 	PageSize int `json:"ps"`
+}
+
+// sonarqubeSearchProjectsQueryFilter builds the "filter" query value for
+// api/components/search_projects. SonarQube expects text search via the filter
+// language (e.g. filter=query = "term"), not a bare "q" parameter; see
+// SearchProjectsAction in SonarQube.
+func sonarqubeSearchProjectsQueryFilter(term string) string {
+	term = strings.TrimSpace(term)
+	term = strings.ReplaceAll(term, `"`, "")
+	return fmt.Sprintf(`query = "%s"`, term)
 }
 
 func querySonarqubeProjects(
@@ -49,11 +60,15 @@ func querySonarqubeProjects(
 		page.Page = 1
 	}
 	// Use components/search_projects so non-admin (Browse) tokens can list projects.
-	res, err := apiClient.Get("components/search_projects", url.Values{
+	q := url.Values{
 		"p":  {fmt.Sprintf("%v", page.Page)},
 		"ps": {fmt.Sprintf("%v", page.PageSize)},
-		"q":  {keyword},
-	}, nil)
+	}
+	keyword = strings.TrimSpace(keyword)
+	if keyword != "" {
+		q.Set("filter", sonarqubeSearchProjectsQueryFilter(keyword))
+	}
+	res, err := apiClient.Get("components/search_projects", q, nil)
 	if err != nil {
 		return
 	}

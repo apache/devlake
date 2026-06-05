@@ -19,7 +19,6 @@ package tasks
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
@@ -57,8 +56,8 @@ type BitbucketApiPullRequest struct {
 	} `json:"links"`
 	ClosedBy           *BitbucketAccountResponse `json:"closed_by"`
 	Author             *BitbucketAccountResponse `json:"author"`
-	BitbucketCreatedAt time.Time                 `json:"created_on"`
-	BitbucketUpdatedAt time.Time                 `json:"updated_on"`
+	BitbucketCreatedAt *common.Iso8601Time       `json:"created_on"`
+	BitbucketUpdatedAt *common.Iso8601Time       `json:"updated_on"`
 	BaseRef            *struct {
 		Branch struct {
 			Name string `json:"name"`
@@ -174,8 +173,8 @@ func convertBitbucketPullRequest(pull *BitbucketApiPullRequest, connId uint64, r
 		Url:                pull.Links.Html.Href,
 		Type:               pull.Type,
 		CommentCount:       pull.CommentCount,
-		BitbucketCreatedAt: pull.BitbucketCreatedAt,
-		BitbucketUpdatedAt: pull.BitbucketUpdatedAt,
+		BitbucketCreatedAt: pull.BitbucketCreatedAt.ToTime(),
+		BitbucketUpdatedAt: pull.BitbucketUpdatedAt.ToTime(),
 	}
 	if pull.BaseRef != nil {
 		if pull.BaseRef.Repo != nil {

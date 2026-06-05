@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Check License Header
         uses: apache/skywalking-eyes@main

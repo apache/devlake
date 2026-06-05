@@ -49,11 +49,11 @@ export const OnboardCard = ({ style }: Props) => {
 
   const tasksRes = useAutoRefresh(
     async () => {
-      if ((data && data.done) || !record) {
+      if ((data && data.done) || !record || !record.pipelineId) {
         return;
       }
 
-      return await API.pipeline.subTasks(record?.pipelineId as string);
+      return await API.pipeline.subTasks(record.pipelineId as string);
     },
     [record],
     {

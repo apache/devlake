@@ -18,30 +18,15 @@ limitations under the License.
 package services
 
 import (
-	"regexp"
-	"strings"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/server/services/pushapiaccess"
 )
 
 // InsertRow FIXME ...
 func InsertRow(table string, rows []map[string]interface{}) (int64, errors.Error) {
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(table) {
-		return 0, errors.BadInput.New("table name invalid")
-	}
-
-	if allowedTables := cfg.GetString("PUSH_API_ALLOWED_TABLES"); allowedTables != "" {
-		allow := false
-		for _, t := range strings.Split(allowedTables, ",") {
-			if strings.TrimSpace(t) == table {
-				allow = true
-				break
-			}
-		}
-		if !allow {
-			return 0, errors.Forbidden.New("table name is not in the allowed list")
-		}
+	if err := pushapiaccess.ValidateTable(table, cfg.GetString("PUSH_API_ALLOWED_TABLES")); err != nil {
+		return 0, err
 	}
 
 	err := db.Create(rows, dal.From(table))

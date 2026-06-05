@@ -17,4 +17,4 @@
 #
 
 cd "$(dirname "$0")"
-poetry install
+sh ../../uv.sh sync .

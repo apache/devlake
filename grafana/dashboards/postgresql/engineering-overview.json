@@ -1,0 +1,2386 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 40,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 13,
+        "x": 0,
+        "y": 0
+      },
+      "id": 32,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- Use Cases: This dashboard is to overview the Git and project management metrics.\n- Data Sources Required:\n   - One of the Git tools, e.g. [GitHub](https://devlake.apache.org/docs/Configuration/GitHub), [GitLab](https://devlake.apache.org/docs/Configuration/GitLab), [Bitbucket](https://devlake.apache.org/docs/Configuration/BitBucket) or [Azure DevOps](https://devlake.apache.org/docs/Configuration/AzureDevOps)\n   - One of the issue tracking tools, e.g. [Jira](https://devlake.apache.org/docs/Configuration/Jira)",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) AND i.type = 'BUG' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Critical Defects Identified [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 3
+      },
+      "id": 22,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.46,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, COUNT(DISTINCT i.id) AS defect_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) AND i.type = 'BUG' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, defect_count FROM _issues ORDER BY time ASC NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Critical Defects Identified over Month",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 14
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 11
+      },
+      "id": 10,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Lead Time",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS value FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ('${type:csv}' = '' OR i.type::text = ANY(ARRAY[${type:singlequote}]::text[])) AND i.status = 'DONE' AND i.resolution_date BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Mean Issue Lead Time in Days [Issues Resolved in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Lead Time(days)",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 11
+      },
+      "id": 23,
+      "interval": "",
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Lead Time",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.5,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _issues AS (SELECT CAST(i.resolution_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.resolution_date AS DATE)) + 1) AS time, AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) AS issue_lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND i.status = 'DONE' AND $__timeFilter(i.resolution_date) AND i.resolution_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, issue_lead_time AS \"Mean Requirement Lead Time in Days\" FROM _issues ORDER BY time NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Mean Requirement Lead Time in Days [Of Issues Resolved per Month]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "green",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 19
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT author_name) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[]))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Number of Developers [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 19
+      },
+      "id": 24,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.5,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _developers AS (SELECT CAST(c.authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(c.authored_date AS DATE)) + 1) AS time, COUNT(DISTINCT author_name) AS developer_count FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id AND pm.table = 'repos' WHERE $__timeFilter(c.authored_date) AND c.authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, developer_count FROM _developers ORDER BY time ASC NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Number of Developers",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 27
+      },
+      "id": 6,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Delivery Rate",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'), _total_num_issues AS (SELECT NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND CAST(i.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH') SELECT NOW() AS time, 100 - CAST(100 * (SELECT 1.0 * num_issues_with_sprint_updated FROM _num_issues_with_sprint_updated) AS NUMERIC) / NULLIF((SELECT total_num_issues FROM _total_num_issues), 0) AS ratio",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "On-time Delivery [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 60
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 27
+      },
+      "id": 25,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Delivery Rate",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _num_issues_with_sprint_updated AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS num_issues_with_sprint_updated FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id JOIN issue_changelogs AS c ON i.id = c.issue_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND c.field_name = 'Sprint' AND c.original_from_value <> '' AND c.original_to_value <> '' AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time), _total_num_issues AS (SELECT CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(i.created_date AS DATE)) + 1) AS time, NULLIF(COUNT(DISTINCT i.id), 0) AS total_num_issues FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(i.created_date) AND i.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT x.time, 100 - 100 * (CAST(1.0 * x.num_issues_with_sprint_updated AS NUMERIC) / NULLIF(y.total_num_issues, 0)) AS delivery_rate FROM _num_issues_with_sprint_updated AS x JOIN _total_num_issues AS y ON x.time = y.time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "On-time Delivery over Month",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 20
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 35
+      },
+      "id": 4,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Count",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCount"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT pr.id) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE NOT pr.merged_date IS NULL AND CAST(pr.merged_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' AND ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[]))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "PRs merged [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 35
+      },
+      "id": 26,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Count",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCount"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.5,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _merged_prs AS (SELECT CAST(pr.merged_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.merged_date AS DATE)) + 1) AS time, COUNT(DISTINCT pr.id) AS pr_merged_count FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.merged_date) AND pr.merged_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY time) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, pr_merged_count FROM _merged_prs ORDER BY time ASC NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "PRs Merged over Month",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 40
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 43
+      },
+      "id": 16,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Count",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCount"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Unlinked PRs % [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 43
+      },
+      "id": 28,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Count",
+          "url": "https://devlake.apache.org/docs/Metrics/PRCount"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS time, CAST(100 * COUNT(DISTINCT CASE WHEN pr.id IN (SELECT pull_request_id FROM pull_request_issues) THEN pr.id ELSE NULL END) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr.id), 0) AS unlinked_pr_rate FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(created_date) AND created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\"",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Unlinked PRs Ratio over Month",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 51
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND (EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4 AND CAST(authored_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH' GROUP BY \"author_name\", CAST(authored_date AS DATE)) SELECT CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) FROM _commits_groupby_name_and_date",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Coding Days % [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 51
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH _commits_groupby_name_and_date AS (SELECT author_name, CAST(authored_date AS DATE) AS _day, COUNT(DISTINCT c.sha) FROM commits AS c JOIN repo_commits AS rc ON c.sha = rc.commit_sha JOIN project_mapping AS pm ON rc.repo_id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND ((EXTRACT(ISODOW FROM authored_date) - 1) BETWEEN 0 AND 4) AND $__timeFilter(authored_date) AND authored_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY 1, 2) SELECT _day + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(_day AS DATE)) + 1) AS time, CAST(100 * COUNT(*) AS NUMERIC) / NULLIF((COUNT(DISTINCT author_name) * COUNT(DISTINCT _day)), 0) AS working_days_percentatages_per_month FROM _commits_groupby_name_and_date GROUP BY time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Percentage of Coding Days Each Month",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 59
+      },
+      "id": 2,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Time To Merge",
+          "url": "https://devlake.apache.org/docs/Metrics/PRTimeToMerge"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND CAST(pr.created_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_raw_github_api_repositories",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Mean Time to Merge [in $month]",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 59
+      },
+      "id": 30,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "PR Time To Merge",
+          "url": "https://devlake.apache.org/docs/Metrics/PRTimeToMerge"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(pr.created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(pr.created_date AS DATE)) + 1) AS time, AVG(CAST((EXTRACT(EPOCH FROM (pr.merged_date - pr.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS pr_time_to_merge_in_days FROM pull_requests AS pr JOIN project_mapping AS pm ON pr.base_repo_id = pm.row_id AND pm.table = 'repos' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT pr.merged_date IS NULL AND $__timeFilter(pr.created_date) AND pr.created_date >= $__timeFrom()::timestamp + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST($__timeFrom() AS DATE)) + 1) + INTERVAL '1 MONTH' GROUP BY \"time\" ORDER BY time NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_raw_github_api_repositories",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Mean Time to Merge over Month",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "id": 21,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT CASE WHEN i.type = 'BUG' THEN i.id ELSE NULL END) AS \"Bug\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key <> '' THEN i.id ELSE NULL END) AS \"Strategic\", COUNT(DISTINCT CASE WHEN i.type <> 'BUG' AND epic_key = '' THEN i.id ELSE NULL END) AS \"Non-Strategic\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND NOT i.resolution_date IS NULL AND CAST(resolution_date AS DATE) BETWEEN TO_DATE('$month', 'YYYY-MM-DD') AND TO_DATE('$month', 'YYYY-MM-DD') + INTERVAL '1 MONTH'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Work Done % [in $month]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 68,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "id": 20,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.27,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT i.priority AS \"Priority\", AVG(CAST((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60) AS NUMERIC) / NULLIF(1440, 0)) AS \"Average Age\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id JOIN project_mapping AS pm ON b.id = pm.row_id WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND i.status = 'TODO' AND i.type = 'BUG' AND ('${priority:csv}' = '' OR i.priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) GROUP BY i.priority",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_blueprints",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Age of Critical Outstanding Defects by Priority",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 34,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "Engineering Leads Dashboard",
+    "Highlights"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "",
+          "value": ""
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT (TO_CHAR(CAST(CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS TIMESTAMP), 'YYYY-MM') || ':' || TO_CHAR(CAST(CAST(created_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(created_date AS DATE)) + 1) AS TIMESTAMP), 'YYYY-MM-DD')) AS month FROM issues AS i ORDER BY month DESC NULLS LAST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Selected Month",
+        "multi": false,
+        "name": "month",
+        "options": [],
+        "query": "SELECT DISTINCT (TO_CHAR(CAST(month_timestamp AS TIMESTAMP), 'YYYY-MM') || ':' || TO_CHAR(CAST(month_timestamp AS TIMESTAMP), 'YYYY-MM-DD')) AS month FROM calendar_months WHERE month_timestamp <= CURRENT_DATE ORDER BY month DESC NULLS LAST LIMIT 12",
+        "refresh": 1,
+        "regex": "/^(?<text>.*):(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT priority FROM issues",
+        "description": "Customize what prioriti(es) are considered \"critical\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Prioriti(es) of Critical Issues",
+        "multi": true,
+        "name": "priority",
+        "options": [],
+        "query": "SELECT DISTINCT priority FROM issues",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT type FROM issues",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Issue Type",
+        "multi": false,
+        "name": "type",
+        "options": [],
+        "query": "SELECT DISTINCT type FROM issues",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timeRangeUpdatedDuringEditOrView": false,
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Engineering Overview",
+  "uid": "ZF6abXX7z-pg",
+  "version": 15,
+  "weekStart": ""
+}

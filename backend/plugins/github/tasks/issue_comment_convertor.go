@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer"
@@ -53,33 +51,34 @@ func ConvertIssueComments(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubIssueComment{}),
-		dal.Join("left join _tool_github_issues "+
-			"on _tool_github_issues.github_id = _tool_github_issue_comments.issue_id"),
-		dal.Where("repo_id = ? and _tool_github_issues.connection_id = ?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
 	issueIdGen := didgen.NewDomainIdGenerator(&models.GithubIssue{})
 	accountIdGen := didgen.NewDomainIdGenerator(&models.GithubAccount{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubIssueComment{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubIssueComment]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_COMMENTS_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_COMMENTS_TABLE,
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubIssueComment := inputRow.(*models.GithubIssueComment)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubIssueComment{}),
+				dal.Join("left join _tool_github_issues " +
+					"on _tool_github_issues.github_id = _tool_github_issue_comments.issue_id"),
+				dal.Where("repo_id = ? and _tool_github_issues.connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("_tool_github_issue_comments.github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubIssueComment *models.GithubIssueComment) ([]interface{}, errors.Error) {
 			domainIssueComment := &ticket.IssueComment{
 				DomainEntity: domainlayer.DomainEntity{
 					Id: issueIdGen.Generate(data.Options.ConnectionId, githubIssueComment.GithubId),

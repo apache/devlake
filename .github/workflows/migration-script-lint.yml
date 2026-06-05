@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     container: mericodev/lake-builder:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: migration script linting
         run: |
           go version

@@ -26,7 +26,7 @@ jobs:
     name: lint for yamls
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: github/super-linter/slim@v4
         env:
           FILTER_REGEX_INCLUDE: workspace/(docker-compose.yml|deployment/k8s/k8s-deploy.yaml)

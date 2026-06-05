@@ -21,12 +21,19 @@ limitations under the License.
 This is a generic API service that gives our users the ability to inject data directly to their own database using a
 simple, all-purpose endpoint.
 
+The push API is disabled by default. To enable it safely, you must:
+- configure `PUSH_API_ALLOWED_TABLES` with the specific non-internal tables that may be written
+- send a Bearer API key whose `allowedPath` matches the `/push/...` endpoint you are calling
+
 ## The Endpoint
 
 POST to ```localhost:8080/push/:tableName```
 
 Where "tableName" is the name of the table you wish to insert into
 For example, "commits" would be ```/push/commits```
+
+Internal `_devlake_*` tables are never writable through this endpoint, even if
+they are listed in `PUSH_API_ALLOWED_TABLES`.
 
 ## The JSON body
 
@@ -43,6 +50,5 @@ Please Note: You must know the schema you are inserting into (column names, type
     }
 ]
 ```
-
 
 

@@ -1,0 +1,2274 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 49,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 28,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- Use Cases: This dashboard can be used to track bugs with metrics such as [Bug Age](https://devlake.apache.org/docs/Metrics/BugAge).\n- Data Source Required: One of the issue tracking tools, e.g. [GitHub](https://devlake.apache.org/docs/UserManuals/ConfigUI/GitHub#step-3---adding-transformation-rules-optional), [GitLab](https://devlake.apache.org/docs/Configuration/GitLab) or [Jira](https://devlake.apache.org/docs/UserManuals/ConfigUI/Jira#step-3---adding-transformation-rules-optional) (Scope Config required to define which issues are bugs).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 32,
+      "panels": [],
+      "title": "Overall Bug Count",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 46,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.71,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH bugs AS (SELECT CAST(i.created_date AS DATE) + -(EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT i.id) AS bug_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY \"time\" ORDER BY time DESC NULLS LAST), calendar_date AS (SELECT CAST(($__timeTo()::timestamp - INTERVAL '1 day') AS DATE) AS d FROM (SELECT 0 AS \"H\" UNION ALL SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300) AS \"H\" CROSS JOIN (SELECT 0 AS \"T\" UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 30 UNION ALL SELECT 40 UNION ALL SELECT 50 UNION ALL SELECT 60 UNION ALL SELECT 70 UNION ALL SELECT 80 UNION ALL SELECT 90) AS \"T\" CROSS JOIN (SELECT 0 AS \"U\" UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS \"U\" WHERE ($__timeTo()::timestamp - INTERVAL '1 day') >= ($__timeTo()::timestamp - INTERVAL '6 MONTH')), calendar_weeks AS (SELECT DISTINCT CAST(CAST(d AS DATE) + -(EXTRACT(ISODOW FROM CAST(d AS DATE)) - 1) * INTERVAL '1 day' AS DATE) AS start_of_week FROM calendar_date ORDER BY 1 ASC NULLS FIRST) SELECT TO_CHAR(CAST(cw.start_of_week AS TIMESTAMP), 'MM/DD') || ' - ' || TO_CHAR(CAST(cw.start_of_week + INTERVAL '7 DAY' AS TIMESTAMP), 'MM/DD') AS week, CASE WHEN NOT bug_count IS NULL THEN bug_count ELSE 0 END AS \"Weekly New Bugs\" FROM calendar_weeks AS cw LEFT JOIN bugs AS b ON cw.start_of_week = b.time ORDER BY cw.start_of_week ASC NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Weekly New Bugs [Selected Time Range]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 46,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 20,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.71,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH bugs AS (SELECT CAST(i.resolution_date AS DATE) + -(EXTRACT(ISODOW FROM CAST(i.resolution_date AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT i.id) AS bug_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY \"time\" ORDER BY time DESC NULLS LAST), calendar_date AS (SELECT CAST(($__timeTo()::timestamp - INTERVAL '1 day') AS DATE) AS d FROM (SELECT 0 AS \"H\" UNION ALL SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300) AS \"H\" CROSS JOIN (SELECT 0 AS \"T\" UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 30 UNION ALL SELECT 40 UNION ALL SELECT 50 UNION ALL SELECT 60 UNION ALL SELECT 70 UNION ALL SELECT 80 UNION ALL SELECT 90) AS \"T\" CROSS JOIN (SELECT 0 AS \"U\" UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS \"U\" WHERE ($__timeTo()::timestamp - INTERVAL '1 day') >= ($__timeTo()::timestamp - INTERVAL '6 MONTH')), calendar_weeks AS (SELECT DISTINCT CAST(CAST(d AS DATE) + -(EXTRACT(ISODOW FROM CAST(d AS DATE)) - 1) * INTERVAL '1 day' AS DATE) AS start_of_week FROM calendar_date ORDER BY 1 ASC NULLS FIRST) SELECT TO_CHAR(CAST(cw.start_of_week AS TIMESTAMP), 'MM/DD') || ' - ' || TO_CHAR(CAST(cw.start_of_week + INTERVAL '7 DAY' AS TIMESTAMP), 'MM/DD') AS week, CASE WHEN NOT bug_count IS NULL THEN bug_count ELSE 0 END AS \"Weekly Closed Bugs\" FROM calendar_weeks AS cw LEFT JOIN bugs AS b ON cw.start_of_week = b.time ORDER BY cw.start_of_week ASC NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Weekly Closed Bugs [Selected Time Range]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 46,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 21,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.71,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "WITH calendar_date AS (SELECT CAST(($__timeTo()::timestamp - INTERVAL '1 day') AS DATE) AS d FROM (SELECT 0 AS \"H\" UNION ALL SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300) AS \"H\" CROSS JOIN (SELECT 0 AS \"T\" UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 30 UNION ALL SELECT 40 UNION ALL SELECT 50 UNION ALL SELECT 60 UNION ALL SELECT 70 UNION ALL SELECT 80 UNION ALL SELECT 90) AS \"T\" CROSS JOIN (SELECT 0 AS \"U\" UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS \"U\" WHERE ($__timeTo()::timestamp - INTERVAL '1 day') >= ($__timeTo()::timestamp - INTERVAL '6 MONTH')), calendar_weeks AS (SELECT DISTINCT CAST(CAST(d AS DATE) + -(EXTRACT(ISODOW FROM CAST(d AS DATE)) - 1) * INTERVAL '1 day' AS DATE) AS start_of_week FROM calendar_date ORDER BY 1 ASC NULLS FIRST), created_bugs AS (SELECT CAST(i.created_date AS DATE) + -(EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT i.id) AS bug_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND $__timeFilter(i.created_date) AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY \"time\" ORDER BY time DESC NULLS LAST), resolved_bugs AS (SELECT CAST(i.resolution_date AS DATE) + -(EXTRACT(ISODOW FROM CAST(i.resolution_date AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT i.id) AS bug_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND $__timeFilter(i.resolution_date) AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) GROUP BY \"time\" ORDER BY time DESC NULLS LAST), weekly_new_bug AS (SELECT cw.start_of_week AS week, CASE WHEN NOT bug_count IS NULL THEN bug_count ELSE 0 END AS weekly_new_bug FROM calendar_weeks AS cw LEFT JOIN created_bugs AS cb ON cw.start_of_week = cb.time), weekly_closed_bug AS (SELECT cw.start_of_week AS week, CASE WHEN NOT bug_count IS NULL THEN bug_count ELSE 0 END AS weekly_closed_bug FROM calendar_weeks AS cw LEFT JOIN resolved_bugs AS cb ON cw.start_of_week = cb.time), weekly_updates AS (SELECT t1.week, weekly_new_bug, weekly_closed_bug FROM weekly_new_bug AS t1 LEFT JOIN weekly_closed_bug AS t2 ON t1.week = t2.week UNION SELECT t1.week, weekly_new_bug, weekly_closed_bug FROM weekly_new_bug AS t1 RIGHT JOIN weekly_closed_bug AS t2 ON t1.week = t2.week), original_open_bugs AS (SELECT COUNT(DISTINCT i.id) AS original_open_bug_count FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND i.created_date < $__timeFrom() AND (i.status <> 'DONE' OR $__timeFilter(i.resolution_date)) AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))), weekly_updated_without_null AS (SELECT week, COALESCE(weekly_new_bug, 0) AS weekly_new_bug, COALESCE(weekly_closed_bug, 0) AS weekly_closed_bug, original_open_bug_count FROM weekly_updates, original_open_bugs WHERE NOT week IS NULL), weekly_delta AS (SELECT *, (weekly_new_bug - weekly_closed_bug) AS weekly_delta FROM weekly_updated_without_null ORDER BY week ASC NULLS FIRST), final_data AS (SELECT *, TO_CHAR(CAST(week AS TIMESTAMP), 'MM/DD') || ' - ' || TO_CHAR(CAST(week + INTERVAL '7 DAY' AS TIMESTAMP), 'MM/DD') AS _week, SUM(weekly_delta) OVER (ORDER BY week ASC NULLS FIRST) AS weekly_accumulated FROM weekly_delta) SELECT _week, (original_open_bug_count + weekly_accumulated) AS \"Total No. of Outstanding Bugs By the End of Week\" FROM final_data",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Total Outstanding Bug Count by Week [Selected Time Range]",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 33,
+      "panels": [],
+      "title": "Detailed Bug Info",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 34
+      },
+      "id": 6,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.created_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Last Week's New Bug Count",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 34
+      },
+      "id": 26,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT priority, COUNT(DISTINCT i.id) AS \"Issue Number\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.created_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day' GROUP BY 1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Last Week's New Bug Count by Priority",
+      "type": "piechart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issue Number"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 124
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 640
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields.Url}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 4,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT i.issue_key AS \"Issue Number\", i.title AS \"Title\", i.url AS \"Url\", i.creator_name AS \"Creator\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.created_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Last Week's New Bugs",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 42
+      },
+      "id": 8,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.resolution_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Last Week's Fixed Bugs Count",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 14
+              },
+              {
+                "color": "red",
+                "value": 21
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 42
+      },
+      "id": 24,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.resolution_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Lead Time of Last Week's Resolved Bugs in Days",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 21
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issue Number"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 639
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields.Url}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lead Time in Days"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 12,
+        "x": 12,
+        "y": 42
+      },
+      "id": 10,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT i.issue_key AS \"Issue Number\", i.title AS \"Title\", CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0) AS \"Lead Time in Days\", i.url AS \"Url\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.resolution_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Last Week's Fixed Bugs",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "id": 23,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.3,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT '#' || i.issue_key || ' ' || i.title AS issue_key, CAST(lead_time_minutes AS NUMERIC) / NULLIF(1440, 0) AS lead_time FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND status = 'DONE' AND i.status <> 'REJECTED' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND i.resolution_date BETWEEN TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - INTERVAL '1 DAY' * ((EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) + 7) AND TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0)) - (EXTRACT(ISODOW FROM TO_TIMESTAMP(CAST($__to AS NUMERIC) / NULLIF(1000, 0))) - 1) * INTERVAL '1 day' ORDER BY lead_time DESC NULLS LAST LIMIT 10",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Top 10 Issue Lead Time [Last Week's Resolved Bugs in Days]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 58
+      },
+      "id": 16,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT i.id) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND NOT i.status IN ('DONE', 'REJECTED') AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Total Number of Outstanding Bugs",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 6,
+        "y": 58
+      },
+      "id": 25,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0)) FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND NOT i.status IN ('DONE', 'REJECTED') AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Average Age of Outstanding Bugs in Days",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issue Number"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 121
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 641
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields.Url}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Queue Time in Days"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Priority"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 112
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 14,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Count per 1k Lines of Code",
+          "url": "https://devlake.apache.org/docs/Metrics/BugCountPer1kLinesOfCode"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT i.issue_key AS \"Issue Number\", i.title AS \"Title\", priority AS \"Priority\", severity AS \"Severity\", CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS \"Queue Time in Days\", i.url AS \"Url\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND NOT i.status IN ('DONE', 'REJECTED') AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) AND ('${priority:csv}' = '' OR priority::text = ANY(ARRAY[${priority:singlequote}]::text[])) ORDER BY 'Queue Time' DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Outstanding Bugs Sort by Queue Time [All History]",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Queue Time in Days",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 21
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "id": 18,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.3,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT '#' || i.issue_key AS issue_key, CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS \"Queue Time in Days\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND NOT i.status IN ('DONE', 'REJECTED') AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) ORDER BY 2 DESC NULLS LAST LIMIT 100",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Top 100 Bug Queue Time in Days [Outstanding Bugs]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 7
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issue Number"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 121
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 641
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields.Url}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Queue Time in Days"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Priority"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 103
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 112
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "id": 31,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Bug Age",
+          "url": "https://devlake.apache.org/docs/Metrics/BugAge"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "SELECT i.issue_key AS \"Issue Number\", i.title AS \"Title\", priority AS \"Priority\", severity AS \"Severity\", CAST(((EXTRACT(EPOCH FROM (NOW() - i.created_date))/60)) AS NUMERIC) / NULLIF(1440, 0) AS \"Queue Time in Days\", i.url AS \"Url\" FROM issues AS i JOIN board_issues AS bi ON i.id = bi.issue_id JOIN boards AS b ON bi.board_id = b.id WHERE ('${issue_type:csv}' = '' OR i.type::text = ANY(ARRAY[${issue_type:singlequote}]::text[])) AND NOT i.status IN ('DONE', 'REJECTED') AND i.assignee_name = '' AND ('${board_id:csv}' = '' OR b.id::text = ANY(ARRAY[${board_id:singlequote}]::text[])) ORDER BY 'Queue Time' DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "script_version"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_migration_history",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Bugs to be Triaged Sort by Queue Time [All History]",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 76
+      },
+      "id": 30,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/UserManuals/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "Engineering Leads Dashboard",
+    "Highlights"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT name || '-' || id AS text FROM boards",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Board",
+        "multi": false,
+        "name": "board_id",
+        "options": [],
+        "query": "SELECT name || '-' || id AS text FROM boards",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)-(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "BUG",
+          "value": "BUG"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT type FROM issues",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Issue Type",
+        "multi": false,
+        "name": "issue_type",
+        "options": [],
+        "query": "SELECT DISTINCT type FROM issues",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT priority FROM issues",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Priority",
+        "multi": true,
+        "name": "priority",
+        "options": [],
+        "query": "SELECT DISTINCT priority FROM issues",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Weekly Bug Retro",
+  "uid": "-5EKA5w7k-pg",
+  "version": 5,
+  "weekStart": ""
+}

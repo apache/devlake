@@ -77,7 +77,12 @@ func RunTask(
 		}
 		finishedAt := time.Now()
 		spentSeconds := finishedAt.Unix() - beganAt.Unix()
+		isCancelled := errors.Is(err, gocontext.Canceled) || ctx.Err() == gocontext.Canceled
 		if err != nil {
+			taskStatus := models.TASK_FAILED
+			if isCancelled {
+				taskStatus = models.TASK_CANCELLED
+			}
 			lakeErr := errors.AsLakeErrorType(err)
 			subTaskName := "unknown"
 			if lakeErr = lakeErr.As(errors.SubtaskErr); lakeErr != nil {
@@ -87,16 +92,19 @@ func RunTask(
 			} else {
 				lakeErr = errors.Convert(err)
 			}
-			dbe := db.UpdateColumns(task, []dal.DalSet{
-				{ColumnName: "status", Value: models.TASK_FAILED},
+			columns := []dal.DalSet{
+				{ColumnName: "status", Value: taskStatus},
 				{ColumnName: "message", Value: lakeErr.Error()},
 				{ColumnName: "error_name", Value: lakeErr.Messages().Format()},
 				{ColumnName: "finished_at", Value: finishedAt},
 				{ColumnName: "spent_seconds", Value: spentSeconds},
-				{ColumnName: "failed_sub_task", Value: subTaskName},
-			})
+			}
+			if taskStatus == models.TASK_FAILED {
+				columns = append(columns, dal.DalSet{ColumnName: "failed_sub_task", Value: subTaskName})
+			}
+			dbe := db.UpdateColumns(task, columns)
 			if dbe != nil {
-				logger.Error(dbe, "failed to finalize task status into db (task failed)")
+				logger.Error(dbe, "failed to finalize task status into db (task %s)", taskStatus)
 			}
 		} else {
 			dbe := db.UpdateColumns(task, []dal.DalSet{
@@ -116,7 +124,7 @@ func RunTask(
 			dal.Where("id=?", task.PipelineId),
 		))
 		// not return err if the `SkipOnFail` is true and the error is not canceled
-		if dbPipeline.SkipOnFail && !errors.Is(err, gocontext.Canceled) {
+		if dbPipeline.SkipOnFail && !isCancelled {
 			err = nil
 		}
 	}()
@@ -328,7 +336,7 @@ func RunPluginSubTasks(
 			logger.Info("executing subtask %s", subtaskMeta.Name)
 			start := time.Now()
 			err = runSubtask(basicRes, subtaskCtx, task.ID, subtaskNumber, subtaskMeta.EntryPoint)
-			logger.Info("subtask %s finished in %d ms", subtaskMeta.Name, time.Since(start).Milliseconds())
+			logger.Info("subtask %s finished in %d ms, records processed: %d", subtaskMeta.Name, time.Since(start).Milliseconds(), subtaskCtx.GetProgress())
 			if err != nil {
 				err = errors.SubtaskErr.Wrap(err, fmt.Sprintf("subtask %s ended unexpectedly", subtaskMeta.Name), errors.WithData(&subtaskMeta))
 				logger.Error(err, "")

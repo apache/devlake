@@ -93,7 +93,7 @@ func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		Incremental:   true,
 		Concurrency:   1,
-		AfterResponse: ignore404,
+		AfterResponse: ignoreNoContent,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			return parseRawReportResponse(res, logger)
 		},

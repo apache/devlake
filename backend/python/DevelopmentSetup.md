@@ -14,7 +14,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-# For `make e2e-test` to run properly, the following steps must be taken:
+# Python prerequisites for `make e2e-test`
+
+`make e2e-test` also requires a test database and, for some service tests, `libgit2`. See
+[`backend/test/Readme.md`](../test/Readme.md) for the full local E2E test flow.
+
+For the Python plugin tests to run properly, the following steps must be taken:
 
 1. The following packages are required for Ubuntu: `libffi-dev default-libmysqlclient-dev libpq-dev`
 2. `python3.9` is required by the time of this document. 

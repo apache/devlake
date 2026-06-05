@@ -96,6 +96,10 @@ func (c *defaultExecContext) IncProgress(progressType plugin.ProgressType, quant
 	}
 }
 
+func (c *defaultExecContext) GetProgress() int {
+	return int(atomic.LoadInt64(&c.current))
+}
+
 func (c *defaultExecContext) fork(name string) *defaultExecContext {
 	return newDefaultExecContext(
 		c.ctx,

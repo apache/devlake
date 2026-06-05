@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/didgen"
@@ -53,31 +51,35 @@ func ConvertIssueAssignee(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubIssueAssignee{}),
-		dal.Where("repo_id = ? and connection_id=?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
 	issueIdGen := didgen.NewDomainIdGenerator(&models.GithubIssue{})
 	accountIdGen := didgen.NewDomainIdGenerator(&models.GithubAccount{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubIssueAssignee]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_ISSUE_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_ISSUE_TABLE,
 		},
-		InputRowType: reflect.TypeOf(models.GithubIssueAssignee{}),
-		Input:        cursor,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubIssueAssignee := inputRow.(*models.GithubIssueAssignee)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubIssueAssignee{}),
+				dal.Where("_tool_github_issue_assignees.repo_id = ? and _tool_github_issue_assignees.connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses,
+						dal.Join(`left join _tool_github_issues on _tool_github_issues.github_id = _tool_github_issue_assignees.issue_id and _tool_github_issues.connection_id = _tool_github_issue_assignees.connection_id`),
+					)
+					clauses = append(clauses, dal.Where("_tool_github_issues.github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubIssueAssignee *models.GithubIssueAssignee) ([]interface{}, errors.Error) {
 			issueAssignee := &ticket.IssueAssignee{
 				IssueId:      issueIdGen.Generate(data.Options.ConnectionId, githubIssueAssignee.IssueId),
 				AssigneeId:   accountIdGen.Generate(data.Options.ConnectionId, githubIssueAssignee.AssigneeId),

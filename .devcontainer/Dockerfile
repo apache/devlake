@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM mcr.microsoft.com/devcontainers/go:1-1.23-bookworm
+FROM mcr.microsoft.com/devcontainers/go:1-1.26-bookworm
 
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib:/usr/local/lib/pkgconfig
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib

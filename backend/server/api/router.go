@@ -26,6 +26,7 @@ import (
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/impls/logruslog"
 	"github.com/apache/incubator-devlake/server/api/apikeys"
+	"github.com/apache/incubator-devlake/server/api/auth"
 	"github.com/apache/incubator-devlake/server/api/store"
 
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -85,6 +86,13 @@ func RegisterRouter(r *gin.Engine, basicRes context.BasicRes) {
 	r.POST("/api-keys", apikeys.PostApiKey)
 	r.PUT("/api-keys/:apiKeyId", apikeys.PutApiKey)
 	r.DELETE("/api-keys/:apiKeyId", apikeys.DeleteApiKey)
+
+	// auth (OIDC user login)
+	r.GET(auth.PathMethods, auth.GetMethods)
+	r.GET(auth.PathLogin, auth.LoginInit)
+	r.GET(auth.PathCallback, auth.Callback)
+	r.POST(auth.PathLogout, auth.Logout)
+	r.GET(auth.PathUserInfo, auth.UserInfo)
 
 	// mount all api resources for all plugins
 	resources, err := services.GetPluginsApiResources()

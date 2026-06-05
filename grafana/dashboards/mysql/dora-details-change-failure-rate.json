@@ -1,0 +1,758 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 15,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Go Back",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/qNo8_0M4z/dora?orgId=1"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 63,
+      "links": [],
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "This dashboard shows the details about [Change Failure Rate](https://devlake.apache.org/docs/Metrics/CFR) in DORA.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 2
+      },
+      "id": 86,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 3: change failure rate\nwith _deployments as (\n  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date.\n  SELECT\n    cdc.cicd_deployment_id as deployment_id,\n    max(cdc.finished_date) as deployment_finished_date\n  FROM\n    cicd_deployment_commits cdc\n    JOIN project_mapping pm on cdc.cicd_scope_id = pm.row_id\n    and pm.`table` = 'cicd_scopes'\n  WHERE\n    pm.project_name in (${project})\n    and cdc.result = 'SUCCESS'\n    and cdc.environment = 'PRODUCTION'\n  GROUP BY\n    1\n  HAVING\n    $__timeFilter(max(cdc.finished_date))\n),\n_failure_caused_by_deployments as (\n  -- calculate the number of incidents caused by each deployment\n  SELECT\n    d.deployment_id,\n    d.deployment_finished_date,\n    CASE WHEN count(distinct i.id) > 0 THEN 1 ELSE 0 END as has_incident\n  FROM\n    _deployments d\n    left join project_incident_deployment_relationships pim on d.deployment_id = pim.deployment_id\n    left join incidents i on pim.id = i.id\n  GROUP BY\n    1,\n    2\n)\nSELECT\n  sum(has_incident) / count(deployment_id) as \"change_failure_rate\"\nFROM\n  _failure_caused_by_deployments",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "1. Change Failure Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "gradient",
+              "type": "color-background"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "FALSE": {
+                  "color": "red",
+                  "index": 1
+                },
+                "TRUE": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "incident_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 134
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "deployment_finished_date"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 271
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "created_date"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "",
+                    "url": "${__data.fields[\"metric_hidden\"]}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric_hidden"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 17,
+        "w": 20,
+        "x": 4,
+        "y": 2
+      },
+      "id": 85,
+      "links": [
+        {
+          "title": "docs",
+          "url": "https://devlake.apache.org/docs/Metrics/CFR/#how-is-it-calculated"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 3: change failure rate\nwith _deployments as (\n-- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date.\n\tSELECT\n\t\tcdc.cicd_deployment_id as deployment_id,\n\t\tmax(cdc.finished_date) as deployment_finished_date\n\tFROM \n\t\tcicd_deployment_commits cdc\n\t\tJOIN project_mapping pm on cdc.cicd_scope_id = pm.row_id and pm.`table` = 'cicd_scopes'\n\tWHERE\n\t\tpm.project_name in (${project})\n\t\tand cdc.result = 'SUCCESS'\n\t\tand cdc.environment = 'PRODUCTION'\n\tGROUP BY 1\n\tHAVING $__timeFilter(max(cdc.finished_date))\n),\n\n_failure_caused_by_deployments as (\n-- calculate the number of incidents caused by each deployment\n\tSELECT\n\t\td.deployment_id as \"deployment_id\",\n\t\td.deployment_finished_date,\n\t\tpim.id as incident_id,\n\t\ti.title,\n\t\ti.url,\n\t\ti.url as \"metric_hidden\",\n\t\ti.created_date\n\t\t-- i.resolution_date,\n\tFROM\n\t\t_deployments d\n\t\tleft join project_incident_deployment_relationships pim on d.deployment_id = pim.deployment_id\n\t\tleft join issues i on pim.id = i.id\n\tWHERE pim.id is not null\n\tORDER BY 2\n)\n\nselect * \nFROM _failure_caused_by_deployments\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "2. Deployments that have caused incidents(failure)",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*elite.*",
+                "result": {
+                  "color": "purple",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*high.*",
+                "result": {
+                  "color": "green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*medium.*",
+                "result": {
+                  "color": "yellow",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*low.*",
+                "result": {
+                  "color": "red",
+                  "index": 3
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 4,
+        "x": 0,
+        "y": 8
+      },
+      "id": 84,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "-- Metric 3: change failure rate\nwith _deployments as (\n  -- When deploying multiple commits in one pipeline, GitLab and BitBucket may generate more than one deployment. However, DevLake consider these deployments as ONE production deployment and use the last one's finished_date as the finished date.\n  SELECT\n    cdc.cicd_deployment_id as deployment_id,\n    max(cdc.finished_date) as deployment_finished_date\n  FROM\n    cicd_deployment_commits cdc\n    JOIN project_mapping pm on cdc.cicd_scope_id = pm.row_id\n    and pm.`table` = 'cicd_scopes'\n  WHERE\n    pm.project_name in (${project})\n    and cdc.result = 'SUCCESS'\n    and cdc.environment = 'PRODUCTION'\n  GROUP BY\n    1\n  HAVING\n    $__timeFilter(max(cdc.finished_date))\n),\n_failure_caused_by_deployments as (\n  -- calculate the number of incidents caused by each deployment\n  SELECT\n    d.deployment_id,\n    d.deployment_finished_date,\n    CASE WHEN count(distinct i.id) > 0 THEN 1 ELSE 0 END as has_incident\n  FROM\n    _deployments d\n    left join project_incident_deployment_relationships pim on d.deployment_id = pim.deployment_id\n    left join incidents i on pim.id = i.id\n  GROUP BY\n    1,\n    2\n)\nSELECT\n  sum(has_incident) as \"failed deployment count\",\n  count(deployment_id) as \"deployment count\"\nFROM\n  _failure_caused_by_deployments",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "mode": "basic",
+              "type": "color-background"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "DEPLOYMENT": {
+                  "color": "green",
+                  "index": 0
+                },
+                "INCIDENT": {
+                  "color": "red",
+                  "index": 1
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 58,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "See detail logic",
+          "url": "https://devlake.apache.org/docs/Metrics/CFR#how-is-it-calculated"
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "with _deployments as(\n  select\n    distinct d.cicd_deployment_id as deployment_id,\n    d.result,\n    d.environment,\n    d.finished_date,\n    d.cicd_scope_id,\n    pm.project_name\n  from\n    cicd_deployment_commits d\n    join project_mapping pm on d.cicd_scope_id = pm.row_id\n    and pm.`table` = 'cicd_scopes'\n  where\n    -- only result needs to specified, not environment\n    d.result = 'SUCCESS' -- choose your project_name\n    and pm.project_name in ($project)\n    and $__timeFilter(d.finished_date)\n),\n_incidents as(\n  select\n    distinct i.id as issue_id,\n    i.created_date,\n    pm.project_name\n  from\n    incidents i\n    join project_mapping pm on i.scope_id = pm.row_id\n    and i.`table` = pm.`table`\n  where\n    -- choose your project_name\n    pm.project_name in ($project)\n    and $__timeFilter(i.created_date)\n)\nselect\n  finished_date as 'Time (Ascending)',\n  deployment_id as 'Entity ID',\n  'DEPLOYMENT' as 'Entity Type (Deployment/Incident)'\nfrom\n  _deployments\nunion\nselect\n  created_date as 'Time (Ascending)',\n  issue_id as 'Entity ID',\n  'INCIDENT' as 'Entity Type (Deployment/Incident)'\nfrom\n  _incidents\norder by\n  1",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "3. Deployment and incidents timeline",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "DORA"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "select distinct name from projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "select distinct name from projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "2023",
+          "value": "2023"
+        },
+        "datasource": "mysql",
+        "definition": "select dora_report from dora_benchmarks",
+        "hide": 0,
+        "includeAll": false,
+        "label": "DORA Report",
+        "multi": false,
+        "name": "dora_report",
+        "options": [],
+        "query": "select dora_report from dora_benchmarks",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Failed Deployment Recovery Time",
+          "value": "Failed Deployment Recovery Time"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT \n  CASE \n    WHEN dora_report = '2023' THEN \"Failed Deployment Recovery Time\"\n    WHEN dora_report = '2021' THEN \"Median Time to Restore Service\"\n    ELSE NULL \n  END AS title_value\nFROM dora_benchmarks\nWHERE dora_report = '${dora_report:raw}'",
+        "hide": 2,
+        "includeAll": false,
+        "label": "TitleValue",
+        "multi": false,
+        "name": "title_value",
+        "options": [],
+        "query": "SELECT \n  CASE \n    WHEN dora_report = '2023' THEN \"Failed Deployment Recovery Time\"\n    WHEN dora_report = '2021' THEN \"Median Time to Restore Service\"\n    ELSE NULL \n  END AS title_value\nFROM dora_benchmarks\nWHERE dora_report = '${dora_report:raw}'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DORA Details - Change Failure Rate",
+  "uid": "Change-failure-rate",
+  "version": 3,
+  "weekStart": ""
+}

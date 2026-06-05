@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
 	"time"
 
 	"github.com/apache/incubator-devlake/core/dal"
@@ -63,31 +62,33 @@ func ConvertRuns(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	pipeline := &models.GithubRun{}
-	cursor, err := db.Cursor(
-		dal.Select("*"),
-		dal.From(pipeline),
-		dal.Where("repo_id = ? and connection_id=?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
 	repoIdGen := didgen.NewDomainIdGenerator(&models.GithubRepo{})
 	runIdGen := didgen.NewDomainIdGenerator(&models.GithubRun{})
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubRun]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_RUN_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_RUN_TABLE,
 		},
-		InputRowType: reflect.TypeOf(models.GithubRun{}),
-		Input:        cursor,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			line := inputRow.(*models.GithubRun)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.Select("*"),
+				dal.From(&models.GithubRun{}),
+				dal.Where("repo_id = ? and connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(line *models.GithubRun) ([]interface{}, errors.Error) {
 			createdAt := time.Now()
 			if line.GithubCreatedAt != nil {
 				createdAt = *line.GithubCreatedAt

@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/didgen"
@@ -51,31 +49,33 @@ func ConvertIssueLabels(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubIssueLabel{}),
-		dal.Join(`left join _tool_github_issues on _tool_github_issues.github_id = _tool_github_issue_labels.issue_id`),
-		dal.Where("_tool_github_issues.repo_id = ? and _tool_github_issues.connection_id = ?", repoId, data.Options.ConnectionId),
-		dal.Orderby("issue_id ASC"),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
 	issueIdGen := didgen.NewDomainIdGenerator(&models.GithubIssue{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubIssueLabel]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_ISSUE_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_ISSUE_TABLE,
 		},
-		InputRowType: reflect.TypeOf(models.GithubIssueLabel{}),
-		Input:        cursor,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			issueLabel := inputRow.(*models.GithubIssueLabel)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubIssueLabel{}),
+				dal.Join(`left join _tool_github_issues on _tool_github_issues.github_id = _tool_github_issue_labels.issue_id`),
+				dal.Where("_tool_github_issues.repo_id = ? and _tool_github_issues.connection_id = ?", repoId, data.Options.ConnectionId),
+				dal.Orderby("issue_id ASC"),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("_tool_github_issues.github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(issueLabel *models.GithubIssueLabel) ([]interface{}, errors.Error) {
 			domainIssueLabel := &ticket.IssueLabel{
 				IssueId:   issueIdGen.Generate(data.Options.ConnectionId, issueLabel.IssueId),
 				LabelName: issueLabel.LabelName,

@@ -25,17 +25,21 @@
 
 FROM grafana/grafana:11.6.2
 COPY ./provisioning/dashboards /etc/grafana/provisioning/dashboards
-COPY ./provisioning/datasources /etc/grafana/provisioning/datasources
 COPY ./dashboards /etc/grafana/dashboards
+COPY ./scripts/entrypoint.sh /entrypoint.sh
 COPY ./img/grafana_icon.svg /usr/share/grafana/public/img/grafana_icon.svg
 COPY ./img /usr/share/grafana/public/img/lake
 ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_SERVER_SERVE_FROM_SUB_PATH=true
 ENV GF_DASHBOARDS_JSON_ENABLED=true
 ENV GF_LIVE_ALLOWED_ORIGINS='*'
-ENV GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/Homepage.json
+ENV GF_SERVER_PROTOCOL=http
+ENV GF_SERVER_DOMAIN=localhost:3000
+ENV GF_SERVER_ROOT_URL=http://localhost:3000/grafana
 USER root
-RUN grafana-cli plugins install grafana-piechart-panel
-RUN chgrp -R 0 /etc/grafana /usr/share/grafana /var/lib/grafana && \
+RUN grafana-cli plugins install grafana-piechart-panel && \
+    chmod +x /entrypoint.sh && \
+    chgrp -R 0 /etc/grafana /usr/share/grafana /var/lib/grafana && \
     chmod -R g=u /etc/grafana /usr/share/grafana /var/lib/grafana
 USER 101
+ENTRYPOINT ["/entrypoint.sh"]

@@ -21,29 +21,44 @@ import (
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
+	"github.com/apache/incubator-devlake/helpers/migrationhelper"
 )
 
 var _ plugin.MigrationScript = (*addDisplayNameFields)(nil)
 
 type addDisplayNameFields struct{}
 
+type QDevConnection20250623 struct {
+	IdentityStoreId     string `gorm:"type:VARCHAR(255)"`
+	IdentityStoreRegion string `gorm:"type:VARCHAR(255)"`
+}
+
+func (QDevConnection20250623) TableName() string {
+	return "_tool_q_dev_connections"
+}
+
+type QDevUserData20250623 struct {
+	DisplayName string `gorm:"type:VARCHAR(255)"`
+}
+
+func (QDevUserData20250623) TableName() string {
+	return "_tool_q_dev_user_data"
+}
+
+type QDevUserMetrics20250623 struct {
+	DisplayName string `gorm:"type:VARCHAR(255)"`
+}
+
+func (QDevUserMetrics20250623) TableName() string {
+	return "_tool_q_dev_user_metrics"
+}
+
 func (*addDisplayNameFields) Up(basicRes context.BasicRes) errors.Error {
-	db := basicRes.GetDal()
-
-	// Add Identity Center fields to connections table
-	// Ignore error if column already exists (MySQL error 1060)
-	_ = db.Exec("ALTER TABLE _tool_q_dev_connections ADD COLUMN identity_store_id VARCHAR(255)")
-	_ = db.Exec("ALTER TABLE _tool_q_dev_connections ADD COLUMN identity_store_region VARCHAR(255)")
-
-	// Add display_name column to user_data table
-	// Ignore error if column already exists (MySQL error 1060)
-	_ = db.Exec("ALTER TABLE _tool_q_dev_user_data ADD COLUMN display_name VARCHAR(255)")
-
-	// Add display_name column to user_metrics table
-	// Ignore error if column already exists (MySQL error 1060)
-	_ = db.Exec("ALTER TABLE _tool_q_dev_user_metrics ADD COLUMN display_name VARCHAR(255)")
-
-	return nil
+	return migrationhelper.AutoMigrateTables(basicRes,
+		&QDevConnection20250623{},
+		&QDevUserData20250623{},
+		&QDevUserMetrics20250623{},
+	)
 }
 
 func (*addDisplayNameFields) Version() uint64 {

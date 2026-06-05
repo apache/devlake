@@ -23,6 +23,11 @@ import { DEVLAKE_ENDPOINT } from '@/config';
 
 const instance = axios.create({
   baseURL: DEVLAKE_ENDPOINT,
+  withCredentials: true,
+  // Double-submit CSRF: axios reads `devlake_csrf` and echoes it as
+  // `X-CSRF-Token` on unsafe methods. The cookie is set by /auth/callback.
+  xsrfCookieName: 'devlake_csrf',
+  xsrfHeaderName: 'X-CSRF-Token',
 });
 
 export type RequestConfig = {
@@ -34,6 +39,10 @@ export type RequestConfig = {
   headers?: Record<string, string>;
 };
 
+const isLoginRoute = () => window.location.pathname.replace(/\/+$/, '').endsWith('/login');
+
+let redirectingToLogin = false;
+
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -41,6 +50,12 @@ instance.interceptors.response.use(
 
     if (status === 428) {
       window.location.replace('/db-migrate');
+    }
+
+    if (status === 401 && !isLoginRoute() && !redirectingToLogin) {
+      redirectingToLogin = true;
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.replace(`/login?return_url=${returnUrl}`);
     }
 
     return Promise.reject(error);

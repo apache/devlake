@@ -61,6 +61,11 @@ func (j Job) ToJenkinsJob() *JenkinsJob {
 		}
 	}
 
+	primaryView := j.URL + j.Path + j.Class
+	if len(primaryView) > 255 {
+		primaryView = primaryView[:255]
+	}
+
 	return &JenkinsJob{
 		FullName:    j.FullName,
 		Name:        j.Name,
@@ -70,7 +75,7 @@ func (j Job) ToJenkinsJob() *JenkinsJob {
 		Base:        j.Base,
 		Url:         j.URL,
 		Description: j.Description,
-		PrimaryView: j.URL + j.Path + j.Class,
+		PrimaryView: primaryView,
 	}
 }
 

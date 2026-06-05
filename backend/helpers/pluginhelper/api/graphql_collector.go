@@ -276,14 +276,18 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 	}
 	if len(dataErrors) > 0 {
 		if !collector.args.IgnoreQueryErrors {
+			hasNonIgnorableDataErrors := false
 			for _, dataError := range dataErrors {
-				if strings.Contains(dataError.Error(), "Could not resolve to an Issue") {
-					logger.Warn(nil, "Issue may have been transferred.")
-				} else {
-					collector.checkError(errors.Default.Wrap(dataError, `graphql query got error`))
+				if isIgnorableGraphqlQueryError(dataError) {
+					logger.Warn(nil, "Issue may have been transferred or deleted.")
+					continue
 				}
+				hasNonIgnorableDataErrors = true
+				collector.checkError(errors.Default.Wrap(dataError, `graphql query got error`))
 			}
-			return
+			if hasNonIgnorableDataErrors {
+				return
+			}
 		}
 		// else: error will deal by ResponseParserWithDataErrors
 	}
@@ -342,6 +346,10 @@ func (collector *GraphqlCollector) checkError(err error) {
 // HasError return if any error occurred
 func (collector *GraphqlCollector) HasError() bool {
 	return len(collector.workerErrors) > 0
+}
+
+func isIgnorableGraphqlQueryError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "Could not resolve to an Issue")
 }
 
 var _ plugin.SubTask = (*GraphqlCollector)(nil)

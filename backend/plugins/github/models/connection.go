@@ -134,6 +134,16 @@ func (connection GithubConnection) TableName() string {
 	return "_tool_github_connections"
 }
 
+func (connection GithubConnection) GetHash() string {
+	if connection.AuthMethod == AppKey {
+		// GitHub App installation tokens expire after ~1 hour, disable API client caching
+		// to ensure fresh tokens are fetched for admin APIs (remote-scopes, test-connection)
+		return ""
+	}
+	// Use default caching for PAT connections (they don't expire)
+	return connection.BaseConnection.GetHash()
+}
+
 func (connection *GithubConnection) MergeFromRequest(target *GithubConnection, body map[string]interface{}) error {
 	modifiedConnection := GithubConnection{}
 	if err := helper.DecodeMapStruct(body, &modifiedConnection, true); err != nil {

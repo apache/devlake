@@ -17,4 +17,4 @@
 #
 
 cd "$(dirname "$0")"
-poetry run python azuredevops/main.py "$@"
+sh ../../uv.sh python . azuredevops/main.py "$@"

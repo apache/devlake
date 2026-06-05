@@ -219,7 +219,7 @@ export const SearchLocal = ({ mode, plugin, connectionId, config, disabledScope,
 
         {status === 'loaded' && (
           <S.JobLoad>
-            <CheckCircleFilled style={{ color: '#4DB764' }} />
+            <CheckCircleFilled style={{ color: 'var(--devlake-color-success)' }} />
             <span className="count">{miller.items.length}</span> scopes found
           </S.JobLoad>
         )}

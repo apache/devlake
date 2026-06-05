@@ -206,11 +206,11 @@ func TestMergeFromRequest_HandlesUsesApiToken(t *testing.T) {
 	// After merge, UsesApiToken should be updated
 	// This is a structural test - actual merge logic is in the connection.go MergeFromRequest method
 	assert.True(t, connection.UsesApiToken, "Initial value should be true")
-	
+
 	// If we were to apply the merge:
 	connection.UsesApiToken = newValues["usesApiToken"].(bool)
 	connection.Username = newValues["username"].(string)
-	
+
 	assert.False(t, connection.UsesApiToken, "After merge, should be false")
 	assert.Equal(t, "new_username", connection.Username)
 }
@@ -218,10 +218,10 @@ func TestMergeFromRequest_HandlesUsesApiToken(t *testing.T) {
 func TestConnectionStatusCodes(t *testing.T) {
 	// Test expected status code handling
 	tests := []struct {
-		name           string
-		statusCode     int
-		expectedError  bool
-		errorType      string
+		name          string
+		statusCode    int
+		expectedError bool
+		errorType     string
 	}{
 		{
 			name:          "Success - 200 OK",

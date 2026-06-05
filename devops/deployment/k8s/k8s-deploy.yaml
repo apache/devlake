@@ -32,7 +32,9 @@ data:
   MYSQL_ROOT_PASSWORD: admin
   MYSQL_URL: mysql:3306
   # grafana deployment
-  GF_SERVER_ROOT_URL: http://YOURDOMAIN:30002/grafana
+  GF_SERVER_PROTOCOL: "http"
+  GF_SERVER_DOMAIN: "YOURDOMAIN:30002"
+  GF_SERVER_ROOT_URL: "http://YOURDOMAIN:30002/grafana"
   GF_USERS_DEFAULT_THEME: "light"
   # for devlake deployment
   DB_URL: mysql://merico:merico@mysql:3306/lake?charset=utf8mb4&parseTime=True

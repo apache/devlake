@@ -27,9 +27,9 @@ PYTHON_DIR ?= "./python"
 all: build
 
 go-dep:
-	go install github.com/vektra/mockery/v2@v2.43.0
+	go install github.com/vektra/mockery/v2@v2.53.6
 	go install github.com/swaggo/swag/cmd/swag@v1.16.1
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.63.4
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 go-dev-tools:
 	# go install github.com/atombender/go-jsonschema/cmd/gojsonschema@latest
@@ -84,7 +84,7 @@ unit-test-go:
 	scripts/unit-test-go.sh
 
 build-pydevlake:
-	poetry install -C python/pydevlake
+	sh python/uv.sh sync python/pydevlake
 
 unit-test-python: build-pydevlake
 	sh python/build.sh python/test &&\

@@ -26,9 +26,67 @@ import { ExternalLink } from '@/components';
 import { addConnection, updateConnection } from '@/features';
 import { selectConnection } from '@/features/connections';
 import { getPluginConfig } from '@/plugins';
+import { ICustomHeader } from '@/types';
 import { operator } from '@/utils';
 
 import { Form } from './fields';
+
+const sanitizeCustomHeaders = (headers?: Array<{ key?: string; value?: string }>): ICustomHeader[] | undefined => {
+  if (!headers) {
+    return headers;
+  }
+
+  return headers
+    .filter((header) => header.key?.trim() || header.value?.trim())
+    .map((header) => ({
+      key: header.key?.trim() ?? '',
+      value: header.value ?? '',
+    }));
+};
+
+const buildUpdateTestPayload = (connection: any, values: any, customHeaders: ICustomHeader[] | undefined) => ({
+  endpoint: isEqual(connection?.endpoint, values.endpoint) ? undefined : values.endpoint,
+  authMethod: isEqual(connection?.authMethod, values.authMethod) ? undefined : values.authMethod,
+  username: isEqual(connection?.username, values.username) ? undefined : values.username,
+  password: isEqual(connection?.password, values.password) ? undefined : values.password,
+  token: isEqual(connection?.token, values.token) ? undefined : values.token,
+  appId: isEqual(connection?.appId, values.appId) ? undefined : values.appId,
+  secretKey: isEqual(connection?.secretKey, values.secretKey) ? undefined : values.secretKey,
+  proxy: isEqual(connection?.proxy, values.proxy) ? undefined : values.proxy,
+  rateLimitPerHour: isEqual(connection?.rateLimitPerHour, values.rateLimitPerHour)
+    ? undefined
+    : values.rateLimitPerHour,
+  dbUrl: isEqual(connection?.dbUrl, values.dbUrl) ? undefined : values.dbUrl,
+  companyId: isEqual(connection?.companyId, values.companyId) ? undefined : values.companyId,
+  organization: isEqual(connection?.organization, values.organization) ? undefined : values.organization,
+  customHeaders: isEqual(connection?.customHeaders, customHeaders) ? undefined : customHeaders,
+});
+
+const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: ICustomHeader[] | undefined) =>
+  pick({ ...initialValues, ...values, customHeaders }, [
+    'name',
+    'endpoint',
+    'token',
+    'username',
+    'password',
+    'proxy',
+    'authMethod',
+    'appId',
+    'secretKey',
+    'accessKeyId',
+    'secretAccessKey',
+    'region',
+    'bucket',
+    'identityStoreId',
+    'identityStoreRegion',
+    'rateLimitPerHour',
+    'tenantId',
+    'tenantType',
+    'dbUrl',
+    'companyId',
+    'organization',
+    'customHeaders',
+  ]);
 
 interface Props {
   plugin: string;
@@ -55,52 +113,22 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
   } = getPluginConfig(plugin);
 
   const disabled = useMemo(() => {
-    return Object.values(errors).some((value) => value);
+    return Object.values(errors).some(Boolean);
   }, [errors]);
 
+  const sanitizedCustomHeaders = useMemo(() => sanitizeCustomHeaders(values.customHeaders), [values.customHeaders]);
+
   const handleTest = async () => {
+    const isUpdate = type === 'update' && !!connectionId;
     await operator(
       () =>
-        type === 'update' && connectionId
-          ? API.connection.test(plugin, connectionId, {
-              endpoint: isEqual(connection?.endpoint, values.endpoint) ? undefined : values.endpoint,
-              authMethod: isEqual(connection?.authMethod, values.authMethod) ? undefined : values.authMethod,
-              username: isEqual(connection?.username, values.username) ? undefined : values.username,
-              password: isEqual(connection?.password, values.password) ? undefined : values.password,
-              token: isEqual(connection?.token, values.token) ? undefined : values.token,
-              appId: isEqual(connection?.appId, values.appId) ? undefined : values.appId,
-              secretKey: isEqual(connection?.secretKey, values.secretKey) ? undefined : values.secretKey,
-              proxy: isEqual(connection?.proxy, values.proxy) ? undefined : values.proxy,
-              dbUrl: isEqual(connection?.dbUrl, values.dbUrl) ? undefined : values.dbUrl,
-              companyId: isEqual(connection?.companyId, values.companyId) ? undefined : values.companyId,
-              organization: isEqual(connection?.organization, values.organization) ? undefined : values.organization,
-            })
-          : API.connection.testOld(
+        isUpdate
+          ? API.connection.test(
               plugin,
-              pick({ ...initialValues, ...values }, [
-                'name',
-                'endpoint',
-                'token',
-                'username',
-                'password',
-                'proxy',
-                'authMethod',
-                'appId',
-                'secretKey',
-                'accessKeyId',
-                'secretAccessKey',
-                'region',
-                'bucket',
-                'identityStoreId',
-                'identityStoreRegion',
-                'rateLimitPerHour',
-                'tenantId',
-                'tenantType',
-                'dbUrl',
-                'companyId',
-                'organization',
-              ]),
-            ),
+              connectionId,
+              buildUpdateTestPayload(connection, values, sanitizedCustomHeaders),
+            )
+          : API.connection.testOld(plugin, buildCreateTestPayload(initialValues, values, sanitizedCustomHeaders)),
       {
         setOperating,
         formatMessage: () => 'Test Connection Successfully.',
@@ -109,14 +137,17 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
   };
 
   const handleSave = async () => {
+    const isCreate = !connectionId;
     const [success, res] = await operator(
       () =>
-        !connectionId
-          ? dispatch(addConnection({ plugin, ...values })).unwrap()
-          : dispatch(updateConnection({ plugin, connectionId, ...values })).unwrap(),
+        isCreate
+          ? dispatch(addConnection({ plugin, ...values, customHeaders: sanitizedCustomHeaders })).unwrap()
+          : dispatch(
+              updateConnection({ plugin, connectionId, ...values, customHeaders: sanitizedCustomHeaders }),
+            ).unwrap(),
       {
         setOperating,
-        formatMessage: () => (!connectionId ? 'Create a New Connection Successful.' : 'Update Connection Successful.'),
+        formatMessage: () => (isCreate ? 'Create a New Connection Successful.' : 'Update Connection Successful.'),
       },
     );
 
@@ -140,7 +171,7 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
         type={type}
         name={name}
         fields={fields}
-        initialValues={{ ...initialValues, ...(connection ?? {}) }}
+        initialValues={connection ? { ...initialValues, ...connection } : initialValues}
         values={values}
         errors={errors}
         setValues={setValues}

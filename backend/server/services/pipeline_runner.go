@@ -107,9 +107,10 @@ func runPipeline(pipelineId uint64) errors.Error {
 }
 
 // ComputePipelineStatus determines pipeline status by its latest(rerun included) tasks statuses
-// 1. TASK_COMPLETED: all tasks were executed successfully
-// 2. TASK_FAILED: SkipOnFail=false with failed task(s)
-// 3. TASK_PARTIAL: SkipOnFail=true with failed task(s)
+// 1. TASK_CANCELLED: pipeline was cancelled by the user (takes priority)
+// 2. TASK_COMPLETED: all tasks were executed successfully
+// 3. TASK_FAILED: SkipOnFail=false with failed task(s)
+// 4. TASK_PARTIAL: SkipOnFail=true with failed task(s)
 func ComputePipelineStatus(pipeline *models.Pipeline, isCancelled bool) (string, errors.Error) {
 	tasks, err := GetLatestTasksOfPipeline(pipeline)
 	if err != nil {
@@ -134,6 +135,9 @@ func ComputePipelineStatus(pipeline *models.Pipeline, isCancelled bool) (string,
 		return "", errors.Default.New("unexpected status, did you call computePipelineStatus at a wrong timing?")
 	}
 
+	if isCancelled {
+		return models.TASK_CANCELLED, nil
+	}
 	if failed == 0 {
 		return models.TASK_COMPLETED, nil
 	}

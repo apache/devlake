@@ -143,7 +143,7 @@ func TestIsCommitSHA(t *testing.T) {
 	assert.True(t, isCommitSHA("AABBCCDD11223344AABBCCDD11223344AABBCCDD"))
 	assert.False(t, isCommitSHA("2.6.2"))
 	assert.False(t, isCommitSHA(""))
-	assert.False(t, isCommitSHA("5dd95b4efd7e9b668c361bbddb8d7f1e56c32ac")) // 39 chars
+	assert.False(t, isCommitSHA("5dd95b4efd7e9b668c361bbddb8d7f1e56c32ac"))   // 39 chars
 	assert.False(t, isCommitSHA("5dd95b4efd7e9b668c361bbddb8d7f1e56c32ac12")) // 41 chars
 }
 
@@ -215,4 +215,32 @@ func TestIsGitHostedURL(t *testing.T) {
 	assert.False(t, isGitHostedURL("oci://registry.example.com/charts"))
 	assert.False(t, isGitHostedURL("s3://my-bucket/charts"))
 	assert.False(t, isGitHostedURL(""))
+}
+
+// ── isRedundantOperationState ─────────────────────────────────────────────────
+
+func TestIsRedundantOperationState_SucceededIsSkipped(t *testing.T) {
+	assert.True(t, isRedundantOperationState("Succeeded"),
+		"Succeeded operationState always duplicates the latest history entry")
+}
+
+func TestIsRedundantOperationState_NonTerminalPhasesAreKept(t *testing.T) {
+	for _, phase := range []string{"Running", "Terminating"} {
+		assert.False(t, isRedundantOperationState(phase),
+			"in-flight phase %q is not yet in history and must be kept", phase)
+	}
+}
+
+func TestIsRedundantOperationState_FailurePhasesAreKept(t *testing.T) {
+	for _, phase := range []string{"Failed", "Error"} {
+		assert.False(t, isRedundantOperationState(phase),
+			"failure phase %q may never reach history and must be kept", phase)
+	}
+}
+
+func TestIsRedundantOperationState_HistoryEntryHasNoPhase(t *testing.T) {
+	// History entries have phase="" — isOperationState is false before this
+	// function is called, but double-check the function itself is safe with
+	// an empty string so the guard can never accidentally suppress history rows.
+	assert.False(t, isRedundantOperationState(""))
 }

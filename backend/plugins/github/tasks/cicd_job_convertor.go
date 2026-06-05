@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer"
@@ -55,37 +53,38 @@ type SimpleBranch struct {
 
 func ConvertJobs(taskCtx plugin.SubTaskContext) (err errors.Error) {
 	db := taskCtx.GetDal()
+	logger := taskCtx.GetLogger()
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
-	if err != nil {
-		return err
-	}
-	job := &models.GithubJob{}
-	cursor, err := db.Cursor(
-		dal.From(job),
-		dal.Where("repo_id = ? and connection_id=?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
+
 	jobIdGen := didgen.NewDomainIdGenerator(&models.GithubJob{})
 	runIdGen := didgen.NewDomainIdGenerator(&models.GithubRun{})
 	repoIdGen := didgen.NewDomainIdGenerator(&models.GithubRepo{})
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubJob]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_JOB_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_JOB_TABLE,
 		},
-		InputRowType: reflect.TypeOf(models.GithubJob{}),
-		Input:        cursor,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			line := inputRow.(*models.GithubJob)
-
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubJob{}),
+				dal.Where("_tool_github_jobs.repo_id = ? and _tool_github_jobs.connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					logger.Info("[Convert Jobs] incremental mode using _tool_github_jobs.updated_at >= %v", since)
+					clauses = append(clauses, dal.Where("_tool_github_jobs.updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(line *models.GithubJob) ([]interface{}, errors.Error) {
 			// Skip jobs with no started_at value (workaround for https://github.com/apache/incubator-devlake/issues/8442)
 			if line.StartedAt == nil {
 				return nil, nil

@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     container: mericodev/lake-builder:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Cache golangci-lint
         id: cache-golangci-lint
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: golangci-lint
           key: ${{ runner.os }}-backend-golangci-lint
@@ -42,7 +42,7 @@ jobs:
           cd backend
           make mock
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.53.3
+          version: v2.12.2
           working-directory: ./backend

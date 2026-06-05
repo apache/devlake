@@ -156,7 +156,7 @@ const renderCollapseItems = ({
                 })
               }
             />
-            <i style={{ color: '#E34040' }}>*</i>
+            <i style={{ color: 'var(--devlake-color-error-alt)' }}>*</i>
             <HelpTooltip content="GitLab Pipelines: https://docs.gitlab.com/ee/ci/pipelines/" />
           </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>

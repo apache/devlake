@@ -55,6 +55,12 @@ export const getPluginScopeName = (plugin: string, scope: any) => {
     return '';
   }
 
+  if (plugin === 'claude_code') {
+    const scopeData = scope.data ?? scope;
+
+    return `${scopeData.organization ?? scope.organization ?? scope.fullName ?? scope.name ?? scope.id ?? ''}`.trim();
+  }
+
   if (plugin === 'gh-copilot') {
     const scopeData = scope.data ?? scope;
 
@@ -81,6 +87,7 @@ export const getPluginScopeName = (plugin: string, scope: any) => {
 };
 
 const pluginAliasMap: Record<string, string> = {
+  claude_code: 'claude_code',
   copilot: 'gh-copilot',
 };
 

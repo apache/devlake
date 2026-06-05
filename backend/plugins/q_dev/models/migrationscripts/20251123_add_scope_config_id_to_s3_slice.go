@@ -20,23 +20,21 @@ package migrationscripts
 import (
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/helpers/migrationhelper"
 )
 
 type addScopeConfigIdToS3Slice struct{}
 
+type QDevS3Slice20251123 struct {
+	ScopeConfigId uint64 `gorm:"type:BIGINT DEFAULT 0"`
+}
+
+func (QDevS3Slice20251123) TableName() string {
+	return "_tool_q_dev_s3_slices"
+}
+
 func (*addScopeConfigIdToS3Slice) Up(basicRes context.BasicRes) errors.Error {
-	db := basicRes.GetDal()
-
-	// Add scope_config_id column to _tool_q_dev_s3_slices table
-	err := db.Exec(`
-		ALTER TABLE _tool_q_dev_s3_slices
-		ADD COLUMN scope_config_id BIGINT UNSIGNED DEFAULT 0
-	`)
-	if err != nil {
-		return errors.Convert(err)
-	}
-
-	return nil
+	return migrationhelper.AutoMigrateTables(basicRes, &QDevS3Slice20251123{})
 }
 
 func (*addScopeConfigIdToS3Slice) Version() uint64 {

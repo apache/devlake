@@ -58,11 +58,13 @@ func utcDate(t time.Time) time.Time {
 	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 }
 
-// ignore404 is an AfterResponse callback that skips 404 responses.
+// ignoreNoContent is an AfterResponse callback that skips 404 and 204 responses.
 // The report API returns 404 when no report is available for a given day,
-// which is normal and should not be treated as an error.
-func ignore404(res *http.Response) errors.Error {
-	if res.StatusCode == http.StatusNotFound {
+// and 204 (No Content) when data is not yet available or the org had fewer
+// than 5 active Copilot users on that day. Both are normal and should not
+// be treated as errors.
+func ignoreNoContent(res *http.Response) errors.Error {
+	if res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusNoContent {
 		return helper.ErrIgnoreAndContinue
 	}
 	return nil

@@ -49,7 +49,7 @@ func CollectRecords(taskCtx plugin.SubTaskContext) errors.Error {
 	cursor, err := db.Cursor(
 		dal.Select("azuredevops_id"),
 		dal.From(models.AzuredevopsBuild{}.TableName()),
-		dal.Where("repository_id = ? and connection_id=? and result != ?", data.Options.RepositoryId, data.Options.ConnectionId, "failed"),
+		dal.Where("repository_id = ? and connection_id=? and result NOT IN ?", data.Options.RepositoryId, data.Options.ConnectionId, []string{"failed", "none"}),
 	)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func CollectRecords(taskCtx plugin.SubTaskContext) errors.Error {
 		UrlTemplate:        "{{ .Params.OrganizationId }}/{{ .Params.ProjectId }}/_apis/build/builds/{{ .Input.AzuredevopsId }}/Timeline?api-version=7.1",
 		Query:              BuildPaginator(true),
 		ResponseParser:     ParseRawMessageFromRecords,
-		AfterResponse:      ignoreDeletedBuilds, // Ignore the 404 response if builds are deleted during the collection
+		AfterResponse:      ignoreInvalidTimelineResponse, // Skip builds with missing/malformed timelines (e.g. YAML syntax errors)
 	})
 	if err != nil {
 		return err

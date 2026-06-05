@@ -35,7 +35,7 @@ export const Label = styled.label`
 `;
 
 export const LabelInfo = styled.i`
-  color: #ff8b8b;
+  color: ${({ theme }) => theme.colors.secondary};
 `;
 
 export const LabelDescription = styled.p`

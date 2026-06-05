@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
-
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/domainlayer"
@@ -50,28 +48,38 @@ var ConvertReleasesMeta = plugin.SubTaskMeta{
 
 func ConvertRelease(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
-	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_RELEASE_TABLE)
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubRelease{}),
-		dal.Where(
-			"published_at IS NOT NULL AND connection_id = ? AND github_id = ?",
-			data.Options.ConnectionId, data.Options.GithubId,
-		),
-	)
-	if err != nil {
-		return err
+	data := taskCtx.GetData().(*GithubTaskData)
+	params := GithubApiParams{
+		ConnectionId: data.Options.ConnectionId,
+		Name:         data.Options.Name,
 	}
-	defer cursor.Close()
 
 	releaseIdGen := didgen.NewDomainIdGenerator(&models.GithubRelease{})
 	releaseScopeIdGen := didgen.NewDomainIdGenerator(&models.GithubRepo{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType:       reflect.TypeOf(models.GithubRelease{}),
-		Input:              cursor,
-		RawDataSubTaskArgs: *rawDataSubTaskArgs,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubRelease := inputRow.(*models.GithubRelease)
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubRelease]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_RELEASE_TABLE,
+			Params:         params,
+		},
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubRelease{}),
+				dal.Where(
+					"published_at IS NOT NULL AND connection_id = ? AND github_id = ?",
+					data.Options.ConnectionId, data.Options.GithubId,
+				),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubRelease *models.GithubRelease) ([]interface{}, errors.Error) {
 			release := &devops.CicdRelease{
 				DomainEntity: domainlayer.DomainEntity{
 					Id: releaseIdGen.Generate(githubRelease.ConnectionId, githubRelease.Id),
@@ -87,18 +95,12 @@ func ConvertRelease(taskCtx plugin.SubTaskContext) errors.Error {
 				IsPrerelease: githubRelease.IsPrerelease,
 				TagName:      githubRelease.TagName,
 				CommitSha:    githubRelease.CommitSha,
-
-				AuthorID: githubRelease.AuthorID,
-
-				RepoId: releaseScopeIdGen.Generate(githubRelease.ConnectionId, githubRelease.GithubId),
+				AuthorID:     githubRelease.AuthorID,
+				RepoId:       releaseScopeIdGen.Generate(githubRelease.ConnectionId, githubRelease.GithubId),
 			}
-
-			return []interface{}{
-				release,
-			}, nil
+			return []interface{}{release}, nil
 		},
 	})
-
 	if err != nil {
 		return err
 	}

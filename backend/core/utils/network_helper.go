@@ -19,9 +19,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/apache/incubator-devlake/core/errors"
 	"net"
 	"time"
+
+	"github.com/apache/incubator-devlake/core/errors"
 )
 
 // CheckDNS FIXME ...
@@ -38,7 +39,7 @@ func CheckDNS(domain string) errors.Error {
 
 // CheckNetwork FIXME ...
 func CheckNetwork(host, port string, timeout time.Duration) errors.Error {
-	var target = fmt.Sprintf("%s:%s", host, port)
+	var target = net.JoinHostPort(host, port)
 	_, err := net.DialTimeout("tcp", target, timeout)
 	if err != nil {
 		return errors.Convert(err)

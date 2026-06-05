@@ -35,7 +35,7 @@ export const Message = ({ style, size = 20, content }: Props) => {
   return (
     <Wrapper style={style}>
       <Space>
-        <WarningOutlined style={{ fontSize: size, color: '#f4be55' }} />
+        <WarningOutlined style={{ fontSize: size, color: 'var(--devlake-color-warning-soft)' }} />
         <span>{content}</span>
       </Space>
     </Wrapper>

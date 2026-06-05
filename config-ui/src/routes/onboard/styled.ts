@@ -21,7 +21,7 @@ import styled from 'styled-components';
 export const Wrapper = styled.div`
   width: 100%;
   height: 100vh;
-  background-color: #f9f9fa;
+  background-color: ${({ theme }) => theme.colors.bgLayout};
 `;
 
 export const Inner = styled.div`
@@ -61,14 +61,14 @@ export const StepItem = styled.li<{ $activated: boolean; $activatedColor: string
     margin-right: 8px;
     width: 32px;
     height: 32px;
-    color: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(0, 0, 0, 0.25);
+    color: ${({ theme }) => theme.colors.textDisabled};
+    border: 1px solid ${({ theme }) => theme.colors.borderStep};
     border-radius: 50%;
 
-    ${({ $activated, $activatedColor }) =>
+    ${({ $activated, $activatedColor, theme }) =>
       $activated
         ? `
-          color: #fff;
+          color: ${theme.colors.textInverse};
           background-color: ${$activatedColor};
           border: none;
           `
@@ -91,7 +91,7 @@ export const StepItem = styled.li<{ $activated: boolean; $activatedColor: string
     left: -150px;
     width: 100px;
     height: 1px;
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: ${({ theme }) => theme.colors.borderStep};
   }
 
   &:first-child::before {
@@ -102,7 +102,7 @@ export const StepItem = styled.li<{ $activated: boolean; $activatedColor: string
 export const StepContent = styled.div`
   display: flex;
   height: 450px;
-  background-color: #fff;
+  background-color: ${({ theme }) => theme.colors.bgContainer};
   box-shadow: 0px 2.4px 4.8px -0.8px rgba(0, 0, 0, 0.1), 0px 1.6px 8px 0px rgba(0, 0, 0, 0.07);
 
   .content {
@@ -115,7 +115,7 @@ export const StepContent = styled.div`
     margin: 12px 0;
     padding: 0 24px;
     font-size: 14px;
-    border-left: 1px solid #f0f0f0;
+    border-left: 1px solid ${({ theme }) => theme.colors.borderSubtle};
     overflow-y: auto;
 
     img {
@@ -142,7 +142,7 @@ export const StepContent = styled.div`
     }
 
     p {
-      color: #6c6c6c;
+      color: ${({ theme }) => theme.colors.textBody};
     }
 
     code {
@@ -151,8 +151,8 @@ export const StepContent = styled.div`
       font-family: Menlo;
       line-height: 20px;
       border-radius: 3px;
-      border: #f0f0f0;
-      background: #f5f5f5;
+      border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+      background: ${({ theme }) => theme.colors.bgCode};
     }
   }
 `;

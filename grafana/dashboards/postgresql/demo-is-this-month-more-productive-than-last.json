@@ -1,0 +1,253 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 12,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homepage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/0Rjxknc7z/demo-homepage?orgId=1"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Break down by user1",
+              "url": "/grafana/d/cHnTA7K7z/is-this-month-more-productive-than-last-by-users?orgId=1"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "Commit Count"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 36,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Drill down by Commit Author",
+          "url": "/d/F0iYknc7z/demo-commit-count-by-author?orgId=1"
+        }
+      ],
+      "options": {
+        "barWidth": 0.25,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {},
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH _commits AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, COUNT(*) AS commit_count FROM commits WHERE message::text NOT LIKE '%Merge%' AND $__timeFilter(authored_date) GROUP BY 1) SELECT TO_CHAR(CAST(time AS TIMESTAMP), 'FMMonth YYYY') AS month, commit_count AS \"Commit Count\" FROM _commits ORDER BY time NULLS FIRST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Commit Count over Time",
+      "type": "barchart"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 5,
+        "x": 0,
+        "y": 9
+      },
+      "id": 40,
+      "options": {
+        "content": "<br>\n\n[Drill down by commit author](/d/F0iYknc7z/demo-commit-count-by-author?orgId=1)\n           ",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 38,
+      "options": {
+        "content": "<div>\n  <img border=\"0\" src=\"/grafana/public/img/lake/logo.png\" style=\"padding-bottom:20px\" alt=\"Merico\" width=\"40\"></img>\n  <h2 style=\"display:inline-block;\">MARI Guide - Commit Count</h2>\n</div>\n\nSection | Description\n:------------------ | :-------------\nMetric Definition | The total number of commits.\nMetric Value | The number of commits reflects the frequency of code commits and encourages multiple small step commits per day. While paying attention to the number of times, you should also observe the number of lines of code per commit.\n\n***\n\n#### *M (Measure)*\nThe number of commits can be counted in time, project, team or individual dimensions, and the above 4 dimensions can be cross-tabulated, e.g., the number of commits per week for a project, the average number of commits per person per day for a team.\n\n##### *A (Analyze)*\n1. By project dimension, analyze and compare the number of code commits of different projects horizontally, and locate the projects with the maximum, minimum and lower than average values for research.\n2. By team dimension, analyze and compare the number of code commits of different teams horizontally, and locate the teams with the maximum, minimum, and lower than average values for research.\n3. By individual dimension, analyze and compare the number of code commits of different personnel horizontally, and locate the individuals with the maximum, minimum, and lower than average values for research.\n4. Analyze the trend of the number of code commits in each cycle, compare vertically, and locate the maximum, minimum, and continuously increasing or decreasing cycles for research.\n\n##### *R (Review)*\nBased on the results of metrics analysis, use Ishikawa diagram (fishbone diagram) or root cause analysis (RCA) to analyze, investigate and review the root causes of projects/teams/individuals with low (e.g. lower than average) code submission times in a cycle:\n1. too many complicated requirements with large granularity (estimated workload)?\n2. uneven and full task distribution?\n3. no specification for small step submission?\n\n##### *I (Improve)*\nBased on the review results, focus on the key root causes, give targeted improvement measures in terms of specification, process, tools, behavior, etc., and clarify the improvement target, improvement measures, verification cycle and responsible person.\nTo address the root causes of low code submission in the cycle, the following improvement measures were taken: 1.\n1. reduce the granularity of requirements.\n2. distribute tasks evenly so that each person has a full workload each day.\n3. set small step commit specifications, such as an average number of commits per person per day greater than 1, an average number of lines per commit less than 100, etc.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 42,
+      "options": {
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Demo-Is this month more productive than last?",
+  "uid": "ddREk75nk-pg",
+  "version": 3
+}

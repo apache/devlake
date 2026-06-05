@@ -28,7 +28,6 @@ var PluginEntry impl.Dbt
 // standalone mode for debugging
 func main() {
 	dbtCmd := &cobra.Command{Use: "dbt"}
-	_ = dbtCmd.MarkFlagRequired("projectPath")
 	projectPath := dbtCmd.Flags().StringP("projectPath", "p", "/Users/abeizn/demoapp", "user dbt project directory.")
 	projectGitURL := dbtCmd.Flags().StringP("projectGitURL", "g", "", "user dbt project git url.")
 	projectName := dbtCmd.Flags().StringP("projectName", "n", "demoapp", "user dbt project name.")

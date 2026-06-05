@@ -20,6 +20,6 @@ import styled from 'styled-components';
 
 export const ErrorText = styled.div`
   margin-top: 4px;
-  color: #f5222d;
+  color: ${({ theme }) => theme.colors.error};
   font-size: 12px;
 `;

@@ -29,7 +29,7 @@ import (
 // AsanaConn holds the essential information to connect to the Asana API
 type AsanaConn struct {
 	helper.RestConnection `mapstructure:",squash"`
-	Token                 string `mapstructure:"token" json:"token" encrypt:"yes"`
+	Token                 string `mapstructure:"token" json:"token" gorm:"serializer:encdec"`
 }
 
 func (ac *AsanaConn) Sanitize() AsanaConn {

@@ -100,7 +100,7 @@ const renderCollapseItems = ({
                 })
               }
             />
-            <i style={{ color: '#E34040' }}>*</i>
+            <i style={{ color: 'var(--devlake-color-error-alt)' }}>*</i>
             <HelpTooltip content="Azure Pipelines: https://learn.microsoft.com/en-us/azure/devops/pipelines/get-started/what-is-azure-pipelines?view=azure-devops#continuous-testing" />
           </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>

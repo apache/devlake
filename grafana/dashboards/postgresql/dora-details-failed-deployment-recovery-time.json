@@ -1,0 +1,478 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 45,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Go Back ",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/qNo8_0M4z/dora?orgId=1"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 63,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "This dashboard shows the details about [Failed Deployment Recovery Time\n](https://devlake.apache.org/docs/Metrics/MTTR) in DORA.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 5,
+        "x": 0,
+        "y": 2
+      },
+      "id": 87,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(CAST(fd.deployment_finished_date AS TIMESTAMP), 'YY/MM') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _recovery_time_ranks AS (SELECT *, PERCENT_RANK() OVER (ORDER BY (EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60) NULLS FIRST) AS ranks FROM _incidents_for_deployments), _median_recovery_time AS (SELECT MAX((EXTRACT(EPOCH FROM (incident_resolution_date - deployment_finished_date))/60)) AS median_recovery_time FROM _recovery_time_ranks WHERE ranks <= 0.5), _is_collected_data AS (SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM _deployments) AND NOT EXISTS(SELECT 1 FROM incidents) THEN 'No deployments and incidents' WHEN NOT EXISTS(SELECT 1 FROM _deployments) THEN 'No Deployments' WHEN NOT EXISTS(SELECT 1 FROM incidents) THEN 'No Incidents' ELSE 'No incidents are mapped to deployments' END AS is_collected FROM _deployments AS d, _incidents_for_deployments AS i) SELECT CASE WHEN is_collected = 'No deployments and incidents' THEN 'N/A. Please check if you have collected deployments and incidents.' WHEN is_collected = 'No Deployments' THEN 'N/A. Please check if you have collected deployments.' WHEN is_collected = 'No Incidents' THEN 'N/A. Please check if you have collected incidents.' WHEN NOT median_recovery_time IS NULL THEN (CAST(median_recovery_time AS NUMERIC) / NULLIF(60, 0))::TEXT ELSE 'No data' END AS median_recovery_time_in_hours FROM _median_recovery_time, _is_collected_data",
+          "refId": "D",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "1. Failed Deployment Recovery Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgba(255, 255, 255, 1)",
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [
+            {
+              "options": {
+                "FALSE": {
+                  "color": "red",
+                  "index": 1
+                },
+                "TRUE": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "deployment_finished_date"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 174
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "incident_resolution_date"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 208
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed_deployment_recovery_time"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "purple",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 24
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 168
+                    },
+                    {
+                      "color": "red",
+                      "value": 720
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric_hidden"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 19,
+        "w": 19,
+        "x": 5,
+        "y": 2
+      },
+      "id": 80,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": [
+            "failed_deployment_recovery_time"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 1,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "deployment_finished_date"
+          }
+        ]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _incidents_for_deployments AS (SELECT fd.deployment_id AS \"deployment_id\", fd.deployment_finished_date, i.id AS incident_caused_by_deployment /* date_format(fd.deployment_finished_date, '%y/%m') as deployment_finished_month, */, i.title AS incident_title, i.url AS incident_url, i.url AS \"metric_hidden\", i.resolution_date AS incident_resolution_date /* i.created_date as incident_create_date, */, (EXTRACT(EPOCH FROM (i.resolution_date - fd.deployment_finished_date))/3600) AS \"failed_deployment_recovery_time\" FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)) SELECT * FROM _incidents_for_deployments WHERE NOT incident_resolution_date IS NULL",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "_devlake_tasks",
+          "timeColumn": "created_at",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "3. Deployments and Incidents Details",
+      "type": "table"
+    },
+    {
+      "datasource": "postgresql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 0,
+        "y": 12
+      },
+      "id": 88,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "/*  ***** 2023 report ***** -- */ /*  Metric 4: Failed deployment recovery time */ WITH _deployments AS (SELECT cdc.cicd_deployment_id AS deployment_id, MAX(cdc.finished_date) AS deployment_finished_date FROM cicd_deployment_commits AS cdc JOIN project_mapping AS pm ON cdc.cicd_scope_id = pm.row_id AND pm.\"table\" = 'cicd_scopes' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND cdc.result = 'SUCCESS' AND cdc.environment = 'PRODUCTION' GROUP BY 1 HAVING MAX(cdc.finished_date) BETWEEN $__timeFrom() AND $__timeTo()), _incidents_for_deployments AS (SELECT i.id AS incident_id, i.created_date AS incident_create_date, i.resolution_date AS incident_resolution_date, fd.deployment_id AS caused_by_deployment, fd.deployment_finished_date, TO_CHAR(CAST(fd.deployment_finished_date AS TIMESTAMP), 'YY/MM') AS deployment_finished_month FROM incidents AS i LEFT JOIN project_incident_deployment_relationships AS pim ON i.id = pim.id JOIN _deployments AS fd ON pim.deployment_id = fd.deployment_id WHERE $__timeFilter(i.resolution_date)), _incidents /*  ***** 2021 report ***** -- */ /* Metric 4: Median time to restore service */ AS (/* get the incidents created within the selected time period in the top-right corner */ SELECT DISTINCT i.id, CAST(lead_time_minutes AS BIGINT) AS lead_time_minutes FROM incidents AS i JOIN project_mapping AS pm ON i.scope_id = pm.row_id AND i.\"table\" = pm.\"table\" AND pm.\"table\" = 'boards' WHERE ('${project:csv}' = '' OR pm.project_name::text = ANY(ARRAY[${project:singlequote}]::text[])) AND $__timeFilter(i.created_date)) SELECT COUNT(incident_id) AS total_count FROM _incidents_for_deployments",
+          "refId": "D",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "2. The number of incidents caused by deployments",
+      "type": "stat"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "DORA"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "postgresql",
+        "definition": "SELECT DISTINCT name FROM projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT name FROM projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timeRangeUpdatedDuringEditOrView": false,
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DORA Details - Failed Deployment Recovery Time",
+  "uid": "Failed-deployment-recovery-time-pg",
+  "version": 3,
+  "weekStart": ""
+}

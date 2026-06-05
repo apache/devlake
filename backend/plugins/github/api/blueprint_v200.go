@@ -80,8 +80,11 @@ func makeDataSourcePipelinePlanV200(
 	scopeDetails []*srvhelper.ScopeDetail[models.GithubRepo, models.GithubScopeConfig],
 	connection *models.GithubConnection,
 ) (coreModels.PipelinePlan, errors.Error) {
-	plan := make(coreModels.PipelinePlan, len(scopeDetails))
+	plan := make(coreModels.PipelinePlan, 0, len(scopeDetails)+1)
 	for i, scopeDetail := range scopeDetails {
+		if i == len(plan) {
+			plan = append(plan, nil)
+		}
 		githubRepo, scopeConfig := scopeDetail.Scope, scopeDetail.ScopeConfig
 		stage := plan[i]
 		if stage == nil {

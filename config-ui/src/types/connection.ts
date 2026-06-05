@@ -16,12 +16,18 @@
  *
  */
 
+export interface ICustomHeader {
+  key: string;
+  value: string;
+}
+
 export interface IConnectionAPI {
   id: ID;
   name: string;
   endpoint: string;
   authMethod?: string;
   token?: string;
+  adminApiKey?: string;
   username?: string;
   password?: string;
   appId?: string;
@@ -31,6 +37,8 @@ export interface IConnectionAPI {
   proxy: string;
   rateLimitPerHour?: number;
   organization?: string;
+  organizationId?: string;
+  customHeaders?: ICustomHeader[];
 }
 
 export interface IConnectionTestResult {
@@ -76,6 +84,7 @@ export interface IConnection {
   endpoint: string;
   authMethod?: string;
   token?: string;
+  adminApiKey?: string;
   username?: string;
   password?: string;
   appId?: string;
@@ -85,4 +94,6 @@ export interface IConnection {
   proxy: string;
   rateLimitPerHour?: number;
   organization?: string;
+  organizationId?: string;
+  customHeaders?: ICustomHeader[];
 }

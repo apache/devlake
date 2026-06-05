@@ -121,7 +121,11 @@ export const BlueprintHomePage = () => {
               title: 'Blueprint Name',
               key: 'name',
               render: (_, { id, name }) => (
-                <Link to={PATHS.BLUEPRINT(id)} state={{ activeKey: 'configuration' }} style={{ color: '#292b3f' }}>
+                <Link
+                  to={PATHS.BLUEPRINT(id)}
+                  state={{ activeKey: 'configuration' }}
+                  style={{ color: 'var(--devlake-color-text)' }}
+                >
                   <TextTooltip content={name}>{name}</TextTooltip>
                 </Link>
               ),

@@ -56,79 +56,59 @@ type PullRequestReview struct {
 
 func ExtractApiPullRequestReviews(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraIssues by Board
-			*/
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[PullRequestReview]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_PR_REVIEW_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			apiPullRequestReview := &PullRequestReview{}
+		Extract: func(body *PullRequestReview, row *api.RawData) ([]any, errors.Error) {
 			if strings.HasPrefix(string(row.Data), "{\"message\": \"Not Found\"") {
 				return nil, nil
 			}
-			err := errors.Convert(json.Unmarshal(row.Data, apiPullRequestReview))
-			if err != nil {
-				return nil, err
-			}
-			if apiPullRequestReview.State == "PENDING" || apiPullRequestReview.User == nil {
+			if body.State == "PENDING" || body.User == nil {
 				return nil, nil
 			}
 			// Filter bot reviews by username
-			if shouldSkipByUsername(apiPullRequestReview.User.Login) {
-				taskCtx.GetLogger().Debug("Skipping review #%d from bot user: %s", apiPullRequestReview.GithubId, apiPullRequestReview.User.Login)
+			if shouldSkipByUsername(body.User.Login) {
+				taskCtx.GetLogger().Debug("Skipping review #%d from bot user: %s", body.GithubId, body.User.Login)
 				return nil, nil
 			}
 			pull := &SimplePr{}
-			err = errors.Convert(json.Unmarshal(row.Input, pull))
+			err := errors.Convert(json.Unmarshal(row.Input, pull))
 			if err != nil {
 				return nil, err
 			}
-			// need to extract 2 kinds of entities here
 			results := make([]interface{}, 0, 1)
-
 			githubReviewer := &models.GithubReviewer{
 				ConnectionId:  data.Options.ConnectionId,
 				PullRequestId: pull.GithubId,
 			}
-
 			githubPrReview := &models.GithubPrReview{
 				ConnectionId:   data.Options.ConnectionId,
-				GithubId:       apiPullRequestReview.GithubId,
-				Body:           apiPullRequestReview.Body,
-				State:          apiPullRequestReview.State,
-				CommitSha:      apiPullRequestReview.CommitId,
-				GithubSubmitAt: apiPullRequestReview.SubmittedAt.ToNullableTime(),
+				GithubId:       body.GithubId,
+				Body:           body.Body,
+				State:          body.State,
+				CommitSha:      body.CommitId,
+				GithubSubmitAt: body.SubmittedAt.ToNullableTime(),
 				PullRequestId:  pull.GithubId,
 			}
-
-			if apiPullRequestReview.User != nil {
-				githubReviewer.ReviewerId = apiPullRequestReview.User.Id
-				githubReviewer.Username = apiPullRequestReview.User.Login
-
-				githubPrReview.AuthorUserId = apiPullRequestReview.User.Id
-				githubPrReview.AuthorUsername = apiPullRequestReview.User.Login
-
-				githubUser, err := convertAccount(apiPullRequestReview.User, data.Options.GithubId, data.Options.ConnectionId)
+			if body.User != nil {
+				githubReviewer.ReviewerId = body.User.Id
+				githubReviewer.Username = body.User.Login
+				githubPrReview.AuthorUserId = body.User.Id
+				githubPrReview.AuthorUsername = body.User.Login
+				githubUser, err := convertAccount(body.User, data.Options.GithubId, data.Options.ConnectionId)
 				if err != nil {
 					return nil, err
 				}
 				results = append(results, githubUser)
 			}
-
 			results = append(results, githubReviewer)
 			results = append(results, githubPrReview)
-
 			return results, nil
 		},
 	})
