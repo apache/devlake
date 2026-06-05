@@ -42,6 +42,7 @@ func TestLinearCommentDataFlow(t *testing.T) {
 	// the comment convertor joins to issues, so populate _tool_linear_issues first
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_linear_issues.csv", "_raw_linear_issues")
 	dataflowTester.FlushTabler(&models.LinearIssue{})
+	dataflowTester.FlushTabler(&models.LinearIssueLabel{})
 	dataflowTester.Subtask(tasks.ExtractIssuesMeta, taskData)
 
 	// verify extraction: raw -> tool layer
