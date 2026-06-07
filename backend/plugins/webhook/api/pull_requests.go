@@ -77,7 +77,7 @@ type WebhookPullRequestReq struct {
 // @Failure 400  {string} errcode.Error "Bad Request"
 // @Failure 403  {string} errcode.Error "Forbidden"
 // @Failure 500  {string} errcode.Error "Internal Error"
-// @Router /plugins/webhook/connections/:connectionId/pullrequests [POST]
+// @Router /plugins/webhook/connections/:connectionId/pull_requests [POST]
 func PostPullRequests(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.First(connection, input.Params)
@@ -96,10 +96,31 @@ func PostPullRequests(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput
 // @Failure 400  {string} errcode.Error "Bad Request"
 // @Failure 403  {string} errcode.Error "Forbidden"
 // @Failure 500  {string} errcode.Error "Internal Error"
-// @Router /plugins/webhook/connections/by-name/:connectionName/pullrequests [POST]
+// @Router /plugins/webhook/connections/by-name/:connectionName/pull_requests [POST]
 func PostPullRequestsByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.FirstByName(connection, input.Params)
+
+	return postPullRequests(input, connection, err)
+}
+
+// PostPullRequestsByProjectName
+// @Summary create pull requests by project name
+// @Description Create pull request by project name. The webhook connection will be created automatically if it does not exist.<br/>
+// @Description example1: {"id": "pr1","baseRepoId": "webhook:1","headRepoId": "repo_fork1","status": "MERGED","originalStatus": "OPEN","displayTitle": "Feature: Add new functionality","description": "This PR adds new features","url": "https://github.com/org/repo/pull/1","authorName": "johndoe","authorId": "johnd123","mergedByName": "janedoe","mergedById": "janed123","parentPrId": "","pullRequestKey": 1,"createdDate": "2025-02-20T16:17:36Z","mergedDate": "2025-02-20T17:17:36Z","closedDate": null,"type": "feature","component": "backend","mergeCommitSha": "bf0a79c57dff8f5f1f393de315ee5105a535e059","headRef": "repo_fork1:feature-branch","baseRef": "main","baseCommitSha": "e73325c2c9863f42ea25871cbfaeebcb8edcf604","headCommitSha": "b22f772f1197edfafd4cc5fe679a2d299ec12837","additions": 100,"deletions": 50,"isDraft": false}<br/>
+// @Description "baseRepoId" should be equal to "webhook:{connectionId}" for consistent DORA calculations
+// @Tags plugins/webhook
+// @Param body body WebhookPullRequestReq true "json body"
+// @Success 200
+// @Failure 400  {string} errcode.Error "Bad Request"
+// @Failure 403  {string} errcode.Error "Forbidden"
+// @Failure 500  {string} errcode.Error "Internal Error"
+// @Router /projects/:projectName/pull_requests [POST]
+func PostPullRequestsByProjectName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
+	connection, err, shouldReturn := getOrCreateConnection(input, "pull_requests")
+	if shouldReturn {
+		return nil, err
+	}
 
 	return postPullRequests(input, connection, err)
 }

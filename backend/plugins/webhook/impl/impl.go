@@ -131,5 +131,11 @@ func (p Webhook) ApiResources() map[string]map[string]plugin.ApiResourceHandler 
 		"projects/:projectName/deployments": {
 			"POST": api.PostDeploymentsByProjectName,
 		},
+		"projects/:projectName/issues": {
+			"POST": api.PostIssuesByProjectName,
+		},
+		"projects/:projectName/pull_requests": {
+			"POST": api.PostPullRequestsByProjectName,
+		},
 	}
 }
