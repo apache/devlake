@@ -126,7 +126,7 @@ func PostDeploymentsByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceO
 // @Router /projects/:projectName/deployments [POST]
 func PostDeploymentsByProjectName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	// find or create the connection for this project
-	connection, err, shouldReturn := getOrCreateConnection(input)
+	connection, err, shouldReturn := getOrCreateConnection(input, "deployments")
 	if shouldReturn {
 		return nil, err
 	}
@@ -134,10 +134,10 @@ func PostDeploymentsByProjectName(input *plugin.ApiResourceInput) (*plugin.ApiRe
 	return postDeployments(input, connection, err)
 }
 
-func getOrCreateConnection(input *plugin.ApiResourceInput) (*models.WebhookConnection, errors.Error, bool) {
+func getOrCreateConnection(input *plugin.ApiResourceInput, webhookSuffix string) (*models.WebhookConnection, errors.Error, bool) {
 	connection := &models.WebhookConnection{}
 	projectName := input.Params["projectName"]
-	webhookName := fmt.Sprintf("%s_deployments", projectName)
+	webhookName := fmt.Sprintf("%s_%s", projectName, webhookSuffix)
 	err := findByProjectName(connection, input.Params, pluginName, webhookName)
 	dal := basicRes.GetDal()
 	if err != nil {
