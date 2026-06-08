@@ -46,7 +46,7 @@ var CollectJobsMeta = plugin.SubTaskMeta{
 // recollected by the CollectJobs "unfinished details" collector.
 func UnfinishedJobsInputClauses(connectionId uint64, projectSlug string) []dal.Clause {
 	return []dal.Clause{
-		dal.Select("DISTINCT workflow_id"), // Only need to recollect jobs for a workflow once
+		dal.Select("DISTINCT workflow_id AS id"), // #8907: alias to id so {{ .Input.Id }} resolves when scanned into CircleciJob
 		dal.From(&models.CircleciJob{}),
 		dal.Where(
 			"connection_id = ? AND project_slug = ? AND status IN ('running', 'not_running', 'queued', 'on_hold')",
