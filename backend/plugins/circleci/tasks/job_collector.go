@@ -41,6 +41,20 @@ var CollectJobsMeta = plugin.SubTaskMeta{
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_CICD},
 }
 
+// UnfinishedJobsInputClauses returns the DAL clauses that select the workflows whose
+// jobs are still in a non-terminal status and therefore need their job details
+// recollected by the CollectJobs "unfinished details" collector.
+func UnfinishedJobsInputClauses(connectionId uint64, projectSlug string) []dal.Clause {
+	return []dal.Clause{
+		dal.Select("DISTINCT workflow_id"), // Only need to recollect jobs for a workflow once
+		dal.From(&models.CircleciJob{}),
+		dal.Where(
+			"connection_id = ? AND project_slug = ? AND status IN ('running', 'not_running', 'queued', 'on_hold')",
+			connectionId, projectSlug,
+		),
+	}
+}
+
 func CollectJobs(taskCtx plugin.SubTaskContext) errors.Error {
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_JOB_TABLE)
 	logger := taskCtx.GetLogger()
@@ -94,14 +108,8 @@ func CollectJobs(taskCtx plugin.SubTaskContext) errors.Error {
 				AfterResponse:  ignoreDeletedBuilds,
 			},
 			BuildInputIterator: func() (api.Iterator, errors.Error) {
-				clauses := []dal.Clause{
-					dal.Select("DISTINCT workflow_id"), // Only need to recollect jobs for a workflow once
-					dal.From(&models.CircleciJob{}),
-					dal.Where("connection_id = ? AND project_slug = ? AND status IN ('running', 'not_running', 'queued', 'on_hold')", data.Options.ConnectionId, data.Options.ProjectSlug),
-				}
-
 				db := taskCtx.GetDal()
-				cursor, err := db.Cursor(clauses...)
+				cursor, err := db.Cursor(UnfinishedJobsInputClauses(data.Options.ConnectionId, data.Options.ProjectSlug)...)
 				if err != nil {
 					return nil, err
 				}
