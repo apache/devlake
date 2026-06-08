@@ -74,6 +74,9 @@ func clearHistoryData(db dal.Dal, data *LinkerTaskData) errors.Error {
 func LinkPrToIssue(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	data := taskCtx.GetData().(*LinkerTaskData)
+	if data.PrToIssueRegexp == nil {
+		return errors.BadInput.New("prToIssueRegexp is required")
+	}
 
 	if err := clearHistoryData(db, data); err != nil {
 		return err

@@ -18,9 +18,11 @@ limitations under the License.
 package tasks
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/apache/incubator-devlake/core/errors"
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
-	"regexp"
 )
 
 type LinkerOptions struct {
@@ -38,6 +40,10 @@ func DecodeAndValidateTaskOptions(options map[string]interface{}) (*LinkerOption
 	err := helper.Decode(options, &op, nil)
 	if err != nil {
 		return nil, errors.Default.Wrap(err, "error decoding linker task options")
+	}
+	op.PrToIssueRegexp = strings.TrimSpace(op.PrToIssueRegexp)
+	if op.PrToIssueRegexp == "" {
+		return nil, errors.BadInput.New("prToIssueRegexp is required")
 	}
 	return &op, nil
 }
