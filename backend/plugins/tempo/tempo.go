@@ -15,21 +15,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package migrationscripts
+package main // must be main for plugin entry point
 
-import "github.com/apache/incubator-devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/runner"
+	"github.com/apache/incubator-devlake/plugins/tempo/impl"
+	"github.com/spf13/cobra"
+)
 
-// All returns the ordered list of migration scripts for the Copilot plugin.
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(addCopilotInitialTables),
-		new(addRawDataOriginToCopilotSeats),
-		new(addRawDataOriginToCopilotLanguageMetrics),
-		new(addNameFieldsToScopes),
-		new(addScopeConfig20260121),
-		new(migrateToUsageMetricsV2),
-		new(addPRFieldsToEnterpriseMetrics),
-		new(addOrganizationIdToUserMetrics),
-		new(addCopilotMetricsGaps),
+var PluginEntry impl.Tempo //nolint
+
+// standalone mode for debugging
+func main() {
+	cmd := &cobra.Command{Use: "tempo"}
+	connectionId := cmd.Flags().Uint64P("connection", "c", 0, "tempo connection id")
+	timeAfter := cmd.Flags().StringP("timeAfter", "a", "", "collect data that are created after specified time, ie 2006-01-02T15:04:05Z")
+
+	cmd.Run = func(c *cobra.Command, args []string) {
+		runner.DirectRun(c, args, PluginEntry, map[string]interface{}{
+			"connectionId": *connectionId,
+		}, *timeAfter)
 	}
+	runner.RunCmd(cmd)
 }

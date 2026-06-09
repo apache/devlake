@@ -20,6 +20,7 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -29,17 +30,11 @@ import (
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
 )
 
-const rawEnterpriseMetricsTable = "copilot_enterprise_metrics"
+const rawUserTeamsTable = "copilot_user_teams"
 
-// dayInput is passed to each collector request via the Input iterator.
-type dayInput struct {
-	Day string `json:"day"`
-}
-
-// CollectEnterpriseMetrics collects enterprise-level daily Copilot usage reports.
-// It iterates day-by-day using the enterprise-1-day report endpoint, downloads
-// the report files from the returned links, and stores them as raw data.
-func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
+// CollectUserTeams collects user-team mapping data from the user-teams-1-day report.
+// This enables team-level metrics aggregation by joining with per-user daily metrics.
+func CollectUserTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	data, ok := taskCtx.TaskContext().GetData().(*GhCopilotTaskData)
 	if !ok {
 		return errors.Default.New("task data is not GhCopilotTaskData")
@@ -47,8 +42,13 @@ func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	connection := data.Connection
 	connection.Normalize()
 
-	if !connection.HasEnterprise() {
-		taskCtx.GetLogger().Info("No enterprise configured, skipping enterprise metrics collection")
+	var urlTemplate string
+
+	if connection.HasEnterprise() {
+		urlTemplate = fmt.Sprintf("enterprises/%s/copilot/metrics/reports/user-teams-1-day", connection.Enterprise)
+	} else if connection.Organization != "" {
+		urlTemplate = fmt.Sprintf("orgs/%s/copilot/metrics/reports/user-teams-1-day", connection.Organization)
+	} else {
 		return nil
 	}
 
@@ -59,7 +59,7 @@ func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 	rawArgs := helper.RawDataSubTaskArgs{
 		Ctx:   taskCtx,
-		Table: rawEnterpriseMetricsTable,
+		Table: rawUserTeamsTable,
 		Options: copilotRawParams{
 			ConnectionId: data.Options.ConnectionId,
 			ScopeId:      data.Options.ScopeId,
@@ -75,16 +75,14 @@ func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 	now := time.Now().UTC()
 	start, until := computeReportDateRange(now, collector.GetSince())
-	start = clampDailyMetricsStartForBackfill(start, until)
 	logger := taskCtx.GetLogger()
 
 	dayIter := newDayIterator(start, until)
 
 	err = collector.InitCollector(helper.ApiCollectorArgs{
-		ApiClient: apiClient,
-		Input:     dayIter,
-		UrlTemplate: fmt.Sprintf("enterprises/%s/copilot/metrics/reports/enterprise-1-day",
-			connection.Enterprise),
+		ApiClient:   apiClient,
+		Input:       dayIter,
+		UrlTemplate: urlTemplate,
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			input := reqData.Input.(*dayInput)
 			q := url.Values{}
@@ -95,42 +93,41 @@ func CollectEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 		Concurrency:   1,
 		AfterResponse: ignoreNoContent,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			return parseRawReportResponse(res, logger)
+			body, readErr := io.ReadAll(res.Body)
+			res.Body.Close()
+			if readErr != nil {
+				return nil, errors.Default.Wrap(readErr, "failed to read report metadata")
+			}
+			if isEmptyReport(body) {
+				return nil, nil
+			}
+
+			var meta reportMetadataResponse
+			if jsonErr := json.Unmarshal(body, &meta); jsonErr != nil {
+				return nil, errors.Default.Wrap(jsonErr, "failed to parse report metadata")
+			}
+
+			var results []json.RawMessage
+			for _, link := range meta.DownloadLinks {
+				reportBody, dlErr := downloadReport(link, logger)
+				if dlErr != nil {
+					return nil, dlErr
+				}
+				if reportBody == nil {
+					continue
+				}
+				// User-teams reports are JSONL format
+				records, parseErr := parseJSONL(reportBody)
+				if parseErr != nil {
+					return nil, parseErr
+				}
+				results = append(results, records...)
+			}
+			return results, nil
 		},
 	})
 	if err != nil {
 		return err
 	}
 	return collector.Execute()
-}
-
-// dayIterator implements helper.Iterator to yield one dayInput per day in a range.
-type dayIterator struct {
-	days []dayInput
-	idx  int
-}
-
-func newDayIterator(start, end time.Time) *dayIterator {
-	var days []dayInput
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		days = append(days, dayInput{Day: d.Format("2006-01-02")})
-	}
-	return &dayIterator{days: days}
-}
-
-func (it *dayIterator) HasNext() bool {
-	return it.idx < len(it.days)
-}
-
-func (it *dayIterator) Fetch() (interface{}, errors.Error) {
-	if it.idx >= len(it.days) {
-		return nil, nil
-	}
-	day := it.days[it.idx]
-	it.idx++
-	return &day, nil
-}
-
-func (it *dayIterator) Close() errors.Error {
-	return nil
 }

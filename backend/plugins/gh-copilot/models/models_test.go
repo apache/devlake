@@ -40,6 +40,7 @@ func TestGetTablesInfo(t *testing.T) {
 		(&GhCopilotUserMetricsByLanguageModel{}).TableName():   false,
 		(&GhCopilotUserMetricsByModelFeature{}).TableName():    false,
 		(&GhCopilotSeat{}).TableName():                         false,
+		(&GhCopilotUserTeam{}).TableName():                     false,
 	}
 
 	if len(tables) != len(expected) {

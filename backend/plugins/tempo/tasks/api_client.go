@@ -15,21 +15,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package migrationscripts
+package tasks
 
-import "github.com/apache/incubator-devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/core/plugin"
+	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
+	"github.com/apache/incubator-devlake/plugins/tempo/models"
+)
 
-// All returns the ordered list of migration scripts for the Copilot plugin.
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(addCopilotInitialTables),
-		new(addRawDataOriginToCopilotSeats),
-		new(addRawDataOriginToCopilotLanguageMetrics),
-		new(addNameFieldsToScopes),
-		new(addScopeConfig20260121),
-		new(migrateToUsageMetricsV2),
-		new(addPRFieldsToEnterpriseMetrics),
-		new(addOrganizationIdToUserMetrics),
-		new(addCopilotMetricsGaps),
+const (
+	BaseURL = "https://api.tempo.io/4"
+)
+
+// NewTempoApiClient creates a new Tempo API client
+func NewTempoApiClient(
+	taskCtx plugin.TaskContext,
+	connection *models.TempoConnection,
+) (*helper.ApiAsyncClient, errors.Error) {
+	apiClient, err := helper.NewApiClientFromConnection(taskCtx.GetContext(), taskCtx, connection)
+	if err != nil {
+		return nil, err
 	}
+	return helper.CreateAsyncApiClient(taskCtx, apiClient, nil)
 }

@@ -17,19 +17,29 @@ limitations under the License.
 
 package migrationscripts
 
-import "github.com/apache/incubator-devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/helpers/migrationhelper"
+	"github.com/apache/incubator-devlake/plugins/tempo/models/migrationscripts/archived"
+)
 
-// All returns the ordered list of migration scripts for the Copilot plugin.
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(addCopilotInitialTables),
-		new(addRawDataOriginToCopilotSeats),
-		new(addRawDataOriginToCopilotLanguageMetrics),
-		new(addNameFieldsToScopes),
-		new(addScopeConfig20260121),
-		new(migrateToUsageMetricsV2),
-		new(addPRFieldsToEnterpriseMetrics),
-		new(addOrganizationIdToUserMetrics),
-		new(addCopilotMetricsGaps),
-	}
+type tempoInitTables20240401 struct{}
+
+func (script *tempoInitTables20240401) Up(basicRes context.BasicRes) errors.Error {
+	return migrationhelper.AutoMigrateTables(
+		basicRes,
+		&archived.TempoConnection{},
+		&archived.TempoScopeConfig{},
+		&archived.TempoTeam{},
+		&archived.TempoWorklog{},
+	)
+}
+
+func (*tempoInitTables20240401) Version() uint64 {
+	return 20240401143000
+}
+
+func (*tempoInitTables20240401) Name() string {
+	return "Tempo init schemas"
 }

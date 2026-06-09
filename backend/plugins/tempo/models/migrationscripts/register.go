@@ -17,19 +17,13 @@ limitations under the License.
 
 package migrationscripts
 
-import "github.com/apache/incubator-devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/plugin"
+)
 
-// All returns the ordered list of migration scripts for the Copilot plugin.
+// All returns all the migration scripts
 func All() []plugin.MigrationScript {
 	return []plugin.MigrationScript{
-		new(addCopilotInitialTables),
-		new(addRawDataOriginToCopilotSeats),
-		new(addRawDataOriginToCopilotLanguageMetrics),
-		new(addNameFieldsToScopes),
-		new(addScopeConfig20260121),
-		new(migrateToUsageMetricsV2),
-		new(addPRFieldsToEnterpriseMetrics),
-		new(addOrganizationIdToUserMetrics),
-		new(addCopilotMetricsGaps),
+		new(tempoInitTables20240401),
 	}
 }

@@ -18,6 +18,8 @@ limitations under the License.
 package tasks
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -45,6 +47,7 @@ func TestComputeReportDateRangeDefaultLookback(t *testing.T) {
 }
 
 func TestComputeReportDateRangeUsesSince(t *testing.T) {
+	// since is far enough in the past that the lookback buffer doesn't apply.
 	now := time.Date(2025, 1, 10, 12, 0, 0, 0, time.UTC)
 	since := time.Date(2025, 1, 3, 12, 0, 0, 0, time.UTC)
 	start, until := computeReportDateRange(now, &since)
@@ -61,11 +64,82 @@ func TestComputeReportDateRangeClampsToLookback(t *testing.T) {
 }
 
 func TestComputeReportDateRangeClampsFutureSince(t *testing.T) {
+	// Future since is clamped to until, then the lookback buffer applies.
 	now := time.Date(2025, 1, 10, 12, 0, 0, 0, time.UTC)
 	since := now.Add(24 * time.Hour)
 	start, until := computeReportDateRange(now, &since)
 	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), until)
-	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), start)
+	require.Equal(t, time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC), start)
+}
+
+func TestComputeReportDateRangeLookbackBuffer(t *testing.T) {
+	// since is yesterday: without the buffer we'd only request 1 day (yesterday).
+	// With the buffer we look back reportLookbackDays days to retry any 404'd days.
+	now := time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC)  // midnight run
+	since := time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC) // LatestSuccessStart from previous midnight run
+	start, until := computeReportDateRange(now, &since)
+	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), until)
+	require.Equal(t, time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC), start)
+}
+
+func TestClampDailyMetricsStartForBackfillRecentStart(t *testing.T) {
+	until := time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC)
+	start := time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+
+	clamped := clampDailyMetricsStartForBackfill(start, until)
+	require.Equal(t, time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC), clamped)
+}
+
+func TestClampDailyMetricsStartForBackfillKeepsOlderStart(t *testing.T) {
+	until := time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC)
+	start := time.Date(2025, 1, 3, 0, 0, 0, 0, time.UTC)
+
+	clamped := clampDailyMetricsStartForBackfill(start, until)
+	require.Equal(t, start, clamped)
+}
+
+func TestUserMetricsDateRangeAppliesFourDayBackfillWindow(t *testing.T) {
+	now := time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC)
+	since := time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC)
+
+	start, until := computeReportDateRange(now, &since)
+	start = clampDailyMetricsStartForBackfill(start, until)
+
+	require.Equal(t, time.Date(2025, 1, 9, 0, 0, 0, 0, time.UTC), until)
+	require.Equal(t, time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC), start)
+}
+
+func TestParseReportMetadataResponseNoContent(t *testing.T) {
+	res := &http.Response{
+		StatusCode: http.StatusNoContent,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	meta, err := parseReportMetadataResponse(res, nil)
+	require.NoError(t, err)
+	require.Nil(t, meta)
+}
+
+func TestParseReportMetadataResponseEmptyBody(t *testing.T) {
+	res := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	meta, err := parseReportMetadataResponse(res, nil)
+	require.NoError(t, err)
+	require.Nil(t, meta)
+}
+
+func TestParseReportMetadataResponseEmptyString(t *testing.T) {
+	res := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewReader([]byte(`""`))),
+	}
+
+	meta, err := parseReportMetadataResponse(res, nil)
+	require.NoError(t, err)
+	require.Nil(t, meta)
 }
 
 func TestIsEmptyReport(t *testing.T) {

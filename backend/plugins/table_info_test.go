@@ -57,6 +57,7 @@ import (
 	taiga "github.com/apache/incubator-devlake/plugins/taiga/impl"
 	tapd "github.com/apache/incubator-devlake/plugins/tapd/impl"
 	teambition "github.com/apache/incubator-devlake/plugins/teambition/impl"
+	tempo "github.com/apache/incubator-devlake/plugins/tempo/impl"
 	testmo "github.com/apache/incubator-devlake/plugins/testmo/impl"
 	trello "github.com/apache/incubator-devlake/plugins/trello/impl"
 	webhook "github.com/apache/incubator-devlake/plugins/webhook/impl"
@@ -97,6 +98,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("taiga/models", taiga.Taiga{}.GetTablesInfo)
 	checker.FeedIn("tapd/models", tapd.Tapd{}.GetTablesInfo)
 	checker.FeedIn("teambition/models", teambition.Teambition{}.GetTablesInfo)
+	checker.FeedIn("tempo/models", tempo.Tempo{}.GetTablesInfo)
 	checker.FeedIn("testmo/models", testmo.Testmo{}.GetTablesInfo)
 	checker.FeedIn("trello/models", trello.Trello{}.GetTablesInfo)
 	checker.FeedIn("webhook/models", webhook.Webhook{}.GetTablesInfo)
