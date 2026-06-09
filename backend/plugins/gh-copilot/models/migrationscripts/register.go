@@ -30,5 +30,6 @@ func All() []plugin.MigrationScript {
 		new(migrateToUsageMetricsV2),
 		new(addPRFieldsToEnterpriseMetrics),
 		new(addOrganizationIdToUserMetrics),
+		new(addCopilotMetricsGaps),
 	}
 }

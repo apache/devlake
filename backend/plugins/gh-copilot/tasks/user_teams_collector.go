@@ -30,11 +30,11 @@ import (
 	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
 )
 
-const rawOrgMetricsTable = "copilot_org_metrics"
+const rawUserTeamsTable = "copilot_user_teams"
 
-// CollectOrgMetrics collects organization-level daily Copilot usage reports
-// using the new report download API. Replaces the deprecated /orgs/{org}/copilot/metrics endpoint.
-func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
+// CollectUserTeams collects user-team mapping data from the user-teams-1-day report.
+// This enables team-level metrics aggregation by joining with per-user daily metrics.
+func CollectUserTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	data, ok := taskCtx.TaskContext().GetData().(*GhCopilotTaskData)
 	if !ok {
 		return errors.Default.New("task data is not GhCopilotTaskData")
@@ -42,8 +42,13 @@ func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 	connection := data.Connection
 	connection.Normalize()
 
-	if connection.Organization == "" {
-		taskCtx.GetLogger().Info("No organization configured, skipping org metrics collection")
+	var urlTemplate string
+
+	if connection.HasEnterprise() {
+		urlTemplate = fmt.Sprintf("enterprises/%s/copilot/metrics/reports/user-teams-1-day", connection.Enterprise)
+	} else if connection.Organization != "" {
+		urlTemplate = fmt.Sprintf("orgs/%s/copilot/metrics/reports/user-teams-1-day", connection.Organization)
+	} else {
 		return nil
 	}
 
@@ -54,7 +59,7 @@ func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 	rawArgs := helper.RawDataSubTaskArgs{
 		Ctx:   taskCtx,
-		Table: rawOrgMetricsTable,
+		Table: rawUserTeamsTable,
 		Options: copilotRawParams{
 			ConnectionId: data.Options.ConnectionId,
 			ScopeId:      data.Options.ScopeId,
@@ -70,16 +75,14 @@ func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 	now := time.Now().UTC()
 	start, until := computeReportDateRange(now, collector.GetSince())
-	start = clampDailyMetricsStartForBackfill(start, until)
 	logger := taskCtx.GetLogger()
 
 	dayIter := newDayIterator(start, until)
 
 	err = collector.InitCollector(helper.ApiCollectorArgs{
-		ApiClient: apiClient,
-		Input:     dayIter,
-		UrlTemplate: fmt.Sprintf("orgs/%s/copilot/metrics/reports/organization-1-day",
-			connection.Organization),
+		ApiClient:   apiClient,
+		Input:       dayIter,
+		UrlTemplate: urlTemplate,
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			input := reqData.Input.(*dayInput)
 			q := url.Values{}
@@ -101,17 +104,7 @@ func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 
 			var meta reportMetadataResponse
 			if jsonErr := json.Unmarshal(body, &meta); jsonErr != nil {
-				snippet := string(body)
-				if len(snippet) > 200 {
-					snippet = snippet[:200]
-				}
-				logger.Error(jsonErr, "failed to parse report metadata, body=%s", snippet)
 				return nil, errors.Default.Wrap(jsonErr, "failed to parse report metadata")
-			}
-
-			if len(meta.DownloadLinks) == 0 {
-				logger.Info("No download links for report day=%s, skipping", meta.ReportDay)
-				return nil, nil
 			}
 
 			var results []json.RawMessage
@@ -121,9 +114,14 @@ func CollectOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					return nil, dlErr
 				}
 				if reportBody == nil {
-					continue // blob not found, skip
+					continue
 				}
-				results = append(results, json.RawMessage(reportBody))
+				// User-teams reports are JSONL format
+				records, parseErr := parseJSONL(reportBody)
+				if parseErr != nil {
+					return nil, parseErr
+				}
+				results = append(results, records...)
 			}
 			return results, nil
 		},

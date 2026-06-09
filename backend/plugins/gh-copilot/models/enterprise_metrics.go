@@ -44,6 +44,15 @@ type CopilotCodeMetrics struct {
 	LocDeletedSum               int `json:"locDeletedSum"`
 }
 
+// CopilotCliMetrics contains CLI usage breakdown metrics.
+type CopilotCliMetrics struct {
+	CliSessionCount   int `json:"cliSessionCount" gorm:"comment:Number of CLI sessions"`
+	CliRequestCount   int `json:"cliRequestCount" gorm:"comment:Number of CLI requests"`
+	CliPromptCount    int `json:"cliPromptCount" gorm:"comment:Number of CLI prompts"`
+	CliOutputTokenSum int `json:"cliOutputTokenSum" gorm:"comment:Total output tokens from CLI"`
+	CliPromptTokenSum int `json:"cliPromptTokenSum" gorm:"comment:Total prompt tokens from CLI"`
+}
+
 // GhCopilotEnterpriseDailyMetrics captures daily enterprise-level aggregate Copilot metrics.
 type GhCopilotEnterpriseDailyMetrics struct {
 	ConnectionId uint64    `gorm:"primaryKey" json:"connectionId"`
@@ -57,12 +66,43 @@ type GhCopilotEnterpriseDailyMetrics struct {
 	MonthlyActiveChatUsers  int    `json:"monthlyActiveChatUsers"`
 	MonthlyActiveAgentUsers int    `json:"monthlyActiveAgentUsers"`
 
-	PRTotalReviewed          int `json:"prTotalReviewed" gorm:"comment:Total PRs reviewed"`
-	PRTotalCreated           int `json:"prTotalCreated" gorm:"comment:Total PRs created"`
-	PRTotalCreatedByCopilot  int `json:"prTotalCreatedByCopilot" gorm:"comment:PRs created by Copilot"`
-	PRTotalReviewedByCopilot int `json:"prTotalReviewedByCopilot" gorm:"comment:PRs reviewed by Copilot"`
+	// CLI active users
+	DailyActiveCliUsers int `json:"dailyActiveCliUsers" gorm:"comment:Daily active CLI users"`
+
+	// Code review user counts
+	DailyActiveCopilotCodeReviewUsers    int `json:"dailyActiveCopilotCodeReviewUsers"`
+	DailyPassiveCopilotCodeReviewUsers   int `json:"dailyPassiveCopilotCodeReviewUsers"`
+	WeeklyActiveCopilotCodeReviewUsers   int `json:"weeklyActiveCopilotCodeReviewUsers"`
+	WeeklyPassiveCopilotCodeReviewUsers  int `json:"weeklyPassiveCopilotCodeReviewUsers"`
+	MonthlyActiveCopilotCodeReviewUsers  int `json:"monthlyActiveCopilotCodeReviewUsers"`
+	MonthlyPassiveCopilotCodeReviewUsers int `json:"monthlyPassiveCopilotCodeReviewUsers"`
+
+	// Chat panel mode breakdown
+	ChatPanelAgentMode   int `json:"chatPanelAgentMode" gorm:"comment:Chat panel agent mode interactions"`
+	ChatPanelAskMode     int `json:"chatPanelAskMode" gorm:"comment:Chat panel ask mode interactions"`
+	ChatPanelCustomMode  int `json:"chatPanelCustomMode" gorm:"comment:Chat panel custom mode interactions"`
+	ChatPanelEditMode    int `json:"chatPanelEditMode" gorm:"comment:Chat panel edit mode interactions"`
+	ChatPanelPlanMode    int `json:"chatPanelPlanMode" gorm:"comment:Chat panel plan mode interactions"`
+	ChatPanelUnknownMode int `json:"chatPanelUnknownMode" gorm:"comment:Chat panel unknown mode interactions"`
+
+	// Pull request metrics (expanded)
+	PRTotalReviewed                   int     `json:"prTotalReviewed" gorm:"comment:Total PRs reviewed"`
+	PRTotalCreated                    int     `json:"prTotalCreated" gorm:"comment:Total PRs created"`
+	PRTotalMerged                     int     `json:"prTotalMerged" gorm:"comment:Total PRs merged"`
+	PRMedianMinutesToMerge            float64 `json:"prMedianMinutesToMerge" gorm:"comment:Median minutes to merge PRs"`
+	PRTotalSuggestions                int     `json:"prTotalSuggestions" gorm:"comment:Total PR review suggestions"`
+	PRTotalAppliedSuggestions         int     `json:"prTotalAppliedSuggestions" gorm:"comment:Total applied PR suggestions"`
+	PRTotalCreatedByCopilot           int     `json:"prTotalCreatedByCopilot" gorm:"comment:PRs created by Copilot"`
+	PRTotalReviewedByCopilot          int     `json:"prTotalReviewedByCopilot" gorm:"comment:PRs reviewed by Copilot"`
+	PRTotalMergedCreatedByCopilot     int     `json:"prTotalMergedCreatedByCopilot" gorm:"comment:Merged PRs created by Copilot"`
+	PRTotalMergedReviewedByCopilot    int     `json:"prTotalMergedReviewedByCopilot" gorm:"comment:Merged PRs reviewed by Copilot"`
+	PRMedianMinToMergeCopilotAuthored float64 `json:"prMedianMinToMergeCopilotAuthored" gorm:"comment:Median min to merge Copilot-authored PRs"`
+	PRMedianMinToMergeCopilotReviewed float64 `json:"prMedianMinToMergeCopilotReviewed" gorm:"comment:Median min to merge Copilot-reviewed PRs"`
+	PRTotalCopilotSuggestions         int     `json:"prTotalCopilotSuggestions" gorm:"comment:Total Copilot review suggestions"`
+	PRTotalCopilotAppliedSuggestions  int     `json:"prTotalCopilotAppliedSuggestions" gorm:"comment:Total Copilot applied suggestions"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
+	CopilotCliMetrics      `mapstructure:",squash"`
 	common.NoPKModel
 }
 
