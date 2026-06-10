@@ -91,3 +91,16 @@ func GetScopeConfigList(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutp
 func DeleteScopeConfig(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ScopeConfigApi.Delete(input)
 }
+
+// GetProjectsByScopeConfig return projects details related by scope config
+// @Summary return all related projects
+// @Description return all related projects
+// @Tags plugins/linear
+// @Param scopeConfigId path int true "scopeConfigId"
+// @Success 200  {object} models.ProjectScopeOutput
+// @Failure 400  {object} shared.ApiBody "Bad Request"
+// @Failure 500  {object} shared.ApiBody "Internal Error"
+// @Router /plugins/linear/scope-config/{scopeConfigId}/projects [GET]
+func GetProjectsByScopeConfig(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
+	return dsHelper.ScopeConfigApi.GetProjectsByScopeConfig(input)
+}

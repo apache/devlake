@@ -21,11 +21,17 @@ import (
 	"github.com/apache/incubator-devlake/core/models/common"
 )
 
-// LinearScopeConfig is intentionally minimal: Linear's WorkflowState.type maps
-// deterministically to TODO/IN_PROGRESS/DONE, so no user status mapping is
-// required. It is reserved for future label-based issue-type mapping.
+// LinearScopeConfig keeps status mapping deterministic (Linear's
+// WorkflowState.type maps to TODO/IN_PROGRESS/DONE without user input) but
+// allows label-based issue-type mapping. Linear has no native issue "type", so
+// each pattern below is a regular expression matched against an issue's label
+// names to derive the domain ticket.Issue.Type. Precedence is
+// INCIDENT > BUG > REQUIREMENT; an issue matching none defaults to REQUIREMENT.
 type LinearScopeConfig struct {
-	common.ScopeConfig `mapstructure:",squash" json:",inline" gorm:"embedded"`
+	common.ScopeConfig   `mapstructure:",squash" json:",inline" gorm:"embedded"`
+	IssueTypeRequirement string `mapstructure:"issueTypeRequirement,omitempty" json:"issueTypeRequirement" gorm:"type:varchar(255)"`
+	IssueTypeBug         string `mapstructure:"issueTypeBug,omitempty" json:"issueTypeBug" gorm:"type:varchar(255)"`
+	IssueTypeIncident    string `mapstructure:"issueTypeIncident,omitempty" json:"issueTypeIncident" gorm:"type:varchar(255)"`
 }
 
 func (LinearScopeConfig) TableName() string {

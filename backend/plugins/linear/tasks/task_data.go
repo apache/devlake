@@ -38,6 +38,9 @@ type LinearTaskData struct {
 	Options       *LinearOptions
 	GraphqlClient *api.GraphqlAsyncClient
 	TimeAfter     *time.Time
+	// ScopeConfig carries the resolved scope config (e.g. label-based issue-type
+	// mapping). Never nil: PrepareTaskData defaults it to an empty config.
+	ScopeConfig *models.LinearScopeConfig
 }
 
 type LinearApiParams models.LinearApiParams

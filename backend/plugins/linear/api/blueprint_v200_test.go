@@ -65,6 +65,38 @@ func TestMakeScopesV200(t *testing.T) {
 	assert.Equal(t, expectDomainScopeId, scopes[0].ScopeId())
 }
 
+func TestMakePipelinePlanV200PassesScopeConfigId(t *testing.T) {
+	const scopeConfigId uint64 = 42
+	subtaskMetas := []plugin.SubTaskMeta{
+		{Name: "convertIssues", EnabledByDefault: true, DomainTypes: []string{plugin.DOMAIN_TYPE_TICKET}},
+	}
+
+	plan, err := makePipelinePlanV200(
+		subtaskMetas,
+		[]*srvhelper.ScopeDetail[models.LinearTeam, models.LinearScopeConfig]{
+			{
+				Scope: models.LinearTeam{
+					Scope:  common.Scope{ConnectionId: 1, ScopeConfigId: scopeConfigId},
+					TeamId: "team-1",
+					Name:   "Engineering",
+				},
+				ScopeConfig: &models.LinearScopeConfig{
+					ScopeConfig: common.ScopeConfig{Entities: []string{plugin.DOMAIN_TYPE_TICKET}},
+				},
+			},
+		},
+		&models.LinearConnection{
+			BaseConnection: helper.BaseConnection{Model: common.Model{ID: 1}},
+		},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(plan))
+	assert.Equal(t, 1, len(plan[0]))
+	// the scope's scopeConfigId must be threaded into the task options so the
+	// convertor can resolve label-based issue-type mapping at runtime.
+	assert.EqualValues(t, scopeConfigId, plan[0][0].Options["scopeConfigId"])
+}
+
 func TestMakeScopesV200WithoutTicketEntity(t *testing.T) {
 	mockLinearPlugin(t)
 

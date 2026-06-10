@@ -68,8 +68,9 @@ func makePipelinePlanV200(
 			subtaskMetas,
 			scopeConfig.Entities,
 			tasks.LinearOptions{
-				ConnectionId: connection.ID,
-				TeamId:       scope.TeamId,
+				ConnectionId:  connection.ID,
+				TeamId:        scope.TeamId,
+				ScopeConfigId: scope.ScopeConfigId,
 			},
 		)
 		if err != nil {

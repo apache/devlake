@@ -143,9 +143,19 @@ func (p Linear) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]i
 		return nil, errors.Default.Wrap(err, "unable to create Linear GraphQL client")
 	}
 
+	// Resolve the scope config (label-based issue-type mapping). Default to an
+	// empty config when none is set so subtasks can rely on it being non-nil.
+	scopeConfig := &models.LinearScopeConfig{}
+	if op.ScopeConfigId != 0 {
+		if err := taskCtx.GetDal().First(scopeConfig, dal.Where("id = ?", op.ScopeConfigId)); err != nil {
+			return nil, errors.Default.Wrap(err, "error getting scope config for Linear plugin")
+		}
+	}
+
 	taskData := &tasks.LinearTaskData{
 		Options:       &op,
 		GraphqlClient: graphqlClient,
+		ScopeConfig:   scopeConfig,
 	}
 	if op.TimeAfter != "" {
 		timeAfter, errConv := errors.Convert01(time.Parse(time.RFC3339, op.TimeAfter))
@@ -197,6 +207,9 @@ func (p Linear) ApiResources() map[string]map[string]plugin.ApiResourceHandler {
 		"connections/:connectionId/scopes": {
 			"GET": api.GetScopeList,
 			"PUT": api.PutScopes,
+		},
+		"scope-config/:scopeConfigId/projects": {
+			"GET": api.GetProjectsByScopeConfig,
 		},
 	}
 }

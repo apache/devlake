@@ -19,6 +19,7 @@ package tasks
 
 import (
 	"reflect"
+	"regexp"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -68,6 +69,24 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		accountNames[account.Id] = name
 	}
 
+	// Preload issue labels so the convertor can derive domain issue Type from a
+	// label-based mapping (Linear has no native issue type).
+	var issueLabels []models.LinearIssueLabel
+	if err := db.All(&issueLabels, dal.Where("connection_id = ?", connectionId)); err != nil {
+		return err
+	}
+	labelsByIssue := make(map[string][]string, len(issueLabels))
+	for _, l := range issueLabels {
+		labelsByIssue[l.IssueId] = append(labelsByIssue[l.IssueId], l.LabelName)
+	}
+
+	// Compile the label-matching patterns from the scope config. An empty
+	// pattern is treated as "no match" (nil), so issues default to REQUIREMENT.
+	typeMatcher, err := newIssueTypeMatcher(data.ScopeConfig)
+	if err != nil {
+		return err
+	}
+
 	cursor, err := db.Cursor(
 		dal.From(&models.LinearIssue{}),
 		dal.Where("connection_id = ? AND team_id = ?", connectionId, data.Options.TeamId),
@@ -96,7 +115,7 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 				Title:          issue.Title,
 				Description:    issue.Description,
 				Url:            issue.Url,
-				Type:           ticket.REQUIREMENT,
+				Type:           typeMatcher.typeOf(labelsByIssue[issue.Id]),
 				Status:         StatusFromStateType(issue.StateType),
 				OriginalStatus: issue.StateName,
 				StoryPoint:     issue.Estimate,
@@ -150,4 +169,61 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	return converter.Execute()
+}
+
+// issueTypeMatcher derives the domain ticket.Issue.Type from an issue's label
+// names using the scope config's regex patterns. Precedence is
+// INCIDENT > BUG > REQUIREMENT; an issue whose labels match none (or with no
+// patterns configured) defaults to REQUIREMENT.
+type issueTypeMatcher struct {
+	incident    *regexp.Regexp
+	bug         *regexp.Regexp
+	requirement *regexp.Regexp
+}
+
+func newIssueTypeMatcher(sc *models.LinearScopeConfig) (*issueTypeMatcher, errors.Error) {
+	m := &issueTypeMatcher{}
+	if sc == nil {
+		return m, nil
+	}
+	for _, p := range []struct {
+		pattern string
+		field   string
+		out     **regexp.Regexp
+	}{
+		{sc.IssueTypeIncident, "issueTypeIncident", &m.incident},
+		{sc.IssueTypeBug, "issueTypeBug", &m.bug},
+		{sc.IssueTypeRequirement, "issueTypeRequirement", &m.requirement},
+	} {
+		if p.pattern == "" {
+			continue
+		}
+		re, err := regexp.Compile(p.pattern)
+		if err != nil {
+			return nil, errors.Default.Wrap(err, "invalid "+p.field+" pattern")
+		}
+		*p.out = re
+	}
+	return m, nil
+}
+
+func (m *issueTypeMatcher) typeOf(labels []string) string {
+	for _, c := range []struct {
+		pattern *regexp.Regexp
+		typ     string
+	}{
+		{m.incident, ticket.INCIDENT},
+		{m.bug, ticket.BUG},
+		{m.requirement, ticket.REQUIREMENT},
+	} {
+		if c.pattern == nil {
+			continue
+		}
+		for _, name := range labels {
+			if c.pattern.MatchString(name) {
+				return c.typ
+			}
+		}
+	}
+	return ticket.REQUIREMENT
 }

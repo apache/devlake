@@ -51,8 +51,11 @@ func (LinearTeam) TableName() string { return "_tool_linear_teams" }
 
 type LinearScopeConfig struct {
 	archived.ScopeConfig
-	ConnectionId uint64 `json:"connectionId" gorm:"index"`
-	Name         string `gorm:"type:varchar(255);uniqueIndex" json:"name"`
+	ConnectionId         uint64 `json:"connectionId" gorm:"index"`
+	Name                 string `gorm:"type:varchar(255);uniqueIndex" json:"name"`
+	IssueTypeRequirement string `json:"issueTypeRequirement" gorm:"type:varchar(255)"`
+	IssueTypeBug         string `json:"issueTypeBug" gorm:"type:varchar(255)"`
+	IssueTypeIncident    string `json:"issueTypeIncident" gorm:"type:varchar(255)"`
 }
 
 func (LinearScopeConfig) TableName() string { return "_tool_linear_scope_configs" }
