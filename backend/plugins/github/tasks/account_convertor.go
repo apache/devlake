@@ -81,6 +81,12 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 		// merged-by user), and LEFT JOIN _tool_github_accounts for profile detail when it
 		// was collected. This guarantees a domain `accounts` row for every CreatorId /
 		// AuthorId the other convertors emit, instead of only for users who committed.
+		// Raw-data provenance follows the same rule as the profile fields: the enriched
+		// _tool_github_accounts row when we collected one, the repo_accounts row otherwise.
+		// Note the consequence: fallback-provenance rows carry a _raw_data_table other than
+		// _raw_github_api_accounts, so the batch-save divider's full-sync delete-then-reinsert
+		// (keyed on this converter's raw table) never deletes them; they are reconciled by
+		// upsert only. Scope deletion still covers them via _raw_data_params.
 		// SQL is kept DB-agnostic (no backtick quoting, COALESCE not IFNULL) so it runs on
 		// both MySQL and PostgreSQL.
 		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
@@ -90,10 +96,10 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 					COALESCE(ga.name, '') AS name,
 					COALESCE(ga.email, '') AS email,
 					COALESCE(ga.avatar_url, '') AS avatar_url,
-					_tool_github_repo_accounts._raw_data_params AS _raw_data_params,
-					_tool_github_repo_accounts._raw_data_table AS _raw_data_table,
-					_tool_github_repo_accounts._raw_data_id AS _raw_data_id,
-					_tool_github_repo_accounts._raw_data_remark AS _raw_data_remark`),
+					COALESCE(ga._raw_data_params, _tool_github_repo_accounts._raw_data_params) AS _raw_data_params,
+					COALESCE(ga._raw_data_table, _tool_github_repo_accounts._raw_data_table) AS _raw_data_table,
+					COALESCE(ga._raw_data_id, _tool_github_repo_accounts._raw_data_id) AS _raw_data_id,
+					COALESCE(ga._raw_data_remark, _tool_github_repo_accounts._raw_data_remark) AS _raw_data_remark`),
 				dal.From(&models.GithubRepoAccount{}),
 				dal.Join(`left join _tool_github_accounts ga on (
 					ga.connection_id = _tool_github_repo_accounts.connection_id
