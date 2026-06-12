@@ -95,16 +95,17 @@ func ConvertIssueChangelogs(subtaskCtx plugin.SubTaskContext) errors.Error {
 					_tool_jira_issue_changelogs.connection_id = _tool_jira_issue_changelog_items.connection_id
 					AND _tool_jira_issue_changelogs.changelog_id = _tool_jira_issue_changelog_items.changelog_id
 				)`),
-				dal.Join(`left join _tool_jira_board_issues on (
-					_tool_jira_board_issues.connection_id = _tool_jira_issue_changelogs.connection_id
-					AND _tool_jira_board_issues.issue_id = _tool_jira_issue_changelogs.issue_id
-				)`),
-				dal.Where("_tool_jira_issue_changelog_items.connection_id = ? AND _tool_jira_board_issues.board_id = ?", connectionId, boardId),
-			}
+				dal.Join(`inner join _tool_jira_board_issues on (
+				    _tool_jira_board_issues.connection_id = _tool_jira_issue_changelogs.connection_id
+				    AND _tool_jira_board_issues.issue_id = _tool_jira_issue_changelogs.issue_id
+				    AND _tool_jira_board_issues.board_id = ?
+				)`, boardId),
+				dal.Where("_tool_jira_issue_changelog_items.connection_id = ?", connectionId),			}
 			if stateManager.IsIncremental() {
 				since := stateManager.GetSince()
 				if since != nil {
-					clauses = append(clauses, dal.Where("_tool_jira_issue_changelog_items.created_at >= ? ", since))
+					clauses = append(clauses, dal.Where("_tool_jira_issue_changelogs.created >= ?", since))
+
 				}
 			}
 			return db.Cursor(clauses...)
