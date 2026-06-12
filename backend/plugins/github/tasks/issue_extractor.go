@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/ticket"
@@ -84,44 +85,53 @@ type IssueRegexes struct {
 
 func ExtractApiIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
+	db := taskCtx.GetDal()
 
 	config := data.Options.ScopeConfig
 	issueRegexes, err := NewIssueRegexes(config)
 	if err != nil {
 		return nil
 	}
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraIssues by Board
-			*/
+
+	extractor, extErr := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[IssuesResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_ISSUE_TABLE,
+			SubtaskConfig: map[string]string{
+				"issueSeverity":        config.IssueSeverity,
+				"issueComponent":       config.IssueComponent,
+				"issuePriority":        config.IssuePriority,
+				"issueTypeBug":         config.IssueTypeBug,
+				"issueTypeRequirement": config.IssueTypeRequirement,
+				"issueTypeIncident":    config.IssueTypeIncident,
+			},
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			body := &IssuesResponse{}
-			err := errors.Convert(json.Unmarshal(row.Data, body))
-			if err != nil {
-				return nil, err
+		BeforeExtract: func(body *IssuesResponse, stateManager *api.SubtaskStateManager) errors.Error {
+			if stateManager.IsIncremental() {
+				if err := db.Delete(&models.GithubIssueLabel{},
+					dal.Where("connection_id = ? AND issue_id = ?", data.Options.ConnectionId, body.GithubId),
+				); err != nil {
+					return errors.Convert(err)
+				}
+				return errors.Convert(db.Delete(&models.GithubIssueAssignee{},
+					dal.Where("connection_id = ? AND issue_id = ?", data.Options.ConnectionId, body.GithubId),
+				))
 			}
-			// need to extract 2 kinds of entities here
+			return nil
+		},
+		Extract: func(body *IssuesResponse, row *api.RawData) ([]any, errors.Error) {
 			if body.GithubId == 0 {
 				return nil, nil
 			}
-			//If this is a pr, ignore
+			// If this is a pr, ignore
 			if body.PullRequest.Url != "" {
 				return nil, nil
 			}
 			results := make([]interface{}, 0, 2)
-
 			githubIssue, err := convertGithubIssue(body, data.Options.ConnectionId, data.Options.GithubId)
 			if err != nil {
 				return nil, err
@@ -163,8 +173,8 @@ func ExtractApiIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			return results, nil
 		},
 	})
-	if err != nil {
-		return err
+	if extErr != nil {
+		return extErr
 	}
 
 	return extractor.Execute()

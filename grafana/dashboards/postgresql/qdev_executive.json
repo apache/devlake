@@ -1,0 +1,768 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Usage (New)",
+      "tooltip": "Kiro Usage Dashboard - Credits & Messages (new format)",
+      "type": "link",
+      "url": "/d/qdev_user_report"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Feature Metrics (Legacy)",
+      "tooltip": "Kiro Legacy Feature Metrics (old format)",
+      "type": "link",
+      "url": "/d/qdev_feature_metrics"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Prompt Logging",
+      "tooltip": "Kiro AI Activity Insights - Prompt Logging",
+      "type": "link",
+      "url": "/d/qdev_logging"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "KPI Overview (cross-source)",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Distinct users with chat activity in the last 7 days (from prompt logging)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT user_id) AS \"WAU\" FROM lake._tool_q_dev_chat_log WHERE timestamp >= NOW() - INTERVAL '7 DAY'",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users (logging)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Average credits spent per accepted line of code (new report + legacy metrics)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(NULLIF(SUM(d.total_accepted), 0), 0), 2) AS \"Credits per Accepted Line\" FROM (SELECT user_id, date, SUM(credits_used) AS credits_used FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"user_id\", date) AS r JOIN (SELECT user_id, \"date\", (inline_ai_code_lines + chat_ai_code_lines + code_fix_accepted_lines + dev_accepted_lines) AS total_accepted FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)) AS d ON r.user_id = d.user_id AND r.date = d.date",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits Efficiency (new + legacy)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Percentage of inline suggestions accepted (from legacy feature metrics)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(SUM(inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(inline_suggestions_count), 0), 0) * 100, 1) AS \"Acceptance %\" FROM lake._tool_q_dev_user_data WHERE $__timeFilter(date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Inline Acceptance Rate (legacy)",
+      "type": "stat"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Percentage of users who used steering rules (from prompt logging)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(CAST(COUNT(DISTINCT CASE WHEN has_steering = TRUE THEN user_id END) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT user_id), 0), 0) * 100 AS DECIMAL), 0) AS \"Steering %\" FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)",
+          "refId": "A"
+        }
+      ],
+      "title": "Steering Adoption (logging)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 101,
+      "panels": [],
+      "title": "User Engagement (logging data: _tool_q_dev_chat_log)",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Weekly active user count over time (from prompt logging)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT TO_DATE(yw || ' Monday', 'IYYYIW FMDay') AS time, COUNT(DISTINCT user_id) AS \"Active Users\" FROM (SELECT user_id, (EXTRACT(ISOYEAR FROM timestamp) * 100 + EXTRACT(WEEK FROM timestamp))::int AS yw FROM lake._tool_q_dev_chat_log WHERE $__timeFilter(timestamp)) AS t GROUP BY \"yw\" ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Weekly Active Users Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "New vs returning users by week (from prompt logging)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT TO_DATE(yw || ' Monday', 'IYYYIW FMDay') AS time, SUM(CASE WHEN yw = first_yw THEN 1 ELSE 0 END) AS \"New Users\", SUM(CASE WHEN yw <> first_yw THEN 1 ELSE 0 END) AS \"Returning Users\" FROM (SELECT DISTINCT u.user_id, (EXTRACT(ISOYEAR FROM u.timestamp) * 100 + EXTRACT(WEEK FROM u.timestamp))::int AS yw, f.first_yw FROM lake._tool_q_dev_chat_log AS u JOIN (SELECT user_id, (EXTRACT(ISOYEAR FROM MIN(timestamp)) * 100 + EXTRACT(WEEK FROM MIN(timestamp)))::int AS first_yw FROM lake._tool_q_dev_chat_log GROUP BY user_id) AS f ON u.user_id = f.user_id WHERE $__timeFilter(u.timestamp)) AS weekly GROUP BY yw ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "New vs Returning Users (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Credits & Subscription (new format: _tool_q_dev_user_report)",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Cumulative credits this month vs projected total (from new user_report)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time, SUM(SUM(credits_used)) OVER (ORDER BY date NULLS FIRST) AS \"Cumulative Credits\", (SELECT CAST(SUM(credits_used) AS NUMERIC) / NULLIF(COUNT(DISTINCT date), 0) * EXTRACT(DAY FROM CAST(CAST(DATE_TRUNC('MONTH', CURRENT_DATE) + INTERVAL '1 MONTH' - INTERVAL '1 DAY' AS DATE) AS DATE)) FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE))) AS \"Projected Monthly\" FROM lake._tool_q_dev_user_report WHERE YEAR(CAST(date AS DATE)) = YEAR(CAST(CURRENT_DATE AS DATE)) AND MONTH(CAST(date AS DATE)) = MONTH(CAST(CURRENT_DATE AS DATE)) GROUP BY \"date\" ORDER BY date NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Credits Pace vs Projected (This Month)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Power tier users with no activity in the last 14 days (from new user_report)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(MAX(display_name), user_id) AS \"User\", MAX(subscription_tier) AS \"Tier\", ROUND(SUM(credits_used), 1) AS \"Total Credits Used\", MAX(date) AS \"Last Activity\" FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) AND subscription_tier = 'POWER' GROUP BY \"user_id\" HAVING MAX(date) < NOW() - INTERVAL '14 DAY' ORDER BY MAX(date) NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Idle Power Users (No Activity in 14 Days)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 103,
+      "panels": [],
+      "title": "Cross-Source: User Productivity (new report + legacy metrics)",
+      "type": "row"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "Per-user productivity combining credits (new format) with feature metrics (legacy). Only shows users present in both data sources.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "postgresql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(MAX(d.display_name), d.user_id) AS \"User\", COALESCE(MAX(r.subscription_tier), '') AS \"Tier\", ROUND(SUM(r.credits_used), 1) AS \"Credits Used\", SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) AS \"Total Accepted Lines\", CASE WHEN SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines) > 0 THEN ROUND(CAST(SUM(r.credits_used) AS NUMERIC) / NULLIF(SUM(d.chat_ai_code_lines + d.inline_ai_code_lines + d.code_fix_accepted_lines + d.dev_accepted_lines), 0), 2) ELSE NULL END AS \"Credits/Line\", ROUND(CAST(SUM(d.inline_acceptance_count) AS NUMERIC) / NULLIF(NULLIF(SUM(d.inline_suggestions_count), 0), 0) * 100, 1) || '%' AS \"Accept Rate\", SUM(d.code_review_findings_count) AS \"Review Findings\", SUM(d.test_generation_event_count) AS \"Test Gen Events\", SUM(d.dev_accepted_lines) AS \"Agentic Lines\", MIN(d.date) AS \"First Active\", MAX(d.date) AS \"Last Active\" FROM lake._tool_q_dev_user_data AS d LEFT JOIN (SELECT user_id, date, SUM(credits_used) AS credits_used, MAX(subscription_tier) AS subscription_tier FROM lake._tool_q_dev_user_report WHERE $__timeFilter(date) GROUP BY \"user_id\", date) AS r ON d.user_id = r.user_id AND d.date = r.date WHERE $__timeFilter(d.date) GROUP BY d.user_id ORDER BY SUM(r.credits_used) DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "User Productivity & Efficiency",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [
+    "q_dev",
+    "executive",
+    "kiro"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Kiro Executive Dashboard",
+  "uid": "qdev_executive-pg",
+  "version": 1
+}

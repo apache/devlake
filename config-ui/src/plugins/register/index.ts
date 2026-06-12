@@ -25,12 +25,14 @@ import { BambooConfig } from './bamboo';
 import { BitbucketConfig } from './bitbucket';
 import { BitbucketServerConfig } from './bitbucket-server';
 import { CircleCIConfig } from './circleci';
+import { ClaudeCodeConfig } from './claude-code';
 import { GitHubConfig } from './github';
 import { GhCopilotConfig } from './gh-copilot';
 import { GitLabConfig } from './gitlab';
 import { JenkinsConfig } from './jenkins';
 import { JiraConfig } from './jira';
 import { PagerDutyConfig } from './pagerduty';
+import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
 import { TAPDConfig } from './tapd';
 import { WebhookConfig } from './webhook';
@@ -40,6 +42,7 @@ import { QDevConfig } from './q-dev';
 import { TeambitionConfig } from './teambition';
 import { TestmoConfig } from './testmo';
 import { SlackConfig } from './slack/config';
+import { TempoConfig } from './tempo';
 
 export const pluginConfigs: IPluginConfig[] = [
   ArgoCDConfig,
@@ -50,13 +53,16 @@ export const pluginConfigs: IPluginConfig[] = [
   BitbucketConfig,
   BitbucketServerConfig,
   CircleCIConfig,
+  ClaudeCodeConfig,
   GitHubConfig,
   GhCopilotConfig,
   GitLabConfig,
   JenkinsConfig,
   JiraConfig,
   PagerDutyConfig,
+  RootlyConfig,
   SlackConfig,
+  TempoConfig,
   QDevConfig,
   SonarQubeConfig,
   TAPDConfig,

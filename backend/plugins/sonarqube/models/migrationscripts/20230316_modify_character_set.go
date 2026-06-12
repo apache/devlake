@@ -18,8 +18,6 @@ limitations under the License.
 package migrationscripts
 
 import (
-	"net/url"
-
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/errors"
 )
@@ -27,52 +25,46 @@ import (
 type modifyCharacterSet struct{}
 
 func (*modifyCharacterSet) Up(basicRes context.BasicRes) errors.Error {
-	dbUrl := basicRes.GetConfig("DB_URL")
-	if dbUrl == "" {
-		return errors.BadInput.New("DB_URL is required")
-	}
-	u, err1 := url.Parse(dbUrl)
-	if err1 != nil {
-		return errors.Convert(err1)
-	}
-	if u.Scheme == "mysql" {
-		err := basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_projects CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+	db := basicRes.GetDal()
+	// Character set conversion is MySQL-specific; PostgreSQL uses UTF-8 by default
+	if db.Dialect() == "mysql" {
+		err := db.Exec(`ALTER TABLE _tool_sonarqube_projects CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_issues CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE _tool_sonarqube_issues CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_issue_code_blocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE _tool_sonarqube_issue_code_blocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_hotspots CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE _tool_sonarqube_hotspots CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_file_metrics CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE _tool_sonarqube_file_metrics CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE _tool_sonarqube_accounts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE _tool_sonarqube_accounts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE cq_projects CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE cq_projects CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE cq_issues CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE cq_issues CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE cq_issue_code_blocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE cq_issue_code_blocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE cq_file_metrics CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
+		err = db.Exec(`ALTER TABLE cq_file_metrics CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`)
 		if err != nil {
 			return err
 		}

@@ -146,6 +146,18 @@ func TestConvertStringToTime(t *testing.T) {
 			err:    nil,
 		},
 		{
+			name:   "Valid time string with milliseconds",
+			input:  "2025-09-15T08:53:36.337+00:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 337000000, time.UTC),
+			err:    nil,
+		},
+		{
+			name:   "Valid time string with microseconds (Bitbucket Cloud format)",
+			input:  "2025-09-15T08:53:36.337932+00:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 337932000, time.UTC),
+			err:    nil,
+		},
+		{
 			name:   "Invalid time string",
 			input:  "invalid",
 			output: time.Time{},
@@ -155,7 +167,7 @@ func TestConvertStringToTime(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := ConvertStringToTime(tc.input)
-			if !reflect.DeepEqual(tc.output, output) {
+			if !tc.output.Equal(output) {
 				t.Errorf("Expected output to be %v, but got %v", tc.output, output)
 			}
 			assert.Equal(t, fmt.Sprintf("%v", err), fmt.Sprintf("%v", tc.err), "Expected error to be %v, but got %v", tc.err, err)
@@ -310,7 +322,7 @@ func TestConvertStringToTimeInLoc(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := ConvertStringToTimeInLoc(tc.input, tc.loc)
-			if !reflect.DeepEqual(tc.output, output) {
+			if !tc.output.Equal(output) {
 				t.Errorf("Expected output to be %v, but got %v", tc.output, output)
 			}
 			assert.Equal(t, fmt.Sprintf("%v", err), fmt.Sprintf("%v", tc.err), "Expected error to be %v, but got %v", tc.err, err)

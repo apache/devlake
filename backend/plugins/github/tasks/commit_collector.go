@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -78,7 +79,7 @@ func CollectApiCommits(taskCtx plugin.SubTaskContext) errors.Error {
 			query := url.Values{}
 			query.Set("state", "all")
 			if apiCollector.GetSince() != nil {
-				query.Set("since", apiCollector.GetSince().String())
+				query.Set("since", apiCollector.GetSince().UTC().Format(time.RFC3339))
 			}
 			query.Set("direction", "asc")
 			query.Set("page", fmt.Sprintf("%v", reqData.Pager.Page))

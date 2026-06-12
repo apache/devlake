@@ -138,4 +138,11 @@ func (r remoteContextImpl) IncProgress(quantity int) {
 	}
 }
 
+func (r remoteContextImpl) GetProgress() int {
+	if r.parent != nil {
+		return r.parent.GetProgress()
+	}
+	return 0
+}
+
 var _ RemoteContext = (*remoteContextImpl)(nil)

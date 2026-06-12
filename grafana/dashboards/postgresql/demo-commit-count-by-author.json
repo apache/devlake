@@ -1,0 +1,257 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 5,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homepage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/0Rjxknc7z/demo-homepage?orgId=1"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Back to previous page",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/ddREk75nk/demo-is-this-month-more-productive-than-last?orgId=1"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": "postgresql",
+      "description": "The number of commits from different commit authors.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 50,
+      "options": {
+        "barWidth": 0.6,
+        "groupWidth": 0.5,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "text": {
+          "valueSize": 14
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH commit_data AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, c.author_name, COUNT(*) AS commit_count FROM commits AS c WHERE c.message::text NOT LIKE '%Merge%' AND $__timeFilter(authored_date) GROUP BY 2, 1 ORDER BY 2 NULLS FIRST, 1 NULLS FIRST), this_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) AS this_month), last_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) + INTERVAL '-1 MONTH' AS last_month), the_month_before_last AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) + INTERVAL '-2 MONTH' AS the_month_before_last), this_month_record AS (SELECT author_name, commit_count AS this_month_count, time AS this_month FROM commit_data WHERE time IN (SELECT this_month FROM this_month)), last_month_record AS (SELECT author_name, commit_count AS last_month_count, time AS last_month FROM commit_data WHERE time IN (SELECT last_month FROM last_month)), the_month_before_last_record AS (SELECT author_name, commit_count AS the_month_before_last_count, time AS the_month_before_last FROM commit_data WHERE time IN (SELECT the_month_before_last FROM the_month_before_last)) SELECT COALESCE(NULLIF(tmr.author_name, ''), NULLIF(lmr.author_name, ''), tmblr.author_name) AS \"Author Name\", COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\" FROM this_month_record AS tmr RIGHT JOIN last_month_record AS lmr ON tmr.author_name = lmr.author_name RIGHT JOIN the_month_before_last_record AS tmblr ON lmr.author_name = tmblr.author_name UNION SELECT COALESCE(NULLIF(tmr.author_name, ''), NULLIF(lmr.author_name, ''), tmblr.author_name) AS \"Author Name\", COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\" FROM this_month_record AS tmr LEFT JOIN last_month_record AS lmr ON tmr.author_name = lmr.author_name LEFT JOIN the_month_before_last_record AS tmblr ON lmr.author_name = tmblr.author_name ORDER BY 2 DESC NULLS LAST LIMIT 20",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Commit Count by Author [Top 20]",
+      "type": "barchart"
+    },
+    {
+      "datasource": "postgresql",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 38,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH commit_data AS (SELECT CAST(authored_date AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(authored_date AS DATE)) + 1) AS time, c.author_name, COUNT(*) AS commit_count FROM commits AS c WHERE c.message::text NOT LIKE '%Merge%' AND $__timeFilter(authored_date) GROUP BY 2, 1 ORDER BY 2 NULLS FIRST, 1 NULLS FIRST), this_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) AS this_month), last_month AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) + INTERVAL '-1 MONTH' AS last_month), the_month_before_last AS (SELECT CAST(CURRENT_DATE AS DATE) + INTERVAL '1 DAY' * (-EXTRACT(DAY FROM CAST(CURRENT_DATE AS DATE)) + 1) + INTERVAL '-2 MONTH' AS the_month_before_last), this_month_record AS (SELECT author_name, commit_count AS this_month_count, time AS this_month FROM commit_data WHERE time IN (SELECT this_month FROM this_month)), last_month_record AS (SELECT author_name, commit_count AS last_month_count, time AS last_month FROM commit_data WHERE time IN (SELECT last_month FROM last_month)), the_month_before_last_record AS (SELECT author_name, commit_count AS the_month_before_last_count, time AS the_month_before_last FROM commit_data WHERE time IN (SELECT the_month_before_last FROM the_month_before_last)) SELECT COALESCE(NULLIF(tmr.author_name, ''), NULLIF(lmr.author_name, ''), tmblr.author_name) AS \"Author Name\", COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\", CASE WHEN lmr.last_month_count IS NULL OR tmr.this_month_count IS NULL THEN '-' ELSE ROUND(CAST(100 * (tmr.this_month_count - lmr.last_month_count) AS NUMERIC) / NULLIF(lmr.last_month_count, 0), 1)::TEXT || '%' END AS \"Changes in last 2 month\" FROM this_month_record AS tmr RIGHT JOIN last_month_record AS lmr ON tmr.author_name = lmr.author_name RIGHT JOIN the_month_before_last_record AS tmblr ON lmr.author_name = tmblr.author_name UNION SELECT COALESCE(NULLIF(tmr.author_name, ''), NULLIF(lmr.author_name, ''), tmblr.author_name) AS \"Author Name\", COALESCE(tmblr.the_month_before_last_count, 0) AS \"The Month before Last\", COALESCE(lmr.last_month_count, 0) AS \"Last Month\", COALESCE(tmr.this_month_count, 0) AS \"This Month\", CASE WHEN lmr.last_month_count IS NULL OR tmr.this_month_count IS NULL THEN '-' ELSE ROUND(CAST(100 * (tmr.this_month_count - lmr.last_month_count) AS NUMERIC) / NULLIF(lmr.last_month_count, 0), 1)::TEXT || '%' END AS \"Changes in last 2 month\" FROM this_month_record AS tmr LEFT JOIN last_month_record AS lmr ON tmr.author_name = lmr.author_name LEFT JOIN the_month_before_last_record AS tmblr ON lmr.author_name = tmblr.author_name ORDER BY 4 DESC NULLS LAST",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "progress"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "ca_analysis",
+          "timeColumn": "create_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "type": "table"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 52,
+      "options": {
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Demo-Commit Count by Author",
+  "uid": "F0iYknc7z-pg",
+  "version": 3
+}

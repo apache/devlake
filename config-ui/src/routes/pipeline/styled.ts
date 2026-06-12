@@ -21,19 +21,19 @@ import styled from 'styled-components';
 export const StatusWrapper = styled.div`
   &.ready,
   &.cancel {
-    color: #94959f;
+    color: ${({ theme }) => theme.colors.textTertiary};
   }
 
   &.loading {
-    color: #7497f7;
+    color: ${({ theme }) => theme.colors.primary};
   }
 
   &.success {
-    color: #4db764;
+    color: ${({ theme }) => theme.colors.success};
   }
 
   &.error {
-    color: #f5222d;
+    color: ${({ theme }) => theme.colors.error};
   }
 `;
 
@@ -54,7 +54,7 @@ export const Info = styled.div`
 
     & > span {
       font-size: 12px;
-      color: #94959f;
+      color: ${({ theme }) => theme.colors.textTertiary};
       text-align: center;
     }
 
@@ -68,7 +68,7 @@ export const Info = styled.div`
 
   p.message {
     margin: 8px 0 0;
-    color: #f5222d;
+    color: ${({ theme }) => theme.colors.error};
   }
 `;
 
@@ -100,23 +100,23 @@ export const TasksHeader = styled.ul`
 
     &.ready,
     &.cancel {
-      color: #94959f;
-      background-color: #f9f9fa;
+      color: ${({ theme }) => theme.colors.textTertiary};
+      background-color: ${({ theme }) => theme.colors.bgStatus};
     }
 
     &.loading {
-      color: #7497f7;
-      background-color: #e9efff;
+      color: ${({ theme }) => theme.colors.primary};
+      background-color: ${({ theme }) => theme.colors.infoBg};
     }
 
     &.success {
-      color: #4db764;
-      background-color: #edfbf0;
+      color: ${({ theme }) => theme.colors.success};
+      background-color: ${({ theme }) => theme.colors.successBg};
     }
 
     &.error {
-      color: #e34040;
-      background-color: #feefef;
+      color: ${({ theme }) => theme.colors.errorAlt};
+      background-color: ${({ theme }) => theme.colors.errorBg};
     }
   }
 
@@ -146,7 +146,7 @@ export const Task = styled.div`
   justify-content: space-between;
   padding: 16px 0;
   height: 80px;
-  border-bottom: 1px solid #dbe4fd;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderTask};
   box-sizing: border-box;
 
   .info {
@@ -181,7 +181,7 @@ export const Task = styled.div`
       text-overflow: ellipsis;
 
       &.error {
-        color: #f5222d;
+        color: ${({ theme }) => theme.colors.error};
       }
     }
   }

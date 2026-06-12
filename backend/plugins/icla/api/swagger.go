@@ -25,7 +25,7 @@ package api
 // @Router /blueprints/icla/blueprint-setting [post]
 func _() {}
 
-//nolint:unused,deadcode
+//nolint:unused
 type iclaBlueprintSetting []struct {
 	Version     string `json:"version" example:"1.0.0"`
 	Connections []struct {
@@ -41,7 +41,7 @@ type iclaBlueprintSetting []struct {
 // @Router /pipelines/icla/pipeline-plan [post]
 func _() {}
 
-//nolint:unused,deadcode
+//nolint:unused
 type iclaPipelinePlan [][]struct {
 	Plugin string `json:"plugin" example:"icla"`
 }

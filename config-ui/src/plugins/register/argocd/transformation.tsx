@@ -99,7 +99,7 @@ const renderCollapseItems = ({
                 })
               }
             />
-            <i style={{ color: '#E34040' }}>*</i>
+            <i style={{ color: 'var(--devlake-color-error-alt)' }}>*</i>
             <HelpTooltip content="Use regex to match application names. Default pattern matches any name containing 'prod' (case-insensitive)." />
           </div>
           <div style={{ marginTop: 16, marginBottom: 8 }}>

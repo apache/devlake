@@ -32,9 +32,9 @@ type asanaTask20250212 struct {
 	StdType         string   `gorm:"type:varchar(255)"`
 	StdStatus       string   `gorm:"type:varchar(255)"`
 	Priority        string   `gorm:"type:varchar(255)"`
-	StoryPoint      *float64 `gorm:"type:double"`
+	StoryPoint      *float64 `gorm:"type:float8"`
 	Severity        string   `gorm:"type:varchar(255)"`
-	LeadTimeMinutes *uint    `gorm:"type:int unsigned"`
+	LeadTimeMinutes *uint
 }
 
 func (asanaTask20250212) TableName() string {

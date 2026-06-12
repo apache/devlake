@@ -33,8 +33,8 @@ export const Error = () => {
     <TipLayout>
       <Card>
         <Space>
-          <CloseCircleOutlined style={{ fontSize: 20, color: '#f5222d' }} />
-          <h2 style={{ color: '#f5222d' }}>{error.toString() || 'Unknown Error'}</h2>
+          <CloseCircleOutlined style={{ fontSize: 20, color: 'var(--devlake-color-error)' }} />
+          <h2 style={{ color: 'var(--devlake-color-error)' }}>{error.toString() || 'Unknown Error'}</h2>
         </Space>
         <p>
           Please try again, if the problem persists include the above error message when filing a bug report on{' '}

@@ -54,6 +54,8 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
     nextTokenMap: {},
   });
 
+  const PAGE_SIZE = 50;
+
   const [search, setSearch] = useState<{
     loading: boolean;
     items: McsItem<T.ResItem>[];
@@ -61,6 +63,7 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
     query: string;
     page: number;
     total: number;
+    hasMore: boolean;
   }>({
     loading: true,
     items: [],
@@ -68,6 +71,7 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
     query: '',
     page: 1,
     total: 0,
+    hasMore: false,
   });
 
   const searchDebounce = useDebounce(search.query, { wait: 500 });
@@ -129,24 +133,35 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
   const searchItems = async () => {
     if (!searchDebounce) return;
 
-    const res = await API.scope.searchRemote(plugin, connectionId, {
-      search: searchDebounce,
-      page: search.page,
-      pageSize: 20,
-    });
+    try {
+      const res = await API.scope.searchRemote(plugin, connectionId, {
+        search: searchDebounce,
+        page: search.page,
+        pageSize: PAGE_SIZE,
+      });
 
-    const newItems = (res.children ?? []).map((it) => ({
-      ...it,
-      title: getPluginScopeName(plugin, it) || it.fullName || it.name,
-    }));
+      const newItems = (res.children ?? []).map((it) => ({
+        ...it,
+        title: getPluginScopeName(plugin, it) || it.fullName || it.name,
+      }));
 
-    setSearch((s) => ({
-      ...s,
-      loading: false,
-      items: [...allItems, ...newItems],
-      currentItems: newItems,
-      total: res.count,
-    }));
+      const total = res.count ?? 0;
+      // If the backend returns a real total, use it; otherwise fall back to
+      // the heuristic: a full page means there are likely more results.
+      const hasMore = total > 0 ? search.page * PAGE_SIZE < total : newItems.length >= PAGE_SIZE;
+
+      setSearch((s) => ({
+        ...s,
+        loading: false,
+        items: [...allItems, ...newItems],
+        // Accumulate results across pages so previous pages remain visible
+        currentItems: s.page === 1 ? newItems : [...s.currentItems, ...newItems],
+        total,
+        hasMore,
+      }));
+    } catch {
+      setSearch((s) => ({ ...s, loading: false, hasMore: false }));
+    }
   };
 
   useEffect(() => {
@@ -178,7 +193,9 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
           prefix={<SearchOutlined />}
           placeholder={config.searchPlaceholder ?? 'Search'}
           value={search.query}
-          onChange={(e) => setSearch({ ...search, query: e.target.value, loading: true, currentItems: [] })}
+          onChange={(e) =>
+            setSearch({ ...search, query: e.target.value, loading: true, currentItems: [], page: 1, hasMore: false })
+          }
         />
         {!searchDebounce ? (
           <MillerColumnsSelect
@@ -210,8 +227,12 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
             columnCount={1}
             columnHeight={300}
             getCanExpand={() => false}
-            getHasMore={() => search.loading}
-            onScroll={() => setSearch({ ...search, page: search.page + 1 })}
+            getHasMore={() => search.hasMore}
+            onScroll={() => {
+              if (!search.loading && search.hasMore) {
+                setSearch((s) => ({ ...s, loading: true, page: s.page + 1 }));
+              }
+            }}
             renderLoading={() => <Loading size={20} style={{ padding: '4px 12px' }} />}
             disabledIds={(disabledScope ?? []).map((it) => it.id)}
             selectedIds={selectedScope.map((it) => it.id)}

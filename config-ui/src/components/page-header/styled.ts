@@ -47,7 +47,7 @@ export const Breadcrumb = styled.li`
   a {
     display: flex;
     align-items: center;
-    color: #292b3f;
+    color: ${({ theme }) => theme.colors.text};
   }
 `;
 export const Extra = styled.div``;

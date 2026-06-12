@@ -20,7 +20,7 @@ import styled from 'styled-components';
 
 export const Wrapper = styled.div`
   padding: 16px 24px;
-  background-color: #f3f3f3;
+  background-color: ${({ theme }) => theme.colors.bgElevated};
 
   .title {
     display: flex;
@@ -34,7 +34,7 @@ export const Wrapper = styled.div`
 
     span {
       font-size: 10px;
-      color: #aaaaaa;
+      color: ${({ theme }) => theme.colors.textFaint};
     }
   }
 
@@ -46,7 +46,7 @@ export const Wrapper = styled.div`
   .content {
     padding: 10px;
     max-height: 600;
-    background-color: #ffff;
+    background-color: ${({ theme }) => theme.colors.bgContainer};
     border-radius: 4px;
     box-shadow: 1px 1px 3px 0px rgb(0 0 0 / 20%) inset;
     overflow-y: auto;

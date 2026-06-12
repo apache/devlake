@@ -21,7 +21,7 @@ const dbt = [
     {
       plugin: 'dbt',
       options: {
-        projectPath: '/var/www/html/my-project',
+        projectPath: '/tmp/devlake-dbt-projects/my-project',
         projectGitURL: '',
         projectName: 'myproject',
         projectTarget: 'dev',

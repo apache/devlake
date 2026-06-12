@@ -24,7 +24,7 @@ export const Wrapper = styled.div`
   align-items: center;
   padding-top: 100px;
   height: 100vh;
-  background-color: #f9f9fa;
+  background-color: ${({ theme }) => theme.colors.bgLayout};
   box-sizing: border-box;
 `;
 
@@ -42,7 +42,7 @@ export const Inner = styled.div`
     margin: 16px 0;
 
     &.warning {
-      color: #faad14;
+      color: ${({ theme }) => theme.colors.warningAlt};
     }
   }
 `;

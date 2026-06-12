@@ -18,12 +18,10 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
-	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/models/domainlayer"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/didgen"
@@ -49,50 +47,44 @@ var ConvertAccountsMeta = plugin.SubTaskMeta{
 	ProductTables: []string{crossdomain.Account{}.TableName()},
 }
 
-type GithubAccountWithOrg struct {
-	models.GithubAccount
-	Login string `json:"login" gorm:"type:varchar(255)"`
-	common.NoPKModel
-}
-
 func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	data := taskCtx.GetData().(*GithubTaskData)
 
-	cursor, err := db.Cursor(
-		dal.Select("_tool_github_accounts.*"),
-		dal.From(&models.GithubAccount{}),
-		dal.Where(
-			"repo_github_id = ? and _tool_github_accounts.connection_id=?",
-			data.Options.GithubId,
-			data.Options.ConnectionId,
-		),
-		dal.Join(`left join _tool_github_repo_accounts gra on (
-			_tool_github_accounts.connection_id = gra.connection_id
-			AND _tool_github_accounts.id = gra.account_id
-		)`),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
 	accountIdGen := didgen.NewDomainIdGenerator(&models.GithubAccount{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubAccount{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubAccount]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_ACCOUNT_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_ACCOUNT_TABLE,
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			githubUser := inputRow.(*models.GithubAccount)
-
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.Select("_tool_github_accounts.*"),
+				dal.From(&models.GithubAccount{}),
+				dal.Where(
+					"repo_github_id = ? and _tool_github_accounts.connection_id=?",
+					data.Options.GithubId,
+					data.Options.ConnectionId,
+				),
+				dal.Join(`left join _tool_github_repo_accounts gra on (
+					_tool_github_accounts.connection_id = gra.connection_id
+					AND _tool_github_accounts.id = gra.account_id
+				)`),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("_tool_github_accounts.updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(githubUser *models.GithubAccount) ([]interface{}, errors.Error) {
 			// query related orgs
 			var orgs []string
 			err := db.Pluck(`org_login`, &orgs,

@@ -112,7 +112,10 @@ export const Step4 = () => {
 
   const { data } = useAutoRefresh(
     async () => {
-      return await API.pipeline.subTasks(record?.pipelineId as string);
+      if (!record?.pipelineId) {
+        return;
+      }
+      return await API.pipeline.subTasks(record.pipelineId as string);
     },
     [record],
     {

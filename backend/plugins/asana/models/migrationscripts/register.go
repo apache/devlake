@@ -30,5 +30,6 @@ func All() []plugin.MigrationScript {
 		new(addTaskTransformationFields),
 		new(addScopeConfigIssueTypeFields),
 		new(addConnectionIdToAsanaScopeConfigs),
+		new(encryptConnectionToken),
 	}
 }

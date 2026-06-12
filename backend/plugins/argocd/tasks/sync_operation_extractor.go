@@ -188,6 +188,12 @@ func ExtractSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 
 			isOperationState := apiOp.Phase != ""
 
+			// operationState always represents the same sync as the latest history entry
+			// (when phase=Succeeded). Skip it to avoid the duplicate DeploymentId.
+			if isOperationState && isRedundantOperationState(apiOp.Phase) {
+				return nil, nil
+			}
+
 			// For multi-source apps ArgoCD sets revisions[] instead of revision. Resolve
 			// the single commit SHA we care about before deciding whether to skip this entry.
 			if apiOp.Revision == "" {
@@ -533,4 +539,22 @@ func isCommitSHA(s string) bool {
 		}
 	}
 	return true
+}
+
+// isRedundantOperationState reports whether an operationState entry should be
+// skipped because it duplicates the most recent history entry.
+//
+// ArgoCD exposes a completed sync in two places:
+//   - status.history[]     — authoritative log, one entry per sync
+//   - status.operationState — mirrors the last sync while it is current
+//
+// When phase is Succeeded the operationState is always already present in
+// history[]. Emitting it would produce a second ArgocdSyncOperation whose
+// DeploymentId differs by one second (startedAt vs deployedAt), creating a
+// duplicate deployment in DORA metrics.
+//
+// In-flight (Running, Terminating) and terminal-failure (Failed, Error) states
+// are not yet — or may never be — written to history, so they must be kept.
+func isRedundantOperationState(phase string) bool {
+	return phase == "Succeeded"
 }

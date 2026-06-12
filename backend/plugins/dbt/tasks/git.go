@@ -32,20 +32,26 @@ func Git(taskCtx plugin.SubTaskContext) errors.Error {
 		return nil
 	}
 
-	// clean ProjectPath
-	err := os.RemoveAll(data.Options.ProjectPath)
+	projectBaseDir, err := ensureProjectBaseDir(data.Options.ProjectBaseDir)
 	if err != nil {
-		logger.Error(err, "cleanup before clone dbt project failed")
-		return errors.Convert(err)
+		logger.Error(err, "prepare dbt workspace failed")
+		return err
 	}
+	projectPath, mkErr := os.MkdirTemp(projectBaseDir, "project-*")
+	if mkErr != nil {
+		logger.Error(mkErr, "create managed dbt project directory failed")
+		return errors.Convert(mkErr)
+	}
+	data.Options.ProjectPath = projectPath
 
-	// git clone from ProjectGitURL into ProjectPath
+	// git clone from ProjectGitURL into a managed temporary project directory
 	cmd := exec.Command("git", "clone", data.Options.ProjectGitURL, data.Options.ProjectPath)
 	logger.Info("start clone dbt project: %v", cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		logger.Error(err, "clone dbt project failed")
-		return errors.Convert(err)
+	out, cloneErr := cmd.CombinedOutput()
+	if cloneErr != nil {
+		_ = os.RemoveAll(data.Options.ProjectPath)
+		logger.Error(cloneErr, "clone dbt project failed")
+		return errors.Convert(cloneErr)
 	}
 	logger.Info("clone dbt project success: %v", string(out))
 	return nil

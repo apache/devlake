@@ -113,37 +113,40 @@ func (g *GitcliCloner) prepareSync() errors.Error {
 		}
 		// support private key
 		if taskData.Options.PrivateKey != "" {
-			pkFile, err := os.CreateTemp("", "gitext-pk")
+			// Create a restricted temp directory so the key file is protected from the moment of creation (CWE-367, CWE-732)
+			pkDir, err := os.MkdirTemp("", "gitext-pk-")
 			if err != nil {
-				g.logger.Error(err, "create temp private key file error")
+				g.logger.Error(err, "create temp private key dir error")
+				return errors.Default.New("failed to handle the private key")
+			}
+			defer os.RemoveAll(pkDir)
+			pkFilePath := path.Join(pkDir, "pk")
+			pkFile, err := os.OpenFile(pkFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+			if err != nil {
+				g.logger.Error(err, "create private key file error")
 				return errors.Default.New("failed to handle the private key")
 			}
 			if _, e := pkFile.WriteString(taskData.Options.PrivateKey + "\n"); e != nil {
-				g.logger.Error(err, "write private key file error")
-				return errors.Default.New("failed to write the  private key")
+				g.logger.Error(e, "write private key file error")
+				return errors.Default.New("failed to write the private key")
 			}
 			pkFile.Close()
-			if e := os.Chmod(pkFile.Name(), 0600); e != nil {
-				g.logger.Error(err, "chmod private key file error")
-				return errors.Default.New("failed to modify the private key")
-			}
 
 			if taskData.Options.Passphrase != "" {
+				// Pass passphrase via stdin to avoid exposure in /proc/<pid>/cmdline (CWE-214)
 				pp := exec.CommandContext(
 					g.ctx.GetContext(),
 					"ssh-keygen", "-p",
-					"-P", taskData.Options.Passphrase,
 					"-N", "",
-					"-f", pkFile.Name(),
+					"-f", pkFilePath,
 				)
-				if ppout, pperr := pp.CombinedOutput(); pperr != nil {
+				pp.Stdin = strings.NewReader(taskData.Options.Passphrase + "\n")
+				if _, pperr := pp.CombinedOutput(); pperr != nil {
 					g.logger.Error(pperr, "change private key passphrase error")
-					g.logger.Info(string(ppout))
 					return errors.Default.New("failed to decrypt the private key")
 				}
 			}
-			defer os.Remove(pkFile.Name())
-			sshCmdArgs = append(sshCmdArgs, fmt.Sprintf("-i %s -o StrictHostKeyChecking=no", pkFile.Name()))
+			sshCmdArgs = append(sshCmdArgs, fmt.Sprintf("-i %s -o StrictHostKeyChecking=no", pkFilePath))
 		}
 		if len(sshCmdArgs) > 0 {
 			g.syncEnvs = append(g.syncEnvs, fmt.Sprintf("GIT_SSH_COMMAND=ssh %s", strings.Join(sshCmdArgs, " ")))
@@ -251,6 +254,7 @@ func (g *GitcliCloner) doubleClone() errors.Error {
 	if e != nil {
 		return errors.Convert(e)
 	}
+	defer os.RemoveAll(intermediaryDir) // CWE-459: ensure cleanup on all exit paths
 	// step 1: full clone into a intermediary dir
 	backup := g.localDir
 	g.localDir = intermediaryDir
@@ -303,7 +307,7 @@ func (g *GitcliCloner) gitCmd(gitcmd string, args ...string) errors.Error {
 }
 
 func (g *GitcliCloner) git(env []string, dir string, gitcmd string, args ...string) errors.Error {
-	g.logger.Debug("git %s %v", gitcmd, args)
+	g.logger.Debug("git %s %v", gitcmd, sanitizeArgs(args)) // CWE-532: sanitize before logging
 	args = append([]string{gitcmd}, args...)
 	cmd := exec.CommandContext(g.ctx.GetContext(), "git", args...)
 	cmd.Env = env
@@ -335,14 +339,47 @@ func generateErrMsg(output []byte, err error) string {
 	return errMsg
 }
 
+// sensitiveQueryParams lists URL query parameter names that may carry credentials.
+var sensitiveQueryParams = []string{"token", "access_token", "private_token", "api_key", "key", "apikey"}
+
 func sanitizeArgs(args []string) []string {
 	var ret []string
 	for _, arg := range args {
+		// Redact Authorization header values (e.g. --header=Authorization: Bearer TOKEN) (CWE-532)
+		lower := strings.ToLower(arg)
+		if authIdx := strings.Index(lower, "authorization:"); authIdx != -1 {
+			colonPos := authIdx + len("authorization:")
+			rest := strings.TrimSpace(arg[colonPos:])
+			parts := strings.SplitN(rest, " ", 2)
+			if len(parts) == 2 {
+				arg = arg[:colonPos] + " " + parts[0] + " " + strings.Repeat("*", len(parts[1]))
+			} else if len(rest) > 0 {
+				arg = arg[:colonPos] + " " + strings.Repeat("*", len(rest))
+			}
+			ret = append(ret, arg)
+			continue
+		}
 		u, err := url.Parse(arg)
 		if err == nil && u != nil && u.User != nil {
 			password, ok := u.User.Password()
 			if ok {
+				// Redact password in user:password@host URLs
 				arg = strings.Replace(arg, password, strings.Repeat("*", len(password)), -1)
+			} else {
+				// Redact username-only tokens (e.g. https://TOKEN@github.com/..., GitHub App pattern)
+				username := u.User.Username()
+				if len(username) >= 16 {
+					arg = strings.Replace(arg, username, strings.Repeat("*", len(username)), -1)
+				}
+			}
+		}
+		// Redact sensitive query parameters (e.g. ?private_token=..., ?access_token=...)
+		if err == nil && u != nil && u.RawQuery != "" {
+			q := u.Query()
+			for _, param := range sensitiveQueryParams {
+				if val := q.Get(param); val != "" {
+					arg = strings.Replace(arg, val, strings.Repeat("*", len(val)), -1)
+				}
 			}
 		}
 		ret = append(ret, arg)

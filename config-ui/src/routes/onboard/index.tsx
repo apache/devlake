@@ -123,7 +123,7 @@ export const Onboard = ({ logo, title }: Props) => {
             <>
               <S.Header>
                 <h1>Connect to your first repository</h1>
-                <CloseOutlined style={{ fontSize: 18, color: '#70727F', cursor: 'pointer' }} onClick={handleClose} />
+                <CloseOutlined style={{ fontSize: 18, color: 'var(--devlake-color-text-subdued)', cursor: 'pointer' }} onClick={handleClose} />
               </S.Header>
               <S.Content>
                 {[1, 2, 3].includes(step) && (

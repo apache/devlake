@@ -47,5 +47,5 @@ export const Input = styled.div`
 `;
 
 export const Error = styled.div`
-  color: #e34040;
+  color: ${({ theme }) => theme.colors.errorAlt};
 `;

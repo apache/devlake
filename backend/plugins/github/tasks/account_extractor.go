@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/apache/incubator-devlake/core/errors"
@@ -61,39 +60,32 @@ type DetailGithubAccountResponse struct {
 
 func ExtractAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[DetailGithubAccountResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_ACCOUNT_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			apiAccount := &DetailGithubAccountResponse{}
-			err := errors.Convert(json.Unmarshal(row.Data, apiAccount))
-			if err != nil {
-				return nil, err
-			}
-			results := make([]interface{}, 0, 1)
-			if apiAccount.Id == 0 {
+		Extract: func(body *DetailGithubAccountResponse, row *api.RawData) ([]any, errors.Error) {
+			if body.Id == 0 {
 				return nil, nil
 			}
 			githubAccount := &models.GithubAccount{
 				ConnectionId: data.Options.ConnectionId,
-				Id:           apiAccount.Id,
-				Login:        apiAccount.Login,
-				Name:         apiAccount.Name,
-				Company:      apiAccount.Company,
-				Email:        apiAccount.Email,
-				AvatarUrl:    apiAccount.AvatarUrl,
-				Url:          apiAccount.Url,
-				HtmlUrl:      apiAccount.HtmlUrl,
-				Type:         apiAccount.Type,
+				Id:           body.Id,
+				Login:        body.Login,
+				Name:         body.Name,
+				Company:      body.Company,
+				Email:        body.Email,
+				AvatarUrl:    body.AvatarUrl,
+				Url:          body.Url,
+				HtmlUrl:      body.HtmlUrl,
+				Type:         body.Type,
 			}
-			results = append(results, githubAccount)
-			return results, nil
+			return []any{githubAccount}, nil
 		},
 	})
 

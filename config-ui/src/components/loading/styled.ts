@@ -37,7 +37,7 @@ export const Wrapper = styled.div`
 export const Spin = styled.div<{ size: number }>`
   width: ${({ size }) => size}px;
   height: ${({ size }) => size}px;
-  border: 2px solid #7497f7;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
   border-radius: 50%;
   border-right-color: transparent;
   box-sizing: border-box;

@@ -171,9 +171,9 @@ export const Token = ({
             {status && (
               <S.Alert>
                 <h4>
-                  {status === 'success' && <CheckCircleFilled style={{ color: '#4DB764' }} />}
-                  {status === 'warning' && <WarningFilled style={{ color: '#F4BE55' }} />}
-                  {status === 'error' && <CloseCircleFilled style={{ color: '#E34040' }} />}
+                  {status === 'success' && <CheckCircleFilled style={{ color: 'var(--devlake-color-success)' }} />}
+                  {status === 'warning' && <WarningFilled style={{ color: 'var(--devlake-color-warning-soft)' }} />}
+                  {status === 'error' && <CloseCircleFilled style={{ color: 'var(--devlake-color-error-alt)' }} />}
                   <span style={{ marginLeft: 8 }}>Token Permissions</span>
                 </h4>
                 {status === 'success' && <p>All required fields are checked.</p>}

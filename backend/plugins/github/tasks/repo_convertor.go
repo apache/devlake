@@ -19,7 +19,6 @@ package tasks
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -35,10 +34,6 @@ import (
 	"github.com/apache/incubator-devlake/plugins/github/models"
 )
 
-func init() {
-	RegisterSubtaskMeta(&ConvertRepoMeta)
-}
-
 type GithubApiRepo struct {
 	Name        string `json:"name"`
 	FullName    string `json:"full_name"`
@@ -51,6 +46,10 @@ type GithubApiRepo struct {
 	CreatedAt   common.Iso8601Time  `json:"created_at"`
 	UpdatedAt   *common.Iso8601Time `json:"updated_at"`
 	CloneUrl    string              `json:"clone_url"`
+}
+
+func init() {
+	RegisterSubtaskMeta(&ConvertRepoMeta)
 }
 
 var ConvertRepoMeta = plugin.SubTaskMeta{
@@ -80,30 +79,31 @@ func ConvertRepo(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	cursor, err := db.Cursor(
-		dal.From(&models.GithubRepo{}),
-		dal.Where("github_id = ? and connection_id = ?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
 	repoIdGen := didgen.NewDomainIdGenerator(&models.GithubRepo{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		InputRowType: reflect.TypeOf(models.GithubRepo{}),
-		Input:        cursor,
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubRepo]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          models.GithubRepo{}.TableName(),
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: models.GithubRepo{}.TableName(),
 		},
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			repository := inputRow.(*models.GithubRepo)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubRepo{}),
+				dal.Where("github_id = ? and connection_id = ?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(repository *models.GithubRepo) ([]interface{}, errors.Error) {
 			domainRepository := &code.Repo{
 				DomainEntity: domainlayer.DomainEntity{
 					Id: repoIdGen.Generate(data.Options.ConnectionId, repository.GithubId),
@@ -125,12 +125,10 @@ func ConvertRepo(taskCtx plugin.SubTaskContext) errors.Error {
 				Description: repository.Description,
 				CreatedDate: repository.CreatedDate,
 			}
-
 			domainBoardRepo := &crossdomain.BoardRepo{
 				BoardId: repoIdGen.Generate(data.Options.ConnectionId, repository.GithubId),
 				RepoId:  repoIdGen.Generate(data.Options.ConnectionId, repository.GithubId),
 			}
-
 			domainCicdScope := &devops.CicdScope{
 				DomainEntity: domainlayer.DomainEntity{
 					Id: repoIdGen.Generate(data.Options.ConnectionId, repository.GithubId),
@@ -141,7 +139,6 @@ func ConvertRepo(taskCtx plugin.SubTaskContext) errors.Error {
 				CreatedDate: repository.CreatedDate,
 				UpdatedDate: repository.UpdatedDate,
 			}
-
 			return []interface{}{
 				domainRepository,
 				domainBoard,

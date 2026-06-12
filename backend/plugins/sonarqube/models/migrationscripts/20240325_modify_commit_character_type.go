@@ -18,8 +18,6 @@ limitations under the License.
 package migrationscripts
 
 import (
-	"net/url"
-
 	"github.com/apache/incubator-devlake/core/context"
 	"github.com/apache/incubator-devlake/core/errors"
 )
@@ -27,20 +25,14 @@ import (
 type modifyCommitCharacterType struct{}
 
 func (*modifyCommitCharacterType) Up(basicRes context.BasicRes) errors.Error {
-	dbUrl := basicRes.GetConfig("DB_URL")
-	if dbUrl == "" {
-		return errors.BadInput.New("DB_URL is required")
-	}
-	u, err1 := url.Parse(dbUrl)
-	if err1 != nil {
-		return errors.Convert(err1)
-	}
-	if u.Scheme == "mysql" {
-		err := basicRes.GetDal().Exec(`ALTER TABLE commits MODIFY COLUMN message LONGTEXT CHARACTER SET binary;`)
+	db := basicRes.GetDal()
+	// Binary column types are MySQL-specific; PostgreSQL uses bytea natively
+	if db.Dialect() == "mysql" {
+		err := db.Exec(`ALTER TABLE commits MODIFY COLUMN message LONGTEXT CHARACTER SET binary;`)
 		if err != nil {
 			return err
 		}
-		err = basicRes.GetDal().Exec(`ALTER TABLE commit_files MODIFY COLUMN file_path VARBINARY(255);`)
+		err = db.Exec(`ALTER TABLE commit_files MODIFY COLUMN file_path VARBINARY(255);`)
 		if err != nil {
 			return err
 		}

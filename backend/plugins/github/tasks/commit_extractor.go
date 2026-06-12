@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/apache/incubator-devlake/core/plugin"
@@ -68,60 +66,44 @@ type Commit struct {
 func ExtractApiCommits(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			/*
-				This struct will be JSONEncoded and stored into database along with raw data itself, to identity minimal
-				set of data to be process, for example, we process JiraCommits by Board
-			*/
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[CommitsResponse]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			/*
-				Table store raw data
-			*/
 			Table: RAW_COMMIT_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			commit := &CommitsResponse{}
-			err := errors.Convert(json.Unmarshal(row.Data, commit))
-			if err != nil {
-				return nil, err
-			}
-			if commit.Sha == "" {
+		Extract: func(body *CommitsResponse, row *api.RawData) ([]any, errors.Error) {
+			if body.Sha == "" {
 				return nil, nil
 			}
-
 			results := make([]interface{}, 0, 4)
-
 			githubCommit := &models.GithubCommit{
-				Sha:            commit.Sha,
-				Message:        commit.Commit.Message,
-				AuthorName:     commit.Commit.Author.Name,
-				AuthorEmail:    commit.Commit.Author.Email,
-				AuthoredDate:   commit.Commit.Author.Date.ToTime(),
-				CommitterName:  commit.Commit.Committer.Name,
-				CommitterEmail: commit.Commit.Committer.Email,
-				CommittedDate:  commit.Commit.Committer.Date.ToTime(),
-				Url:            commit.Url,
+				Sha:            body.Sha,
+				Message:        body.Commit.Message,
+				AuthorName:     body.Commit.Author.Name,
+				AuthorEmail:    body.Commit.Author.Email,
+				AuthoredDate:   body.Commit.Author.Date.ToTime(),
+				CommitterName:  body.Commit.Committer.Name,
+				CommitterEmail: body.Commit.Committer.Email,
+				CommittedDate:  body.Commit.Committer.Date.ToTime(),
+				Url:            body.Url,
 			}
-			if commit.Author != nil {
-				githubCommit.AuthorId = commit.Author.Id
-				results = append(results, commit.Author)
+			if body.Author != nil {
+				githubCommit.AuthorId = body.Author.Id
+				results = append(results, body.Author)
 			}
-			if commit.Committer != nil {
-				githubCommit.CommitterId = commit.Committer.Id
-				results = append(results, commit.Committer)
+			if body.Committer != nil {
+				githubCommit.CommitterId = body.Committer.Id
+				results = append(results, body.Committer)
 			}
-
 			githubRepoCommit := &models.GithubRepoCommit{
 				ConnectionId: data.Options.ConnectionId,
 				RepoId:       data.Options.GithubId,
-				CommitSha:    commit.Sha,
+				CommitSha:    body.Sha,
 			}
-
 			results = append(results, githubCommit)
 			results = append(results, githubRepoCommit)
 			return results, nil

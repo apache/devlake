@@ -53,6 +53,7 @@ type ExecContext interface {
 	GetData() interface{}
 	SetProgress(current int, total int)
 	IncProgress(quantity int)
+	GetProgress() int
 }
 
 // SubTaskContext This interface define all resources that needed for subtask execution

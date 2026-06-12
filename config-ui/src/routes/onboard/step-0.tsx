@@ -115,7 +115,7 @@ export const Step0 = ({ logo = <Logo direction="horizontal" />, title = 'DevLake
       {contextHolder}
       <div className="logo">
         {logo}
-        <CloseOutlined style={{ fontSize: 18, color: '#70727F', cursor: 'pointer' }} onClick={handleClose} />
+        <CloseOutlined style={{ fontSize: 18, color: 'var(--devlake-color-text-subdued)', cursor: 'pointer' }} onClick={handleClose} />
       </div>
       <Flex vertical justify="center" align="center">
         <h1>

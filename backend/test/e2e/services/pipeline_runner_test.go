@@ -18,11 +18,14 @@ limitations under the License.
 package services
 
 import (
+	"testing"
+	"time"
+
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/models"
 	"github.com/apache/incubator-devlake/server/services"
 	"github.com/apache/incubator-devlake/test/helper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestComputePipelineStatus(t *testing.T) {
@@ -163,4 +166,121 @@ func TestComputePipelineStatus(t *testing.T) {
 	status, err = services.ComputePipelineStatus(pipeline, false)
 	assert.Nil(t, err)
 	assert.Equal(t, models.TASK_PARTIAL, status)
+
+	// pipeline.status == "cancelled" if the pipeline was cancelled by the user
+	// regardless of individual task statuses
+	task_row1_col1_rerun.Status = models.TASK_COMPLETED
+	err = db.Update(task_row1_col1_rerun)
+	assert.Nil(t, err)
+	status, err = services.ComputePipelineStatus(pipeline, true)
+	assert.Nil(t, err)
+	assert.Equal(t, models.TASK_CANCELLED, status)
+
+	// pipeline.status == "cancelled" even when some tasks failed
+	task_row1_col1_rerun.Status = models.TASK_FAILED
+	err = db.Update(task_row1_col1_rerun)
+	assert.Nil(t, err)
+	status, err = services.ComputePipelineStatus(pipeline, true)
+	assert.Nil(t, err)
+	assert.Equal(t, models.TASK_CANCELLED, status)
+}
+
+func TestCancelPipeline(t *testing.T) {
+	client := helper.StartDevLakeServer(t, nil)
+	db := client.GetDal()
+
+	t.Run("cancels pending pipeline and all its tasks", func(t *testing.T) {
+		pipeline := &models.Pipeline{
+			TotalTasks: 2,
+			Status:     models.TASK_CREATED,
+		}
+		err := db.Create(pipeline)
+		assert.Nil(t, err)
+		assert.NotZero(t, pipeline.ID)
+
+		task1 := &models.Task{
+			PipelineId:  pipeline.ID,
+			PipelineRow: 1,
+			PipelineCol: 1,
+			Plugin:      "github",
+			Status:      models.TASK_CREATED,
+		}
+		task2 := &models.Task{
+			PipelineId:  pipeline.ID,
+			PipelineRow: 1,
+			PipelineCol: 2,
+			Plugin:      "gitextractor",
+			Status:      models.TASK_CREATED,
+		}
+		err = db.Create(task1)
+		assert.Nil(t, err)
+		assert.NotZero(t, task1.ID)
+		err = db.Create(task2)
+		assert.Nil(t, err)
+		assert.NotZero(t, task2.ID)
+
+		err = services.CancelPipeline(pipeline.ID)
+		assert.Nil(t, err)
+
+		cancelledPipeline := &models.Pipeline{}
+		err = db.First(cancelledPipeline, dal.Where("id = ?", pipeline.ID))
+		assert.Nil(t, err)
+		assert.Equal(t, models.TASK_CANCELLED, cancelledPipeline.Status)
+
+		cancelledTask1, err := services.GetTask(task1.ID)
+		assert.Nil(t, err)
+		assert.Equal(t, models.TASK_CANCELLED, cancelledTask1.Status)
+		cancelledTask2, err := services.GetTask(task2.ID)
+		assert.Nil(t, err)
+		assert.Equal(t, models.TASK_CANCELLED, cancelledTask2.Status)
+	})
+
+	t.Run("cancels pending tasks but leaves completed tasks unchanged", func(t *testing.T) {
+		pipeline := &models.Pipeline{
+			TotalTasks: 2,
+			Status:     models.TASK_RUNNING,
+		}
+		err := db.Create(pipeline)
+		assert.Nil(t, err)
+		assert.NotZero(t, pipeline.ID)
+
+		finishedAt := time.Now()
+		completedTask := &models.Task{
+			PipelineId:  pipeline.ID,
+			PipelineRow: 1,
+			PipelineCol: 1,
+			Plugin:      "github",
+			Status:      models.TASK_COMPLETED,
+			FinishedAt:  &finishedAt,
+		}
+		pendingTask := &models.Task{
+			PipelineId:  pipeline.ID,
+			PipelineRow: 2,
+			PipelineCol: 1,
+			Plugin:      "refdiff",
+			Status:      models.TASK_CREATED,
+		}
+		err = db.Create(completedTask)
+		assert.Nil(t, err)
+		assert.NotZero(t, completedTask.ID)
+		err = db.Create(pendingTask)
+		assert.Nil(t, err)
+		assert.NotZero(t, pendingTask.ID)
+
+		err = services.CancelPipeline(pipeline.ID)
+		assert.Nil(t, err)
+
+		reloadedCompleted, err := services.GetTask(completedTask.ID)
+		assert.Nil(t, err)
+		assert.Equal(t, models.TASK_COMPLETED, reloadedCompleted.Status)
+
+		reloadedPending, err := services.GetTask(pendingTask.ID)
+		assert.Nil(t, err)
+		assert.Equal(t, models.TASK_CANCELLED, reloadedPending.Status)
+	})
+
+	t.Run("returns error for non-existent pipeline", func(t *testing.T) {
+		err := services.CancelPipeline(999999)
+		assert.NotNil(t, err)
+	})
 }

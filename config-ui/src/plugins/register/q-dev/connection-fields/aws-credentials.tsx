@@ -175,7 +175,7 @@ export const AwsCredentials = ({ type, initialValues, values, setValues, setErro
               onChange={handleAccessKeyChange}
               status={accessKeyError ? 'error' : ''}
             />
-            {accessKeyError && <div style={{ marginTop: 4, color: '#f5222d' }}>{accessKeyError}</div>}
+            {accessKeyError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{accessKeyError}</div>}
           </Block>
 
           <Block
@@ -190,7 +190,7 @@ export const AwsCredentials = ({ type, initialValues, values, setValues, setErro
               onChange={handleSecretKeyChange}
               status={secretKeyError ? 'error' : ''}
             />
-            {secretKeyError && <div style={{ marginTop: 4, color: '#f5222d' }}>{secretKeyError}</div>}
+            {secretKeyError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{secretKeyError}</div>}
           </Block>
         </>
       )}
@@ -200,7 +200,14 @@ export const AwsCredentials = ({ type, initialValues, values, setValues, setErro
           title="IAM Role Authentication"
           description="DevLake will use the IAM role attached to the EC2 instance, ECS task, or Lambda function"
         >
-          <div style={{ padding: '12px', backgroundColor: '#f6f8fa', borderRadius: '6px', color: '#586069' }}>
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: 'var(--devlake-color-bg-elevated)',
+              borderRadius: '6px',
+              color: 'var(--devlake-color-text-muted)',
+            }}
+          >
             <p style={{ margin: 0 }}>
               Make sure the IAM role has the necessary S3 permissions to access your bucket. No additional credentials
               are required when using IAM role authentication.
@@ -217,7 +224,7 @@ export const AwsCredentials = ({ type, initialValues, values, setValues, setErro
           onChange={handleRegionChange}
           status={regionError ? 'error' : ''}
         />
-        {regionError && <div style={{ marginTop: 4, color: '#f5222d' }}>{regionError}</div>}
+        {regionError && <div style={{ marginTop: 4, color: 'var(--devlake-color-error)' }}>{regionError}</div>}
       </Block>
     </>
   );

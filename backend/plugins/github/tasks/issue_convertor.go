@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -57,33 +56,33 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*GithubTaskData)
 	repoId := data.Options.GithubId
 
-	issue := &models.GithubIssue{}
-	cursor, err := db.Cursor(
-		dal.From(issue),
-		dal.Where("repo_id = ? and connection_id=?", repoId, data.Options.ConnectionId),
-	)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
-
 	issueIdGen := didgen.NewDomainIdGenerator(&models.GithubIssue{})
 	accountIdGen := didgen.NewDomainIdGenerator(&models.GithubAccount{})
 	boardIdGen := didgen.NewDomainIdGenerator(&models.GithubRepo{})
 
-	converter, err := api.NewDataConverter(api.DataConverterArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	converter, err := api.NewStatefulDataConverter(&api.StatefulDataConverterArgs[models.GithubIssue]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_ISSUE_TABLE,
 			Params: GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
-			Table: RAW_ISSUE_TABLE,
 		},
-		InputRowType: reflect.TypeOf(models.GithubIssue{}),
-		Input:        cursor,
-		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			issue := inputRow.(*models.GithubIssue)
+		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
+			clauses := []dal.Clause{
+				dal.From(&models.GithubIssue{}),
+				dal.Where("repo_id = ? and connection_id=?", repoId, data.Options.ConnectionId),
+			}
+			if stateManager.IsIncremental() {
+				since := stateManager.GetSince()
+				if since != nil {
+					clauses = append(clauses, dal.Where("github_updated_at >= ?", since))
+				}
+			}
+			return db.Cursor(clauses...)
+		},
+		Convert: func(issue *models.GithubIssue) ([]interface{}, errors.Error) {
 			domainIssue := &ticket.Issue{
 				DomainEntity:    domainlayer.DomainEntity{Id: issueIdGen.Generate(data.Options.ConnectionId, issue.GithubId)},
 				IssueKey:        strconv.Itoa(issue.Number),
