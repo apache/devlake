@@ -38,6 +38,7 @@ func PostConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 	}
 
 	// 验证连接参数 (enhanced validation)
+	normalizeConnection(connection)
 	if err := validateConnection(connection); err != nil {
 		return nil, errors.BadInput.Wrap(err, "connection validation failed")
 	}
@@ -61,6 +62,7 @@ func PatchConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 	}
 
 	// 验证更新后的连接参数 (enhanced validation)
+	normalizeConnection(connection)
 	if err := validateConnection(connection); err != nil {
 		return nil, errors.BadInput.Wrap(err, "connection validation failed")
 	}
@@ -106,14 +108,32 @@ func GetConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, e
 	return &plugin.ApiResourceOutput{Body: connection.Sanitize()}, err
 }
 
-// validateConnection validates connection parameters including Identity Store fields
-func validateConnection(connection *models.QDevConnection) error {
-	// Validate AWS credentials
-	if connection.AccessKeyId == "" {
-		return errors.Default.New("AccessKeyId is required")
+// normalizeConnection applies defaults to connection fields.
+// Call this before validateConnection to set sensible defaults.
+func normalizeConnection(connection *models.QDevConnection) {
+	if connection.AuthType == "" {
+		connection.AuthType = models.AuthTypeAccessKey
 	}
-	if connection.SecretAccessKey == "" {
-		return errors.Default.New("SecretAccessKey is required")
+	if connection.RateLimitPerHour == 0 {
+		connection.RateLimitPerHour = 20000
+	}
+}
+
+// validateConnection validates connection parameters including Identity Store fields.
+// This function is pure — it does not mutate the connection.
+func validateConnection(connection *models.QDevConnection) error {
+	if connection.AuthType != models.AuthTypeAccessKey && connection.AuthType != models.AuthTypeIAMRole {
+		return errors.Default.New("AuthType must be 'access_key' or 'iam_role'")
+	}
+
+	// Validate AWS credentials only for access_key auth type
+	if !connection.IsIAMRoleAuth() {
+		if connection.AccessKeyId == "" {
+			return errors.Default.New("AccessKeyId is required")
+		}
+		if connection.SecretAccessKey == "" {
+			return errors.Default.New("SecretAccessKey is required")
+		}
 	}
 	if connection.Region == "" {
 		return errors.Default.New("Region is required")
@@ -133,9 +153,6 @@ func validateConnection(connection *models.QDevConnection) error {
 	// Validate rate limit
 	if connection.RateLimitPerHour < 0 {
 		return errors.Default.New("RateLimitPerHour must be positive")
-	}
-	if connection.RateLimitPerHour == 0 {
-		connection.RateLimitPerHour = 20000 // Set default value
 	}
 
 	return nil

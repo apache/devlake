@@ -15,28 +15,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package migrationscripts
+package tasks
 
 import (
-	"github.com/apache/incubator-devlake/core/plugin"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+
+	"github.com/apache/incubator-devlake/plugins/q_dev/models"
 )
 
-// All return all migration scripts
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(initTables),
-		new(modifyFileMetaTable),
-		new(addDisplayNameFields),
-		new(addMissingMetrics),
-		new(addS3SliceTable),
-		new(addScopeConfigIdToS3Slice),
-		new(addScopeIdFields),
-		new(addUserReportTable),
-		new(addAccountIdToS3Slice),
-		new(fixDedupUserTables),
-		new(resetS3FileMetaProcessed),
-		new(addLoggingTables),
-		new(addLoggingFields),
-		new(addAuthTypeToConnection),
+// newAWSSession creates an AWS session for the given connection and region.
+// For access_key auth, static credentials are used; for iam_role, the default credential chain is used.
+func newAWSSession(conn *models.QDevConnection, region string) (*session.Session, error) {
+	cfg := &aws.Config{
+		Region: aws.String(region),
 	}
+	if !conn.IsIAMRoleAuth() {
+		cfg.Credentials = credentials.NewStaticCredentials(
+			conn.AccessKeyId,
+			conn.SecretAccessKey,
+			"",
+		)
+	}
+	return session.NewSession(cfg)
 }

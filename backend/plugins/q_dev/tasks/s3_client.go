@@ -21,18 +21,12 @@ import (
 	"github.com/apache/incubator-devlake/core/errors"
 	"github.com/apache/incubator-devlake/core/plugin"
 	"github.com/apache/incubator-devlake/plugins/q_dev/models"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func NewQDevS3Client(taskCtx plugin.TaskContext, connection *models.QDevConnection) (*QDevS3Client, errors.Error) {
-	// 创建AWS session
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(connection.Region),
-		Credentials: credentials.NewStaticCredentials(connection.AccessKeyId, connection.SecretAccessKey, ""),
-	})
+	// Create AWS session
+	sess, err := newAWSSession(connection, connection.Region)
 	if err != nil {
 		return nil, errors.Convert(err)
 	}
