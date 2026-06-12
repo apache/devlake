@@ -124,7 +124,7 @@ export const Auth = ({ type, initialValues, values, setValues, setErrors }: Prop
       <Block title="Jira Version" required>
         <Radio.Group value={version} onChange={handleChangeVersion}>
           <Radio value="cloud">Jira Cloud</Radio>
-          <Radio value="server">Jira Data Center</Radio>
+          <Radio value="server">Jira Server / Jira Data Center</Radio>
         </Radio.Group>
 
         <Block
@@ -136,7 +136,7 @@ export const Auth = ({ type, initialValues, values, setValues, setErrors }: Prop
                 ? 'Provide the Jira instance API endpoint. For Jira Cloud, e.g. https://your-company.atlassian.net/rest/. Please note that the endpoint URL should end with /.'
                 : ''}
               {version === 'server'
-                ? 'Provide the Jira instance API endpoint. For Jira Data Center, e.g. https://jira.your-company.com/rest/. Please note that the endpoint URL should end with /.'
+                ? 'Provide the Jira instance API endpoint. For Jira Server / Jira Data Center, e.g. https://jira.your-company.com/rest/. Please note that the endpoint URL should end with /.'
                 : ''}
             </>
           }
