@@ -265,6 +265,16 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 	}
 	domainIssue.Status = ticket.DONE
 	domainIssue.OriginalStatus = ``
+	now := time.Now()
+	if domainIssue.ResolutionDate == nil {
+		domainIssue.ResolutionDate = &now
+	}
+	if domainIssue.LeadTimeMinutes == nil || *domainIssue.LeadTimeMinutes == 0 {
+		if domainIssue.CreatedDate != nil {
+			temp := uint(domainIssue.ResolutionDate.Sub(*domainIssue.CreatedDate).Minutes())
+			domainIssue.LeadTimeMinutes = &temp
+		}
+	}
 	// save
 	err = tx.Update(domainIssue)
 	if err != nil {
@@ -278,6 +288,15 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 		if err == nil {
 			domainIncident.Status = ticket.DONE
 			domainIncident.OriginalStatus = ``
+			if domainIncident.ResolutionDate == nil {
+				domainIncident.ResolutionDate = &now
+			}
+			if domainIncident.LeadTimeMinutes == nil || *domainIncident.LeadTimeMinutes == 0 {
+				if domainIncident.CreatedDate != nil {
+					temp := uint(domainIncident.ResolutionDate.Sub(*domainIncident.CreatedDate).Minutes())
+					domainIncident.LeadTimeMinutes = &temp
+				}
+			}
 			// save
 			err = tx.Update(domainIncident)
 			if err != nil {
