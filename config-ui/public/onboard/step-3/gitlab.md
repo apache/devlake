@@ -32,3 +32,7 @@ Yes, data transformations can be applied by setting up a Scope Config for the se
 ##### Q4. How often is the data synchronized?
 
 Data synchronization occurs daily. This frequency can be modified on the project details page as needed.
+
+##### Q5. Which dashboard will be shown after collection?
+
+After data collection completes, the **Contributor Experience** dashboard will open, showing metrics like Issue Initial Response Time, PR Review Time, and Good First Issue recommendations — just like GitHub.
