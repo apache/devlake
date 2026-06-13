@@ -18,15 +18,40 @@ limitations under the License.
 package shared
 
 import (
+	"context"
+
 	"github.com/apache/incubator-devlake/core/models/common"
 	"github.com/gin-gonic/gin"
 )
 
+// userContextKey is a dedicated, unexported type for storing the
+// authenticated user on the request's context.Context. A dedicated type
+// avoids collisions with other packages and satisfies go vet (which flags
+// basic types such as plain strings used as context keys).
+type userContextKey struct{}
+
+// SetUserOnRequest stores the authenticated user on the request's
+// context.Context so the identity survives gin's Engine.HandleContext
+// re-dispatch, which calls Context.reset() and wipes gin's Keys (where
+// c.Set stores values). Callers that re-dispatch (e.g. the /rest open-API
+// path rewrite) must use this so the terminal RequireAuth gate can still
+// see the user. It also mirrors the value into gin Keys via c.Set for the
+// common, non-re-dispatched case.
+func SetUserOnRequest(c *gin.Context, user *common.User) {
+	c.Set(common.USER, user)
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), userContextKey{}, user))
+}
+
 func GetUser(c *gin.Context) (*common.User, bool) {
-	userObj, exist := c.Get(common.USER)
-	if !exist {
-		return nil, false
+	if userObj, exist := c.Get(common.USER); exist {
+		if user, ok := userObj.(*common.User); ok {
+			return user, true
+		}
 	}
-	user := userObj.(*common.User)
-	return user, true
+	// Fall back to the request context, which survives Engine.HandleContext
+	// re-dispatch (unlike gin Keys, which Context.reset() clears).
+	if user, ok := c.Request.Context().Value(userContextKey{}).(*common.User); ok {
+		return user, true
+	}
+	return nil, false
 }
