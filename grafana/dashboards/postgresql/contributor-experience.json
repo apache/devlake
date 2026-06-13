@@ -41,7 +41,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard answers the question \"What makes a great developer experience? And how can we define and track that?\". This dashboard heavily focuses on actionability. All metrics can be deterministically improved as long as OSS maintainers invested time into them.\n- Data Source Required: GitHub",
+        "content": "- Use Cases: This dashboard answers the question \"What makes a great developer experience? And how can we define and track that?\". This dashboard heavily focuses on actionability. All metrics can be deterministically improved as long as OSS maintainers invested time into them.\n- Data Sources Required: GitHub, GitLab",
         "mode": "markdown"
       },
       "pluginVersion": "9.5.15",
@@ -830,7 +830,7 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
-    "OSS Maintainer Dashboard"
+    "OSS Maintainer Dashboard", "GitLab"
   ],
   "templating": {
     "list": [
