@@ -99,6 +99,9 @@ func (p Webhook) ApiResources() map[string]map[string]plugin.ApiResourceHandler 
 		"connections/:connectionId/issue/:issueKey/close": {
 			"POST": api.CloseIssue,
 		},
+		"connections/:connectionId/issue/close": {
+			"POST": api.CloseIssueByBody,
+		},
 		":connectionId/deployments": {
 			"POST": api.PostDeployments,
 		},
@@ -110,6 +113,9 @@ func (p Webhook) ApiResources() map[string]map[string]plugin.ApiResourceHandler 
 		},
 		":connectionId/issue/:issueKey/close": {
 			"POST": api.CloseIssue,
+		},
+		":connectionId/issue/close": { 
+			"POST": api.CloseIssueByBody,
 		},
 		"connections/by-name/:connectionName": {
 			"GET":    api.GetConnectionByName,
@@ -127,6 +133,9 @@ func (p Webhook) ApiResources() map[string]map[string]plugin.ApiResourceHandler 
 		},
 		"connections/by-name/:connectionName/issue/:issueKey/close": {
 			"POST": api.CloseIssueByName,
+		},
+		"connections/by-name/:connectionName/issue/close": {
+			"POST": api.CloseIssueByBodyByName,
 		},
 		"projects/:projectName/deployments": {
 			"POST": api.PostDeploymentsByProjectName,
