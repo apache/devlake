@@ -77,12 +77,28 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	} else {
 		logger.Info("got user's timezone: %v", loc.String())
 	}
-	jql := "ORDER BY created ASC"
-	if apiCollector.GetSince() != nil {
-		jql = buildJQL(*apiCollector.GetSince(), loc)
+	boardJQL, err := getBoardJQL(taskCtx.GetDal(), data)
+	if err != nil {
+		return err
+	}
+	jql := buildBoardIssueJQL(boardJQL, apiCollector.GetSince(), loc)
+
+	if strings.EqualFold(string(data.JiraServerInfo.DeploymentType), string(models.DeploymentServer)) {
+		logger.Info("Using api/2/search for Jira issue collection")
+		err = setupIssueApiV2Collector(apiCollector, data, jql)
+	} else {
+		logger.Info("Using api/3/search/jql for Jira issue collection")
+		err = setupIssueApiV3Collector(apiCollector, data, jql)
+	}
+	if err != nil {
+		return err
 	}
 
-	err = apiCollector.InitCollector(api.ApiCollectorArgs{
+	return apiCollector.Execute()
+}
+
+func setupIssueApiV2Collector(apiCollector *api.StatefulApiCollector, data *JiraTaskData, jql string) errors.Error {
+	return apiCollector.InitCollector(api.ApiCollectorArgs{
 		ApiClient: data.ApiClient,
 		PageSize:  data.Options.PageSize,
 		/*
@@ -94,7 +110,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			avoid duplicate logic for every tasks, and when we have a better idea like improving performance, we can
 			do it in one place
 		*/
-		UrlTemplate: "agile/1.0/board/{{ .Params.BoardId }}/issue",
+		UrlTemplate: "api/2/search",
 		/*
 			(Optional) Return query string for request, or you can plug them into UrlTemplate directly
 		*/
@@ -104,6 +120,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			query.Set("startAt", fmt.Sprintf("%v", reqData.Pager.Skip))
 			query.Set("maxResults", fmt.Sprintf("%v", reqData.Pager.Size))
 			query.Set("expand", "changelog")
+			query.Set("fields", "*all")
 			return query, nil
 		},
 		/*
@@ -123,42 +140,169 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			For api endpoint that returns number of total pages, ApiCollector can collect pages in parallel with ease,
 			or other techniques are required if this information was missing.
 		*/
-		GetTotalPages: GetTotalPagesFromResponse,
-		Concurrency:   10,
-		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			var data struct {
-				Issues []json.RawMessage `json:"issues"`
-			}
-			blob, err := io.ReadAll(res.Body)
-			if err != nil {
-				return nil, errors.Convert(err)
-			}
-			err = json.Unmarshal(blob, &data)
-			if err != nil {
-				return nil, errors.Convert(err)
-			}
-			return data.Issues, nil
-		},
+		GetTotalPages:  GetTotalPagesFromResponse,
+		Concurrency:    10,
+		ResponseParser: parseIssuesFromResponse,
 	})
-	if err != nil {
-		return err
-	}
+}
 
-	return apiCollector.Execute()
+func setupIssueApiV3Collector(apiCollector *api.StatefulApiCollector, data *JiraTaskData, jql string) errors.Error {
+	return apiCollector.InitCollector(api.ApiCollectorArgs{
+		ApiClient:             data.ApiClient,
+		PageSize:              data.Options.PageSize,
+		UrlTemplate:           "api/3/search/jql",
+		GetNextPageCustomData: getNextPageCustomDataForV3,
+		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
+			query := url.Values{}
+			query.Set("jql", jql)
+			query.Set("maxResults", fmt.Sprintf("%v", reqData.Pager.Size))
+			query.Set("expand", "changelog")
+			query.Set("fields", "*all")
+			if reqData.CustomData != nil {
+				query.Set("nextPageToken", reqData.CustomData.(string))
+			}
+			return query, nil
+		},
+		ResponseParser: parseIssuesFromResponse,
+	})
+}
+
+func parseIssuesFromResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
+	var data struct {
+		Issues []json.RawMessage `json:"issues"`
+	}
+	blob, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.Convert(err)
+	}
+	err = json.Unmarshal(blob, &data)
+	if err != nil {
+		return nil, errors.Convert(err)
+	}
+	return data.Issues, nil
+}
+
+func getBoardJQL(db dal.Dal, data *JiraTaskData) (string, errors.Error) {
+	var record models.JiraBoard
+	err := db.First(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
+	if err != nil {
+		return "", errors.Default.Wrap(err, fmt.Sprintf("error finding record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
+	}
+	if strings.TrimSpace(record.Jql) == "" {
+		return "", errors.Default.New(fmt.Sprintf("connection_id:%d board_id:%d filter jql is empty, please run collectBoardFilterBegin first", data.Options.ConnectionId, data.Options.BoardId))
+	}
+	return record.Jql, nil
 }
 
 // buildJQL build jql based on timeAfter and incremental mode
 func buildJQL(since time.Time, location *time.Location) string {
-	jql := "ORDER BY created ASC"
-	if !since.IsZero() {
-		if location != nil {
-			since = since.In(location)
-		} else {
-			since = since.In(time.UTC).Add(-24 * time.Hour)
+	updatedAfter := buildUpdatedAfterJQL(since, location)
+	if updatedAfter == "" {
+		return jiraIssueOrderBy
+	}
+	return fmt.Sprintf("%s %s", updatedAfter, jiraIssueOrderBy)
+}
+
+const jiraIssueOrderBy = "ORDER BY created ASC"
+
+func buildBoardIssueJQL(boardJQL string, since *time.Time, location *time.Location) string {
+	var clauses []string
+	boardJQL = stripJQLOrderBy(boardJQL)
+	if boardJQL != "" {
+		clauses = append(clauses, fmt.Sprintf("(%s)", boardJQL))
+	}
+	if since != nil {
+		updatedAfter := buildUpdatedAfterJQL(*since, location)
+		if updatedAfter != "" {
+			clauses = append(clauses, updatedAfter)
 		}
-		jql = fmt.Sprintf("updated >= '%s' %s", since.Format("2006/01/02 15:04"), jql)
+	}
+	if len(clauses) == 0 {
+		return jiraIssueOrderBy
+	}
+	return fmt.Sprintf("%s %s", strings.Join(clauses, " AND "), jiraIssueOrderBy)
+}
+
+func buildUpdatedAfterJQL(since time.Time, location *time.Location) string {
+	if since.IsZero() {
+		return ""
+	}
+	if location != nil {
+		since = since.In(location)
+	} else {
+		since = since.In(time.UTC).Add(-24 * time.Hour)
+	}
+	return fmt.Sprintf("updated >= '%s'", since.Format("2006/01/02 15:04"))
+}
+
+func stripJQLOrderBy(jql string) string {
+	jql = strings.TrimSpace(jql)
+	inSingleQuote := false
+	inDoubleQuote := false
+	escaped := false
+	for i := 0; i < len(jql); i++ {
+		c := jql[i]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if (inSingleQuote || inDoubleQuote) && c == '\\' {
+			escaped = true
+			continue
+		}
+		if !inDoubleQuote && c == '\'' {
+			inSingleQuote = !inSingleQuote
+			continue
+		}
+		if !inSingleQuote && c == '"' {
+			inDoubleQuote = !inDoubleQuote
+			continue
+		}
+		if inSingleQuote || inDoubleQuote {
+			continue
+		}
+		if isJQLOrderByAt(jql, i) {
+			return strings.TrimSpace(jql[:i])
+		}
 	}
 	return jql
+}
+
+func isJQLOrderByAt(jql string, index int) bool {
+	order := "order"
+	if !hasPrefixFold(jql[index:], order) {
+		return false
+	}
+	before := index - 1
+	if before >= 0 && !isJQLTokenBoundary(jql[before]) {
+		return false
+	}
+	afterOrder := index + len(order)
+	if afterOrder >= len(jql) || !isJQLWhitespace(jql[afterOrder]) {
+		return false
+	}
+	byIndex := afterOrder
+	for byIndex < len(jql) && isJQLWhitespace(jql[byIndex]) {
+		byIndex++
+	}
+	by := "by"
+	if !hasPrefixFold(jql[byIndex:], by) {
+		return false
+	}
+	afterBy := byIndex + len(by)
+	return afterBy == len(jql) || isJQLTokenBoundary(jql[afterBy])
+}
+
+func hasPrefixFold(s string, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
+}
+
+func isJQLWhitespace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f'
+}
+
+func isJQLTokenBoundary(c byte) bool {
+	return isJQLWhitespace(c) || c == '(' || c == ')'
 }
 
 // getTimeZone get user's timezone from jira API

@@ -41,12 +41,15 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 	logger := taskCtx.GetLogger()
 	db := taskCtx.GetDal()
 	logger.Info("collect board in collectBoardFilterBegin: %d", data.Options.BoardId)
-	// get board filter id
-	filterId, err := getBoardFilterId(data)
+	// get board filter configuration
+	boardConfiguration, err := getBoardConfiguration(data)
 	if err != nil {
-		return errors.Default.Wrap(err, fmt.Sprintf("error getting board filter id for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
+		return errors.Default.Wrap(err, fmt.Sprintf("error getting board filter configuration for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
 	}
+	filterId := boardConfiguration.Filter.ID
+	subQuery := boardConfiguration.SubQuery
 	logger.Info("collect board filter:%s", filterId)
+	logger.Info("collect board subQuery:%s", subQuery)
 
 	// get board filter jql
 	filterInfo, err := getBoardFilterJql(data, filterId)
@@ -65,13 +68,14 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 	// full sync
 	syncPolicy := taskCtx.TaskContext().SyncPolicy()
 	if syncPolicy != nil && syncPolicy.FullSync {
-		if record.Jql != jql {
+		if record.Jql != jql || record.SubQuery != subQuery {
 			record.Jql = jql
+			record.SubQuery = subQuery
 			err = db.Update(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
 			if err != nil {
 				return errors.Default.Wrap(err, fmt.Sprintf("error updating record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
 			}
-			logger.Info("full sync mode, update jql to %s", record.Jql)
+			logger.Info("full sync mode, update jql to %s, subQuery to %s", record.Jql, record.SubQuery)
 		}
 		return nil
 	}
@@ -79,11 +83,12 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 	// first run
 	if record.Jql == "" {
 		record.Jql = jql
+		record.SubQuery = subQuery
 		err = db.Update(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
 		if err != nil {
 			return errors.Default.Wrap(err, fmt.Sprintf("error updating record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
 		}
-		logger.Info("first run, update jql to %s", record.Jql)
+		logger.Info("first run, update jql to %s, subQuery to %s", record.Jql, record.SubQuery)
 		return nil
 	}
 	// change
@@ -95,6 +100,7 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 			// set full sync
 			taskCtx.TaskContext().SetSyncPolicy(&coreModels.SyncPolicy{TriggerSyncPolicy: coreModels.TriggerSyncPolicy{FullSync: true}})
 			record.Jql = jql
+			record.SubQuery = subQuery
 			err = db.Update(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
 			if err != nil {
 				return errors.Default.Wrap(err, fmt.Sprintf("error updating record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
@@ -103,23 +109,38 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 			return errors.Default.New(fmt.Sprintf("connection_id:%d board_id:%d filter jql has changed, please use fullSync mode. And the previous jql is %s, now jql is %s", data.Options.ConnectionId, data.Options.BoardId, record.Jql, jql))
 		}
 	}
+	if record.SubQuery != subQuery {
+		record.SubQuery = subQuery
+		err = db.Update(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
+		if err != nil {
+			return errors.Default.Wrap(err, fmt.Sprintf("error updating record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
+		}
+		logger.Info("update board subQuery to %s", record.SubQuery)
+	}
 	// no change
 	return nil
 }
 
 func getBoardFilterId(data *JiraTaskData) (string, error) {
+	boardConfiguration, err := getBoardConfiguration(data)
+	if err != nil {
+		return "", err
+	}
+	return boardConfiguration.Filter.ID, nil
+}
+
+func getBoardConfiguration(data *JiraTaskData) (*BoardConfiguration, error) {
 	url := fmt.Sprintf("agile/1.0/board/%d/configuration", data.Options.BoardId)
 	boardConfiguration, err := data.ApiClient.Get(url, nil, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	bc := &BoardConfiguration{}
 	err = helper.UnmarshalResponse(boardConfiguration, bc)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	filterId := bc.Filter.ID
-	return filterId, nil
+	return bc, nil
 }
 
 func getBoardFilterJql(data *JiraTaskData, filterId string) (*FilterInfo, error) {
@@ -152,6 +173,7 @@ type BoardConfiguration struct {
 		ID   string `json:"id"`
 		Self string `json:"self"`
 	} `json:"filter"`
+	SubQuery string `json:"subQuery"`
 	ColumnConfig struct {
 		Columns []struct {
 			Name     string `json:"name"`

@@ -40,11 +40,12 @@ func CollectBoardFilterEnd(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	logger.Info("collect board in collectBoardFilterEnd: %d", data.Options.BoardId)
 
-	// get board filter id
-	filterId, err := getBoardFilterId(data)
+	// get board filter configuration
+	boardConfiguration, err := getBoardConfiguration(data)
 	if err != nil {
-		return errors.Default.Wrap(err, fmt.Sprintf("error getting board filter id for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
+		return errors.Default.Wrap(err, fmt.Sprintf("error getting board filter configuration for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
 	}
+	filterId := boardConfiguration.Filter.ID
 	logger.Info("collect board filter:%s", filterId)
 
 	// get board filter jql
@@ -69,6 +70,14 @@ func CollectBoardFilterEnd(taskCtx plugin.SubTaskContext) errors.Error {
 		if !flag {
 			return errors.Default.New(fmt.Sprintf("connection_id:%d board_id:%d filter jql has changed, please use fullSync mode. And the previous jql is %s, now jql is %s", data.Options.ConnectionId, data.Options.BoardId, record.Jql, jql))
 		}
+	}
+	if record.SubQuery != boardConfiguration.SubQuery {
+		record.SubQuery = boardConfiguration.SubQuery
+		err = db.Update(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
+		if err != nil {
+			return errors.Default.Wrap(err, fmt.Sprintf("error updating record in _tool_jira_boards table for connection_id:%d board_id:%d", data.Options.ConnectionId, data.Options.BoardId))
+		}
+		logger.Info("update board subQuery to %s", record.SubQuery)
 	}
 
 	return nil
