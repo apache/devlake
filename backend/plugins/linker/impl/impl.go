@@ -20,6 +20,7 @@ package impl
 import (
 	"encoding/json"
 	"regexp"
+	"strings"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -84,13 +85,11 @@ func (p Linker) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]i
 	taskData := &tasks.LinkerTaskData{
 		Options: op,
 	}
-	if op.PrToIssueRegexp != "" {
-		re, err := regexp.Compile(op.PrToIssueRegexp)
-		if err != nil {
-			return taskData, errors.Convert(err)
-		}
-		taskData.PrToIssueRegexp = re
+	re, compileErr := regexp.Compile(op.PrToIssueRegexp)
+	if compileErr != nil {
+		return taskData, errors.Convert(compileErr)
 	}
+	taskData.PrToIssueRegexp = re
 	return taskData, nil
 }
 
@@ -108,6 +107,10 @@ func (p Linker) MakeMetricPluginPipelinePlanV200(projectName string, options jso
 	err := json.Unmarshal(options, op)
 	if err != nil {
 		return nil, errors.Default.WrapRaw(err)
+	}
+	op.PrToIssueRegexp = strings.TrimSpace(op.PrToIssueRegexp)
+	if op.PrToIssueRegexp == "" {
+		return nil, nil
 	}
 	plan := coreModels.PipelinePlan{
 		{
