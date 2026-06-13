@@ -37,13 +37,14 @@ export const ScopeConfigSelect = ({ plugin, connectionId, scopeConfigId, onCance
   const [version, setVersion] = useState(1);
   const [trId, setTrId] = useState<ID>();
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  
+  const { ready, data } = useRefreshData(() => showAll ? API.scopeConfig.listAll(plugin) : API.scopeConfig.list(plugin, connectionId),[version, showAll],);
 
-  const { ready, data } = useRefreshData(() => API.scopeConfig.list(plugin, connectionId), [version]);
-
-  const dataSource = useMemo(
-    () => (data ? (scopeConfigId ? [{ id: 'None', name: 'No Scope Config' }].concat(data) : data) : []),
-    [data, scopeConfigId],
-  );
+  const dataSource = useMemo(() => {
+  const filtered = showAll ? data : data;
+  return filtered ? (scopeConfigId ? [{ id: 'None', name: 'No Scope Config' }].concat(filtered) : filtered) : [];
+}, [data, scopeConfigId, showAll]);
 
   const defaultName = useMemo(() => `shared-config-<${(data ?? []).length}>`, [data]);
 
@@ -67,11 +68,17 @@ export const ScopeConfigSelect = ({ plugin, connectionId, scopeConfigId, onCance
 
   return (
     <Flex vertical gap="middle">
-      <Flex style={{ marginTop: 20 }}>
+      <Flex style={{ marginTop: 20 }} gap="small" align="center">
         <Button type="primary" icon={<PlusOutlined />} onClick={handleShowDialog}>
-          Add New Scope Config
+        Add New Scope Config
         </Button>
-      </Flex>
+        <Button
+        type={showAll ? 'primary' : 'default'}
+        onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll ? 'Showing: All Connections' : 'This Connection Only'}
+            </Button>
+            </Flex>
       <Table
         rowKey="id"
         size="small"
