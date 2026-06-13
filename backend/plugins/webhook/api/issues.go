@@ -19,10 +19,11 @@ package api
 
 import (
 	"fmt"
-	"github.com/apache/incubator-devlake/core/log"
-	"github.com/apache/incubator-devlake/helpers/dbhelper"
 	"net/http"
 	"time"
+
+	"github.com/apache/incubator-devlake/core/log"
+	"github.com/apache/incubator-devlake/helpers/dbhelper"
 
 	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/errors"
@@ -109,6 +110,26 @@ func PostIssue(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, error
 func PostIssueByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.FirstByName(connection, input.Params)
+	return postIssue(input, err, connection)
+}
+
+// PostIssuesByProjectName
+// @Summary create issue by project name
+// @Description Create issue by project name. The webhook connection will be created automatically if it does not exist.<br/>
+// @Description example: {"url":"","issue_key":"DLK-1234","title":"a feature from DLK","description":"","epic_key":"","type":"BUG","status":"TODO","original_status":"created","story_point":0,"resolution_date":null,"created_date":"2020-01-01T12:00:00+00:00","updated_date":null,"lead_time_minutes":0,"parent_issue_key":"DLK-1200","priority":"","original_estimate_minutes":0,"time_spent_minutes":0,"time_remaining_minutes":0,"creator_id":"user1131","creator_name":"Nick name 1","assignee_id":"user1132","assignee_name":"Nick name 2","severity":"","component":""}
+// @Tags plugins/webhook
+// @Param body body WebhookIssueRequest true "json body"
+// @Success 200  {string} noResponse ""
+// @Failure 400  {string} errcode.Error "Bad Request"
+// @Failure 403  {string} errcode.Error "Forbidden"
+// @Failure 500  {string} errcode.Error "Internal Error"
+// @Router /projects/:projectName/issues [POST]
+func PostIssuesByProjectName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
+	// find or create the connection for this project
+	connection, err, shouldReturn := getOrCreateConnection(input, "issues")
+	if shouldReturn {
+		return nil, err
+	}
 	return postIssue(input, err, connection)
 }
 
