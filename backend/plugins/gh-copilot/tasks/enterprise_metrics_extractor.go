@@ -30,13 +30,31 @@ import (
 // --- Enterprise report JSON structures ---
 
 type enterpriseDayTotal struct {
-	Day                           string                 `json:"day"`
-	EnterpriseId                  string                 `json:"enterprise_id"`
-	DailyActiveUsers              int                    `json:"daily_active_users"`
-	WeeklyActiveUsers             int                    `json:"weekly_active_users"`
-	MonthlyActiveUsers            int                    `json:"monthly_active_users"`
-	MonthlyActiveChatUsers        int                    `json:"monthly_active_chat_users"`
-	MonthlyActiveAgentUsers       int                    `json:"monthly_active_agent_users"`
+	Day                     string `json:"day"`
+	EnterpriseId            string `json:"enterprise_id"`
+	DailyActiveUsers        int    `json:"daily_active_users"`
+	WeeklyActiveUsers       int    `json:"weekly_active_users"`
+	MonthlyActiveUsers      int    `json:"monthly_active_users"`
+	MonthlyActiveChatUsers  int    `json:"monthly_active_chat_users"`
+	MonthlyActiveAgentUsers int    `json:"monthly_active_agent_users"`
+	DailyActiveCliUsers     int    `json:"daily_active_cli_users"`
+
+	// Code review user counts
+	DailyActiveCopilotCodeReviewUsers    int `json:"daily_active_copilot_code_review_users"`
+	DailyPassiveCopilotCodeReviewUsers   int `json:"daily_passive_copilot_code_review_users"`
+	WeeklyActiveCopilotCodeReviewUsers   int `json:"weekly_active_copilot_code_review_users"`
+	WeeklyPassiveCopilotCodeReviewUsers  int `json:"weekly_passive_copilot_code_review_users"`
+	MonthlyActiveCopilotCodeReviewUsers  int `json:"monthly_active_copilot_code_review_users"`
+	MonthlyPassiveCopilotCodeReviewUsers int `json:"monthly_passive_copilot_code_review_users"`
+
+	// Chat panel mode breakdown
+	ChatPanelAgentMode   int `json:"chat_panel_agent_mode"`
+	ChatPanelAskMode     int `json:"chat_panel_ask_mode"`
+	ChatPanelCustomMode  int `json:"chat_panel_custom_mode"`
+	ChatPanelEditMode    int `json:"chat_panel_edit_mode"`
+	ChatPanelPlanMode    int `json:"chat_panel_plan_mode"`
+	ChatPanelUnknownMode int `json:"chat_panel_unknown_mode"`
+
 	UserInitiatedInteractionCount int                    `json:"user_initiated_interaction_count"`
 	CodeGenerationActivityCount   int                    `json:"code_generation_activity_count"`
 	CodeAcceptanceActivityCount   int                    `json:"code_acceptance_activity_count"`
@@ -49,6 +67,7 @@ type enterpriseDayTotal struct {
 	TotalsByLanguageFeature       []totalsByLangFeature  `json:"totals_by_language_feature"`
 	TotalsByLanguageModel         []totalsByLangModel    `json:"totals_by_language_model"`
 	TotalsByModelFeature          []totalsByModelFeature `json:"totals_by_model_feature"`
+	TotalsByCli                   *totalsByCli           `json:"totals_by_cli"`
 	PullRequests                  *pullRequestStats      `json:"pull_requests"`
 }
 
@@ -97,10 +116,32 @@ type totalsByLangModel struct {
 }
 
 type pullRequestStats struct {
-	TotalReviewed          int `json:"total_reviewed"`
-	TotalCreated           int `json:"total_created"`
-	TotalCreatedByCopilot  int `json:"total_created_by_copilot"`
-	TotalReviewedByCopilot int `json:"total_reviewed_by_copilot"`
+	TotalReviewed                   int     `json:"total_reviewed"`
+	TotalCreated                    int     `json:"total_created"`
+	TotalMerged                     int     `json:"total_merged"`
+	MedianMinutesToMerge            float64 `json:"median_minutes_to_merge"`
+	TotalSuggestions                int     `json:"total_suggestions"`
+	TotalAppliedSuggestions         int     `json:"total_applied_suggestions"`
+	TotalCreatedByCopilot           int     `json:"total_created_by_copilot"`
+	TotalReviewedByCopilot          int     `json:"total_reviewed_by_copilot"`
+	TotalMergedCreatedByCopilot     int     `json:"total_merged_created_by_copilot"`
+	TotalMergedReviewedByCopilot    int     `json:"total_merged_reviewed_by_copilot"`
+	MedianMinToMergeCopilotAuthored float64 `json:"median_minutes_to_merge_copilot_authored"`
+	MedianMinToMergeCopilotReviewed float64 `json:"median_minutes_to_merge_copilot_reviewed"`
+	TotalCopilotSuggestions         int     `json:"total_copilot_suggestions"`
+	TotalCopilotAppliedSuggestions  int     `json:"total_copilot_applied_suggestions"`
+}
+
+type totalsByCli struct {
+	SessionCount int        `json:"session_count"`
+	RequestCount int        `json:"request_count"`
+	PromptCount  int        `json:"prompt_count"`
+	TokenUsage   *cliTokens `json:"token_usage"`
+}
+
+type cliTokens struct {
+	OutputTokensSum int `json:"output_tokens_sum"`
+	PromptTokensSum int `json:"prompt_tokens_sum"`
 }
 
 type totalsByModelFeature struct {
@@ -167,6 +208,22 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				MonthlyActiveUsers:      dt.MonthlyActiveUsers,
 				MonthlyActiveChatUsers:  dt.MonthlyActiveChatUsers,
 				MonthlyActiveAgentUsers: dt.MonthlyActiveAgentUsers,
+				DailyActiveCliUsers:     dt.DailyActiveCliUsers,
+
+				DailyActiveCopilotCodeReviewUsers:    dt.DailyActiveCopilotCodeReviewUsers,
+				DailyPassiveCopilotCodeReviewUsers:   dt.DailyPassiveCopilotCodeReviewUsers,
+				WeeklyActiveCopilotCodeReviewUsers:   dt.WeeklyActiveCopilotCodeReviewUsers,
+				WeeklyPassiveCopilotCodeReviewUsers:  dt.WeeklyPassiveCopilotCodeReviewUsers,
+				MonthlyActiveCopilotCodeReviewUsers:  dt.MonthlyActiveCopilotCodeReviewUsers,
+				MonthlyPassiveCopilotCodeReviewUsers: dt.MonthlyPassiveCopilotCodeReviewUsers,
+
+				ChatPanelAgentMode:   dt.ChatPanelAgentMode,
+				ChatPanelAskMode:     dt.ChatPanelAskMode,
+				ChatPanelCustomMode:  dt.ChatPanelCustomMode,
+				ChatPanelEditMode:    dt.ChatPanelEditMode,
+				ChatPanelPlanMode:    dt.ChatPanelPlanMode,
+				ChatPanelUnknownMode: dt.ChatPanelUnknownMode,
+
 				CopilotActivityMetrics: models.CopilotActivityMetrics{
 					UserInitiatedInteractionCount: dt.UserInitiatedInteractionCount,
 					CodeGenerationActivityCount:   dt.CodeGenerationActivityCount,
@@ -177,11 +234,32 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					LocDeletedSum:                 dt.LocDeletedSum,
 				},
 			}
+			if dt.TotalsByCli != nil {
+				dailyMetrics.CopilotCliMetrics = models.CopilotCliMetrics{
+					CliSessionCount: dt.TotalsByCli.SessionCount,
+					CliRequestCount: dt.TotalsByCli.RequestCount,
+					CliPromptCount:  dt.TotalsByCli.PromptCount,
+				}
+				if dt.TotalsByCli.TokenUsage != nil {
+					dailyMetrics.CopilotCliMetrics.CliOutputTokenSum = dt.TotalsByCli.TokenUsage.OutputTokensSum
+					dailyMetrics.CopilotCliMetrics.CliPromptTokenSum = dt.TotalsByCli.TokenUsage.PromptTokensSum
+				}
+			}
 			if dt.PullRequests != nil {
 				dailyMetrics.PRTotalReviewed = dt.PullRequests.TotalReviewed
 				dailyMetrics.PRTotalCreated = dt.PullRequests.TotalCreated
+				dailyMetrics.PRTotalMerged = dt.PullRequests.TotalMerged
+				dailyMetrics.PRMedianMinutesToMerge = dt.PullRequests.MedianMinutesToMerge
+				dailyMetrics.PRTotalSuggestions = dt.PullRequests.TotalSuggestions
+				dailyMetrics.PRTotalAppliedSuggestions = dt.PullRequests.TotalAppliedSuggestions
 				dailyMetrics.PRTotalCreatedByCopilot = dt.PullRequests.TotalCreatedByCopilot
 				dailyMetrics.PRTotalReviewedByCopilot = dt.PullRequests.TotalReviewedByCopilot
+				dailyMetrics.PRTotalMergedCreatedByCopilot = dt.PullRequests.TotalMergedCreatedByCopilot
+				dailyMetrics.PRTotalMergedReviewedByCopilot = dt.PullRequests.TotalMergedReviewedByCopilot
+				dailyMetrics.PRMedianMinToMergeCopilotAuthored = dt.PullRequests.MedianMinToMergeCopilotAuthored
+				dailyMetrics.PRMedianMinToMergeCopilotReviewed = dt.PullRequests.MedianMinToMergeCopilotReviewed
+				dailyMetrics.PRTotalCopilotSuggestions = dt.PullRequests.TotalCopilotSuggestions
+				dailyMetrics.PRTotalCopilotAppliedSuggestions = dt.PullRequests.TotalCopilotAppliedSuggestions
 			}
 			results = append(results, dailyMetrics)
 

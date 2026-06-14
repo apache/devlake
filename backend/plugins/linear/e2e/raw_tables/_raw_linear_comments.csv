@@ -1,0 +1,4 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""comment-1"",""Body"":""Looking into this"",""CreatedAt"":""2026-05-02T10:00:00Z"",""UpdatedAt"":""2026-05-02T10:00:00Z"",""User"":{""Id"":""user-2""}}",https://api.linear.app/graphql,"{""issueId"":""issue-1""}",2026-05-02 10:00:00.000
+2,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""comment-2"",""Body"":""Fixed in PR 42"",""CreatedAt"":""2026-05-03T09:00:00Z"",""UpdatedAt"":""2026-05-03T09:30:00Z"",""User"":{""Id"":""user-1""}}",https://api.linear.app/graphql,"{""issueId"":""issue-1""}",2026-05-03 09:00:00.000
+3,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""comment-3"",""Body"":""Any update?"",""CreatedAt"":""2026-05-02T11:00:00Z"",""UpdatedAt"":""2026-05-02T11:00:00Z"",""User"":{""Id"":""user-1""}}",https://api.linear.app/graphql,"{""issueId"":""issue-2""}",2026-05-02 11:00:00.000

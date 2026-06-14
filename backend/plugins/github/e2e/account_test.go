@@ -20,11 +20,15 @@ package e2e
 import (
 	"testing"
 
+	"github.com/apache/incubator-devlake/core/dal"
 	"github.com/apache/incubator-devlake/core/models/domainlayer/crossdomain"
+	"github.com/apache/incubator-devlake/core/models/domainlayer/didgen"
 	"github.com/apache/incubator-devlake/helpers/e2ehelper"
 	"github.com/apache/incubator-devlake/plugins/github/impl"
 	"github.com/apache/incubator-devlake/plugins/github/models"
 	"github.com/apache/incubator-devlake/plugins/github/tasks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccountDataFlow(t *testing.T) {
@@ -108,4 +112,33 @@ func TestAccountDataFlow(t *testing.T) {
 			"_raw_data_remark",
 		},
 	)
+
+	// Referential-integrity invariant (#8886): every account the repo references in
+	// _tool_github_repo_accounts must have a domain `accounts` row, so issues.creator_id /
+	// pull_requests.author_id / merged_by_id never point at a missing account. We generate
+	// the domain id with the SAME generator the issue/PR convertors use, so this is a
+	// faithful proxy for the FK join the issue reported as broken. It also fails loudly if a
+	// future change shrinks ConvertAccounts' coverage or diverges the id generation.
+	accountIdGen := didgen.NewDomainIdGenerator(&models.GithubAccount{})
+	var repoAccounts []models.GithubRepoAccount
+	require.NoError(t, dataflowTester.Dal.All(&repoAccounts,
+		dal.Where("repo_github_id = ? AND connection_id = ? AND account_id > 0",
+			taskData.Options.GithubId, taskData.Options.ConnectionId),
+	))
+	require.NotEmpty(t, repoAccounts, "fixture must reference at least one account")
+	sawOrphanCase := false
+	for _, ra := range repoAccounts {
+		if ra.Login == "milichev" {
+			sawOrphanCase = true // the non-committer author from the issue repro
+		}
+		domainId := accountIdGen.Generate(taskData.Options.ConnectionId, ra.AccountId)
+		count, err := dataflowTester.Dal.Count(
+			dal.From(&crossdomain.Account{}),
+			dal.Where("id = ?", domainId),
+		)
+		require.NoError(t, err)
+		assert.Equalf(t, int64(1), count,
+			"orphan FK: repo account %q (id=%d) has no domain accounts row %q", ra.Login, ra.AccountId, domainId)
+	}
+	assert.True(t, sawOrphanCase, "fixture should include the non-committer orphan case (milichev)")
 }

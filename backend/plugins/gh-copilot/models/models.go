@@ -45,5 +45,7 @@ func GetTablesInfo() []dal.Tabler {
 		&GhCopilotUserMetricsByModelFeature{},
 		// Seat assignments
 		&GhCopilotSeat{},
+		// User-team mappings
+		&GhCopilotUserTeam{},
 	}
 }

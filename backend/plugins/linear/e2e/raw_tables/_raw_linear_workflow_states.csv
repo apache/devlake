@@ -1,0 +1,6 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""state-backlog"",""Name"":""Backlog"",""Type"":""backlog"",""Color"":""#bec2c8"",""Position"":0}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+2,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""state-todo"",""Name"":""Todo"",""Type"":""unstarted"",""Color"":""#e2e2e2"",""Position"":1}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+3,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""state-inprogress"",""Name"":""In Progress"",""Type"":""started"",""Color"":""#f2c94c"",""Position"":2}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+4,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""state-done"",""Name"":""Done"",""Type"":""completed"",""Color"":""#5e6ad2"",""Position"":3}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000
+5,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""state-canceled"",""Name"":""Canceled"",""Type"":""canceled"",""Color"":""#95a2b3"",""Position"":4}",https://api.linear.app/graphql,null,2026-05-01 00:00:00.000

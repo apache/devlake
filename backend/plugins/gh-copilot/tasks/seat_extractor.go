@@ -96,6 +96,8 @@ func ExtractSeats(taskCtx plugin.SubTaskContext) errors.Error {
 				Organization:            connection.Organization,
 				UserLogin:               seat.Assignee.Login,
 				UserId:                  seat.Assignee.Id,
+				UserName:                seat.Assignee.Name,
+				UserEmail:               seat.Assignee.Email,
 				PlanType:                seat.PlanType,
 				CreatedAt:               createdAt,
 				LastActivityAt:          lastAct,
@@ -103,6 +105,11 @@ func ExtractSeats(taskCtx plugin.SubTaskContext) errors.Error {
 				LastAuthenticatedAt:     lastAuth,
 				PendingCancellationDate: pendingCancel,
 				UpdatedAt:               updatedAt,
+			}
+			if seat.AssigningTeam != nil {
+				toolSeat.AssigningTeamId = seat.AssigningTeam.Id
+				toolSeat.AssigningTeamName = seat.AssigningTeam.Name
+				toolSeat.AssigningTeamSlug = seat.AssigningTeam.Slug
 			}
 
 			return []interface{}{toolSeat}, nil

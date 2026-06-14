@@ -19,6 +19,8 @@ package token
 
 import (
 	"net/http"
+	"strings"
+	"sync/atomic"
 )
 
 // RefreshRoundTripper is an HTTP transport middleware that automatically manages OAuth token refreshes.
@@ -92,4 +94,38 @@ func (rt *RefreshRoundTripper) roundTripWithRetry(req *http.Request, refreshAtte
 	}
 
 	return resp, nil
+}
+
+// StaticRoundTripper is an HTTP transport that injects a fixed bearer token.
+// Unlike RefreshRoundTripper, it does NOT attempt refresh or retries.
+type StaticRoundTripper struct {
+	base   http.RoundTripper
+	tokens []string
+	idx    atomic.Uint64
+}
+
+func NewStaticRoundTripper(base http.RoundTripper, rawToken string) *StaticRoundTripper {
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	parts := strings.Split(rawToken, ",")
+	tokens := make([]string, 0, len(parts))
+	for _, t := range parts {
+		if t = strings.TrimSpace(t); t != "" {
+			tokens = append(tokens, t)
+		}
+	}
+	if len(tokens) == 0 {
+		tokens = []string{rawToken}
+	}
+	return &StaticRoundTripper{base: base, tokens: tokens}
+}
+
+func (rt *StaticRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// always overrides headers put by SetupAuthentication, to make sure the token is always injected
+	// Add(1)-1 yields a 0-based sequence (0, 1, 2, ...) so rotation starts at tokens[0].
+	tok := rt.tokens[(rt.idx.Add(1)-1)%uint64(len(rt.tokens))]
+	reqClone := req.Clone(req.Context())
+	reqClone.Header.Set("Authorization", "Bearer "+tok)
+	return rt.base.RoundTrip(reqClone)
 }

@@ -1,0 +1,4 @@
+id,issue_id,author_id,author_name,field_id,field_name,original_from_value,original_to_value,from_value,to_value,created_date
+linear:LinearIssueHistory:1:hist-1,linear:LinearIssue:1:issue-1,linear:LinearAccount:1:user-2,,state,status,Backlog,Todo,TODO,TODO,2026-05-01T08:00:00.000+00:00
+linear:LinearIssueHistory:1:hist-2,linear:LinearIssue:1:issue-1,linear:LinearAccount:1:user-1,,state,status,Todo,In Progress,TODO,IN_PROGRESS,2026-05-02T00:00:00.000+00:00
+linear:LinearIssueHistory:1:hist-3,linear:LinearIssue:1:issue-1,linear:LinearAccount:1:user-1,,state,status,In Progress,Done,IN_PROGRESS,DONE,2026-05-03T00:00:00.000+00:00

@@ -1,0 +1,4 @@
+connection_id,issue_id,label_name
+1,issue-1,Bug
+1,issue-1,P1
+1,issue-2,Feature

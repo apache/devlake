@@ -38,12 +38,21 @@ type copilotSeatResponse struct {
 	LastActivityAt          *string         `json:"last_activity_at"`
 	LastActivityEditor      string          `json:"last_activity_editor"`
 	Assignee                copilotAssignee `json:"assignee"`
+	AssigningTeam           *copilotTeam    `json:"assigning_team"`
 }
 
 type copilotAssignee struct {
 	Login string `json:"login"`
 	Id    int64  `json:"id"`
 	Type  string `json:"type"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+type copilotTeam struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 // ExtractOrgMetrics parses org report data from the new report download API.
@@ -100,6 +109,22 @@ func ExtractOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				MonthlyActiveUsers:      dt.MonthlyActiveUsers,
 				MonthlyActiveChatUsers:  dt.MonthlyActiveChatUsers,
 				MonthlyActiveAgentUsers: dt.MonthlyActiveAgentUsers,
+				DailyActiveCliUsers:     dt.DailyActiveCliUsers,
+
+				DailyActiveCopilotCodeReviewUsers:    dt.DailyActiveCopilotCodeReviewUsers,
+				DailyPassiveCopilotCodeReviewUsers:   dt.DailyPassiveCopilotCodeReviewUsers,
+				WeeklyActiveCopilotCodeReviewUsers:   dt.WeeklyActiveCopilotCodeReviewUsers,
+				WeeklyPassiveCopilotCodeReviewUsers:  dt.WeeklyPassiveCopilotCodeReviewUsers,
+				MonthlyActiveCopilotCodeReviewUsers:  dt.MonthlyActiveCopilotCodeReviewUsers,
+				MonthlyPassiveCopilotCodeReviewUsers: dt.MonthlyPassiveCopilotCodeReviewUsers,
+
+				ChatPanelAgentMode:   dt.ChatPanelAgentMode,
+				ChatPanelAskMode:     dt.ChatPanelAskMode,
+				ChatPanelCustomMode:  dt.ChatPanelCustomMode,
+				ChatPanelEditMode:    dt.ChatPanelEditMode,
+				ChatPanelPlanMode:    dt.ChatPanelPlanMode,
+				ChatPanelUnknownMode: dt.ChatPanelUnknownMode,
+
 				CopilotActivityMetrics: models.CopilotActivityMetrics{
 					UserInitiatedInteractionCount: dt.UserInitiatedInteractionCount,
 					CodeGenerationActivityCount:   dt.CodeGenerationActivityCount,
@@ -110,11 +135,32 @@ func ExtractOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					LocDeletedSum:                 dt.LocDeletedSum,
 				},
 			}
+			if dt.TotalsByCli != nil {
+				dailyMetrics.CopilotCliMetrics = models.CopilotCliMetrics{
+					CliSessionCount: dt.TotalsByCli.SessionCount,
+					CliRequestCount: dt.TotalsByCli.RequestCount,
+					CliPromptCount:  dt.TotalsByCli.PromptCount,
+				}
+				if dt.TotalsByCli.TokenUsage != nil {
+					dailyMetrics.CopilotCliMetrics.CliOutputTokenSum = dt.TotalsByCli.TokenUsage.OutputTokensSum
+					dailyMetrics.CopilotCliMetrics.CliPromptTokenSum = dt.TotalsByCli.TokenUsage.PromptTokensSum
+				}
+			}
 			if dt.PullRequests != nil {
 				dailyMetrics.PRTotalReviewed = dt.PullRequests.TotalReviewed
 				dailyMetrics.PRTotalCreated = dt.PullRequests.TotalCreated
+				dailyMetrics.PRTotalMerged = dt.PullRequests.TotalMerged
+				dailyMetrics.PRMedianMinutesToMerge = dt.PullRequests.MedianMinutesToMerge
+				dailyMetrics.PRTotalSuggestions = dt.PullRequests.TotalSuggestions
+				dailyMetrics.PRTotalAppliedSuggestions = dt.PullRequests.TotalAppliedSuggestions
 				dailyMetrics.PRTotalCreatedByCopilot = dt.PullRequests.TotalCreatedByCopilot
 				dailyMetrics.PRTotalReviewedByCopilot = dt.PullRequests.TotalReviewedByCopilot
+				dailyMetrics.PRTotalMergedCreatedByCopilot = dt.PullRequests.TotalMergedCreatedByCopilot
+				dailyMetrics.PRTotalMergedReviewedByCopilot = dt.PullRequests.TotalMergedReviewedByCopilot
+				dailyMetrics.PRMedianMinToMergeCopilotAuthored = dt.PullRequests.MedianMinToMergeCopilotAuthored
+				dailyMetrics.PRMedianMinToMergeCopilotReviewed = dt.PullRequests.MedianMinToMergeCopilotReviewed
+				dailyMetrics.PRTotalCopilotSuggestions = dt.PullRequests.TotalCopilotSuggestions
+				dailyMetrics.PRTotalCopilotAppliedSuggestions = dt.PullRequests.TotalCopilotAppliedSuggestions
 			}
 			results = append(results, dailyMetrics)
 

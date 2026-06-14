@@ -87,7 +87,6 @@ func ConvertPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 				OriginalStatus: pr.State,
 				Title:          pr.Title,
 				Url:            pr.Url,
-				AuthorId:       accountIdGen.Generate(data.Options.ConnectionId, pr.AuthorId),
 				AuthorName:     pr.AuthorName,
 				Description:    pr.Body,
 				CreatedDate:    pr.GithubCreatedAt,
@@ -104,8 +103,16 @@ func ConvertPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 				Additions:      pr.Additions,
 				Deletions:      pr.Deletions,
 				MergedByName:   pr.MergedByName,
-				MergedById:     accountIdGen.Generate(data.Options.ConnectionId, pr.MergedById),
 				IsDraft:        pr.IsDraft,
+			}
+			// Generate account ids only for real users (#8886): a zero AuthorId (deleted
+			// user) or zero MergedById (unmerged PR) would otherwise produce an id like
+			// github:GithubAccount:1:0 that no accounts row can ever match.
+			if pr.AuthorId != 0 {
+				domainPr.AuthorId = accountIdGen.Generate(data.Options.ConnectionId, pr.AuthorId)
+			}
+			if pr.MergedById != 0 {
+				domainPr.MergedById = accountIdGen.Generate(data.Options.ConnectionId, pr.MergedById)
 			}
 			if pr.State == "open" || pr.State == "OPEN" {
 				domainPr.Status = code.OPEN
