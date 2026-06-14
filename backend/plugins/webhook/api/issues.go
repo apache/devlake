@@ -234,6 +234,42 @@ func CloseIssue(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, erro
 	return closeIssue(input, err, connection)
 }
 
+// CloseIssueByBodyRequest is the body for the body-based close endpoint
+type CloseIssueByBodyRequest struct {
+	IssueKey       string     `mapstructure:"issueKey"       validate:"required,max=255"`
+	ResolutionDate *time.Time `mapstructure:"resolutionDate"`
+	OriginalStatus string     `mapstructure:"originalStatus"`
+}
+
+// CloseIssueByBody
+// @Summary      close an issue (body-based)
+// @Description  Close an incident by passing issueKey in the request body.
+// @Description  Use this when the client (e.g. Kibana) cannot construct a dynamic URL.
+// @Tags          plugins/webhook
+// @Param         connectionId path  int                    true  "connection ID"
+// @Param         body         body  CloseIssueByBodyRequest true  "close request"
+// @Success 200  {string} noResponse ""
+// @Failure 400  {string} errcode.Error "Bad Request"
+// @Failure 500  {string} errcode.Error "Internal Error"
+// @Router        /plugins/webhook/connections/{connectionId}/issue/close [POST]
+func CloseIssueByBody(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
+	connection := &models.WebhookConnection{}
+	err := connectionHelper.First(connection, input.Params)
+	if err != nil {
+		return nil, err
+	}
+	request := &CloseIssueByBodyRequest{}
+	if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	vld = validator.New()
+	if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	input.Params["issueKey"] = request.IssueKey
+	return closeIssue(input, err, connection)
+}
+
 // CloseIssueByName
 // @Summary set issue's status to DONE
 // @Description set issue's status to DONE
@@ -245,6 +281,34 @@ func CloseIssue(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, erro
 func CloseIssueByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.FirstByName(connection, input.Params)
+	return closeIssue(input, err, connection)
+}
+
+// CloseIssueByBodyByName
+// @Summary      close an issue by connection name (body-based)
+// @Description  Close an incident using connection name + issueKey in request body.
+// @Tags          plugins/webhook
+// @Param         connectionName path  string                 true "connection name"
+// @Param         body           body  CloseIssueByBodyRequest true "close request"
+// @Success 200  {string} noResponse ""
+// @Failure 400  {string} errcode.Error "Bad Request"
+// @Failure 500  {string} errcode.Error "Internal Error"
+// @Router        /plugins/webhook/connections/by-name/{connectionName}/issue/close [POST]
+func CloseIssueByBodyByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
+	connection := &models.WebhookConnection{}
+	err := connectionHelper.FirstByName(connection, input.Params)
+	if err != nil {
+		return nil, err
+	}
+	request := &CloseIssueByBodyRequest{}
+	if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	vld = validator.New()
+	if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	input.Params["issueKey"] = request.IssueKey
 	return closeIssue(input, err, connection)
 }
 
@@ -265,16 +329,6 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 	}
 	domainIssue.Status = ticket.DONE
 	domainIssue.OriginalStatus = ``
-	now := time.Now()
-	if domainIssue.ResolutionDate == nil {
-		domainIssue.ResolutionDate = &now
-	}
-	if domainIssue.LeadTimeMinutes == nil || *domainIssue.LeadTimeMinutes == 0 {
-		if domainIssue.CreatedDate != nil {
-			temp := uint(domainIssue.ResolutionDate.Sub(*domainIssue.CreatedDate).Minutes())
-			domainIssue.LeadTimeMinutes = &temp
-		}
-	}
 	// save
 	err = tx.Update(domainIssue)
 	if err != nil {
@@ -288,15 +342,6 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 		if err == nil {
 			domainIncident.Status = ticket.DONE
 			domainIncident.OriginalStatus = ``
-			if domainIncident.ResolutionDate == nil {
-				domainIncident.ResolutionDate = &now
-			}
-			if domainIncident.LeadTimeMinutes == nil || *domainIncident.LeadTimeMinutes == 0 {
-				if domainIncident.CreatedDate != nil {
-					temp := uint(domainIncident.ResolutionDate.Sub(*domainIncident.CreatedDate).Minutes())
-					domainIncident.LeadTimeMinutes = &temp
-				}
-			}
 			// save
 			err = tx.Update(domainIncident)
 			if err != nil {
