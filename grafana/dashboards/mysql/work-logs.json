@@ -787,7 +787,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "with _accounts as (\n  select ua.account_id, ua.user_id, u.name, u.email\n    from accounts a \n    join user_accounts ua on a.id = ua.account_id\n    join users u on ua.user_id = u.id\n  where ua.user_id in ($users)\n)\n\nSELECT  count(distinct c.sha)\nFROM commits c\njoin _accounts a on c.author_id = a.email\nwhere $__timeFilter(authored_date)\n",
+          "rawSql": "with _accounts as (\n  select ua.account_id, ua.user_id, u.name, a.email\n    from accounts a \n    join user_accounts ua on a.id = ua.account_id\n    join users u on ua.user_id = u.id\n  where ua.user_id in ($users)\n)\n\nSELECT  count(distinct c.sha)\nFROM commits c\njoin _accounts a on c.author_id = a.email\nwhere $__timeFilter(authored_date)\n",
           "refId": "A",
           "sql": {
             "columns": [
