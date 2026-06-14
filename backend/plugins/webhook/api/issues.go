@@ -236,9 +236,9 @@ func CloseIssue(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, erro
 
 // CloseIssueByBodyRequest is the body for the body-based close endpoint
 type CloseIssueByBodyRequest struct {
-    IssueKey       string     `mapstructure:"issueKey"       validate:"required,max=255"`
-    ResolutionDate *time.Time `mapstructure:"resolutionDate"`
-    OriginalStatus string     `mapstructure:"originalStatus"`
+	IssueKey       string     `mapstructure:"issueKey"       validate:"required,max=255"`
+	ResolutionDate *time.Time `mapstructure:"resolutionDate"`
+	OriginalStatus string     `mapstructure:"originalStatus"`
 }
 
 // CloseIssueByBody
@@ -253,22 +253,21 @@ type CloseIssueByBodyRequest struct {
 // @Failure 500  {string} errcode.Error "Internal Error"
 // @Router        /plugins/webhook/connections/{connectionId}/issue/close [POST]
 func CloseIssueByBody(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
-    connection := &models.WebhookConnection{}
-    err := connectionHelper.First(connection, input.Params)
-    if err != nil {
-        return nil, err
-    }
-    request := &CloseIssueByBodyRequest{}
-    if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
-        return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
-    }
-    vld = validator.New()
-    if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
-        return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
-    }
-    // Inject issueKey into input.Params so closeIssue() can read it
-    input.Params["issueKey"] = request.IssueKey
-    return closeIssue(input, err, connection)
+	connection := &models.WebhookConnection{}
+	err := connectionHelper.First(connection, input.Params)
+	if err != nil {
+		return nil, err
+	}
+	request := &CloseIssueByBodyRequest{}
+	if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	vld = validator.New()
+	if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	input.Params["issueKey"] = request.IssueKey
+	return closeIssue(input, err, connection)
 }
 
 // CloseIssueByName
@@ -296,21 +295,21 @@ func CloseIssueByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput
 // @Failure 500  {string} errcode.Error "Internal Error"
 // @Router        /plugins/webhook/connections/by-name/{connectionName}/issue/close [POST]
 func CloseIssueByBodyByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
-    connection := &models.WebhookConnection{}
-    err := connectionHelper.FirstByName(connection, input.Params)
-    if err != nil {
-        return nil, err
-    }
-    request := &CloseIssueByBodyRequest{}
-    if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
-        return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
-    }
-    vld = validator.New()
-    if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
-        return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
-    }
-    input.Params["issueKey"] = request.IssueKey
-    return closeIssue(input, err, connection)
+	connection := &models.WebhookConnection{}
+	err := connectionHelper.FirstByName(connection, input.Params)
+	if err != nil {
+		return nil, err
+	}
+	request := &CloseIssueByBodyRequest{}
+	if err2 := helper.DecodeMapStruct(input.Body, request, true); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	vld = validator.New()
+	if err2 := errors.Convert(vld.Struct(request)); err2 != nil {
+		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
+	}
+	input.Params["issueKey"] = request.IssueKey
+	return closeIssue(input, err, connection)
 }
 
 func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *models.WebhookConnection) (*plugin.ApiResourceOutput, errors.Error) {
