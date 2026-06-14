@@ -1,0 +1,4 @@
+connection_id,id,issue_id,actor_id,from_state_id,from_state_name,from_state_type,to_state_id,to_state_name,to_state_type
+1,hist-1,issue-1,user-2,state-backlog,Backlog,backlog,state-todo,Todo,unstarted
+1,hist-2,issue-1,user-1,state-todo,Todo,unstarted,state-inprogress,In Progress,started
+1,hist-3,issue-1,user-1,state-inprogress,In Progress,started,state-done,Done,completed

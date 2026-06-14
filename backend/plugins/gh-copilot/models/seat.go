@@ -29,7 +29,12 @@ type GhCopilotSeat struct {
 	Organization            string `gorm:"primaryKey;type:varchar(255)"`
 	UserLogin               string `gorm:"primaryKey;type:varchar(255)"`
 	UserId                  int64  `gorm:"index"`
+	UserName                string `gorm:"type:varchar(255)" json:"userName"`
+	UserEmail               string `gorm:"type:varchar(255)" json:"userEmail"`
 	PlanType                string `gorm:"type:varchar(32)"`
+	AssigningTeamId         int64  `json:"assigningTeamId" gorm:"comment:Team that assigned the seat"`
+	AssigningTeamName       string `json:"assigningTeamName" gorm:"type:varchar(255)"`
+	AssigningTeamSlug       string `json:"assigningTeamSlug" gorm:"type:varchar(255)"`
 	CreatedAt               time.Time
 	LastActivityAt          *time.Time
 	LastActivityEditor      string

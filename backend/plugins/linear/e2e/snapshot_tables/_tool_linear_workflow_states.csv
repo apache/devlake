@@ -1,0 +1,6 @@
+connection_id,id,team_id,name,type,color,position
+1,state-backlog,team-1,Backlog,backlog,#bec2c8,0
+1,state-canceled,team-1,Canceled,canceled,#95a2b3,4
+1,state-done,team-1,Done,completed,#5e6ad2,3
+1,state-inprogress,team-1,In Progress,started,#f2c94c,2
+1,state-todo,team-1,Todo,unstarted,#e2e2e2,1

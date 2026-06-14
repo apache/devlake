@@ -1,0 +1,3 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""cycle-1"",""Number"":1,""Name"":"""",""StartsAt"":""2026-04-20T00:00:00Z"",""EndsAt"":""2026-05-04T00:00:00Z"",""CompletedAt"":""2026-05-04T00:00:00Z""}",https://api.linear.app/graphql,null,2026-05-04 00:00:00.000
+2,"{""ConnectionId"":1,""TeamId"":""team-1""}","{""Id"":""cycle-2"",""Number"":2,""Name"":""Sprint 2"",""StartsAt"":""2026-05-04T00:00:00Z"",""EndsAt"":""2026-05-18T00:00:00Z"",""CompletedAt"":null}",https://api.linear.app/graphql,null,2026-05-04 00:00:00.000

@@ -1,0 +1,4 @@
+issue_id,label_name
+linear:LinearIssue:1:issue-1,Bug
+linear:LinearIssue:1:issue-1,P1
+linear:LinearIssue:1:issue-2,Feature

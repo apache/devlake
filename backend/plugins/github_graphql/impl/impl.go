@@ -20,10 +20,7 @@ package impl
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/apache/incubator-devlake/core/models/domainlayer/devops"
@@ -39,7 +36,6 @@ import (
 	"github.com/apache/incubator-devlake/plugins/github_graphql/model/migrationscripts"
 	"github.com/apache/incubator-devlake/plugins/github_graphql/tasks"
 	"github.com/merico-ai/graphql"
-	"golang.org/x/oauth2"
 )
 
 // make sure interface is implemented
@@ -180,46 +176,10 @@ func (p GithubGraphql) PrepareTaskData(taskCtx plugin.TaskContext, options map[s
 		return nil, err
 	}
 
-	tokens := strings.Split(connection.Token, ",")
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: tokens[0]},
-	)
-	oauthContext := taskCtx.GetContext()
-	proxy := connection.GetProxy()
-	if proxy != "" {
-		pu, err := url.Parse(proxy)
-		if err != nil {
-			return nil, errors.Convert(err)
-		}
-		if pu.Scheme == "http" || pu.Scheme == "socks5" {
-			proxyClient := &http.Client{
-				Transport: &http.Transport{Proxy: http.ProxyURL(pu)},
-			}
-			oauthContext = context.WithValue(
-				taskCtx.GetContext(),
-				oauth2.HTTPClient,
-				proxyClient,
-			)
-			logger.Debug("Proxy set in oauthContext to %s", proxy)
-		} else {
-			return nil, errors.BadInput.New("Unsupported scheme set in proxy")
-		}
-	}
-
-	httpClient := oauth2.NewClient(oauthContext, src)
-	endpoint, err := errors.Convert01(url.Parse(connection.Endpoint))
-	if err != nil {
-		return nil, errors.BadInput.Wrap(err, fmt.Sprintf("malformed connection endpoint supplied: %s", connection.Endpoint))
-	}
-
-	// github.com and github enterprise have different graphql endpoints
-	endpoint.Path = "/graphql" // see https://docs.github.com/en/graphql/guides/forming-calls-with-graphql
-	if endpoint.Hostname() != "api.github.com" {
-		// see https://docs.github.com/en/enterprise-server@3.11/graphql/guides/forming-calls-with-graphql
-		endpoint.Path = "/api/graphql"
-	}
-	client := graphql.NewClient(endpoint.String(), httpClient)
-	graphqlClient, err := helper.CreateAsyncGraphqlClient(taskCtx, client, taskCtx.GetLogger(),
+	graphqlClient, err := tasks.CreateGraphqlClient(
+		taskCtx,
+		connection,
+		apiClient.ApiClient.GetClient(),
 		func(ctx context.Context, client *graphql.Client, logger log.Logger) (rateRemaining int, resetAt *time.Time, err errors.Error) {
 			var query GraphQueryRateLimit
 			dataErrors, err := errors.Convert01(client.Query(taskCtx.GetContext(), &query, nil))
@@ -230,8 +190,7 @@ func (p GithubGraphql) PrepareTaskData(taskCtx plugin.TaskContext, options map[s
 				return 0, nil, errors.Default.Wrap(dataErrors[0], `query rate limit fail`)
 			}
 			if query.RateLimit == nil {
-				logger.Info(`github graphql rate limit are disabled, fallback to 5000req/hour`)
-				return 5000, nil, nil
+				return 0, nil, errors.Default.New("rate limit unavailable")
 			}
 			logger.Info(`github graphql init success with remaining %d/%d and will reset at %s`,
 				query.RateLimit.Remaining, query.RateLimit.Limit, query.RateLimit.ResetAt)
