@@ -787,7 +787,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH _accounts AS (SELECT ua.account_id, ua.user_id, u.name, u.email FROM accounts AS a JOIN user_accounts AS ua ON a.id = ua.account_id JOIN users AS u ON ua.user_id = u.id WHERE ('${users:csv}' = '' OR ua.user_id::text = ANY(ARRAY[${users:singlequote}]::text[]))) SELECT COUNT(DISTINCT c.sha) FROM commits AS c JOIN _accounts AS a ON c.author_id = a.email WHERE $__timeFilter(authored_date)",
+          "rawSql": "WITH _accounts AS (SELECT ua.account_id, ua.user_id, u.name, a.email FROM accounts AS a JOIN user_accounts AS ua ON a.id = ua.account_id JOIN users AS u ON ua.user_id = u.id WHERE ('${users:csv}' = '' OR ua.user_id::text = ANY(ARRAY[${users:singlequote}]::text[]))) SELECT COUNT(DISTINCT c.sha) FROM commits AS c JOIN _accounts AS a ON c.author_id = a.email WHERE $__timeFilter(authored_date)",
           "refId": "A",
           "sql": {
             "columns": [
