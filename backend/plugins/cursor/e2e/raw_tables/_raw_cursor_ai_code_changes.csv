@@ -1,0 +1,2 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""ScopeId"":""team"",""Endpoint"":""https://api.cursor.com""}","{""changeId"":""chg_001"",""userId"":""user_ent123"",""userEmail"":""dev@example.com"",""source"":""TAB"",""model"":""default"",""totalLinesAdded"":12,""totalLinesDeleted"":1,""createdAt"":""2026-08-20T15:00:00Z"",""metadata"":[{""fileName"":""main.go"",""lineStart"":10,""lineEnd"":15}]}",https://api.cursor.com/analytics/ai-code/changes,null,2026-08-20 15:00:00.000

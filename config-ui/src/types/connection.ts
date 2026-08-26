@@ -27,6 +27,7 @@ export interface IConnectionAPI {
   endpoint: string;
   authMethod?: string;
   token?: string;
+  keyTier?: string;
   adminApiKey?: string;
   username?: string;
   password?: string;
@@ -47,6 +48,15 @@ export interface IConnectionAPI {
 export interface IConnectionTestResult {
   success: boolean;
   message: string;
+  memberCount?: number;
+  keyTier?: string;
+  permissions?: {
+    members?: boolean;
+    spend?: boolean;
+    usageEvents?: boolean;
+    analytics?: boolean;
+    aiCodeTracking?: boolean;
+  };
   causes?: null;
   data?: null;
   tokens?: Array<{
@@ -60,6 +70,15 @@ export interface IConnectionTestResult {
 export interface IConnectionOldTestResult {
   success: boolean;
   message: string;
+  memberCount?: number;
+  keyTier?: string;
+  permissions?: {
+    members?: boolean;
+    spend?: boolean;
+    usageEvents?: boolean;
+    analytics?: boolean;
+    aiCodeTracking?: boolean;
+  };
   login?: string;
   installations?: Array<{
     id: number;
@@ -87,6 +106,7 @@ export interface IConnection {
   endpoint: string;
   authMethod?: string;
   token?: string;
+  keyTier?: string;
   adminApiKey?: string;
   username?: string;
   password?: string;

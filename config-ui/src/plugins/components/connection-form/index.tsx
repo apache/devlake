@@ -107,6 +107,7 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
   const [values, setValues] = useState<any>({});
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [operating, setOperating] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
 
   const dispatch = useAppDispatch();
   const connection = useAppSelector((state) => selectConnection(state, `${plugin}-${connectionId}`));
@@ -117,7 +118,14 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
 
   const pluginConfig = getPluginConfig(plugin);
   const name = pluginConfig?.name;
-  const { docLink = '', fields = [], initialValues = {} } = pluginConfig?.connection ?? {};
+  const {
+    docLink = '',
+    fields = [],
+    initialValues = {},
+    formatTestMessage,
+    onTestSuccess,
+    renderTestSummary,
+  } = pluginConfig?.connection ?? {};
 
   const disabled = useMemo(() => {
     return Object.values(errors).some(Boolean);
@@ -131,23 +139,53 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
 
   const handleTest = async () => {
     const isUpdate = type === 'update' && !!connectionId;
-    const [success, res] = await operator(
-      () =>
-        isUpdate
-          ? API.connection.test(
+    const showPluginMessage = !!pluginConfig.connection.showTestResultMessage;
+    const usesCustomTestUi = !!(formatTestMessage || onTestSuccess || renderTestSummary);
+    let testResponse: any;
+    const [requestSuccess, res] = await operator(
+      async () => {
+        testResponse = isUpdate
+          ? await API.connection.test(
               plugin,
               connectionId,
               buildUpdateTestPayload(connection, values, sanitizedCustomHeaders),
             )
-          : API.connection.testOld(plugin, buildCreateTestPayload(initialValues, values, sanitizedCustomHeaders)),
+          : await API.connection.testOld(plugin, buildCreateTestPayload(initialValues, values, sanitizedCustomHeaders));
+        return testResponse;
+      },
       {
         setOperating,
         formatMessage: () => 'Test Connection Successfully.',
-        hideToast: !!pluginConfig.connection.showTestResultMessage,
+        hideToast: usesCustomTestUi || showPluginMessage,
       },
     );
 
-    if (success && pluginConfig.connection.showTestResultMessage) {
+    if (!requestSuccess) {
+      setTestResult(null);
+      return;
+    }
+
+    if (usesCustomTestUi && res) {
+      setTestResult(res);
+      const connectionOk = res.success !== false;
+      if (!renderTestSummary) {
+        const toastMessage =
+          formatTestMessage?.(res) ?? (connectionOk ? 'Test Connection Successfully.' : 'Test Connection Failed.');
+        if (connectionOk) {
+          message.success(toastMessage);
+        } else {
+          message.error(toastMessage);
+        }
+      }
+      if (connectionOk) {
+        onTestSuccess?.(res, {
+          setValues: (patch) => setValues((prev) => ({ ...prev, ...patch })),
+        });
+      }
+      return;
+    }
+
+    if (showPluginMessage) {
       message.success(res?.message || 'Test Connection Successfully.');
     }
   };
@@ -193,6 +231,7 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
         setValues={setValues}
         setErrors={setErrors}
       />
+      {testResult && renderTestSummary?.(testResult)}
       <Flex justify="flex-end" gap="small">
         <Button loading={operating} disabled={disabled} onClick={handleTest}>
           Test Connection
