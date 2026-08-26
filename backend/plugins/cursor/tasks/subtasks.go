@@ -86,3 +86,37 @@ var ExtractDailyUsageMeta = plugin.SubTaskMeta{
 	Description:      "Extract per-user per-day adoption metrics into tool-layer tables",
 	Dependencies:     []*plugin.SubTaskMeta{&CollectDailyUsageMeta},
 }
+
+var CollectAiCodeCommitsMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeCommits",
+	EntryPoint:       CollectAiCodeCommits,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect per-commit AI line attribution from the Cursor Enterprise API (skipped for non-enterprise keys)",
+}
+
+var ExtractAiCodeCommitsMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeCommits",
+	EntryPoint:       ExtractAiCodeCommits,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract per-commit AI line attribution into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeCommitsMeta},
+}
+
+var CollectAiCodeChangesMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeChanges",
+	EntryPoint:       CollectAiCodeChanges,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect granular accepted AI changes from the Cursor Enterprise API (skipped for non-enterprise keys)",
+}
+
+var ExtractAiCodeChangesMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeChanges",
+	EntryPoint:       ExtractAiCodeChanges,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract granular accepted AI changes into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeChangesMeta},
+}
