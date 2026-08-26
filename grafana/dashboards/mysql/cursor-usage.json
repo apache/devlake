@@ -1244,12 +1244,584 @@
       "type": "timeseries"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 44
+      },
+      "id": 300,
+      "title": "Enterprise AI Code Tracking",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of committed lines attributed to TAB, Composer, and non-AI coding from GET /analytics/ai-code/commits (Enterprise API). Requires an enterprise key.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TAB"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Composer"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Non-AI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "id": 301,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(ts) AS time,\n  metric,\n  SUM(value) AS value\nFROM (\n  SELECT COALESCE(commit_ts, created_at) AS ts,\n    'TAB' AS metric,\n    tab_lines_added AS value\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, created_at),\n    'Composer',\n    composer_lines_added\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, created_at),\n    'Non-AI',\n    COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0))\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n) src\nGROUP BY DATE(ts), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Committed Lines by AI Source",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of commits by source channel (IDE, CLI, Cloud) from GET /analytics/ai-code/commits",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 45
+      },
+      "id": 302,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown'))\n    WHEN 'ide' THEN 'IDE'\n    WHEN 'cli' THEN 'CLI'\n    WHEN 'cloud' THEN 'Cloud'\n    ELSE 'Unknown'\n  END AS \"Source\",\n  COUNT(*) AS \"Commits\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY 1\nORDER BY 2 DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Commits by Source",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Users ranked by TAB + Composer lines committed in the selected period",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 45
+      },
+      "id": 303,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_email AS \"User\",\n  SUM(tab_lines_added + composer_lines_added) AS \"AI Lines Added\",\n  SUM(total_lines_added) AS \"Total Lines Added\",\n  ROUND(SUM(tab_lines_added + composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"AI Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY user_email\nHAVING SUM(total_lines_added) > 0\nORDER BY SUM(tab_lines_added + composer_lines_added) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Contributors by AI-Assisted Lines",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Overall share of committed lines from TAB, Composer, and manual coding in the selected period",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "id": 304,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'TAB' AS \"Source\",\n  ROUND(SUM(tab_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nUNION ALL\nSELECT 'Composer',\n  ROUND(SUM(composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1)\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nUNION ALL\nSELECT 'Non-AI',\n  ROUND(SUM(COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0))) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1)\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Line Coverage (Period)",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Source",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "id": 310,
+      "title": "Enterprise Analytics (Agent Edits & Tabs)",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Agent diff acceptance rate (accepted_diffs / suggested_diffs) from GET /analytics/team/agent-edits. Requires enterprise key and Phase 2 collection.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 58
+      },
+      "id": 311,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time,\n  SUM(accepted_diffs) * 100.0 / NULLIF(SUM(suggested_diffs), 0) AS \"Diff Acceptance Rate\"\nFROM _tool_cursor_agent_edits\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY date\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Edit Acceptance Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Green/red line counts in agent suggestions vs accepted diffs from GET /analytics/team/agent-edits",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Suggested"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 58
+      },
+      "id": 312,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time,\n  SUM(green_lines_suggested) AS \"Green Lines Suggested\",\n  SUM(red_lines_suggested) AS \"Red Lines Suggested\",\n  SUM(green_lines_accepted) AS \"Green Lines Accepted\",\n  SUM(red_lines_accepted) AS \"Red Lines Accepted\"\nFROM _tool_cursor_agent_edits\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY date\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent Edit Line Impact",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Tab suggestion acceptance rate and line impact from GET /analytics/team/tabs. Richer than daily-usage tabsAccepted/tabsShown counts.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines Added"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines Deleted"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 58
+      },
+      "id": 313,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time,\n  SUM(suggestions_accepted) * 100.0 / NULLIF(SUM(suggestions_shown), 0) AS \"Tab Acceptance Rate\",\n  SUM(lines_added) AS \"Lines Added\",\n  SUM(lines_deleted) AS \"Lines Deleted\"\nFROM _tool_cursor_tab_analytics\nWHERE $__timeFilter(date)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY date\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Tab Analytics Acceptance & Line Impact",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Cross-validation: daily-usage tabs_accepted (Admin API) vs analytics suggestions_accepted (Enterprise Analytics API). Counts may differ due to aggregation timing.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 314,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT d.usage_date AS time,\n  SUM(d.tabs_accepted) AS \"Daily Usage: Tabs Accepted\",\n  COALESCE(MAX(a.suggestions_accepted), 0) AS \"Analytics: Suggestions Accepted\"\nFROM _tool_cursor_daily_usage d\nLEFT JOIN (\n  SELECT date, SUM(suggestions_accepted) AS suggestions_accepted\n  FROM _tool_cursor_tab_analytics\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  GROUP BY date\n) a ON DATE(d.usage_date) = DATE(a.date)\nWHERE $__timeFilter(d.usage_date)\n  AND d.connection_id = ${connection_id}\n  AND d.scope_id = '${scope_id}'\nGROUP BY d.usage_date\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Tab Counts: Daily Usage vs Analytics API",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 74
       },
       "id": 104,
       "title": "Diagnostics",
@@ -1266,7 +1838,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 45
+            "y": 75
           },
           "id": 40,
           "options": {
@@ -1282,7 +1854,7 @@
               "datasource": "mysql",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_commits', COUNT(*), MAX(COALESCE(commit_ts, created_at))\nFROM _tool_cursor_ai_code_commits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(created_at)\nFROM _tool_cursor_ai_code_changes\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_agent_edits', COUNT(*), MAX(date)\nFROM _tool_cursor_agent_edits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_tab_analytics', COUNT(*), MAX(date)\nFROM _tool_cursor_tab_analytics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
               "refId": "A"
             }
           ],
@@ -1349,6 +1921,6 @@
   "timezone": "utc",
   "title": "Cursor Usage & Cost",
   "uid": "cursor_usage",
-  "version": 14,
+  "version": 15,
   "weekStart": ""
 }
