@@ -38,7 +38,7 @@ export const Token = ({ type, initialValues, values, setValues, setErrors }: Pro
 
   const error = useMemo(() => {
     if (type === 'update') return '';
-    return values.token?.trim() ? '' : 'Team Admin API Key is required';
+    return values.token?.trim() ? '' : 'API Key is required';
   }, [type, values.token]);
 
   useEffect(() => {
@@ -47,13 +47,13 @@ export const Token = ({ type, initialValues, values, setValues, setErrors }: Pro
 
   return (
     <Block
-      title="Team Admin API Key"
-      description="Create a Team Admin key in the Cursor dashboard under API Keys (admin:* scope). User API keys from Settings → Integrations do not work with the Admin API."
+      title="API Key"
+      description="Create a Team or Enterprise Admin key in the Cursor dashboard under API Keys (admin:* scope). Enterprise keys unlock AI code tracking metrics. User API keys from Settings → Integrations do not work."
       required
     >
       <Input.Password
         style={{ width: 386 }}
-        placeholder={type === 'update' ? '********' : 'Your Team Admin API Key'}
+        placeholder={type === 'update' ? '********' : 'Your Admin API Key'}
         value={values.token}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setValues({ token: e.target.value })}
       />

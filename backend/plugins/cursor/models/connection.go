@@ -33,11 +33,21 @@ const (
 	DefaultRateLimitPerHour = 1200
 )
 
-// CursorConn stores Cursor Team Admin API connection settings.
+const (
+	// KeyTierPersonal indicates a User API key (cannot access team endpoints).
+	KeyTierPersonal = "personal"
+	// KeyTierTeam indicates a Team Admin API key (admin:* scope, no analytics).
+	KeyTierTeam = "team"
+	// KeyTierEnterprise indicates an Enterprise Admin API key (admin:*, analytics, AI code tracking).
+	KeyTierEnterprise = "enterprise"
+)
+
+// CursorConn stores Cursor Admin API connection settings.
 type CursorConn struct {
 	helper.RestConnection `mapstructure:",squash"`
 
-	Token string `mapstructure:"token" json:"token"`
+	Token   string `mapstructure:"token" json:"token"`
+	KeyTier string `mapstructure:"keyTier" json:"keyTier" gorm:"type:varchar(20)"`
 }
 
 // SetupAuthentication uses HTTP Basic auth with the API key as username and an empty password.
@@ -86,6 +96,9 @@ func (connection *CursorConnection) Normalize() {
 	}
 	if connection.RateLimitPerHour <= 0 {
 		connection.RateLimitPerHour = DefaultRateLimitPerHour
+	}
+	if connection.KeyTier == "" {
+		connection.KeyTier = KeyTierTeam
 	}
 }
 

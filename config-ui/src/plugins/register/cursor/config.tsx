@@ -19,7 +19,13 @@
 import { IPluginConfig } from '@/types';
 
 import Icon from './assets/icon.svg?react';
-import { Token } from './connection-fields';
+import { KeyTier, Token } from './connection-fields';
+import { renderCursorConnectionMeta } from './connection-meta';
+import {
+  formatCursorTestMessage,
+  onCursorTestSuccess,
+  renderCursorTestSummary,
+} from './connection-test-summary';
 
 export const CursorConfig: IPluginConfig = {
   plugin: 'cursor',
@@ -28,17 +34,24 @@ export const CursorConfig: IPluginConfig = {
   sort: 6.7,
   isBeta: true,
   connection: {
-    docLink: 'https://cursor.com/docs/account/teams/admin-api',
+    docLink: 'https://cursor.com/docs/account/teams',
     initialValues: {
       endpoint: 'https://api.cursor.com',
       token: '',
       rateLimitPerHour: 1200,
     },
+    formatTestMessage: formatCursorTestMessage,
+    onTestSuccess: onCursorTestSuccess,
+    renderTestSummary: renderCursorTestSummary,
+    renderConnectionMeta: renderCursorConnectionMeta,
     fields: [
       'name',
       'endpoint',
       ({ type, initialValues, values, setValues, setErrors }: any) => (
         <Token type={type} initialValues={initialValues} values={values} setValues={setValues} setErrors={setErrors} />
+      ),
+      ({ type, initialValues, values }: any) => (
+        <KeyTier type={type} initialValues={initialValues} values={values} />
       ),
       'proxy',
       {
