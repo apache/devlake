@@ -45,6 +45,7 @@ type AdminApiPermissions struct {
 	UsageEvents    bool `json:"usageEvents"`
 	Analytics      bool `json:"analytics"`
 	AiCodeTracking bool `json:"aiCodeTracking"`
+	BugbotReviews  bool `json:"bugbotReviews"`
 }
 
 // TestConnectionResult represents the payload returned by the connection test endpoints.
@@ -122,6 +123,7 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 
 	permissions.Analytics = probeEndpoint(apiClient, "analytics/team/dau?startDate=7d&endDate=today")
 	permissions.AiCodeTracking = probeEndpoint(apiClient, "analytics/ai-code/commits?page=1&pageSize=1")
+	permissions.BugbotReviews = probeEndpoint(apiClient, "analytics/team/bugbot-reviews?page=1&pageSize=1")
 
 	keyTier := models.KeyTierTeam
 	if permissions.Analytics || permissions.AiCodeTracking {
@@ -131,6 +133,9 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 	msg := "Team Admin API key validated. Members, spend, and usage events are accessible."
 	if keyTier == models.KeyTierEnterprise {
 		msg = "Enterprise Admin API key validated. Team data, analytics, and AI code tracking are accessible."
+	}
+	if permissions.BugbotReviews {
+		msg += " BugBot review analytics are accessible."
 	}
 
 	return &TestConnectionResult{
@@ -142,12 +147,15 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 	}, nil
 }
 
-// ApplyTestResultToConnection copies detected key tier from a test result onto the connection.
+// ApplyTestResultToConnection copies detected capabilities from a test result onto the connection.
 func ApplyTestResultToConnection(connection *models.CursorConnection, result *TestConnectionResult) {
-	if connection == nil || result == nil || result.KeyTier == "" {
+	if connection == nil || result == nil {
 		return
 	}
-	connection.KeyTier = result.KeyTier
+	if result.KeyTier != "" {
+		connection.KeyTier = result.KeyTier
+	}
+	connection.HasBugbotReviews = result.Permissions.BugbotReviews
 }
 
 // PopulateKeyTier probes the Cursor API and sets connection.KeyTier from the result.

@@ -171,6 +171,16 @@ The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/
 
 Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau` and `/analytics/ai-code/commits` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys.
 
+## BugBot Review Analytics
+
+The following endpoint from the [BugBot Analytics API](https://cursor.com/docs/bugbot) is collected when `TestConnection` confirms access via `GET /analytics/team/bugbot-reviews`:
+
+| Endpoint | Purpose | Tool tables |
+|----------|---------|-------------|
+| `GET /analytics/team/bugbot-reviews` | Completed BugBot reviews with findings, cost, and resolution status | `_tool_cursor_bugbot_reviews`, `_tool_cursor_bugbot_findings` |
+
+Access is probed during connection test and persisted as `hasBugbotReviews` on the connection (may be available on Team or Enterprise keys). Collectors skip silently when the flag is false.
+
 **Not yet collected:**
 
 | Endpoint | Purpose |
@@ -184,7 +194,7 @@ Team/Business Admin API keys receive **401** on these routes. `TestConnection` p
 
 ## Limitations
 
-- **Enterprise API endpoints are conditional** — AI Code Tracking (`/analytics/ai-code/*`) is collected only with Enterprise Admin keys. Other Analytics endpoints (`/analytics/team/*`) are not yet collected (see [Enterprise AI Code Tracking](#enterprise-ai-code-tracking) above).
+- **Enterprise API endpoints are conditional** — AI Code Tracking (`/analytics/ai-code/*`) is collected only with Enterprise Admin keys. BugBot review analytics (`/analytics/team/bugbot-reviews`) runs when `hasBugbotReviews` is true on the connection. Other Analytics endpoints (`/analytics/team/*`) are not yet collected (see sections above).
 - **Tool layer only** — no domain-layer tables; cross-plugin joins (Jira, GitHub PRs, etc.) are done in Grafana SQL or separate tooling.
 - **Team-level scope** — one scope per connection represents the whole team; per-team multi-tenant collection is not supported.
 - **Beta** — the plugin is marked beta in Config UI while the Admin API surface continues to evolve.

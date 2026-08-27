@@ -120,3 +120,20 @@ var ExtractAiCodeChangesMeta = plugin.SubTaskMeta{
 	Description:      "Extract granular accepted AI changes into tool-layer tables",
 	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeChangesMeta},
 }
+
+var CollectBugbotReviewsMeta = plugin.SubTaskMeta{
+	Name:             "collectBugbotReviews",
+	EntryPoint:       CollectBugbotReviews,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect BugBot review analytics from the Cursor Analytics API (skipped when bugbot-reviews is inaccessible)",
+}
+
+var ExtractBugbotReviewsMeta = plugin.SubTaskMeta{
+	Name:             "extractBugbotReviews",
+	EntryPoint:       ExtractBugbotReviews,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract BugBot reviews and findings into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectBugbotReviewsMeta},
+}

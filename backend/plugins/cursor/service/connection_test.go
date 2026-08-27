@@ -113,14 +113,24 @@ func TestAdminApiPermissions_EnterpriseFields(t *testing.T) {
 
 func TestApplyTestResultToConnection(t *testing.T) {
 	conn := &models.CursorConnection{}
-	ApplyTestResultToConnection(conn, &TestConnectionResult{KeyTier: models.KeyTierEnterprise})
+	ApplyTestResultToConnection(conn, &TestConnectionResult{
+		KeyTier: models.KeyTierEnterprise,
+		Permissions: AdminApiPermissions{
+			BugbotReviews: true,
+		},
+	})
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
+	require.True(t, conn.HasBugbotReviews)
 
 	ApplyTestResultToConnection(conn, nil)
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
+	require.True(t, conn.HasBugbotReviews)
 
-	ApplyTestResultToConnection(conn, &TestConnectionResult{})
+	ApplyTestResultToConnection(conn, &TestConnectionResult{
+		Permissions: AdminApiPermissions{BugbotReviews: false},
+	})
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
+	require.False(t, conn.HasBugbotReviews)
 }
 
 func TestFailedConnectionResult_OmitsKeyTierWhenUnauthorized(t *testing.T) {
