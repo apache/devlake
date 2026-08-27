@@ -28,6 +28,7 @@ export interface IConnectionAPI {
   authMethod?: string;
   token?: string;
   keyTier?: string;
+  hasBugbotReviews?: boolean;
   adminApiKey?: string;
   username?: string;
   password?: string;
@@ -56,6 +57,7 @@ export interface IConnectionTestResult {
     usageEvents?: boolean;
     analytics?: boolean;
     aiCodeTracking?: boolean;
+    bugbotReviews?: boolean;
   };
   causes?: null;
   data?: null;
@@ -78,6 +80,7 @@ export interface IConnectionOldTestResult {
     usageEvents?: boolean;
     analytics?: boolean;
     aiCodeTracking?: boolean;
+    bugbotReviews?: boolean;
   };
   login?: string;
   installations?: Array<{
@@ -107,6 +110,7 @@ export interface IConnection {
   authMethod?: string;
   token?: string;
   keyTier?: string;
+  hasBugbotReviews?: boolean;
   adminApiKey?: string;
   username?: string;
   password?: string;

@@ -49,11 +49,17 @@ const capabilityLines = (result: CursorTestResult): string[] => {
     if (perms?.aiCodeTracking) {
       lines.push('AI code tracking (commits and changes) will be collected.');
     }
+    if (perms?.bugbotReviews) {
+      lines.push('BugBot review analytics will be collected.');
+    }
     return lines;
   }
 
   lines.push('Members, spend, usage events, and daily usage will be collected.');
   lines.push('AI code tracking requires an Enterprise Admin key.');
+  if (perms?.bugbotReviews) {
+    lines.push('BugBot review analytics will be collected.');
+  }
   return lines;
 };
 
@@ -124,7 +130,14 @@ export const renderCursorTestSummary = (result: CursorTestResult) => {
 };
 
 export const onCursorTestSuccess = (result: CursorTestResult, ctx: { setValues: (patch: Record<string, any>) => void }) => {
+  const patch: Record<string, any> = {};
   if (result.keyTier) {
-    ctx.setValues({ keyTier: result.keyTier });
+    patch.keyTier = result.keyTier;
+  }
+  if (result.permissions?.bugbotReviews != null) {
+    patch.hasBugbotReviews = result.permissions.bugbotReviews;
+  }
+  if (Object.keys(patch).length > 0) {
+    ctx.setValues(patch);
   }
 };

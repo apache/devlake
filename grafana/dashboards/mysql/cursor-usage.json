@@ -1816,12 +1816,330 @@
       "type": "timeseries"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 74
+      },
+      "id": 320,
+      "title": "BugBot Review Analytics",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Completed BugBot reviews per day from GET /analytics/team/bugbot-reviews, stacked by publication status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 75
+      },
+      "id": 321,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  COALESCE(NULLIF(publication_status, ''), 'unknown') AS metric,\n  COUNT(*) AS value\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY DATE(timestamp), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Review Volume by Status",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total BugBot review cost (cost_cents / 100) over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 75
+      },
+      "id": 322,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  SUM(COALESCE(cost_cents, 0)) / 100 AS \"Review Cost\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY DATE(timestamp)\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "BugBot Cost Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of findings marked resolved vs total findings with a resolution status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 83
+      },
+      "id": 323,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(r.timestamp) AS time,\n  SUM(CASE WHEN f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0\n    / NULLIF(SUM(CASE WHEN f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0) AS \"Resolution Rate\"\nFROM _tool_cursor_bugbot_reviews r\nJOIN _tool_cursor_bugbot_findings f\n  ON r.connection_id = f.connection_id\n  AND r.scope_id = f.scope_id\n  AND r.request_id = f.request_id\nWHERE $__timeFilter(r.timestamp)\n  AND r.connection_id = ${connection_id}\n  AND r.scope_id = '${scope_id}'\nGROUP BY DATE(r.timestamp)\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Finding Resolution Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Finding counts by severity over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 83
+      },
+      "id": 324,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(r.timestamp) AS time,\n  COALESCE(NULLIF(f.severity, ''), 'unknown') AS metric,\n  COUNT(*) AS value\nFROM _tool_cursor_bugbot_reviews r\nJOIN _tool_cursor_bugbot_findings f\n  ON r.connection_id = f.connection_id\n  AND r.scope_id = f.scope_id\n  AND r.request_id = f.request_id\nWHERE $__timeFilter(r.timestamp)\n  AND r.connection_id = ${connection_id}\n  AND r.scope_id = '${scope_id}'\nGROUP BY DATE(r.timestamp), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Finding Severity Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Repositories ranked by total bugs_found in the selected period",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 83
+      },
+      "id": 325,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT repo AS \"Repo\",\n  COUNT(*) AS \"Reviews\",\n  SUM(bugs_found) AS \"Findings\",\n  ROUND(SUM(COALESCE(cost_cents, 0)) / 100, 2) AS \"Cost ($)\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND repo != ''\nGROUP BY repo\nORDER BY SUM(bugs_found) DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Repos by Findings",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average bugs found per pull request by repository",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 91
+      },
+      "id": 326,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT repo AS \"Repo\",\n  pr_number AS \"PR\",\n  COUNT(*) AS \"Reviews\",\n  ROUND(AVG(bugs_found), 2) AS \"Avg Findings\",\n  SUM(bugs_found) AS \"Total Findings\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND pr_number IS NOT NULL\nGROUP BY repo, pr_number\nORDER BY AVG(bugs_found) DESC, SUM(bugs_found) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Bugs per PR",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 98
       },
       "id": 104,
       "title": "Diagnostics",
@@ -1838,7 +2156,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 75
+            "y": 99
           },
           "id": 40,
           "options": {
@@ -1854,7 +2172,7 @@
               "datasource": "mysql",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_commits', COUNT(*), MAX(COALESCE(commit_ts, created_at))\nFROM _tool_cursor_ai_code_commits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(created_at)\nFROM _tool_cursor_ai_code_changes\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_agent_edits', COUNT(*), MAX(date)\nFROM _tool_cursor_agent_edits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_tab_analytics', COUNT(*), MAX(date)\nFROM _tool_cursor_tab_analytics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_commits', COUNT(*), MAX(COALESCE(commit_ts, created_at))\nFROM _tool_cursor_ai_code_commits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(created_at)\nFROM _tool_cursor_ai_code_changes\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_agent_edits', COUNT(*), MAX(date)\nFROM _tool_cursor_agent_edits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_tab_analytics', COUNT(*), MAX(date)\nFROM _tool_cursor_tab_analytics\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_bugbot_reviews', COUNT(*), MAX(timestamp)\nFROM _tool_cursor_bugbot_reviews\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_bugbot_findings', COUNT(*), NULL\nFROM _tool_cursor_bugbot_findings\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
               "refId": "A"
             }
           ],
@@ -1921,6 +2239,6 @@
   "timezone": "utc",
   "title": "Cursor Usage & Cost",
   "uid": "cursor_usage",
-  "version": 15,
+  "version": 16,
   "weekStart": ""
 }
