@@ -79,7 +79,7 @@ func ExtractAiCodeChanges(taskCtx plugin.SubTaskContext) errors.Error {
 				Metadata:          metadataStr,
 			}
 			if ts := parseOptionalISOTime(record.CreatedAt); ts != nil {
-				change.CreatedAt = ts
+				change.IngestedAt = ts
 			}
 			return []any{change}, nil
 		},

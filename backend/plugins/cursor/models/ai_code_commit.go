@@ -44,8 +44,8 @@ type CursorAiCodeCommit struct {
 	ComposerLinesDeleted int      `json:"composerLinesDeleted"`
 	NonAiLinesAdded     *int      `json:"nonAiLinesAdded"`
 	NonAiLinesDeleted   *int      `json:"nonAiLinesDeleted"`
-	CommitTs            *time.Time `json:"commitTs"`
-	CreatedAt           *time.Time `json:"createdAt"`
+	CommitTs   *time.Time `json:"commitTs"`
+	IngestedAt *time.Time `gorm:"column:ingested_at" json:"createdAt"`
 
 	common.NoPKModel
 }

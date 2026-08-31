@@ -144,6 +144,7 @@ Grafana dashboard JSON lives under `grafana/dashboards/mysql/`:
 | Dashboard | File | UID |
 |-----------|------|-----|
 | Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` |
+| Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` |
 | AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — |
 | Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — |
 

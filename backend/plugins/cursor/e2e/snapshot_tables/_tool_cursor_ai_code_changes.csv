@@ -1,2 +1,2 @@
-connection_id,scope_id,change_id,user_id,user_email,source,model,total_lines_added,total_lines_deleted,created_at,metadata
+connection_id,scope_id,change_id,user_id,user_email,source,model,total_lines_added,total_lines_deleted,ingested_at,metadata
 1,team,chg_001,user_ent123,dev@example.com,TAB,default,12,1,2026-08-20 15:00:00,"[{""fileName"":""main.go"",""lineStart"":10,""lineEnd"":15}]"

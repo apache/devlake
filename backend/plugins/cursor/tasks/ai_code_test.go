@@ -18,6 +18,7 @@ limitations under the License.
 package tasks
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -32,7 +33,8 @@ func TestParseOptionalISOTime(t *testing.T) {
 		{name: "RFC3339", input: "2026-08-20T14:30:00Z", want: "2026-08-20T14:30:00Z"},
 		{name: "RFC3339 with offset", input: "2026-08-20T08:30:00-06:00", want: "2026-08-20T14:30:00Z"},
 		{name: "RFC3339Nano", input: "2026-08-20T14:30:00.123456789Z", want: "2026-08-20T14:30:00Z"},
-		{name: "date only", input: "2026-08-20", want: "2026-08-20T00:00:00Z"},
+		{name: "MySQL datetime", input: "2026-08-27 16:18:49.000", want: "2026-08-27T16:18:49Z"},
+		{name: "MySQL datetime with ms", input: "2026-08-27 16:18:56.608", want: "2026-08-27T16:18:56Z"},
 		{name: "empty string", input: "", isNil: true},
 		{name: "whitespace", input: "   ", isNil: true},
 		{name: "garbage", input: "not-a-date", isNil: true},
@@ -94,5 +96,58 @@ func TestSplitAnalyticsDateRange_ShortRange(t *testing.T) {
 	}
 	if chunks[0].StartDate != "2026-08-20" || chunks[0].EndDate != "2026-08-25" {
 		t.Fatalf("chunk = %v, want 2026-08-20 to 2026-08-25", chunks[0])
+	}
+}
+
+func TestParseAiCodeTrackingItemsBody_PrefersItems(t *testing.T) {
+	body := []byte(`{"items":[{"commitHash":"abc"}],"totalCount":1,"pageSize":100}`)
+	items, err := parseAiCodeTrackingItemsBody(body)
+	if err != nil {
+		t.Fatalf("parseAiCodeTrackingItemsBody: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+	var commit struct {
+		CommitHash string `json:"commitHash"`
+	}
+	if jsonErr := json.Unmarshal(items[0], &commit); jsonErr != nil {
+		t.Fatalf("unmarshal item: %v", jsonErr)
+	}
+	if commit.CommitHash != "abc" {
+		t.Fatalf("commitHash = %q, want abc", commit.CommitHash)
+	}
+}
+
+func TestParseAiCodeTrackingItemsBody_FallsBackToData(t *testing.T) {
+	body := []byte(`{"data":[{"changeId":"123"}]}`)
+	items, err := parseAiCodeTrackingItemsBody(body)
+	if err != nil {
+		t.Fatalf("parseAiCodeTrackingItemsBody: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+}
+
+func TestParseAiCodeTrackingTotalPages_FromTotalCount(t *testing.T) {
+	body := []byte(`{"items":[],"totalCount":250,"pageSize":100}`)
+	pages, err := parseAiCodeTrackingTotalPages(body, 100)
+	if err != nil {
+		t.Fatalf("parseAiCodeTrackingTotalPages: %v", err)
+	}
+	if pages != 3 {
+		t.Fatalf("pages = %d, want 3", pages)
+	}
+}
+
+func TestParseAiCodeTrackingTotalPages_FromTotalPages(t *testing.T) {
+	body := []byte(`{"items":[],"totalPages":5}`)
+	pages, err := parseAiCodeTrackingTotalPages(body, 100)
+	if err != nil {
+		t.Fatalf("parseAiCodeTrackingTotalPages: %v", err)
+	}
+	if pages != 5 {
+		t.Fatalf("pages = %d, want 5", pages)
 	}
 }
