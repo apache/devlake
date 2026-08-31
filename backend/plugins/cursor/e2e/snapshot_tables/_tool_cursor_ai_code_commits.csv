@@ -1,2 +1,2 @@
-connection_id,scope_id,commit_hash,user_id,user_email,repo_name,branch_name,is_primary_branch,commit_source,total_lines_added,total_lines_deleted,tab_lines_added,tab_lines_deleted,composer_lines_added,composer_lines_deleted,non_ai_lines_added,non_ai_lines_deleted,commit_ts,created_at
+connection_id,scope_id,commit_hash,user_id,user_email,repo_name,branch_name,is_primary_branch,commit_source,total_lines_added,total_lines_deleted,tab_lines_added,tab_lines_deleted,composer_lines_added,composer_lines_deleted,non_ai_lines_added,non_ai_lines_deleted,commit_ts,ingested_at
 1,team,abc123def456,user_ent123,dev@example.com,github.com/org/repo,main,1,ide,120,10,40,2,50,5,30,3,2026-08-20 14:30:00,2026-08-20 14:31:00

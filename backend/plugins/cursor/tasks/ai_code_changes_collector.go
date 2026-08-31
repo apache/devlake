@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -80,18 +79,9 @@ func CollectAiCodeChanges(taskCtx plugin.SubTaskContext) errors.Error {
 			if readErr != nil {
 				return 0, readErr
 			}
-			var pagination struct {
-				TotalPages int `json:"totalPages"`
-			}
-			if jsonErr := json.Unmarshal(body, &pagination); jsonErr != nil {
-				return 0, errors.Default.Wrap(errors.Convert(jsonErr), "failed to parse ai-code/changes pagination")
-			}
-			if pagination.TotalPages <= 0 {
-				return 1, nil
-			}
-			return pagination.TotalPages, nil
+			return parseAiCodeTrackingTotalPages(body, args.PageSize)
 		},
-		ResponseParser: parseAiCodeChangesResponse,
+		ResponseParser: parseAiCodeTrackingItemsResponse,
 	})
 	if err != nil {
 		return err
@@ -99,18 +89,4 @@ func CollectAiCodeChanges(taskCtx plugin.SubTaskContext) errors.Error {
 
 	logUsageCollectionWindow(taskCtx.GetLogger(), "analytics/ai-code/changes", collector.GetSince(), collector.IsIncremental())
 	return collector.Execute()
-}
-
-func parseAiCodeChangesResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
-	body, err := readResponseBody(res)
-	if err != nil {
-		return nil, err
-	}
-	var response struct {
-		Data []json.RawMessage `json:"data"`
-	}
-	if jsonErr := json.Unmarshal(body, &response); jsonErr != nil {
-		return nil, errors.Default.Wrap(errors.Convert(jsonErr), "failed to decode ai-code/changes response")
-	}
-	return response.Data, nil
 }
