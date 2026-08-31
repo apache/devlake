@@ -92,7 +92,7 @@ func ExtractAiCodeCommits(taskCtx plugin.SubTaskContext) errors.Error {
 				commit.CommitTs = ts
 			}
 			if ts := parseOptionalISOTime(record.CreatedAt); ts != nil {
-				commit.CreatedAt = ts
+				commit.IngestedAt = ts
 			}
 			return []any{commit}, nil
 		},
@@ -108,7 +108,15 @@ func parseOptionalISOTime(raw string) *time.Time {
 	if raw == "" {
 		return nil
 	}
-	for _, layout := range []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05Z", "2006-01-02"} {
+	for _, layout := range []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		"2006-01-02T15:04:05Z",
+		"2006-01-02 15:04:05.000000",
+		"2006-01-02 15:04:05.000",
+		"2006-01-02 15:04:05",
+		"2006-01-02",
+	} {
 		if t, err := time.Parse(layout, raw); err == nil {
 			t = t.UTC()
 			return &t

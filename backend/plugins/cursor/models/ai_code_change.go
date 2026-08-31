@@ -34,10 +34,10 @@ type CursorAiCodeChange struct {
 	UserEmail       string     `gorm:"type:varchar(255);index" json:"userEmail"`
 	Source          string     `gorm:"type:varchar(20)" json:"source"`
 	Model           string     `gorm:"type:varchar(255)" json:"model"`
-	TotalLinesAdded   int      `json:"totalLinesAdded"`
-	TotalLinesDeleted int      `json:"totalLinesDeleted"`
-	CreatedAt       *time.Time `json:"createdAt"`
-	Metadata        string     `gorm:"type:text" json:"metadata"`
+	TotalLinesAdded   int        `json:"totalLinesAdded"`
+	TotalLinesDeleted int        `json:"totalLinesDeleted"`
+	IngestedAt        *time.Time `gorm:"column:ingested_at" json:"createdAt"`
+	Metadata          string     `gorm:"type:text" json:"metadata"`
 
 	common.NoPKModel
 }
