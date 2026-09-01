@@ -45,7 +45,8 @@ type AdminApiPermissions struct {
 	UsageEvents    bool `json:"usageEvents"`
 	Analytics      bool `json:"analytics"`
 	AiCodeTracking bool `json:"aiCodeTracking"`
-	BugbotReviews  bool `json:"bugbotReviews"`
+	BugbotReviews           bool `json:"bugbotReviews"`
+	ConversationInsights    bool `json:"conversationInsights"`
 }
 
 // TestConnectionResult represents the payload returned by the connection test endpoints.
@@ -124,6 +125,7 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 	permissions.Analytics = probeEndpoint(apiClient, "analytics/team/dau?startDate=7d&endDate=today")
 	permissions.AiCodeTracking = probeEndpoint(apiClient, "analytics/ai-code/commits?page=1&pageSize=1")
 	permissions.BugbotReviews = probeEndpoint(apiClient, "analytics/team/bugbot-reviews?page=1&pageSize=1")
+	permissions.ConversationInsights = probeEndpoint(apiClient, "analytics/team/conversation-insights?startDate=7d&endDate=today&include=intents")
 
 	keyTier := models.KeyTierTeam
 	if permissions.Analytics || permissions.AiCodeTracking {
@@ -136,6 +138,9 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 	}
 	if permissions.BugbotReviews {
 		msg += " BugBot review analytics are accessible."
+	}
+	if permissions.ConversationInsights {
+		msg += " Conversation Insights are accessible."
 	}
 
 	return &TestConnectionResult{
@@ -156,6 +161,7 @@ func ApplyTestResultToConnection(connection *models.CursorConnection, result *Te
 		connection.KeyTier = result.KeyTier
 	}
 	connection.HasBugbotReviews = result.Permissions.BugbotReviews
+	connection.HasConversationInsights = result.Permissions.ConversationInsights
 }
 
 // PopulateKeyTier probes the Cursor API and sets connection.KeyTier from the result.

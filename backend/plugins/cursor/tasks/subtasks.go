@@ -137,3 +137,20 @@ var ExtractBugbotReviewsMeta = plugin.SubTaskMeta{
 	Description:      "Extract BugBot reviews and findings into tool-layer tables",
 	Dependencies:     []*plugin.SubTaskMeta{&CollectBugbotReviewsMeta},
 }
+
+var CollectConversationInsightsMeta = plugin.SubTaskMeta{
+	Name:             "collectConversationInsights",
+	EntryPoint:       CollectConversationInsights,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect Conversation Insights from the Cursor Analytics API (skipped for non-enterprise keys or when insights are disabled)",
+}
+
+var ExtractConversationInsightsMeta = plugin.SubTaskMeta{
+	Name:             "extractConversationInsights",
+	EntryPoint:       ExtractConversationInsights,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract Conversation Insights into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectConversationInsightsMeta},
+}

@@ -33,5 +33,6 @@ func GetTablesInfo() []dal.Tabler {
 		&CursorAiCodeChange{},
 		&CursorBugBotReview{},
 		&CursorBugBotFinding{},
+		&CursorConversationInsight{},
 	}
 }
