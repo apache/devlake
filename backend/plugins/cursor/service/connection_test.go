@@ -116,21 +116,25 @@ func TestApplyTestResultToConnection(t *testing.T) {
 	ApplyTestResultToConnection(conn, &TestConnectionResult{
 		KeyTier: models.KeyTierEnterprise,
 		Permissions: AdminApiPermissions{
-			BugbotReviews: true,
+			BugbotReviews:        true,
+			ConversationInsights: true,
 		},
 	})
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
 	require.True(t, conn.HasBugbotReviews)
+	require.True(t, conn.HasConversationInsights)
 
 	ApplyTestResultToConnection(conn, nil)
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
 	require.True(t, conn.HasBugbotReviews)
+	require.True(t, conn.HasConversationInsights)
 
 	ApplyTestResultToConnection(conn, &TestConnectionResult{
-		Permissions: AdminApiPermissions{BugbotReviews: false},
+		Permissions: AdminApiPermissions{BugbotReviews: false, ConversationInsights: false},
 	})
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
 	require.False(t, conn.HasBugbotReviews)
+	require.False(t, conn.HasConversationInsights)
 }
 
 func TestFailedConnectionResult_OmitsKeyTierWhenUnauthorized(t *testing.T) {
