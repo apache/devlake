@@ -20,6 +20,7 @@ package plugin
 import (
 	"encoding/json"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models"
 )
@@ -90,6 +91,23 @@ type MetricPluginBlueprintV200 interface {
 // ProjectMapper is implemented by the plugin org, which binding project and scopes
 type ProjectMapper interface {
 	MapProject(projectName string, scopes []Scope) (models.PipelinePlan, errors.Error)
+}
+
+// ProjectDeleteHook is implemented by plugins that persist state whose
+// lifecycle is tied to a DevLake project.
+//
+// BeforeDeleteProject is called inside the core deletion transaction before
+// the project's core records are deleted. Returning an error aborts deletion.
+//
+// Contract:
+// - Database mutations must use only the supplied transaction.
+// - The plugin must not commit or roll back the transaction.
+// - External side effects cannot be rolled back by the database transaction.
+// - Plugins must not depend on hook execution order across plugins.
+// Plugins that do not maintain project-scoped state do not need to implement
+// this interface.
+type ProjectDeleteHook interface {
+	BeforeDeleteProject(tx dal.Transaction, projectName string) errors.Error
 }
 
 // CompositeDataSourcePluginBlueprintV200 is for unit test

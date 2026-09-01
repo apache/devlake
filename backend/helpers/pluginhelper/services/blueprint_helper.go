@@ -262,7 +262,18 @@ func (b *BlueprintManager) DeleteBlueprint(id uint64) errors.Error {
 			}
 		}
 	}()
-	err = tx.Delete(&models.BlueprintLabel{}, dal.Where("blueprint_id = ?", id))
+	err = b.DeleteBlueprintInTransaction(tx, id)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	return err
+}
+
+// DeleteBlueprintInTransaction removes a blueprint and its dependent records using
+// the caller's transaction. The caller owns commit and rollback.
+func (b *BlueprintManager) DeleteBlueprintInTransaction(tx dal.Transaction, id uint64) errors.Error {
+	err := tx.Delete(&models.BlueprintLabel{}, dal.Where("blueprint_id = ?", id))
 	if err != nil {
 		return err
 	}
@@ -274,9 +285,15 @@ func (b *BlueprintManager) DeleteBlueprint(id uint64) errors.Error {
 	if err != nil {
 		return err
 	}
-	errors.Must(tx.Delete(&models.BlueprintConnection{}, dal.Where("blueprint_id = ?", id)))
-	errors.Must(tx.Delete(&models.BlueprintScope{}, dal.Where("blueprint_id = ?", id)))
-	return tx.Commit()
+	err = tx.Delete(&models.BlueprintConnection{}, dal.Where("blueprint_id = ?", id))
+	if err != nil {
+		return err
+	}
+	err = tx.Delete(&models.BlueprintScope{}, dal.Where("blueprint_id = ?", id))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (b *BlueprintManager) fillBlueprintDetail(blueprint *models.Blueprint) errors.Error {
