@@ -37,6 +37,7 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 |----------|--------|------|
 | `/analytics/ai-code/commits` | GET | Per-commit AI line attribution (TAB vs Composer vs non-AI) |
 | `/analytics/ai-code/changes` | GET | Granular accepted AI changes with per-file metadata |
+| `/analytics/team/conversation-insights` | GET | Aggregate conversation work classifications (intents, categories, complexity) |
 
 **Stored data (tool layer):**
 
@@ -48,6 +49,7 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | `_tool_cursor_daily_usage` | Daily adoption metrics: completions, requests by feature, tab acceptance, line edits |
 | `_tool_cursor_ai_code_commits` | Per-commit AI line attribution: TAB, Composer, and non-AI lines (Enterprise only) |
 | `_tool_cursor_ai_code_changes` | Accepted AI changes with source, model, and per-file metadata (Enterprise only) |
+| `_tool_cursor_conversation_insights` | Flattened Conversation Insights metrics: intents, categories, complexity, guidance, work types (Enterprise only) |
 
 Data is collected in the **Raw → Tool** layers only. There is no domain-layer converter in this plugin; Grafana dashboards query `_tool_cursor_*` tables directly.
 
@@ -71,6 +73,7 @@ flowchart LR
 4. `collectDailyUsage` → `extractDailyUsage`
 5. `collectAiCodeCommits` → `extractAiCodeCommits` *(Enterprise only -- skipped for Team keys)*
 6. `collectAiCodeChanges` → `extractAiCodeChanges` *(Enterprise only -- skipped for Team keys)*
+7. `collectConversationInsights` → `extractConversationInsights` *(Enterprise only -- skipped when insights disabled or inaccessible)*
 
 ## Repository layout
 
@@ -170,7 +173,17 @@ The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/
 | `GET /analytics/ai-code/commits` | Per-commit AI line attribution (TAB vs Composer vs non-AI) | `_tool_cursor_ai_code_commits` |
 | `GET /analytics/ai-code/changes` | Granular accepted AI changes | `_tool_cursor_ai_code_changes` |
 
-Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau` and `/analytics/ai-code/commits` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys.
+Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
+
+## Conversation Insights
+
+The following endpoint from the [Analytics API](https://cursor.com/docs/account/teams/analytics-api) is **Enterprise plan only** and is collected when the connection uses an Enterprise Admin API key with Conversation Insights enabled:
+
+| Endpoint | Purpose | Tool table |
+|----------|---------|------------|
+| `GET /analytics/team/conversation-insights` | Aggregate work classifications (intents, complexity, categories, guidance levels, work types) | `_tool_cursor_conversation_insights` |
+
+Returns **aggregate** insights only — no raw conversation content or conversation IDs. Collectors request all five `include` slices per date chunk. Re-run **Test Connection** after enabling insights in Cursor so DevLake sets `hasConversationInsights`.
 
 ## BugBot Review Analytics
 
@@ -195,7 +208,7 @@ Access is probed during connection test and persisted as `hasBugbotReviews` on t
 
 ## Limitations
 
-- **Enterprise API endpoints are conditional** — AI Code Tracking (`/analytics/ai-code/*`) is collected only with Enterprise Admin keys. BugBot review analytics (`/analytics/team/bugbot-reviews`) runs when `hasBugbotReviews` is true on the connection. Other Analytics endpoints (`/analytics/team/*`) are not yet collected (see sections above).
+- **Enterprise API endpoints are conditional** — AI Code Tracking (`/analytics/ai-code/*`) is collected only with Enterprise Admin keys. Conversation Insights runs when `hasConversationInsights` is true. BugBot review analytics (`/analytics/team/bugbot-reviews`) runs when `hasBugbotReviews` is true on the connection. Other Analytics endpoints (`/analytics/team/*`) are not yet collected (see sections above).
 - **Tool layer only** — no domain-layer tables; cross-plugin joins (Jira, GitHub PRs, etc.) are done in Grafana SQL or separate tooling.
 - **Team-level scope** — one scope per connection represents the whole team; per-team multi-tenant collection is not supported.
 - **Beta** — the plugin is marked beta in Config UI while the Admin API surface continues to evolve.
