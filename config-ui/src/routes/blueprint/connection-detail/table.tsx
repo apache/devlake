@@ -17,11 +17,13 @@
  */
 
 import { useState } from 'react';
-import { Table } from 'antd';
+import { AppstoreAddOutlined } from '@ant-design/icons';
+import { Table, Button, Flex, Modal, Tag, message } from 'antd';
 
 import API from '@/api';
 import { useRefreshData } from '@/hooks';
-import { getPluginScopeId, getPluginScopeName, ScopeConfig } from '@/plugins';
+import { getPluginConfig, getPluginScopeId, getPluginScopeName, ScopeConfig, ScopeConfigSelect } from '@/plugins';
+import { operator } from '@/utils';
 
 interface Props {
   plugin: string;
@@ -31,6 +33,11 @@ interface Props {
 
 export const BlueprintConnectionDetailTable = ({ plugin, connectionId, scopeIds }: Props) => {
   const [version, setVersion] = useState(1);
+  const [selectedScopeIds, setSelectedScopeIds] = useState<ID[]>([]);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkOperating, setBulkOperating] = useState(false);
+
+  const pluginConfig = getPluginConfig(plugin);
 
   const { ready, data } = useRefreshData(async () => {
     const scopes = await Promise.all(scopeIds.map((scopeId) => API.scope.get(plugin, connectionId, scopeId)));
@@ -42,34 +49,105 @@ export const BlueprintConnectionDetailTable = ({ plugin, connectionId, scopeIds 
     }));
   }, [version]);
 
-  return (
-    <Table
-      loading={!ready}
-      rowKey="id"
-      size="middle"
-      columns={[
-        {
-          title: 'Data Scope',
-          dataIndex: 'name',
-          key: 'name',
-        },
-        {
-          title: 'Scope Config',
-          key: 'scopeConfig',
-          render: (_, { id, name, scopeConfigId, scopeConfigName }) => (
-            <ScopeConfig
-              plugin={plugin}
-              connectionId={connectionId}
-              scopeId={id}
-              scopeName={name}
-              scopeConfigId={scopeConfigId}
-              scopeConfigName={scopeConfigName}
-              onSuccess={() => setVersion(version + 1)}
-            />
+  const handleRefresh = () => {
+    setSelectedScopeIds([]);
+    setVersion((v) => v + 1);
+  };
+  
+  // Apply one scope config to all selected data scopes in bulk
+  const handleBulkApplyScopeConfig = async (scopeConfigId: ID) => {
+    setBulkOperating(true);
+    const configId = scopeConfigId === 'None' ? null : +scopeConfigId;
+    const [success] = await operator(
+      () =>
+        Promise.all(
+          selectedScopeIds.map((scopeId) =>
+            API.scope.update(plugin, connectionId, scopeId, { scopeConfigId: configId }),
           ),
-        },
-      ]}
-      dataSource={data ?? []}
-    />
+        ),
+      { setOperating: setBulkOperating },
+    );
+    if (success) {
+      message.success(`Scope config applied to ${selectedScopeIds.length} data scope(s).`);
+      setBulkModalOpen(false);
+      handleRefresh();
+    }
+  };
+
+  const hasScopeConfig = !!pluginConfig.scopeConfig;
+
+  return (
+    <>
+      {/* Bulk toolbar — shown only when rows are selected and plugin supports scope configs */}
+      {hasScopeConfig && selectedScopeIds.length > 0 && (
+        <Flex align="center" gap="small" style={{ marginBottom: 12 }}>
+          <Tag color="blue">{selectedScopeIds.length} selected</Tag>
+          <Button
+            type="primary"
+            icon={<AppstoreAddOutlined />}
+            loading={bulkOperating}
+            onClick={() => setBulkModalOpen(true)}
+          >
+            Apply Scope Config to Selected
+          </Button>
+          <Button onClick={() => setSelectedScopeIds([])}>Clear Selection</Button>
+        </Flex>
+      )}
+
+      <Table
+        loading={!ready}
+        rowKey="id"
+        size="middle"
+        rowSelection={
+          hasScopeConfig
+            ? {
+                type: 'checkbox',
+                selectedRowKeys: selectedScopeIds,
+                onChange: (keys) => setSelectedScopeIds(keys as ID[]),
+              }
+            : undefined
+        }
+        columns={[
+          {
+            title: 'Data Scope',
+            dataIndex: 'name',
+            key: 'name',
+          },
+          {
+            title: 'Scope Config',
+            key: 'scopeConfig',
+            render: (_, { id, name, scopeConfigId, scopeConfigName }) => (
+              <ScopeConfig
+                plugin={plugin}
+                connectionId={connectionId}
+                scopeId={id}
+                scopeName={name}
+                scopeConfigId={scopeConfigId}
+                scopeConfigName={scopeConfigName}
+                onSuccess={handleRefresh}
+              />
+            ),
+          },
+        ]}
+        dataSource={data ?? []}
+      />
+      {/* Bulk scope config picker modal */}
+      <Modal
+        destroyOnClose
+        open={bulkModalOpen}
+        width={960}
+        centered
+        footer={null}
+        title={`Apply Scope Config to ${selectedScopeIds.length} Selected Data Scope(s)`}
+        onCancel={() => setBulkModalOpen(false)}
+      >
+        <ScopeConfigSelect
+          plugin={plugin}
+          connectionId={connectionId}
+          onCancel={() => setBulkModalOpen(false)}
+          onSubmit={handleBulkApplyScopeConfig}
+        />
+      </Modal>
+    </>
   );
 };

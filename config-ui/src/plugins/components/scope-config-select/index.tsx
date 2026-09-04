@@ -37,14 +37,18 @@ export const ScopeConfigSelect = ({ plugin, connectionId, scopeConfigId, onCance
   const [version, setVersion] = useState(1);
   const [trId, setTrId] = useState<ID>();
   const [open, setOpen] = useState(false);
-
-  const { ready, data } = useRefreshData(() => API.scopeConfig.list(plugin, connectionId), [version]);
+  const [showAll, setShowAll] = useState(false);
+  
+  const { ready, data } = useRefreshData(
+    () => showAll ? API.scopeConfig.listAll(plugin) : API.scopeConfig.list(plugin, connectionId),
+    [version, showAll],
+  );
 
   const dataSource = useMemo(
     () => (data ? (scopeConfigId ? [{ id: 'None', name: 'No Scope Config' }].concat(data) : data) : []),
     [data, scopeConfigId],
   );
-
+  
   const defaultName = useMemo(() => `shared-config-<${(data ?? []).length}>`, [data]);
 
   useEffect(() => {
@@ -67,9 +71,15 @@ export const ScopeConfigSelect = ({ plugin, connectionId, scopeConfigId, onCance
 
   return (
     <Flex vertical gap="middle">
-      <Flex style={{ marginTop: 20 }}>
+      <Flex style={{ marginTop: 20 }} gap="small" align="center">
         <Button type="primary" icon={<PlusOutlined />} onClick={handleShowDialog}>
           Add New Scope Config
+        </Button>
+        <Button
+          type={showAll ? 'primary' : 'default'}
+          onClick={() => setShowAll((v) => !v)}
+        >
+          {showAll ? 'Showing: All Connections' : 'This Connection Only'}
         </Button>
       </Flex>
       <Table
