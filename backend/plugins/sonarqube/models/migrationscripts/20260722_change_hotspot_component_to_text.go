@@ -15,32 +15,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package tasks
+package migrationscripts
 
-import "github.com/apache/devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/core/plugin"
+)
 
-// GetSubTaskMetas returns the ordered list of Copilot subtasks.
-func GetSubTaskMetas() []plugin.SubTaskMeta {
-	return []plugin.SubTaskMeta{
-		// Collectors
-		CollectOrgMetricsMeta,
-		CollectCopilotSeatAssignmentsMeta,
-		CollectEnterpriseMetricsMeta,
-		CollectUserMetricsMeta,
-		CollectUserTeamsMeta,
-		CollectEnterpriseMetrics28DayMeta,
-		CollectOrgMetrics28DayMeta,
-		CollectUserMetrics28DayMeta,
-		CollectAiCreditUsageMeta,
-		// Extractors
-		ExtractSeatsMeta,
-		ExtractOrgMetricsMeta,
-		ExtractEnterpriseMetricsMeta,
-		ExtractUserMetricsMeta,
-		ExtractUserTeamsMeta,
-		ExtractEnterpriseMetrics28DayMeta,
-		ExtractOrgMetrics28DayMeta,
-		ExtractUserMetrics28DayMeta,
-		ExtractAiCreditUsageMeta,
-	}
+var _ plugin.MigrationScript = (*changeHotspotComponentToText)(nil)
+
+type changeHotspotComponentToText struct{}
+
+func (*changeHotspotComponentToText) Up(basicRes context.BasicRes) errors.Error {
+	db := basicRes.GetDal()
+	errors.Must(db.DropIndex("_tool_sonarqube_hotspots", "component"))
+	return db.ModifyColumnType("_tool_sonarqube_hotspots", "component", "text")
+}
+
+func (*changeHotspotComponentToText) Version() uint64 {
+	return 20260722120000
+}
+
+func (*changeHotspotComponentToText) Name() string {
+	return "change _tool_sonarqube_hotspots.component type to text"
 }

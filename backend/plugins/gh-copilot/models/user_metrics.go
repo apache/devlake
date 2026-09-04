@@ -30,6 +30,20 @@ type GhCopilotUserDailyMetrics struct {
 	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
 	UserId       int64     `gorm:"primaryKey" json:"userId"`
 
+	OrganizationId               string `json:"organizationId" gorm:"type:varchar(100)"`
+	EnterpriseId                 string `json:"enterpriseId" gorm:"type:varchar(100)"`
+	UserLogin                    string `json:"userLogin" gorm:"type:varchar(255);index"`
+	UsedAgent                    bool   `json:"usedAgent"`
+	UsedChat                     bool   `json:"usedChat"`
+	UsedCli                      bool   `json:"usedCli" gorm:"comment:Whether user used Copilot CLI"`
+	UsedCopilotCodeReviewActive  bool   `json:"usedCopilotCodeReviewActive" gorm:"comment:Whether user actively used code review"`
+	UsedCopilotCodeReviewPassive bool   `json:"usedCopilotCodeReviewPassive" gorm:"comment:Whether user passively used code review"`
+	UsedCopilotCodingAgent       bool   `json:"usedCopilotCodingAgent" gorm:"comment:Whether user used the Copilot coding agent"`
+	UsedCopilotCloudAgent        bool   `json:"usedCopilotCloudAgent" gorm:"comment:Whether user used the Copilot cloud agent"`
+
+	// AI adoption cohort classification (phase 0-3), added 2026-05-29.
+	AiAdoptionPhase        int `json:"aiAdoptionPhase" gorm:"comment:0=no cohort,1=code-first,2=agent-first,3=multi-agent"`
+	AiAdoptionPhaseVersion int `json:"aiAdoptionPhaseVersion" gorm:"comment:Classification logic version, starts at 1"`
 	OrganizationId               string  `json:"organizationId" gorm:"type:varchar(100)"`
 	EnterpriseId                 string  `json:"enterpriseId" gorm:"type:varchar(100)"`
 	UserLogin                    string  `json:"userLogin" gorm:"type:varchar(255);index"`

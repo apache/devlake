@@ -25,7 +25,7 @@ type SonarqubeHotspot struct {
 	ConnectionId             uint64 `gorm:"primaryKey"`
 	HotspotKey               string `gorm:"primaryKey"`
 	RuleKey                  string `gorm:"type:varchar(255)"`
-	Component                string `gorm:"index;type:varchar(500)"`
+	Component                string `gorm:"type:text"`
 	ProjectKey               string `gorm:"index"`
 	Line                     int
 	Status                   string `gorm:"type:varchar(100)"`

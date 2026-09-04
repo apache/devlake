@@ -51,7 +51,7 @@ type PullRequest struct {
 	MergedDate     *time.Time
 	ClosedDate     *time.Time
 	Type           string `gorm:"type:varchar(100)"`
-	Component      string `gorm:"type:varchar(100)"`
+	Component      string `gorm:"type:text"`
 	MergeCommitSha string `gorm:"type:varchar(40)"`
 	HeadRef        string `gorm:"type:varchar(255)"`
 	BaseRef        string `gorm:"type:varchar(255)"`

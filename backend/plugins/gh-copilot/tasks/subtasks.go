@@ -60,6 +60,30 @@ var CollectUserTeamsMeta = plugin.SubTaskMeta{
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
 	Description:      "Collect GitHub Copilot user-team mappings from user-teams-1-day report",
 }
+var CollectEnterpriseMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "collectEnterpriseMetrics28Day",
+	EntryPoint:       CollectEnterpriseMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect GitHub Copilot enterprise-28-day/latest rolling-window usage report",
+}
+
+var CollectOrgMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "collectOrgMetrics28Day",
+	EntryPoint:       CollectOrgMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect GitHub Copilot organization-28-day/latest rolling-window usage report",
+}
+
+var CollectUserMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "collectUserMetrics28Day",
+	EntryPoint:       CollectUserMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect GitHub Copilot users-28-day/latest rolling-window usage report",
+}
+
 
 var ExtractOrgMetricsMeta = plugin.SubTaskMeta{
 	Name:             "extractOrgMetrics",
@@ -70,6 +94,32 @@ var ExtractOrgMetricsMeta = plugin.SubTaskMeta{
 	Dependencies:     []*plugin.SubTaskMeta{&CollectOrgMetricsMeta},
 }
 
+var ExtractEnterpriseMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "extractEnterpriseMetrics28Day",
+	EntryPoint:       ExtractEnterpriseMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract Copilot enterprise 28-day rolling-window metrics into tool-layer table",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectEnterpriseMetrics28DayMeta},
+}
+
+var ExtractOrgMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "extractOrgMetrics28Day",
+	EntryPoint:       ExtractOrgMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract Copilot org 28-day rolling-window metrics into tool-layer table",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectOrgMetrics28DayMeta},
+}
+
+var ExtractUserMetrics28DayMeta = plugin.SubTaskMeta{
+	Name:             "extractUserMetrics28Day",
+	EntryPoint:       ExtractUserMetrics28Day,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract Copilot user 28-day rolling-window metrics into tool-layer table",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectUserMetrics28DayMeta},
+}
 var ExtractSeatsMeta = plugin.SubTaskMeta{
 	Name:             "extractSeats",
 	EntryPoint:       ExtractSeats,
