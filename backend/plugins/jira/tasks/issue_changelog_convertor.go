@@ -121,6 +121,7 @@ func ConvertIssueChangelogs(subtaskCtx plugin.SubTaskContext) errors.Error {
 					row.ConnectionId,
 					row.ChangelogId,
 					row.Field,
+					row.ItemIndex,
 				)},
 				IssueId:           issueIdGenerator.Generate(row.ConnectionId, row.IssueId),
 				AuthorId:          accountIdGen.Generate(connectionId, row.AuthorAccountId),

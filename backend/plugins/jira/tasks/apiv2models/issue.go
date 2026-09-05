@@ -472,9 +472,9 @@ func (i Issue) ExtractEntities(connectionId uint64, userFieldMaps map[string]str
 			if user != nil {
 				users = append(users, user)
 			}
-			for _, item := range changelog.Items {
-				changelogItems = append(changelogItems, item.ToToolLayer(connectionId, changelog.ID))
-				users = append(users, item.ExtractUser(connectionId, userFieldMaps)...)
+			for _, indexed := range IndexChangelogItems(changelog.Items) {
+				changelogItems = append(changelogItems, indexed.Item.ToToolLayer(connectionId, changelog.ID, indexed.ItemIndex))
+				users = append(users, indexed.Item.ExtractUser(connectionId, userFieldMaps)...)
 			}
 		}
 	}
