@@ -25,6 +25,7 @@ import (
 	bamboo "github.com/apache/devlake/plugins/bamboo/impl"
 	bitbucket "github.com/apache/devlake/plugins/bitbucket/impl"
 	customize "github.com/apache/devlake/plugins/customize/impl"
+	datadog "github.com/apache/devlake/plugins/datadog/impl"
 	dora "github.com/apache/devlake/plugins/dora/impl"
 	feishu "github.com/apache/devlake/plugins/feishu/impl"
 	gitee "github.com/apache/devlake/plugins/gitee/impl"
@@ -66,6 +67,7 @@ func loadGoPlugins() []plugin.PluginMeta {
 		bamboo.Bamboo{},
 		bitbucket.Bitbucket{},
 		customize.Customize{},
+		datadog.Datadog{},
 		dora.Dora{},
 		feishu.Feishu{},
 		gitee.Gitee{},

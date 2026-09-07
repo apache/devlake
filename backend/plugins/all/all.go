@@ -43,6 +43,7 @@ import (
 	clickup "github.com/apache/devlake/plugins/clickup/impl"
 	cursor "github.com/apache/devlake/plugins/cursor/impl"
 	customize "github.com/apache/devlake/plugins/customize/impl"
+	datadog "github.com/apache/devlake/plugins/datadog/impl"
 	dora "github.com/apache/devlake/plugins/dora/impl"
 	feishu "github.com/apache/devlake/plugins/feishu/impl"
 	gh_copilot "github.com/apache/devlake/plugins/gh-copilot/impl"
@@ -93,6 +94,7 @@ func init() {
 	plugin.MustRegister(&clickup.ClickUp{})
 	plugin.MustRegister(&cursor.Cursor{})
 	plugin.MustRegister(&customize.Customize{})
+	plugin.MustRegister(&datadog.Datadog{})
 	plugin.MustRegister(&dora.Dora{})
 	plugin.MustRegister(&feishu.Feishu{})
 	plugin.MustRegister(&gh_copilot.GhCopilot{})
