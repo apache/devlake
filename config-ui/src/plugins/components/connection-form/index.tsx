@@ -55,6 +55,9 @@ const buildUpdateTestPayload = (connection: any, values: any, customHeaders: ICu
   cloudId: isEqual(connection?.cloudId, values.cloudId) ? undefined : values.cloudId,
   clientId: isEqual(connection?.clientId, values.clientId) ? undefined : values.clientId,
   clientSecret: isEqual(connection?.clientSecret, values.clientSecret) ? undefined : values.clientSecret,
+  apiKey: isEqual(connection?.apiKey, values.apiKey) ? undefined : values.apiKey,
+  applicationKey: isEqual(connection?.applicationKey, values.applicationKey) ? undefined : values.applicationKey,
+  webUrl: isEqual(connection?.webUrl, values.webUrl) ? undefined : values.webUrl,
   proxy: isEqual(connection?.proxy, values.proxy) ? undefined : values.proxy,
   rateLimitPerHour: isEqual(connection?.rateLimitPerHour, values.rateLimitPerHour)
     ? undefined
@@ -81,6 +84,9 @@ const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: 
     'cloudId',
     'clientId',
     'clientSecret',
+    'apiKey',
+    'applicationKey',
+    'webUrl',
     'accessKeyId',
     'secretAccessKey',
     'region',
