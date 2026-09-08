@@ -104,3 +104,44 @@ func TestRestoreMinutes_NegativeTimeToRepairIsIgnored(t *testing.T) {
 	require.NotNil(t, minutes)
 	assert.Equal(t, uint(10), *minutes)
 }
+
+func TestRestoreMinutes_ZeroTimeToRepairMeansNotRecorded(t *testing.T) {
+	repair := int64(0)
+	created := time.Date(2022, 8, 8, 12, 51, 32, 0, time.UTC)
+	resolved := created.Add(24*time.Hour + 41*time.Minute + 45*time.Second)
+
+	minutes := restoreMinutes(&models.Incident{
+		CreatedDate:  created,
+		ResolvedDate: &resolved,
+		TimeToRepair: &repair,
+	})
+
+	// Datadog reports 0 for an incident that never passed through
+	// `stable`, while still carrying a real time_to_resolve. Reading that
+	// as an instant restore would report an MTTR of zero.
+	require.NotNil(t, minutes)
+	assert.Equal(t, uint(1481), *minutes)
+}
+
+func TestIssueKeyFor(t *testing.T) {
+	// The slug is what Datadog's own UI shows.
+	assert.Equal(t, "IR-22", issueKeyFor(&models.Incident{Slug: "IR-22", PublicId: 22}, "IR"))
+	// Without one, rebuild it from the incident type's prefix.
+	assert.Equal(t, "OUTAGE-22", issueKeyFor(&models.Incident{PublicId: 22}, "OUTAGE"))
+}
+
+func TestNextOffsetFrom(t *testing.T) {
+	next := 2
+	offset, more := nextOffsetFrom(0, &next)
+	assert.True(t, more)
+	assert.Equal(t, 2, offset)
+
+	// The last page carries no next_offset.
+	_, more = nextOffsetFrom(2, nil)
+	assert.False(t, more)
+
+	// An offset that fails to advance would loop forever.
+	stuck := 2
+	_, more = nextOffsetFrom(2, &stuck)
+	assert.False(t, more)
+}

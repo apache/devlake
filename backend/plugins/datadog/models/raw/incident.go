@@ -32,22 +32,28 @@ type Incident struct {
 }
 
 type IncidentAttributes struct {
-	PublicId         int64                      `json:"public_id"`
-	Title            string                     `json:"title"`
-	State            *string                    `json:"state"`
-	Severity         *string                    `json:"severity"`
-	IncidentTypeUuid *string                    `json:"incident_type_uuid"`
-	Created          *time.Time                 `json:"created"`
-	Declared         *time.Time                 `json:"declared"`
-	Detected         *time.Time                 `json:"detected"`
-	Resolved         *time.Time                 `json:"resolved"`
-	Modified         *time.Time                 `json:"modified"`
-	IsTest           *bool                      `json:"is_test"`
-	CustomerImpacted *bool                      `json:"customer_impacted"`
-	TimeToDetect     *int64                     `json:"time_to_detect"`
-	TimeToRepair     *int64                     `json:"time_to_repair"`
-	TimeToResolve    *int64                     `json:"time_to_resolve"`
-	Fields           map[string]FieldAttributes `json:"fields"`
+	PublicId         int64      `json:"public_id"`
+	Title            string     `json:"title"`
+	State            *string    `json:"state"`
+	Severity         *string    `json:"severity"`
+	IncidentTypeUuid *string    `json:"incident_type_uuid"`
+	Created          *time.Time `json:"created"`
+	Declared         *time.Time `json:"declared"`
+	Detected         *time.Time `json:"detected"`
+	Resolved         *time.Time `json:"resolved"`
+	Modified         *time.Time `json:"modified"`
+	IsTest           *bool      `json:"is_test"`
+	Visibility       *string    `json:"visibility"`
+	CustomerImpacted *bool      `json:"customer_impacted"`
+	// Datadog reports these durations in seconds.
+	CustomerImpactDuration *int64 `json:"customer_impact_duration"`
+	TimeToDetect           *int64 `json:"time_to_detect"`
+	TimeToInternalResponse *int64 `json:"time_to_internal_response"`
+	TimeToRepair           *int64 `json:"time_to_repair"`
+	TimeToResolve          *int64 `json:"time_to_resolve"`
+	// Fields holds both organization-defined custom fields and Datadog's
+	// own attributes mirrored as fields, `slug` and `severity` among them.
+	Fields map[string]FieldAttributes `json:"fields"`
 }
 
 // FieldAttributes is one custom-field value. Single-select and textbox

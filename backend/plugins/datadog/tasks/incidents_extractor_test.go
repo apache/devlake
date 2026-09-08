@@ -42,14 +42,20 @@ const resolvedIncident = `{
 		"resolved": "2026-09-04T09:39:14Z",
 		"modified": "2026-09-04T09:39:14Z",
 		"customer_impacted": false,
+		"customer_impact_duration": 0,
 		"is_test": false,
-		"time_to_detect": 0,
+		"visibility": "organization",
+		"time_to_detect": 61,
+		"time_to_internal_response": 0,
 		"time_to_repair": 74601,
 		"time_to_resolve": 74601,
 		"fields": {
 			"detection_method": {"type": "dropdown", "value": "monitor"},
 			"services": {"type": "multiselect", "value": ["headless", "backend"]},
-			"root_cause": {"type": "textbox", "value": ""}
+			"severity": {"type": "dropdown", "value": "SEV-3"},
+			"slug": {"type": "textbox", "value": "IR-22"},
+			"root_cause": {"type": "textbox", "value": null},
+			"teams": {"type": "autocomplete", "value": null}
 		}
 	}
 }`
@@ -79,6 +85,9 @@ func TestExtractIncident_HappyPath(t *testing.T) {
 	assert.Equal(t, "headless - Sev_3 - todo backlog age", incident.Title)
 	assert.Equal(t, "resolved", incident.State)
 	assert.Equal(t, "SEV-3", incident.Severity)
+	// Datadog mirrors its own attributes into `fields`, slug among them.
+	assert.Equal(t, "IR-22", incident.Slug)
+	assert.Equal(t, "organization", incident.Visibility)
 	assert.Equal(t, "https://app.datadoghq.com/incidents/22", incident.Url)
 	assert.Equal(t, time.Date(2026, 9, 3, 12, 55, 53, 0, time.UTC), incident.CreatedDate)
 	require.NotNil(t, incident.DetectedDate)
@@ -113,8 +122,10 @@ func TestExtractIncident_MapsCustomFieldsPerScopeConfig(t *testing.T) {
 
 func TestExtractIncident_EmptyConfiguredFieldLeavesNativeSeverity(t *testing.T) {
 	data := newTestTaskData()
+	// `root_cause` and `teams` carry a null value in real payloads, which
+	// must read as absent rather than as an empty override.
 	data.Options.ScopeConfig = &models.DatadogScopeConfig{
-		ComponentField: "absent_field",
+		ComponentField: "teams",
 		SeverityField:  "root_cause",
 	}
 

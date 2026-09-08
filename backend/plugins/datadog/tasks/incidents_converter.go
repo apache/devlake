@@ -96,7 +96,7 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 					Id: domainIssueId,
 				},
 				Url:             incident.Url,
-				IssueKey:        fmt.Sprintf("%s-%d", prefix, incident.PublicId),
+				IssueKey:        issueKeyFor(incident, prefix),
 				Title:           incident.Title,
 				Type:            ticket.INCIDENT,
 				Status:          status,
@@ -137,11 +137,27 @@ func mapState(state string) (mapped string, known bool) {
 	}
 }
 
+// issueKeyFor prefers the slug Datadog shows in its own UI. Rebuilding it
+// from the incident type's prefix is the fallback for a payload that
+// carries no slug field.
+func issueKeyFor(incident *models.Incident, prefix string) string {
+	if incident.Slug != "" {
+		return incident.Slug
+	}
+	return fmt.Sprintf("%s-%d", prefix, incident.PublicId)
+}
+
 // restoreMinutes prefers Datadog's own time_to_repair: it measures when
 // service was restored, whereas created-to-resolved also counts the
 // post-incident paperwork and so overstates MTTR.
+//
+// Zero is Datadog's "not recorded", not an instant restore — an incident
+// that never passed through `stable` reports 0 here while still carrying a
+// real time_to_resolve. Taking it literally would report an MTTR of zero
+// for every such incident, so fall through to the timestamps instead. A
+// genuinely fast restore is reported in seconds and so survives.
 func restoreMinutes(incident *models.Incident) *uint {
-	if incident.TimeToRepair != nil && *incident.TimeToRepair >= 0 {
+	if incident.TimeToRepair != nil && *incident.TimeToRepair > 0 {
 		minutes := uint(*incident.TimeToRepair / 60)
 		return &minutes
 	}

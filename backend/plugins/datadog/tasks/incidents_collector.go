@@ -44,6 +44,7 @@ var CollectIncidentsMeta = plugin.SubTaskMeta{
 
 func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*DatadogTaskData)
+	var lastNextOffset *int
 	collector, err := api.NewStatefulApiCollectorForFinalizableEntity(api.FinalizableApiCollectorArgs{
 		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
 			Ctx:     taskCtx,
@@ -53,6 +54,16 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		ApiClient: data.Client,
 		CollectNewRecordsByList: api.FinalizableApiCollectorListArgs{
 			PageSize: 100,
+			// Pagination state captured in ResponseParser and read back in
+			// GetNextPageCustomData: the response body is a single-read
+			// stream and is already drained when the next-page hook fires.
+			GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
+				offset, ok := nextOffsetFrom(prevReqData.Pager.Skip, lastNextOffset)
+				if !ok {
+					return nil, api.ErrFinishCollect
+				}
+				return offset, nil
+			},
 			FinalizableApiCollectorCommonArgs: api.FinalizableApiCollectorCommonArgs{
 				UrlTemplate: "incidents",
 				// The list endpoint offers neither an incident-type filter nor
@@ -60,10 +71,16 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 				// incidents and the extractor filters. createdAfter is
 				// deliberately ignored for the same reason.
 				Query: func(reqData *api.RequestData, createdAfter *time.Time) (url.Values, errors.Error) {
-					return buildIncidentsQuery(reqData.Pager.Size, reqData.Pager.Skip), nil
+					offset := reqData.Pager.Skip
+					if custom, ok := reqData.CustomData.(int); ok {
+						offset = custom
+					}
+					return buildIncidentsQuery(reqData.Pager.Size, offset), nil
 				},
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-					return parseDataEnvelope(res)
+					data, next, err := parseIncidentsPage(res)
+					lastNextOffset = next
+					return data, err
 				},
 			},
 		},
@@ -76,10 +93,42 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 
 // buildIncidentsQuery is the pure core of the Query closure above.
 // Datadog paginates JSON:API collections with an offset in records, not a
-// page number.
+// page number. It ignores an unknown `page[limit]`, so the name matters.
 func buildIncidentsQuery(pageSize int, offset int) url.Values {
 	query := url.Values{}
 	query.Set("page[size]", fmt.Sprintf("%d", pageSize))
 	query.Set("page[offset]", fmt.Sprintf("%d", offset))
 	return query
+}
+
+// parseIncidentsPage unwraps the JSON:API envelope and reports where the
+// next page starts, as Datadog itself declares it.
+func parseIncidentsPage(res *http.Response) ([]json.RawMessage, *int, errors.Error) {
+	var body struct {
+		Data []json.RawMessage `json:"data"`
+		Meta *struct {
+			Pagination *struct {
+				Offset     int  `json:"offset"`
+				Size       int  `json:"size"`
+				NextOffset *int `json:"next_offset"`
+			} `json:"pagination"`
+		} `json:"meta"`
+	}
+	if err := api.UnmarshalResponse(res, &body); err != nil {
+		return nil, nil, err
+	}
+	if body.Meta != nil && body.Meta.Pagination != nil {
+		return body.Data, body.Meta.Pagination.NextOffset, nil
+	}
+	return body.Data, nil, nil
+}
+
+// nextOffsetFrom decides whether to ask for another page. The last page
+// carries no next_offset; an offset that fails to advance would loop
+// forever, so treat that as the end too.
+func nextOffsetFrom(prevOffset int, next *int) (int, bool) {
+	if next == nil || *next <= prevOffset {
+		return 0, false
+	}
+	return *next, true
 }

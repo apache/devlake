@@ -29,15 +29,18 @@ type Incident struct {
 	Id             string `gorm:"primaryKey;autoIncrement:false"`
 	PublicId       int64  `gorm:"index"`
 	IncidentTypeId string `gorm:"index"`
-	Title          string
-	Url            string
-	State          string
-	Severity       string
-	Component      string
+	// Slug is the key Datadog shows in its UI, e.g. IR-22.
+	Slug      string
+	Title     string
+	Url       string
+	State     string
+	Severity  string
+	Component string
 	// CustomFields keeps Datadog's `fields` object verbatim, so a scope
 	// config change can remap severity or component without re-collecting.
 	CustomFields     string `gorm:"type:text"`
 	IsTest           bool
+	Visibility       string
 	CustomerImpacted bool
 	CreatedDate      time.Time
 	DeclaredDate     *time.Time
@@ -46,9 +49,11 @@ type Incident struct {
 	ModifiedDate     *time.Time
 	// Datadog's own durations, in seconds. TimeToRepair is the restore
 	// time; TimeToResolve includes post-incident work.
-	TimeToDetect  *int64
-	TimeToRepair  *int64
-	TimeToResolve *int64
+	CustomerImpactDuration *int64
+	TimeToDetect           *int64
+	TimeToInternalResponse *int64
+	TimeToRepair           *int64
+	TimeToResolve          *int64
 }
 
 func (Incident) TableName() string { return "_tool_datadog_incidents" }

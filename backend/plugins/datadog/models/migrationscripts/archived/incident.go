@@ -25,26 +25,30 @@ import (
 
 type Incident struct {
 	archived.NoPKModel
-	ConnectionId     uint64 `gorm:"primaryKey"`
-	Id               string `gorm:"primaryKey;autoIncrement:false"`
-	PublicId         int64  `gorm:"index"`
-	IncidentTypeId   string `gorm:"index"`
-	Title            string
-	Url              string
-	State            string
-	Severity         string
-	Component        string
-	CustomFields     string `gorm:"type:text"`
-	IsTest           bool
-	CustomerImpacted bool
-	CreatedDate      time.Time
-	DeclaredDate     *time.Time
-	DetectedDate     *time.Time
-	ResolvedDate     *time.Time
-	ModifiedDate     *time.Time
-	TimeToDetect     *int64
-	TimeToRepair     *int64
-	TimeToResolve    *int64
+	ConnectionId           uint64 `gorm:"primaryKey"`
+	Id                     string `gorm:"primaryKey;autoIncrement:false"`
+	PublicId               int64  `gorm:"index"`
+	IncidentTypeId         string `gorm:"index"`
+	Slug                   string
+	Title                  string
+	Url                    string
+	State                  string
+	Severity               string
+	Component              string
+	CustomFields           string `gorm:"type:text"`
+	IsTest                 bool
+	Visibility             string
+	CustomerImpacted       bool
+	CreatedDate            time.Time
+	DeclaredDate           *time.Time
+	DetectedDate           *time.Time
+	ResolvedDate           *time.Time
+	ModifiedDate           *time.Time
+	CustomerImpactDuration *int64
+	TimeToDetect           *int64
+	TimeToInternalResponse *int64
+	TimeToRepair           *int64
+	TimeToResolve          *int64
 }
 
 func (Incident) TableName() string {
