@@ -18,6 +18,8 @@ limitations under the License.
 package models
 
 import (
+	"time"
+
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/plugin"
 )
@@ -36,6 +38,9 @@ type IncidentType struct {
 	Name         string `json:"name" mapstructure:"name"`
 	Prefix       string `json:"prefix" mapstructure:"prefix"`
 	IsDefault    bool   `json:"isDefault" mapstructure:"isDefault"`
+	// CreatedDate is when the type was created in Datadog, as opposed to
+	// when DevLake first saw it.
+	CreatedDate *time.Time `json:"createdDate" mapstructure:"createdDate"`
 }
 
 func (t IncidentType) ScopeId() string {

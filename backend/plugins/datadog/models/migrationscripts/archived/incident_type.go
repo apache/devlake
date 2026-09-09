@@ -18,6 +18,8 @@ limitations under the License.
 package archived
 
 import (
+	"time"
+
 	"github.com/apache/devlake/core/models/migrationscripts/archived"
 )
 
@@ -31,6 +33,7 @@ type IncidentType struct {
 	Name          string
 	Prefix        string
 	IsDefault     bool
+	CreatedDate   *time.Time
 }
 
 func (IncidentType) TableName() string {

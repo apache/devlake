@@ -60,10 +60,11 @@ func ExtractIncidentTypes(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, nil
 			}
 			incidentType := &models.IncidentType{
-				Id:        rawType.Id,
-				Name:      rawType.Attributes.Name,
-				Prefix:    derefString(rawType.Attributes.Prefix),
-				IsDefault: derefBool(rawType.Attributes.IsDefault),
+				Id:          rawType.Id,
+				Name:        rawType.Attributes.Name,
+				Prefix:      derefString(rawType.Attributes.Prefix),
+				IsDefault:   derefBool(rawType.Attributes.IsDefault),
+				CreatedDate: rawType.Attributes.CreatedAt,
 			}
 			incidentType.ConnectionId = data.Options.ConnectionId
 			return []interface{}{incidentType}, nil

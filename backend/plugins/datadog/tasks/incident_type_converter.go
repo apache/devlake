@@ -22,6 +22,7 @@ import (
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/models/domainlayer"
 	"github.com/apache/devlake/core/models/domainlayer/didgen"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
@@ -64,10 +65,17 @@ func ConvertIncidentTypes(taskCtx plugin.SubTaskContext) errors.Error {
 		Input:        cursor,
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			incidentType := inputRow.(*models.IncidentType)
-			board := ticket.NewBoard(
-				idGen.Generate(data.Options.ConnectionId, incidentType.Id),
-				incidentType.Name,
-			)
+			// Built by hand rather than with ticket.NewBoard, which stamps
+			// CreatedDate with the row's insert time. Datadog reports when
+			// the incident type was actually created, which is both truer
+			// and stable across collections.
+			board := &ticket.Board{
+				DomainEntity: domainlayer.DomainEntity{
+					Id: idGen.Generate(data.Options.ConnectionId, incidentType.Id),
+				},
+				Name:        incidentType.Name,
+				CreatedDate: incidentType.CreatedDate,
+			}
 			return []interface{}{board}, nil
 		},
 	})
