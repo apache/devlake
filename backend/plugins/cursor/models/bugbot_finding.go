@@ -18,7 +18,7 @@ limitations under the License.
 package models
 
 import (
-	"github.com/apache/incubator-devlake/core/models/common"
+	"github.com/apache/devlake/core/models/common"
 )
 
 // CursorBugBotFinding stores one finding within a BugBot review (normalized from bugs[]).

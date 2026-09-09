@@ -21,14 +21,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-devlake/core/config"
-	"github.com/apache/incubator-devlake/core/models/common"
-	"github.com/apache/incubator-devlake/core/runner"
-	"github.com/apache/incubator-devlake/helpers/e2ehelper"
-	helper "github.com/apache/incubator-devlake/helpers/pluginhelper/api"
-	"github.com/apache/incubator-devlake/plugins/cursor/impl"
-	"github.com/apache/incubator-devlake/plugins/cursor/models"
-	"github.com/apache/incubator-devlake/plugins/cursor/tasks"
+	"github.com/apache/devlake/core/config"
+	"github.com/apache/devlake/core/models/common"
+	"github.com/apache/devlake/core/runner"
+	"github.com/apache/devlake/helpers/e2ehelper"
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
+	"github.com/apache/devlake/plugins/cursor/impl"
+	"github.com/apache/devlake/plugins/cursor/models"
+	"github.com/apache/devlake/plugins/cursor/tasks"
 )
 
 func TestCursorBugbotExtractorsDataFlow(t *testing.T) {

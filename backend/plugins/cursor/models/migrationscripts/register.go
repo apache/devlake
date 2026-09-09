@@ -26,8 +26,9 @@ func All() []plugin.MigrationScript {
 		new(changeCursorRequestsCostsToFloat),
 		new(addCursorDailyUsage),
 		new(addCursorDailyUsageLineFields),
-		new(addCursorBugbotReviews),
+		new(addCursorKeyTier),
 		new(fixCursorAiCodeSchema),
+		new(addCursorBugbotReviews),
 		new(addCursorConversationInsights),
 	}
 }
