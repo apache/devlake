@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/incubator-devlake/plugins/cursor/models"
+	"github.com/apache/devlake/plugins/cursor/models"
 	"github.com/stretchr/testify/require"
 )
 

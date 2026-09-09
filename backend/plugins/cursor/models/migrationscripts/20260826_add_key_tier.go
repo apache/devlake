@@ -20,11 +20,11 @@ package migrationscripts
 import (
 	"time"
 
-	"github.com/apache/incubator-devlake/core/context"
-	"github.com/apache/incubator-devlake/core/errors"
-	"github.com/apache/incubator-devlake/core/models/migrationscripts/archived"
-	"github.com/apache/incubator-devlake/helpers/migrationhelper"
-	"github.com/apache/incubator-devlake/plugins/cursor/models"
+	"github.com/apache/devlake/core/context"
+	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/models/migrationscripts/archived"
+	"github.com/apache/devlake/helpers/migrationhelper"
+	"github.com/apache/devlake/plugins/cursor/models"
 )
 
 type addCursorKeyTier struct{}
