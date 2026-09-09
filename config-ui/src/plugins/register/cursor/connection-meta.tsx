@@ -16,9 +16,11 @@
  *
  */
 
-import { Tag } from 'antd';
+import { Tag, Typography } from 'antd';
 
 import { IConnection, IConnectionMetaVariant } from '@/types';
+
+import { CursorCapabilityTags } from './connection-capabilities';
 
 export const CURSOR_TIER_LABELS: Record<string, string> = {
   enterprise: 'Enterprise Admin',
@@ -56,20 +58,36 @@ export const renderCursorConnectionMeta = (connection: IConnection, variant: ICo
     return null;
   }
 
+  const capabilitySource = {
+    keyTier: connection.keyTier,
+    hasBugbotReviews: connection.hasBugbotReviews,
+    hasConversationInsights: connection.hasConversationInsights,
+  };
+
   if (variant === 'list') {
     return (
-      <Tag color={tierTagColor(connection.keyTier!)} style={{ marginLeft: 8 }}>
-        {label}
-      </Tag>
+      <>
+        <Tag color={tierTagColor(connection.keyTier!)} style={{ marginLeft: 8 }}>
+          {label}
+        </Tag>
+        <CursorCapabilityTags source={capabilitySource} variant="list" />
+      </>
     );
   }
 
   const hint = tierHint[connection.keyTier!];
   return (
     <div>
-      <span style={{ marginRight: 4 }}>Key type:</span>
-      <Tag color={tierTagColor(connection.keyTier!)}>{label}</Tag>
-      {hint && <span style={{ marginLeft: 8, color: 'rgba(0, 0, 0, 0.45)' }}>{hint}</span>}
+      <div>
+        <span style={{ marginRight: 4 }}>Key type:</span>
+        <Tag color={tierTagColor(connection.keyTier!)}>{label}</Tag>
+        {hint && (
+          <Typography.Text type="secondary" style={{ marginLeft: 8 }}>
+            {hint}
+          </Typography.Text>
+        )}
+      </div>
+      <CursorCapabilityTags source={capabilitySource} variant="detail" />
     </div>
   );
 };
