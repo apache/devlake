@@ -16,7 +16,7 @@
  *
  */
 
-import { Tag } from 'antd';
+import { Tag, Typography } from 'antd';
 
 import { Block } from '@/components';
 
@@ -42,7 +42,7 @@ export const KeyTier = ({ type, initialValues, values }: Props) => {
         title="Key Type"
         description="Detected from the API key when the connection is saved or tested. Test the connection to detect the key type."
       >
-        <span style={{ color: 'rgba(0, 0, 0, 0.45)' }}>Unknown — test connection to detect</span>
+        <Typography.Text type="secondary">Unknown — test connection to detect</Typography.Text>
       </Block>
     );
   }

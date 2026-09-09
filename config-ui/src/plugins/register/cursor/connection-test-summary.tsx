@@ -49,6 +49,11 @@ const capabilityLines = (result: CursorTestResult): string[] => {
     if (perms?.aiCodeTracking) {
       lines.push('AI code tracking (commits and changes) will be collected.');
     }
+    if (perms?.conversationInsights) {
+      lines.push('Conversation Insights will be collected.');
+    } else if (result.keyTier === 'enterprise') {
+      lines.push('Conversation Insights are not available (enable them in Cursor team settings).');
+    }
     if (perms?.bugbotReviews) {
       lines.push('BugBot review analytics will be collected.');
     }
@@ -57,6 +62,9 @@ const capabilityLines = (result: CursorTestResult): string[] => {
 
   lines.push('Members, spend, usage events, and daily usage will be collected.');
   lines.push('AI code tracking requires an Enterprise Admin key.');
+  if (perms?.conversationInsights) {
+    lines.push('Conversation Insights will be collected.');
+  }
   if (perms?.bugbotReviews) {
     lines.push('BugBot review analytics will be collected.');
   }
@@ -136,6 +144,9 @@ export const onCursorTestSuccess = (result: CursorTestResult, ctx: { setValues: 
   }
   if (result.permissions?.bugbotReviews != null) {
     patch.hasBugbotReviews = result.permissions.bugbotReviews;
+  }
+  if (result.permissions?.conversationInsights != null) {
+    patch.hasConversationInsights = result.permissions.conversationInsights;
   }
   if (Object.keys(patch).length > 0) {
     ctx.setValues(patch);

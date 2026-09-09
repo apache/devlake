@@ -122,10 +122,11 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 		return result, nil
 	}
 
-	permissions.Analytics = probeEndpoint(apiClient, "analytics/team/dau?startDate=7d&endDate=today")
-	permissions.AiCodeTracking = probeEndpoint(apiClient, "analytics/ai-code/commits?page=1&pageSize=1")
-	permissions.BugbotReviews = probeEndpoint(apiClient, "analytics/team/bugbot-reviews?page=1&pageSize=1")
-	permissions.ConversationInsights = probeEndpoint(apiClient, "analytics/team/conversation-insights?startDate=7d&endDate=today&include=intents")
+	optional := probeOptionalEndpoints(apiClient)
+	permissions.Analytics = optional.Analytics
+	permissions.AiCodeTracking = optional.AiCodeTracking
+	permissions.BugbotReviews = optional.BugbotReviews
+	permissions.ConversationInsights = optional.ConversationInsights
 
 	keyTier := models.KeyTierTeam
 	if permissions.Analytics || permissions.AiCodeTracking {
