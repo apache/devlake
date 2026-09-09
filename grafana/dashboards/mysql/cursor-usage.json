@@ -1819,141 +1819,40 @@
     },
     {
       "datasource": "mysql",
-      "description": "Aggregate agent conversation intents from GET /analytics/team/conversation-insights (Enterprise, insights enabled).",
+      "description": "Work category mix for the selected dashboard period (stacked share of conversation counts).",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "locale",
-          "decimals": 0
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 8,
+        "h": 6,
+        "w": 12,
         "x": 0,
         "y": 74
       },
-      "id": 321,
-      "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT dimension_value AS \"Intent\",\n  SUM(count) AS \"Count\"\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND insight_type = 'intents'\n  AND aggregation_type = 'distribution'\n  AND period_end >= $__timeFrom()\n  AND period_start <= $__timeTo()\nGROUP BY dimension_value\nORDER BY SUM(count) DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Conversation Intents",
-      "type": "piechart"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Work category mix from Conversation Insights segment classification.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "locale",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 74
-      },
-      "id": 322,
-      "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT dimension_value AS \"Category\",\n  SUM(count) AS \"Count\"\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND insight_type = 'categories'\n  AND aggregation_type = 'distribution'\n  AND period_end >= $__timeFrom()\n  AND period_start <= $__timeTo()\nGROUP BY dimension_value\nORDER BY SUM(count) DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Work Categories",
-      "type": "piechart"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Task complexity distribution for agent conversations.",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "locale",
-          "decimals": 0,
-          "color": {
-            "mode": "palette-classic"
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 74
-      },
-      "id": 323,
+      "id": 326,
       "options": {
         "displayMode": "gradient",
-        "minVizHeight": 16,
+        "minVizHeight": 10,
         "minVizWidth": 0,
-        "namePlacement": "auto",
+        "namePlacement": "left",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -1964,7 +1863,17 @@
         },
         "showUnfilled": true,
         "sizing": "auto",
-        "text": {}
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
       },
       "pluginVersion": "11.0.0",
       "targets": [
@@ -1972,7 +1881,271 @@
           "datasource": "mysql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT dimension_value AS \"Complexity\",\n  SUM(count) AS \"Count\"\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND insight_type = 'complexity'\n  AND aggregation_type = 'distribution'\n  AND period_end >= $__timeFrom()\n  AND period_start <= $__timeTo()\nGROUP BY dimension_value\nORDER BY SUM(count) DESC",
+          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Category,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'categories'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Category,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Categories",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Category",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Work type mix for the selected dashboard period. KTLO = Keep The Lights On (maintenance, tech debt, dependency updates).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 74
+      },
+      "id": 325,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'ktlo' THEN 'Maintenance (KTLO)'\n      WHEN 'maintenance' THEN 'Maintenance (KTLO)'\n      WHEN 'new_feature' THEN 'New Features'\n      WHEN 'bug' THEN 'Bug Fixing'\n      WHEN 'bug_fix' THEN 'Bug Fixing'\n      ELSE dimension_value\n    END AS `Work Type`,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'workTypes'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT `Work Type`,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Types",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Work Type",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Conversation intent mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 80
+      },
+      "id": 321,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Intent,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'intents'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Intent,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Conversation Intents",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Intent",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Task complexity mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 80
+      },
+      "id": 323,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'low' THEN 'Low'\n      WHEN 'medium' THEN 'Medium'\n      WHEN 'high' THEN 'High'\n      WHEN 'trivial' THEN 'Trivial'\n      ELSE dimension_value\n    END AS Complexity,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'complexity'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT Complexity,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY FIELD(Complexity, 'Trivial', 'Low', 'Medium', 'High'), cnt DESC",
           "refId": "A"
         }
       ],
@@ -1982,75 +2155,16 @@
         {
           "id": "rowsToFields",
           "options": {
-            "labelField": "Complexity",
-            "valueField": "Count"
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Daily work category counts from Conversation Insights time series.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
-          },
-          "unit": "locale",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 82
-      },
-      "id": 324,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT metric_date AS time,\n  dimension_value AS metric,\n  SUM(count) AS value\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND insight_type = 'categories'\n  AND aggregation_type = 'timeSeries'\n  AND $__timeFilter(metric_date)\nGROUP BY metric_date, dimension_value\nORDER BY 1",
-          "refId": "A"
-        }
-      ],
-      "title": "Work Categories Over Time",
-      "type": "timeseries",
-      "transformations": [
-        {
-          "id": "prepareTimeSeries",
-          "options": {
-            "format": "many"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "^value (.+)$",
-            "renamePattern": "$1"
+            "mappings": [
+              {
+                "fieldName": "Complexity",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
           }
         }
       ]
@@ -2061,7 +2175,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 90
+        "y": 86
       },
       "id": 104,
       "title": "Diagnostics",
@@ -2078,7 +2192,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 91
+            "y": 87
           },
           "id": 40,
           "options": {

@@ -173,7 +173,7 @@ The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/
 | `GET /analytics/ai-code/commits` | Per-commit AI line attribution (TAB vs Composer vs non-AI) | `_tool_cursor_ai_code_commits` |
 | `GET /analytics/ai-code/changes` | Granular accepted AI changes | `_tool_cursor_ai_code_changes` |
 
-Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
+Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. **Optional endpoints** (`hasBugbotReviews`, `hasConversationInsights`) are re-probed at the start of each pipeline run and persisted on the connection, so changes in the Cursor dashboard are picked up without a manual Test Connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
 
 ## Conversation Insights
 
@@ -183,7 +183,7 @@ The following endpoint from the [Analytics API](https://cursor.com/docs/account/
 |----------|---------|------------|
 | `GET /analytics/team/conversation-insights` | Aggregate work classifications (intents, complexity, categories, guidance levels, work types) | `_tool_cursor_conversation_insights` |
 
-Returns **aggregate** insights only — no raw conversation content or conversation IDs. Collectors request all five `include` slices per date chunk. Re-run **Test Connection** after enabling insights in Cursor so DevLake sets `hasConversationInsights`.
+Returns **aggregate** insights only — no raw conversation content or conversation IDs. Collectors request all five `include` slices per date chunk. Optional access is re-probed at pipeline start; enable Conversation Insights in Cursor team settings and re-run the pipeline (Test Connection is optional but shows the current status in Config UI).
 
 ## BugBot Review Analytics
 

@@ -29,6 +29,7 @@ export interface IConnectionAPI {
   token?: string;
   keyTier?: string;
   hasBugbotReviews?: boolean;
+  hasConversationInsights?: boolean;
   adminApiKey?: string;
   username?: string;
   password?: string;
@@ -58,6 +59,7 @@ export interface IConnectionTestResult {
     analytics?: boolean;
     aiCodeTracking?: boolean;
     bugbotReviews?: boolean;
+    conversationInsights?: boolean;
   };
   causes?: null;
   data?: null;
@@ -81,6 +83,7 @@ export interface IConnectionOldTestResult {
     analytics?: boolean;
     aiCodeTracking?: boolean;
     bugbotReviews?: boolean;
+    conversationInsights?: boolean;
   };
   login?: string;
   installations?: Array<{
@@ -111,6 +114,7 @@ export interface IConnection {
   token?: string;
   keyTier?: string;
   hasBugbotReviews?: boolean;
+  hasConversationInsights?: boolean;
   adminApiKey?: string;
   username?: string;
   password?: string;

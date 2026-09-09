@@ -19,7 +19,7 @@
 import { IPluginConfig } from '@/types';
 
 import Icon from './assets/icon.svg?react';
-import { KeyTier, Token } from './connection-fields';
+import { KeyTier, Token, Capabilities } from './connection-fields';
 import { renderCursorConnectionMeta } from './connection-meta';
 import {
   formatCursorTestMessage,
@@ -53,6 +53,8 @@ export const CursorConfig: IPluginConfig = {
       ({ type, initialValues, values }: any) => (
         <KeyTier type={type} initialValues={initialValues} values={values} />
       ),
+      ({ type, initialValues, values }: any) =>
+        type === 'update' ? <Capabilities initialValues={initialValues} values={values} /> : null,
       'proxy',
       {
         key: 'rateLimitPerHour',
