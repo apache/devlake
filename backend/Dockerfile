@@ -68,11 +68,11 @@ RUN for arch in aarch64 x86_64 ; do \
         mkdir build && cd build && \
         if [ "$arch" = "aarch64" ] ; then \
             cmake .. -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-                -DBUILD_SHARED_LIBS=ON -DCMAKE_SYSROOT=/rootfs-arm64 \
+                -DBUILD_SHARED_LIBS=ON -DUSE_BUNDLED_ZLIB=ON -DCMAKE_SYSROOT=/rootfs-arm64 \
                 -DCMAKE_INSTALL_PREFIX=/usr/local/deps/${arch} ; \
         elif [ "$arch" = "x86_64" ] ; then \
             cmake .. -DCMAKE_C_COMPILER=x86_64-linux-gnu-gcc \
-                -DBUILD_SHARED_LIBS=ON -DCMAKE_SYSROOT=/rootfs-amd64 \
+                -DBUILD_SHARED_LIBS=ON -DUSE_BUNDLED_ZLIB=ON -DCMAKE_SYSROOT=/rootfs-amd64 \
                 -DCMAKE_INSTALL_PREFIX=/usr/local/deps/${arch} ; \
         fi && \
         make -j install ; \
