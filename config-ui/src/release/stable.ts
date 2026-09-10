@@ -84,10 +84,6 @@ const URLS = {
       TRANSFORMATION:
         'https://devlake.apache.org/docs/Configuration/GitLab#step-3---adding-transformation-rules-optional',
     },
-    DATADOG: {
-      BASIS: 'https://devlake.apache.org/docs/Configuration/Datadog',
-      RATE_LIMIT: 'https://devlake.apache.org/docs/Configuration/Datadog#fixed-rate-limit-optional',
-    },
     INCIDENTIO: {
       BASIS: 'https://devlake.apache.org/docs/Configuration/Incidentio',
       RATE_LIMIT: 'https://devlake.apache.org/docs/Configuration/Incidentio#fixed-rate-limit-optional',

@@ -16,10 +16,10 @@
  *
  */
 
-import { DOC_URL } from '@/release';
 import { IPluginConfig } from '@/types';
 
 import Icon from './assets/icon.svg?react';
+import { ApiKey, ApplicationKey, WebUrl } from './connection-fields';
 
 export const DatadogConfig: IPluginConfig = {
   plugin: 'datadog',
@@ -28,7 +28,9 @@ export const DatadogConfig: IPluginConfig = {
   sort: 21,
   isBeta: true,
   connection: {
-    docLink: DOC_URL.PLUGIN.DATADOG.BASIS,
+    // No docLink until the Datadog page exists on the DevLake site; the
+    // banner is hidden while this is empty.
+    docLink: '',
     initialValues: {
       endpoint: 'https://api.datadoghq.com/api/v2/',
     },
@@ -42,28 +44,40 @@ export const DatadogConfig: IPluginConfig = {
           server: '',
         },
       },
-      {
-        key: 'apiKey',
-        label: 'API Key',
-        subLabel: 'Organization API key, from Organization Settings > API Keys.',
-      },
-      {
-        key: 'applicationKey',
-        label: 'Application Key',
-        subLabel: 'Application key with the incident_read scope, from Organization Settings > Application Keys.',
-      },
-      {
-        key: 'webUrl',
-        label: 'Datadog UI URL (optional)',
-        subLabel:
-          'Where your incidents live in the browser, e.g. https://app.datadoghq.com. The API returns no incident link, so without this incidents have no clickable URL.',
-      },
+      ({ type, initialValues, values, setValues, setErrors }: any) => (
+        <ApiKey
+          key="apiKey"
+          type={type}
+          initialValue={initialValues.apiKey ?? ''}
+          value={values.apiKey ?? ''}
+          setValue={(value) => setValues({ apiKey: value })}
+          setError={(value) => setErrors({ apiKey: value })}
+        />
+      ),
+      ({ type, initialValues, values, setValues, setErrors }: any) => (
+        <ApplicationKey
+          key="applicationKey"
+          type={type}
+          initialValue={initialValues.applicationKey ?? ''}
+          value={values.applicationKey ?? ''}
+          setValue={(value) => setValues({ applicationKey: value })}
+          setError={(value) => setErrors({ applicationKey: value })}
+        />
+      ),
+      ({ initialValues, values, setValues }: any) => (
+        <WebUrl
+          key="webUrl"
+          initialValue={initialValues.webUrl ?? ''}
+          value={values.webUrl ?? ''}
+          setValue={(value) => setValues({ webUrl: value })}
+        />
+      ),
       'proxy',
       {
         key: 'rateLimitPerHour',
         subLabel:
           'By default, DevLake uses 3,600 requests/hour for data collection for Datadog. But you can adjust the collection speed by setting up your desirable rate limit.',
-        learnMore: DOC_URL.PLUGIN.DATADOG.RATE_LIMIT,
+
         defaultValue: 3600,
       },
     ],

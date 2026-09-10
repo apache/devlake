@@ -87,6 +87,9 @@ func queryDatadogRemoteScopes(
 		}
 		if item.Attributes.CreatedAt != nil {
 			entry.Data.Scope.NoPKModel.CreatedAt = *item.Attributes.CreatedAt
+			// Also on the tool model, so a scope added from here carries the
+			// date before the first collection fills it in.
+			entry.Data.CreatedDate = item.Attributes.CreatedAt
 		}
 		children = append(children, entry)
 	}

@@ -220,15 +220,17 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
 
   return (
     <Flex vertical gap="small">
-      <Alert
-        message={
-          <>
-            {' '}
-            If you run into any problems while creating a new connection for {name},{' '}
-            <ExternalLink link={docLink}>check out this doc</ExternalLink>.
-          </>
-        }
-      />
+      {docLink && (
+        <Alert
+          message={
+            <>
+              {' '}
+              If you run into any problems while creating a new connection for {name},{' '}
+              <ExternalLink link={docLink}>check out this doc</ExternalLink>.
+            </>
+          }
+        />
+      )}
       <Form
         type={type}
         name={name}
