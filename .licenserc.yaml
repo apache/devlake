@@ -26,6 +26,7 @@ header:
     - "bin"
     - "logs"
     - "mocks"
+    - "backend/mocks/**"
     - "vendor"
     - "**/*.log"
     - "**/*.csv"

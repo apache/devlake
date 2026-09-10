@@ -53,6 +53,12 @@ jobs:
       run: backend/scripts/install-go.sh
     - name: Install mockery 3.7.4
       run: backend/scripts/install-mockery.sh
+    - name: Verify committed mocks are up to date
+      run: |
+        cd backend
+        make mock
+        git diff --exit-code -- mocks || \
+          (echo "::error::backend/mocks is stale — run 'make mock' and commit the result" && exit 1)
     - name: Build Python
       run: |
         cd backend
