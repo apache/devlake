@@ -25,7 +25,7 @@ export const DatadogConfig: IPluginConfig = {
   plugin: 'datadog',
   name: 'Datadog',
   icon: ({ color }) => <Icon fill={color} />,
-  sort: 21,
+  sort: 5,
   isBeta: true,
   connection: {
     // No docLink until the Datadog page exists on the DevLake site; the
