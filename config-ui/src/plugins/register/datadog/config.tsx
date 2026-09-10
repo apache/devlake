@@ -85,4 +85,15 @@ export const DatadogConfig: IPluginConfig = {
   dataScope: {
     title: 'Incident Types',
   },
+  scopeConfig: {
+    entities: ['TICKET'],
+    transformation: {
+      // Datadog mirrors its own attributes into the incident `fields` object
+      // alongside organization-defined custom fields, so which field carries
+      // the component — and which, if any, overrides the SEV severity — is
+      // configuration rather than something the plugin can know.
+      componentField: '',
+      severityField: '',
+    },
+  },
 };

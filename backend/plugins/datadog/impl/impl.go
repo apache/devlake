@@ -169,6 +169,18 @@ func (p Datadog) ApiResources() map[string]map[string]plugin.ApiResourceHandler 
 		"connections/:connectionId/scopes/:scopeId/latest-sync-state": {
 			"GET": api.GetScopeLatestSyncState,
 		},
+		"connections/:connectionId/scope-configs": {
+			"POST": api.PostScopeConfig,
+			"GET":  api.GetScopeConfigList,
+		},
+		"connections/:connectionId/scope-configs/:scopeConfigId": {
+			"PATCH":  api.PatchScopeConfig,
+			"GET":    api.GetScopeConfig,
+			"DELETE": api.DeleteScopeConfig,
+		},
+		"scope-config/:scopeConfigId/projects": {
+			"GET": api.GetProjectsByScopeConfig,
+		},
 	}
 }
 
