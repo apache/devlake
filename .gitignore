@@ -154,7 +154,6 @@ libgit2
 .playwright-cli/
 
 # auto generated code
-backend/mocks/
 backend/server/api/docs/swagger.json
 backend/server/api/docs/swagger.yaml
 backend/server/api/docs/docs.go
