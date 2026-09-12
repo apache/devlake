@@ -50,6 +50,7 @@ type GitlabMergeRequest struct {
 	Description      string
 	AuthorUsername   string `gorm:"type:varchar(255)"`
 	AuthorUserId     int
+	Component        string `gorm:"type:text"`
 	Component        string `gorm:"type:varchar(255)"`
 	Additions        *int   `gorm:"comment:Lines added in this MR diff only"`
 	Deletions        *int   `gorm:"comment:Lines deleted in this MR diff only"`

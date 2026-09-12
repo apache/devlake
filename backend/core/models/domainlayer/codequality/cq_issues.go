@@ -26,7 +26,7 @@ type CqIssue struct {
 	domainlayer.DomainEntity
 	Rule                     string `gorm:"type:varchar(255)"`
 	Severity                 string `gorm:"type:varchar(100)"`
-	Component                string
+	Component                string `gorm:"type:text"`
 	ProjectKey               string `gorm:"index;type:varchar(500)"` //domain project key
 	Line                     int
 	Status                   string `gorm:"type:varchar(20)"`

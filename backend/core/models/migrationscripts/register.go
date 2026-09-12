@@ -148,6 +148,8 @@ func All() []plugin.MigrationScript {
 		new(changeIssueComponentToText),
 		new(changeCqIssueCodeBlocksComponentToText),
 		new(addCqProjectMetricsHistory),
+		new(changePullRequestComponentToText),
+		new(changeIncidentComponentToText),
 		new(addIsBotToAccounts),
 		new(addSprintVelocityFields),
 		new(addBlueprintIdIndexToPipelines),
