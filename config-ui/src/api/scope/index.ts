@@ -38,17 +38,17 @@ export const list = (
   });
 
 export const get = (plugin: string, connectionId: ID, scopeId: ID, payload?: { blueprints: boolean }) =>
-  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${scopeId}`, {
+  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${encodeURIComponent(scopeId)}`, {
     data: payload,
   });
 
 export const remove = (plugin: string, connectionId: ID, scopeId: ID, onlyData: boolean) =>
-  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${scopeId}?delete_data_only=${onlyData}`, {
+  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${encodeURIComponent(scopeId)}?delete_data_only=${onlyData}`, {
     method: 'delete',
   });
 
 export const update = (plugin: string, connectionId: ID, scopeId: ID, payload: any) =>
-  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${scopeId}`, {
+  request(`/plugins/${plugin}/connections/${connectionId}/scopes/${encodeURIComponent(scopeId)}`, {
     method: 'patch',
     data: payload,
   });
