@@ -43,6 +43,7 @@ type JiraIssueChangelogItems struct {
 	ConnectionId     uint64 `gorm:"primaryKey"`
 	ChangelogId      uint64 `gorm:"primaryKey"`
 	Field            string `gorm:"primaryKey"`
+	ItemIndex        uint64 `gorm:"primaryKey"`
 	FieldType        string
 	FieldId          string
 	FromValue        string

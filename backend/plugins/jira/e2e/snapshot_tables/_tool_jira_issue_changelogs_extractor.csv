@@ -275,3 +275,4 @@ connection_id,changelog_id,issue_id,author_account_id,author_display_name,author
 2,107265,13954,5e9711ba34f7b90c0fbc37d3,Rankin Zheng,1,2021-05-10T03:32:18.784+00:00,2021-05-10T03:32:18.781+00:00,"{""ConnectionId"":2,""BoardId"":8}",_raw_jira_api_issue_changelogs,204681,
 2,296762,13954,5ecfbd0c2490cf0c09e2e598,Gerile Tu,1,2022-03-28T07:30:08.266+00:00,2021-05-10T03:32:18.781+00:00,"{""ConnectionId"":2,""BoardId"":8}",_raw_jira_api_issue_changelogs,204682,
 2,297086,13383,5ecfbd0c2490cf0c09e2e598,Gerile Tu,1,2022-03-28T07:30:25.639+00:00,2021-03-28T08:08:12.741+00:00,"{""ConnectionId"":2,""BoardId"":8}",_raw_jira_api_issue_changelogs,204582,
+2,999001,13383,5e9711ba34f7b90c0fbc37d3,Rankin Zheng,1,2026-04-11T16:23:36.114+00:00,2026-04-11T16:23:36.114+00:00,"{""ConnectionId"":2,""BoardId"":8}",_raw_jira_api_issue_changelogs,299001,
