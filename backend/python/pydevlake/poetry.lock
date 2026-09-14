@@ -524,13 +524,13 @@ email = ["email-validator (>=1.0.3)"]
 
 [[package]]
 name = "pydevd-pycharm"
-version = "262.8665.186"
+version = "263.3889.77"
 description = "PyCharm Debugger (used in PyCharm and PyDev)"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "pydevd_pycharm-262.8665.186.tar.gz", hash = "sha256:3ddd0a6250eb168e6cc93c5f4bb225eb8463cea2d28041ff35ff340b824b75e9"},
+    {file = "pydevd_pycharm-263.3889.77.tar.gz", hash = "sha256:039693f4068a9362f19eac7b54cacfd1ffd6326342bdcaa739c66aed5d281b52"},
 ]
 
 [[package]]
@@ -762,4 +762,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "6c8e1ecb57452ab180aaf47c3c7db00a60eb790e91ecbf856ec20784e0208367"
+content-hash = "ea77c9a40bd643b582d52aa5dbf006d572526469a7781139ef954a35a65f70f9"
