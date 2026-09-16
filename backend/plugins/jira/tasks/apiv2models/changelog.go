@@ -18,6 +18,7 @@ limitations under the License.
 package apiv2models
 
 import (
+	"sort"
 	"time"
 
 	"github.com/apache/devlake/core/models/common"
@@ -60,11 +61,53 @@ type ChangelogItem struct {
 	TmpToAccountId   string `json:"tmpToAccountId,omitempty"`
 }
 
-func (c ChangelogItem) ToToolLayer(connectionId, changelogId uint64) *models.JiraIssueChangelogItems {
+// IndexedChangelogItem is a changelog item with a stable per-field ordinal.
+type IndexedChangelogItem struct {
+	Item      ChangelogItem
+	ItemIndex uint64
+}
+
+// IndexChangelogItems copies items and assigns a canonical per-field ItemIndex.
+// Index 0 is the lexicographically smallest item for that field by
+// (FromValue, ToValue, FromString, ToString, FieldId), not JSON array order.
+func IndexChangelogItems(items []ChangelogItem) []IndexedChangelogItem {
+	copied := make([]ChangelogItem, len(items))
+	copy(copied, items)
+	sort.SliceStable(copied, func(i, j int) bool {
+		a, b := copied[i], copied[j]
+		if a.Field != b.Field {
+			return a.Field < b.Field
+		}
+		if a.FromValue != b.FromValue {
+			return a.FromValue < b.FromValue
+		}
+		if a.ToValue != b.ToValue {
+			return a.ToValue < b.ToValue
+		}
+		if a.FromString != b.FromString {
+			return a.FromString < b.FromString
+		}
+		if a.ToString != b.ToString {
+			return a.ToString < b.ToString
+		}
+		return a.FieldId < b.FieldId
+	})
+	indexed := make([]IndexedChangelogItem, 0, len(copied))
+	counts := make(map[string]uint64)
+	for _, item := range copied {
+		idx := counts[item.Field]
+		counts[item.Field]++
+		indexed = append(indexed, IndexedChangelogItem{Item: item, ItemIndex: idx})
+	}
+	return indexed
+}
+
+func (c ChangelogItem) ToToolLayer(connectionId, changelogId, itemIndex uint64) *models.JiraIssueChangelogItems {
 	item := &models.JiraIssueChangelogItems{
 		ConnectionId:     connectionId,
 		ChangelogId:      changelogId,
 		Field:            c.Field,
+		ItemIndex:        itemIndex,
 		FieldType:        c.Fieldtype,
 		FieldId:          c.FieldId,
 		FromValue:        c.FromValue,
