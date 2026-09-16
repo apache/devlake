@@ -264,6 +264,7 @@ func CheckAuthorizationHeader(c *gin.Context, logger log.Logger, db dal.Dal, api
 		return false
 	}
 	if !matched {
+		c.Abort()
 		c.JSON(http.StatusForbidden, &apiBody{
 			Success: false,
 			Message: "path doesn't match api key's scope",
