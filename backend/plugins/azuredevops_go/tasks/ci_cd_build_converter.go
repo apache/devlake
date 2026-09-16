@@ -93,8 +93,8 @@ func ConvertBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 				OriginalStatus: build.Status,
 				OriginalResult: build.Result,
 				CicdScopeId:    repoIdGen.Generate(data.Options.ConnectionId, build.RepositoryId),
-				Environment:    data.RegexEnricher.ReturnNameIfMatched(devops.PRODUCTION, build.Name+";"+build.Tags),
-				Type:           data.RegexEnricher.ReturnNameIfMatched(devops.DEPLOYMENT, build.Name+";"+build.Tags),
+				Environment:    data.RegexEnricher.ReturnNameIfMatched(devops.PRODUCTION, build.Name+";"+build.RunName+";"+build.Tags),
+				Type:           data.RegexEnricher.ReturnNameIfMatched(devops.DEPLOYMENT, build.Name+";"+build.RunName+";"+build.Tags),
 				DurationSec:    duration,
 				TaskDatesInfo: devops.TaskDatesInfo{
 					CreatedDate:  *build.QueueTime,

@@ -18,16 +18,29 @@ limitations under the License.
 package migrationscripts
 
 import (
-	"github.com/apache/devlake/core/plugin"
+	"github.com/apache/devlake/core/context"
+	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/helpers/migrationhelper"
 )
 
-// All return all the migration scripts
-func All() []plugin.MigrationScript {
-	return []plugin.MigrationScript{
-		new(addInitTables),
-		new(extendRepoTable),
-		new(addEndpointToAzuredevops),
-		new(addUsernameToAzuredevops),
-		new(addRunNameToAzuredevopsBuild),
-	}
+type addRunNameToAzuredevopsBuild struct{}
+
+type azuredevopsBuild20260916 struct {
+	RunName string `gorm:"type:varchar(255)"`
+}
+
+func (azuredevopsBuild20260916) TableName() string {
+	return "_tool_azuredevops_go_builds"
+}
+
+func (script *addRunNameToAzuredevopsBuild) Up(basicRes context.BasicRes) errors.Error {
+	return migrationhelper.AutoMigrateTables(basicRes, &azuredevopsBuild20260916{})
+}
+
+func (*addRunNameToAzuredevopsBuild) Version() uint64 {
+	return 20260916000001
+}
+
+func (*addRunNameToAzuredevopsBuild) Name() string {
+	return "add run name field to _tool_azuredevops_go_builds"
 }
