@@ -25,7 +25,8 @@ on:
 
 jobs:
   auto-cherry-pick:
-    if: github.event.pull_request.merged == true
+    if: false  # disabled
+    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
