@@ -36,6 +36,7 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | Endpoint | Method | Data |
 |----------|--------|------|
 | `/analytics/ai-code/commits` | GET | Per-commit AI line attribution (TAB vs Composer vs non-AI) |
+| `/analytics/ai-code/commits/:commitHash` | GET | Commit-detail file blame and conversation metadata (limited alpha) |
 | `/analytics/ai-code/changes` | GET | Granular accepted AI changes with per-file metadata |
 | `/analytics/team/conversation-insights` | GET | Aggregate conversation work classifications (intents, categories, complexity) |
 
@@ -48,6 +49,8 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | `_tool_cursor_user_spend` | Per-user spend for the current billing cycle (on-demand and included) |
 | `_tool_cursor_daily_usage` | Daily adoption metrics: completions, requests by feature, tab acceptance, line edits |
 | `_tool_cursor_ai_code_commits` | Per-commit AI line attribution: TAB, Composer, and non-AI lines (Enterprise only) |
+| `_tool_cursor_ai_code_range_annotations` | File-level blame rows from commit-detail API with conversation and model (Enterprise alpha) |
+| `_tool_cursor_ai_code_conversations` | Conversation metadata referenced by commit-detail range annotations (Enterprise alpha) |
 | `_tool_cursor_ai_code_changes` | Accepted AI changes with source, model, and per-file metadata (Enterprise only) |
 | `_tool_cursor_conversation_insights` | Flattened Conversation Insights metrics: intents, categories, complexity, guidance, work types (Enterprise only) |
 
@@ -72,8 +75,9 @@ flowchart LR
 3. `collectUserSpend` → `extractUserSpend`
 4. `collectDailyUsage` → `extractDailyUsage`
 5. `collectAiCodeCommits` → `extractAiCodeCommits` *(Enterprise only -- skipped for Team keys)*
-6. `collectAiCodeChanges` → `extractAiCodeChanges` *(Enterprise only -- skipped for Team keys)*
-7. `collectConversationInsights` → `extractConversationInsights` *(Enterprise only -- skipped when insights disabled or inaccessible)*
+6. `collectAiCodeCommitDetails` → `extractAiCodeCommitDetails` *(Enterprise alpha -- skipped when commit-details inaccessible)*
+7. `collectAiCodeChanges` → `extractAiCodeChanges` *(Enterprise only -- skipped for Team keys)*
+8. `collectConversationInsights` → `extractConversationInsights` *(Enterprise only -- skipped when insights disabled or inaccessible)*
 
 ## Repository layout
 
@@ -147,6 +151,7 @@ Grafana dashboard JSON lives under `grafana/dashboards/mysql/`:
 | Dashboard | File | UID |
 |-----------|------|-----|
 | Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` |
+| Cursor Enterprise AI Code & Insights | `cursor-enterprise.json` | `cursor_enterprise` |
 | Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` |
 | AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — |
 | Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — |
@@ -171,9 +176,10 @@ The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/
 | Endpoint | Purpose | Tool table |
 |----------|---------|------------|
 | `GET /analytics/ai-code/commits` | Per-commit AI line attribution (TAB vs Composer vs non-AI) | `_tool_cursor_ai_code_commits` |
+| `GET /analytics/ai-code/commits/:commitHash` | File-level blame and conversation metadata (limited alpha) | `_tool_cursor_ai_code_range_annotations`, `_tool_cursor_ai_code_conversations` |
 | `GET /analytics/ai-code/changes` | Granular accepted AI changes | `_tool_cursor_ai_code_changes` |
 
-Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. **Optional endpoints** (`hasBugbotReviews`, `hasConversationInsights`) are re-probed at the start of each pipeline run and persisted on the connection, so changes in the Cursor dashboard are picked up without a manual Test Connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
+Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. **Optional endpoints** (`hasBugbotReviews`, `hasConversationInsights`, `hasAiCodeCommitDetails`) are re-probed at the start of each pipeline run and persisted on the connection, so changes in the Cursor dashboard are picked up without a manual Test Connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Commit-detail collectors require `hasAiCodeCommitDetails` (limited alpha — probed via first commit hash from the list endpoint). Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
 
 ## Conversation Insights
 

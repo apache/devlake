@@ -45,6 +45,7 @@ type aiCodeCommitRecord struct {
 	NonAiLinesDeleted   *int    `json:"nonAiLinesDeleted"`
 	CommitTs            string  `json:"commitTs"`
 	CreatedAt           string  `json:"createdAt"`
+	Message             string  `json:"message"`
 }
 
 // ExtractAiCodeCommits parses raw AI code commit records into tool-layer tables.
@@ -87,6 +88,7 @@ func ExtractAiCodeCommits(taskCtx plugin.SubTaskContext) errors.Error {
 				ComposerLinesDeleted: record.ComposerLinesDeleted,
 				NonAiLinesAdded:     record.NonAiLinesAdded,
 				NonAiLinesDeleted:   record.NonAiLinesDeleted,
+				Message:             strings.TrimSpace(record.Message),
 			}
 			if ts := parseOptionalISOTime(record.CommitTs); ts != nil {
 				commit.CommitTs = ts

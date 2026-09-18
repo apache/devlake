@@ -19,6 +19,8 @@ package service
 
 import (
 	stdctx "context"
+	"encoding/json"
+	"io"
 	"strings"
 
 	corectx "github.com/apache/devlake/core/context"
@@ -28,9 +30,10 @@ import (
 )
 
 type connectionCapabilities struct {
-	KeyTier                 string
-	HasBugbotReviews        bool
-	HasConversationInsights bool
+	KeyTier                  string
+	HasBugbotReviews         bool
+	HasConversationInsights  bool
+	HasAiCodeCommitDetails   bool
 }
 
 func snapshotConnectionCapabilities(connection *models.CursorConnection) connectionCapabilities {
@@ -41,16 +44,21 @@ func snapshotConnectionCapabilities(connection *models.CursorConnection) connect
 		KeyTier:                 connection.KeyTier,
 		HasBugbotReviews:        connection.HasBugbotReviews,
 		HasConversationInsights: connection.HasConversationInsights,
+		HasAiCodeCommitDetails:  connection.HasAiCodeCommitDetails,
 	}
 }
 
 func probeOptionalEndpoints(apiClient *helper.ApiClient) AdminApiPermissions {
-	return AdminApiPermissions{
+	perms := AdminApiPermissions{
 		Analytics:            probeEndpoint(apiClient, "analytics/team/dau?startDate=7d&endDate=today"),
 		AiCodeTracking:       probeEndpoint(apiClient, "analytics/ai-code/commits?page=1&pageSize=1"),
 		BugbotReviews:        probeEndpoint(apiClient, "analytics/team/bugbot-reviews?page=1&pageSize=1"),
 		ConversationInsights: probeEndpoint(apiClient, "analytics/team/conversation-insights?startDate=7d&endDate=today&include=intents"),
 	}
+	if perms.AiCodeTracking {
+		perms.AiCodeCommitDetails = probeAiCodeCommitDetails(apiClient)
+	}
+	return perms
 }
 
 // ApplyOptionalPermissions updates optional collection flags from live API probes.
@@ -65,6 +73,48 @@ func ApplyOptionalPermissions(connection *models.CursorConnection, perms AdminAp
 	}
 	connection.HasBugbotReviews = perms.BugbotReviews
 	connection.HasConversationInsights = perms.ConversationInsights
+	connection.HasAiCodeCommitDetails = perms.AiCodeCommitDetails
+}
+
+func probeAiCodeCommitDetails(apiClient *helper.ApiClient) bool {
+	commitHash := firstAiCodeCommitHash(apiClient)
+	if commitHash == "" {
+		return false
+	}
+	return probeEndpoint(apiClient, "analytics/ai-code/commits/"+commitHash)
+}
+
+func firstAiCodeCommitHash(apiClient *helper.ApiClient) string {
+	res, err := apiClient.Get("analytics/ai-code/commits?page=1&pageSize=1", nil, nil)
+	if err != nil || res == nil {
+		return ""
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return ""
+	}
+	body, readErr := io.ReadAll(res.Body)
+	if readErr != nil {
+		return ""
+	}
+	var response struct {
+		Items []struct {
+			CommitHash string `json:"commitHash"`
+		} `json:"items"`
+		Data []struct {
+			CommitHash string `json:"commitHash"`
+		} `json:"data"`
+	}
+	if jsonErr := json.Unmarshal(body, &response); jsonErr != nil {
+		return ""
+	}
+	if len(response.Items) > 0 {
+		return strings.TrimSpace(response.Items[0].CommitHash)
+	}
+	if len(response.Data) > 0 {
+		return strings.TrimSpace(response.Data[0].CommitHash)
+	}
+	return ""
 }
 
 // RefreshOptionalPermissions re-probes optional Cursor Admin API endpoints and updates
@@ -94,10 +144,11 @@ func RefreshOptionalPermissions(ctx stdctx.Context, br corectx.BasicRes, connect
 	changed = before != snapshotConnectionCapabilities(connection)
 
 	br.GetLogger().Info(
-		"cursor optional permissions refreshed: keyTier=%s bugbotReviews=%v conversationInsights=%v",
+		"cursor optional permissions refreshed: keyTier=%s bugbotReviews=%v conversationInsights=%v aiCodeCommitDetails=%v",
 		connection.KeyTier,
 		connection.HasBugbotReviews,
 		connection.HasConversationInsights,
+		connection.HasAiCodeCommitDetails,
 	)
 	return changed, nil
 }
