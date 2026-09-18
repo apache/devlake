@@ -233,6 +233,7 @@ func setupIssueV2Collector(apiCollector *api.StatefulApiCollector, data *JiraTas
 			query.Set("startAt", fmt.Sprintf("%v", reqData.Pager.Skip))
 			query.Set("maxResults", fmt.Sprintf("%v", reqData.Pager.Size))
 			query.Set("expand", "changelog")
+			query.Set("fields", "*all")
 			return query, nil
 		},
 		GetTotalPages: GetTotalPagesFromResponse,
