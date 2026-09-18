@@ -1,0 +1,2 @@
+connection_id,scope_id,conversation_id,title,tldr,overview,summary_bullets
+1,team,846952e0-0221-473b-bb1d-e5d016f071b1,Refactor analytics module,Extracted report generation into separate functions,Refactored the analytics module to improve maintainability.,"[""Created dedicated report generator class"",""Added unit tests for new functions""]"

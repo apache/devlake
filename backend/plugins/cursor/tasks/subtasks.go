@@ -104,6 +104,24 @@ var ExtractAiCodeCommitsMeta = plugin.SubTaskMeta{
 	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeCommitsMeta},
 }
 
+var CollectAiCodeCommitDetailsMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeCommitDetails",
+	EntryPoint:       CollectAiCodeCommitDetails,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect commit-detail blame and conversation metadata from the Cursor Enterprise API (skipped when commit-details is inaccessible)",
+	Dependencies:     []*plugin.SubTaskMeta{&ExtractAiCodeCommitsMeta},
+}
+
+var ExtractAiCodeCommitDetailsMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeCommitDetails",
+	EntryPoint:       ExtractAiCodeCommitDetails,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract commit-detail blame and conversations into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeCommitDetailsMeta},
+}
+
 var CollectAiCodeChangesMeta = plugin.SubTaskMeta{
 	Name:             "collectAiCodeChanges",
 	EntryPoint:       CollectAiCodeChanges,

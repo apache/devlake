@@ -32,6 +32,8 @@ func GetSubTaskMetas() []plugin.SubTaskMeta {
 		ExtractDailyUsageMeta,
 		CollectAiCodeCommitsMeta,
 		ExtractAiCodeCommitsMeta,
+		CollectAiCodeCommitDetailsMeta,
+		ExtractAiCodeCommitDetailsMeta,
 		CollectAiCodeChangesMeta,
 		ExtractAiCodeChangesMeta,
 		CollectBugbotReviewsMeta,
