@@ -50,6 +50,7 @@ type CursorConn struct {
 	KeyTier          string `mapstructure:"keyTier" json:"keyTier" gorm:"type:varchar(20)"`
 	HasBugbotReviews           bool   `mapstructure:"hasBugbotReviews" json:"hasBugbotReviews"`
 	HasConversationInsights    bool   `mapstructure:"hasConversationInsights" json:"hasConversationInsights"`
+	HasAiCodeCommitDetails     bool   `mapstructure:"hasAiCodeCommitDetails" json:"hasAiCodeCommitDetails"`
 }
 
 // SetupAuthentication uses HTTP Basic auth with the API key as username and an empty password.

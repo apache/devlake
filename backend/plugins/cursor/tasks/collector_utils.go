@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/log"
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/cursor/models"
 )
 
@@ -323,6 +324,16 @@ func computeEventId(timestamp, userEmail, conversationId, model string, chargedC
 	payload := fmt.Sprintf("%s|%s|%s|%s|%v|%v", timestamp, userEmail, conversationId, model, chargedCents, requestsCosts)
 	sum := sha256.Sum256([]byte(payload))
 	return hex.EncodeToString(sum[:])
+}
+
+func ignoreHTTPStatus404(res *http.Response) errors.Error {
+	if res.StatusCode == http.StatusUnauthorized {
+		return errors.Unauthorized.New("authentication failed, please check your AccessToken")
+	}
+	if res.StatusCode == http.StatusNotFound {
+		return helper.ErrIgnoreAndContinue
+	}
+	return nil
 }
 
 func normalizeNullableString(value string) string {

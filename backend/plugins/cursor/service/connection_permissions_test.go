@@ -32,10 +32,12 @@ func TestApplyOptionalPermissions_UpgradesEnterpriseAndSetsFlags(t *testing.T) {
 		Analytics:            true,
 		BugbotReviews:        true,
 		ConversationInsights: true,
+		AiCodeCommitDetails:  true,
 	})
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
 	require.True(t, conn.HasBugbotReviews)
 	require.True(t, conn.HasConversationInsights)
+	require.True(t, conn.HasAiCodeCommitDetails)
 }
 
 func TestApplyOptionalPermissions_DoesNotDowngradeEnterprise(t *testing.T) {
@@ -55,6 +57,7 @@ func TestApplyOptionalPermissions_DoesNotDowngradeEnterprise(t *testing.T) {
 	require.Equal(t, models.KeyTierEnterprise, conn.KeyTier)
 	require.False(t, conn.HasBugbotReviews)
 	require.False(t, conn.HasConversationInsights)
+	require.False(t, conn.HasAiCodeCommitDetails)
 }
 
 func TestSnapshotConnectionCapabilitiesDetectsChanges(t *testing.T) {

@@ -26,6 +26,17 @@
       "keepTime": true,
       "tags": [],
       "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
       "title": "Cursor BugBot Review Analytics",
       "type": "link",
       "url": "/d/cursor_bugbot"
@@ -97,168 +108,6 @@
         }
       ],
       "title": "Charged Amount (Selected Period)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Current billing cycle on-demand spend from /teams/spend",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 5
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(spend_cents), 0) / 100 AS \"On-Demand Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
-          "refId": "A"
-        }
-      ],
-      "title": "On-Demand Spend (Current Cycle)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Current billing cycle included (non-on-demand) spend from /teams/spend",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 5
-      },
-      "id": 301,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(included_spend_cents), 0) / 100 AS \"Included Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
-          "refId": "A"
-        }
-      ],
-      "title": "Included Spend (Current Cycle)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Difference between total cycle spend (on-demand + included) from /teams/spend and sum of chargedCents for events since billing_cycle_start. Positive means spend exceeds collected events (backfill may be incomplete).",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 5
-      },
-      "id": 302,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT (\n  COALESCE((SELECT SUM(spend_cents + included_spend_cents) FROM _tool_cursor_user_spend\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'), 0)\n  - COALESCE((SELECT SUM(charged_cents) FROM _tool_cursor_usage_events\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n      AND event_time >= (SELECT MIN(billing_cycle_start) FROM _tool_cursor_user_spend\n        WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}')), 0)\n) / 100 AS \"Reconciliation Delta\"",
-          "refId": "A"
-        }
-      ],
-      "title": "Reconciliation Delta",
       "type": "stat"
     },
     {
@@ -421,6 +270,168 @@
         }
       ],
       "title": "Inactive Users (Last 7 Days)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Current billing cycle on-demand spend from /teams/spend",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(spend_cents), 0) / 100 AS \"On-Demand Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "On-Demand Spend (Current Cycle)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Current billing cycle included (non-on-demand) spend from /teams/spend",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "id": 301,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(included_spend_cents), 0) / 100 AS \"Included Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Included Spend (Current Cycle)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Difference between total cycle spend (on-demand + included) from /teams/spend and sum of chargedCents for events since billing_cycle_start. Positive means spend exceeds collected events (backfill may be incomplete).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 302,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT (\n  COALESCE((SELECT SUM(spend_cents + included_spend_cents) FROM _tool_cursor_user_spend\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'), 0)\n  - COALESCE((SELECT SUM(charged_cents) FROM _tool_cursor_usage_events\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n      AND event_time >= (SELECT MIN(billing_cycle_start) FROM _tool_cursor_user_spend\n        WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}')), 0)\n) / 100 AS \"Reconciliation Delta\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Reconciliation Delta",
       "type": "stat"
     },
     {
@@ -1252,922 +1263,26 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "datasource": "mysql",
       "gridPos": {
-        "h": 1,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 44
       },
-      "id": 300,
-      "title": "Enterprise AI Code Tracking",
-      "type": "row"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Share of committed lines attributed to TAB, Composer, and non-AI coding from GET /analytics/ai-code/commits (Enterprise API). Requires an enterprise key.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
-          },
-          "unit": "locale",
-          "decimals": 0
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "TAB"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Composer"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "purple",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Non-AI"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "text",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 45
-      },
-      "id": 301,
+      "id": 330,
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
+        "content": "**Enterprise-only metrics** (AI code tracking, repo/PR attribution, conversation insights) are on [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise?${__url_time_range}). Requires an enterprise API key.",
+        "mode": "markdown"
       },
       "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT DATE(ts) AS time,\n  metric,\n  SUM(value) AS value\nFROM (\n  SELECT COALESCE(commit_ts, ingested_at, created_at) AS ts,\n    'TAB' AS metric,\n    tab_lines_added AS value\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, ingested_at, created_at),\n    'Composer',\n    composer_lines_added\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, ingested_at, created_at),\n    'Non-AI',\n    COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0))\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n) src\nGROUP BY DATE(ts), metric\nORDER BY 1",
-          "refId": "A"
-        }
-      ],
-      "title": "Committed Lines by AI Source",
-      "type": "timeseries",
-      "transformations": [
-        {
-          "id": "prepareTimeSeries",
-          "options": {
-            "format": "many"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "^value (.+)$",
-            "renamePattern": "$1"
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Distribution of commits by source channel (IDE, CLI, Cloud) from GET /analytics/ai-code/commits",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "locale",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 12,
-        "y": 45
-      },
-      "id": 302,
-      "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT CASE LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown'))\n    WHEN 'ide' THEN 'IDE'\n    WHEN 'cli' THEN 'CLI'\n    WHEN 'cloud' THEN 'Cloud'\n    ELSE 'Unknown'\n  END AS \"Source\",\n  COUNT(*) AS \"Commits\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY 1\nORDER BY 2 DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Commits by Source",
-      "type": "piechart"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Users ranked by TAB + Composer lines committed in the selected period",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 45
-      },
-      "id": 303,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT user_email AS \"User\",\n  SUM(tab_lines_added + composer_lines_added) AS \"AI Lines Added\",\n  SUM(total_lines_added) AS \"Total Lines Added\",\n  ROUND(SUM(tab_lines_added + composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"AI Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY user_email\nHAVING SUM(total_lines_added) > 0\nORDER BY SUM(tab_lines_added + composer_lines_added) DESC\nLIMIT 15",
-          "refId": "A"
-        }
-      ],
-      "title": "Top Contributors by AI-Assisted Lines",
-      "type": "table"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Overall share of committed lines from TAB, Composer, and manual coding in the selected period",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 1,
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 24,
-        "x": 0,
-        "y": 53
-      },
-      "id": 304,
-      "options": {
-        "displayMode": "gradient",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "text": {}
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT 'TAB' AS \"Source\",\n  ROUND(SUM(tab_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nUNION ALL\nSELECT 'Composer',\n  ROUND(SUM(composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1)\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nUNION ALL\nSELECT 'Non-AI',\n  ROUND(SUM(COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0))) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1)\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
-          "refId": "A"
-        }
-      ],
-      "title": "AI Line Coverage (Period)",
-      "type": "bargauge",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
-              {
-                "fieldName": "Source",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Share %",
-                "handlerKey": "field.value"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Repositories ranked by AI-assisted committed lines (TAB + Composer) in the selected period",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AI Share %"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 90
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Repo"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 480
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Commits"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 75
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Lines"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 70
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 57
-      },
-      "id": 305,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COALESCE(NULLIF(repo_name, ''), 'Unknown') AS \"Repo\",\n  COUNT(*) AS \"Commits\",\n  SUM(total_lines_added) AS \"Lines\",\n  ROUND(SUM(tab_lines_added + composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"AI Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY COALESCE(NULLIF(repo_name, ''), 'Unknown')\nHAVING SUM(total_lines_added) > 0\nORDER BY SUM(tab_lines_added + composer_lines_added) DESC\nLIMIT 15",
-          "refId": "A"
-        }
-      ],
-      "title": "Top Repos by AI-Assisted Lines",
-      "type": "table"
-    },
-    {
-      "datasource": "mysql",
-      "description": "AI line attribution per pull request (commits joined via pull_request_commits and merge commits). Requires GitHub/GitLab blueprint data. Usage/cost is not included — Cursor usage events have no PR or repo linkage.",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AI Share %"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 90
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Repo"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 200
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "PR #"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 70
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Title"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 420
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 80
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Commits"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 75
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Lines"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "custom.width",
-                "value": 70
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "URL"
-            },
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 65
-      },
-      "id": 306,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  pr.pull_request_key AS \"PR #\",\n  pr.status AS \"Status\",\n  COALESCE(r.name, c.repo_name) AS \"Repo\",\n  pr.title AS \"Title\",\n  pr.url AS \"URL\",\n  COUNT(DISTINCT c.commit_hash) AS \"Commits\",\n  SUM(c.total_lines_added) AS \"Lines\",\n  ROUND(SUM(c.tab_lines_added + c.composer_lines_added) * 100.0 / NULLIF(SUM(c.total_lines_added), 0), 1) AS \"AI Share %\"\nFROM _tool_cursor_ai_code_commits c\nJOIN (\n  SELECT prc.commit_sha, prc.pull_request_id\n  FROM pull_request_commits prc\n  UNION\n  SELECT pr.merge_commit_sha, pr.id\n  FROM pull_requests pr\n  WHERE pr.merge_commit_sha IS NOT NULL AND pr.merge_commit_sha != ''\n) pr_map ON pr_map.commit_sha = c.commit_hash\nJOIN pull_requests pr ON pr.id = pr_map.pull_request_id\nLEFT JOIN repos r ON r.id = pr.base_repo_id\nWHERE $__timeFilter(COALESCE(c.commit_ts, c.ingested_at, c.created_at))\n  AND c.connection_id = ${connection_id}\n  AND c.scope_id = '${scope_id}'\nGROUP BY COALESCE(r.name, c.repo_name), pr.pull_request_key, pr.title, pr.url, pr.status\nHAVING SUM(c.total_lines_added) > 0\nORDER BY SUM(c.tab_lines_added + c.composer_lines_added) DESC\nLIMIT 20",
-          "refId": "A"
-        }
-      ],
-      "title": "PR AI Line Share",
-      "type": "table"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 73
-      },
-      "id": 320,
-      "title": "Conversation Insights",
-      "type": "row"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Work category mix for the selected dashboard period (stacked share of conversation counts).",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 1,
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 74
-      },
-      "id": 326,
-      "options": {
-        "displayMode": "gradient",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "left",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {
-          "titleSize": 12,
-          "valueSize": 12
-        },
-        "valueMode": "color",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Category,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'categories'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Category,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Work Categories",
-      "type": "bargauge",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
-              {
-                "fieldName": "Category",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Share %",
-                "handlerKey": "field.value"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Work type mix for the selected dashboard period. KTLO = Keep The Lights On (maintenance, tech debt, dependency updates).",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 1,
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 74
-      },
-      "id": 325,
-      "options": {
-        "displayMode": "gradient",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "top",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {
-          "titleSize": 12,
-          "valueSize": 12
-        },
-        "valueMode": "color",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'ktlo' THEN 'Maintenance (KTLO)'\n      WHEN 'maintenance' THEN 'Maintenance (KTLO)'\n      WHEN 'new_feature' THEN 'New Features'\n      WHEN 'bug' THEN 'Bug Fixing'\n      WHEN 'bug_fix' THEN 'Bug Fixing'\n      ELSE dimension_value\n    END AS `Work Type`,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'workTypes'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT `Work Type`,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Work Types",
-      "type": "bargauge",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
-              {
-                "fieldName": "Work Type",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Share %",
-                "handlerKey": "field.value"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Conversation intent mix for the selected dashboard period (stacked share of conversation counts).",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 1,
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 80
-      },
-      "id": 321,
-      "options": {
-        "displayMode": "gradient",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "top",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {
-          "titleSize": 12,
-          "valueSize": 12
-        },
-        "valueMode": "color",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Intent,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'intents'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Intent,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Conversation Intents",
-      "type": "bargauge",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
-              {
-                "fieldName": "Intent",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Share %",
-                "handlerKey": "field.value"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "datasource": "mysql",
-      "description": "Task complexity mix for the selected dashboard period (stacked share of conversation counts).",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 1,
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 80
-      },
-      "id": 323,
-      "options": {
-        "displayMode": "gradient",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "top",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {
-          "titleSize": 12,
-          "valueSize": 12
-        },
-        "valueMode": "color",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        }
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'low' THEN 'Low'\n      WHEN 'medium' THEN 'Medium'\n      WHEN 'high' THEN 'High'\n      WHEN 'trivial' THEN 'Trivial'\n      ELSE dimension_value\n    END AS Complexity,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'complexity'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT Complexity,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY FIELD(Complexity, 'Trivial', 'Low', 'Medium', 'High'), cnt DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Task Complexity",
-      "type": "bargauge",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
-              {
-                "fieldName": "Complexity",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Share %",
-                "handlerKey": "field.value"
-              }
-            ]
-          }
-        }
-      ]
+      "title": "",
+      "type": "text"
     },
     {
       "collapsed": true,
@@ -2175,7 +1290,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 47
       },
       "id": 104,
       "title": "Diagnostics",
@@ -2183,7 +1298,7 @@
       "panels": [
         {
           "datasource": "mysql",
-          "description": "Row counts and latest timestamps per _tool_cursor_* table for pipeline health monitoring",
+          "description": "Row counts and latest timestamps per Cursor Admin API tool table",
           "fieldConfig": {
             "defaults": {},
             "overrides": []
@@ -2192,7 +1307,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 87
+            "y": 48
           },
           "id": 40,
           "options": {
@@ -2208,7 +1323,7 @@
               "datasource": "mysql",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_commits', COUNT(*), MAX(COALESCE(commit_ts, ingested_at, created_at))\nFROM _tool_cursor_ai_code_commits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(COALESCE(ingested_at, created_at))\nFROM _tool_cursor_ai_code_changes\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_conversation_insights', COUNT(*), MAX(COALESCE(metric_date, period_end))\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+              "rawSql": "SELECT '_tool_cursor_usage_events' AS table_name, COUNT(*) AS row_count, MAX(event_time) AS latest\nFROM _tool_cursor_usage_events\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_user_spend', COUNT(*), MAX(collected_at)\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_members', COUNT(*), NULL\nFROM _tool_cursor_members\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_daily_usage', COUNT(*), MAX(usage_date)\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
               "refId": "A"
             }
           ],
@@ -2275,6 +1390,6 @@
   "timezone": "utc",
   "title": "Cursor Usage & Cost",
   "uid": "cursor_usage",
-  "version": 16,
+  "version": 17,
   "weekStart": ""
 }
