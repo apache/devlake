@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,12 +30,14 @@ import (
 // issue, while an incremental run adds an updated_at filter so unchanged issues
 // are skipped instead of triggering a request each run.
 func TestIssuesToCollectChildrenClauses(t *testing.T) {
-	// full sync: no `since` -> select/from/where(connection,team) only
+	// Full sync includes a stable input ordering for durable checkpoints.
 	full := issuesToCollectChildrenClauses(1, "team-1", nil)
-	assert.Len(t, full, 3)
+	assert.Len(t, full, 4)
+	assert.Contains(t, full, dal.Orderby("id ASC"))
 
 	// incremental: a `since` adds the updated_at filter clause
 	since := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
 	incremental := issuesToCollectChildrenClauses(1, "team-1", &since)
-	assert.Len(t, incremental, 4)
+	assert.Len(t, incremental, 5)
+	assert.Contains(t, incremental, dal.Orderby("id ASC"))
 }

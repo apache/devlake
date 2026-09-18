@@ -241,7 +241,7 @@ func (scopeSrv *ScopeSrvHelper[C, S, SC]) deleteScopeData(scope plugin.ToolLayer
 			params = []interface{}{rawDataParams}
 		} else {
 			// framework tables: should check plugin, connection and scope
-			if table == (models.CollectorLatestState{}.TableName()) {
+			if table == (models.CollectorLatestState{}.TableName()) || table == (models.GraphqlCollectorState{}.TableName()) {
 				// diff sync state
 				where = "raw_data_table LIKE ? AND raw_data_params = ?"
 			} else {
@@ -304,6 +304,9 @@ func (scopeSrv *ScopeSrvHelper[C, S, SC]) getAffectedTables() ([]string, errors.
 	}
 	// additional tables
 	tables = append(tables, models.CollectorLatestState{}.TableName())
+	if scopeSrv.db.HasTable(&models.GraphqlCollectorState{}) {
+		tables = append(tables, models.GraphqlCollectorState{}.TableName())
+	}
 	scopeSrv.log.Debug("Discovered %d tables used by plugin \"%s\": %v", len(tables), scopeSrv.pluginName, tables)
 	return tables, nil
 }

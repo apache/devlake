@@ -60,6 +60,10 @@ func (c *DalCursorIterator) HasNext() bool {
 	return c.cursor.Next()
 }
 
+// Err distinguishes an exhausted cursor from a failed read. Optional on
+// Iterator for compatibility with existing in-memory/plugin iterators.
+func (c *DalCursorIterator) Err() error { return c.cursor.Err() }
+
 // Fetch if batching is disabled, it'll read a single row, otherwise it'll read as many rows up to the batch size, and the
 // runtime return type will be []interface{}. Note, HasNext needs to have been called before invoking this.
 func (c *DalCursorIterator) Fetch() (interface{}, errors.Error) {

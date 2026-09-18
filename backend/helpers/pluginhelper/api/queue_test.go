@@ -58,28 +58,34 @@ func TestQueue(t *testing.T) {
 	require.Equal(t, "b", data)
 	require.Equal(t, q.GetCount(), int64(0))
 
-	empty := false
-	waited := false
+	empty := make(chan struct{})
+	waited := make(chan struct{})
 	go func() {
+		defer close(empty)
 		require.Equal(t, q.GetCountWithWorkingBlock(), int64(1))
 		data, ok := q.PullWithWorkingBlock().Data().(string)
 		require.True(t, ok)
 		require.Equal(t, data, "c")
 		dataNode := q.PullWithWorkingBlock()
 		require.Equal(t, dataNode, nil)
-		empty = true
 	}()
 
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		q.Push(NewQueueIteratorNode("c"))
-		waited = true
+		close(waited)
 		q.Finish(3)
 	}()
 
-	for !empty {
-		time.Sleep(time.Millisecond)
+	select {
+	case <-empty:
+	case <-time.After(5 * time.Second):
+		t.Fatal("queue consumer did not finish")
 	}
 
-	require.True(t, waited)
+	select {
+	case <-waited:
+	default:
+		t.Fatal("queue producer did not finish")
+	}
 }

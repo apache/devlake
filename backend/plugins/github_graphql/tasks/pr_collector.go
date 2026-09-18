@@ -228,6 +228,7 @@ func CollectPrs(taskCtx plugin.SubTaskContext) errors.Error {
 	cursor, err := db.Cursor(
 		dal.From(models.GithubPullRequest{}.TableName()),
 		dal.Where("state = ? AND repo_id = ? AND connection_id=?", "OPEN", data.Options.GithubId, data.Options.ConnectionId),
+		dal.Orderby("github_id ASC"),
 	)
 	if err != nil {
 		return err

@@ -134,10 +134,12 @@ func (apiClient *GraphqlAsyncClient) SetMaxRetry(
 
 // updateRateRemaining call getRateRemaining to update rateRemaining periodically
 func (apiClient *GraphqlAsyncClient) updateRateRemaining(rateRemaining int, resetAt *time.Time) {
+	apiClient.rateExhaustCond.L.Lock()
 	apiClient.rateRemaining = rateRemaining
 	if rateRemaining > 0 {
 		apiClient.rateExhaustCond.Signal()
 	}
+	apiClient.rateExhaustCond.L.Unlock()
 	go func() {
 		if apiClient.getRateRemaining == nil {
 			return
@@ -157,7 +159,9 @@ func (apiClient *GraphqlAsyncClient) updateRateRemaining(rateRemaining int, rese
 				apiClient.logger.Info("failed to update graphql rate limit, will retry next cycle: %v", err)
 				// Floor the reused value so Signal() always fires; prevents deadlock when
 				// rateRemaining is 0 and the rate-limit endpoint keeps erroring (e.g. GHE).
+				apiClient.rateExhaustCond.L.Lock()
 				fallback := apiClient.rateRemaining
+				apiClient.rateExhaustCond.L.Unlock()
 				if fallback < defaultRateLimitConst {
 					fallback = defaultRateLimitConst
 				}
@@ -179,6 +183,9 @@ func (apiClient *GraphqlAsyncClient) SetGetRateCost(getRateCost func(q interface
 // []graphql.DataError are the errors returned in response body
 // errors.Error is other error
 func (apiClient *GraphqlAsyncClient) Query(q interface{}, variables map[string]interface{}) ([]graphql.DataError, error) {
+	if apiClient.maxRetry <= 0 {
+		return nil, errors.BadInput.New("GraphQL retry attempts must be positive")
+	}
 	apiClient.waitGroup.Add(1)
 	defer apiClient.waitGroup.Done()
 	apiClient.mu.Lock()
@@ -186,7 +193,16 @@ func (apiClient *GraphqlAsyncClient) Query(q interface{}, variables map[string]i
 
 	apiClient.rateExhaustCond.L.Lock()
 	defer apiClient.rateExhaustCond.L.Unlock()
+	stopWake := context.AfterFunc(apiClient.ctx, func() {
+		apiClient.rateExhaustCond.L.Lock()
+		apiClient.rateExhaustCond.Broadcast()
+		apiClient.rateExhaustCond.L.Unlock()
+	})
+	defer stopWake()
 	for apiClient.rateRemaining <= 0 {
+		if err := apiClient.ctx.Err(); err != nil {
+			return nil, err
+		}
 		apiClient.logger.Info(`rate limit remaining exhausted, waiting for next period.`)
 		apiClient.rateExhaustCond.Wait()
 	}
@@ -197,17 +213,26 @@ func (apiClient *GraphqlAsyncClient) Query(q interface{}, variables map[string]i
 	for retryTime < apiClient.maxRetry {
 		select {
 		case <-apiClient.ctx.Done():
-			return nil, nil
+			return nil, apiClient.ctx.Err()
 		default:
 			var dataErrors []graphql.DataError
-			dataErrors, err := apiClient.client.Query(apiClient.ctx, q, variables)
+			dataErrors, err = apiClient.client.Query(apiClient.ctx, q, variables)
 			if err == context.Canceled {
 				return nil, err
 			}
 			if err != nil {
 				apiClient.logger.Warn(err, "retry #%d graphql calling after %ds", retryTime, apiClient.waitBeforeRetry/time.Second)
 				retryTime++
-				<-time.After(apiClient.waitBeforeRetry)
+				if retryTime >= apiClient.maxRetry {
+					break
+				}
+				timer := time.NewTimer(apiClient.waitBeforeRetry)
+				select {
+				case <-apiClient.ctx.Done():
+					timer.Stop()
+					return nil, apiClient.ctx.Err()
+				case <-timer.C:
+				}
 				continue
 			}
 			if dataErrors != nil {
@@ -230,17 +255,13 @@ func (apiClient *GraphqlAsyncClient) NextTick(task func() errors.Error, taskErro
 	// to make sure task will be enqueued
 	apiClient.waitGroup.Add(1)
 	go func() {
+		defer apiClient.waitGroup.Done()
 		select {
 		case <-apiClient.ctx.Done():
+			taskErrorChecker(apiClient.ctx.Err())
 			return
 		default:
-			go func() {
-				// if set waitGroup done here, a serial of goroutine will block until sub-goroutine finish.
-				// But if done out of this go func, so task will run after waitGroup finish
-				// I have no idea about this now...
-				defer apiClient.waitGroup.Done()
-				taskErrorChecker(task())
-			}()
+			taskErrorChecker(task())
 		}
 	}()
 }

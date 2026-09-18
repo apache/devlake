@@ -35,6 +35,7 @@ func issuesToCollectChildrenClauses(connectionId uint64, teamId string, since *t
 		dal.Select("id"),
 		dal.From(&models.LinearIssue{}),
 		dal.Where("connection_id = ? AND team_id = ?", connectionId, teamId),
+		dal.Orderby("id ASC"),
 	}
 	if since != nil {
 		clauses = append(clauses, dal.Where("updated_at > ?", *since))

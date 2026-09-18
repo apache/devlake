@@ -70,6 +70,7 @@ func (m *StatefulApiCollector) InitCollector(args ApiCollectorArgs) errors.Error
 // InitGraphQLCollector appends a new GraphQL collector to the list
 func (m *StatefulApiCollector) InitGraphQLCollector(args GraphqlCollectorArgs) errors.Error {
 	args.RawDataSubTaskArgs = m.RawDataSubTaskArgs
+	args.checkpointIndex = len(m.nestedCollectors)
 	// highest priority: caller may hardcode the incremental flag.
 	//   e.g. github graphql pr_collector need to refetch OPENing PRs existing in the database
 	if !args.Incremental {
@@ -82,6 +83,11 @@ func (m *StatefulApiCollector) InitGraphQLCollector(args GraphqlCollectorArgs) e
 			args.Incremental = m.CollectorStateManager.IsIncremental()
 		}
 	}
+	// A shared raw scope is flushed only once, by the first collector. A later
+	// collector must not erase data whose completed marker will survive restart.
+	if args.checkpointIndex > 0 {
+		args.Incremental = true
+	}
 
 	graphqlCollector, err := NewGraphqlCollector(args)
 	if err != nil {
@@ -93,8 +99,23 @@ func (m *StatefulApiCollector) InitGraphQLCollector(args GraphqlCollectorArgs) e
 
 // Execute all nested collectors and save the state if all collectors succeed
 func (m *StatefulApiCollector) Execute() errors.Error {
+	raw, err := NewRawDataSubTask(m.RawDataSubTaskArgs)
+	if err != nil {
+		return err
+	}
+	release, err := acquireGraphqlScope(raw.table, raw.params)
+	if err != nil {
+		return err
+	}
+	defer release()
 	for _, subtask := range m.nestedCollectors {
+		if graphql, ok := subtask.(*GraphqlCollector); ok {
+			graphql.args.scopeLocked = true
+		}
 		err := subtask.Execute()
+		if graphql, ok := subtask.(*GraphqlCollector); ok {
+			graphql.args.scopeLocked = false
+		}
 		if err != nil {
 			return err
 		}

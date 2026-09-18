@@ -152,5 +152,6 @@ func All() []plugin.MigrationScript {
 		new(addSprintVelocityFields),
 		new(addBlueprintIdIndexToPipelines),
 		new(expandDomainTextColumns),
+		new(addGraphqlCollectorStates),
 	}
 }

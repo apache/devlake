@@ -134,6 +134,7 @@ func RunTask(
 	}
 
 	// start execution
+	task.BeganAt = &beganAt
 	logger.Info("start executing task: %d", task.ID)
 	dbe := db.UpdateColumns(task, []dal.DalSet{
 		{ColumnName: "status", Value: models.TASK_RUNNING},
@@ -248,6 +249,11 @@ func RunPluginSubTasks(
 		}
 	}
 
+	ctx = plugin.WithTaskID(ctx, task.ID)
+	ctx = plugin.WithTaskCode(ctx, task.Plugin)
+	if task.BeganAt != nil {
+		ctx = plugin.WithTaskStartedAt(ctx, *task.BeganAt)
+	}
 	taskCtx := contextimpl.NewDefaultTaskContext(ctx, basicRes, task.Plugin, subtasksFlag, progress)
 	if closeablePlugin, ok := pluginTask.(plugin.CloseablePluginTask); ok {
 		defer closeablePlugin.Close(taskCtx)
@@ -294,8 +300,16 @@ func RunPluginSubTasks(
 		}
 		subtask = append(subtask, s)
 	}
-	if err := basicRes.GetDal().CreateOrUpdate(subtask); err != nil {
-		basicRes.GetLogger().Error(err, "error writing subtask list to DB")
+	for i := range subtask {
+		count, err := basicRes.GetDal().Count(dal.From(&models.Subtask{}), dal.Where("task_id = ? AND name = ?", task.ID, subtask[i].Name))
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			if err := basicRes.GetDal().Create(&subtask[i]); err != nil {
+				return err
+			}
+		}
 	}
 
 	// execute subtasks in order
@@ -324,7 +338,7 @@ func RunPluginSubTasks(
 		if !subtaskMeta.ForceRunOnResume {
 			if task.ID > 0 {
 				sfc := errors.Must1(basicRes.GetDal().Count(
-					dal.From(&models.Subtask{}), dal.Where("task_id = ? AND name = ? AND finished_at IS NOT NULL", task.ID, subtaskMeta.Name),
+					dal.From(&models.Subtask{}), dal.Where("task_id = ? AND name = ? AND finished_at IS NOT NULL AND is_failed = ?", task.ID, subtaskMeta.Name, false),
 				),
 				)
 				subtaskFinished = sfc > 0
@@ -421,29 +435,40 @@ func runSubtask(
 		Number:  subtaskNumber,
 		BeganAt: &beginAt,
 	}
-	recordSubtask(basicRes, subtask)
-	// defer to record subtask status
-	defer func() {
-		finishedAt := time.Now()
+	if err := recordSubtask(basicRes, subtask); err != nil {
+		return err
+	}
+	// A panic leaves this subtask unfinished. Only successful execution may
+	// create the marker used to skip work after a process restart.
+	err := entryPoint(ctx)
+	finishedAt := time.Now()
+	subtask.IsFailed = err != nil
+	if err == nil {
 		subtask.FinishedAt = &finishedAt
-		subtask.SpentSeconds = finishedAt.Unix() - beginAt.Unix()
-
-		recordSubtask(basicRes, subtask)
-	}()
-	return entryPoint(ctx)
+	} else {
+		subtask.Message = err.Error()
+	}
+	subtask.SpentSeconds = finishedAt.Unix() - beginAt.Unix()
+	if recordErr := recordSubtask(basicRes, subtask); recordErr != nil {
+		if err == nil {
+			return recordErr
+		}
+		return errors.Default.Combine([]error{err, recordErr})
+	}
+	return err
 }
 
-func recordSubtask(basicRes context.BasicRes, subtask *models.Subtask) {
+func recordSubtask(basicRes context.BasicRes, subtask *models.Subtask) errors.Error {
 	where := dal.Where("task_id = ? and name = ?", subtask.TaskID, subtask.Name)
-	if err := basicRes.GetDal().UpdateColumns(subtask, []dal.DalSet{
+	return basicRes.GetDal().UpdateColumns(subtask, []dal.DalSet{
 		{ColumnName: "began_at", Value: subtask.BeganAt},
 		{ColumnName: "finished_at", Value: subtask.FinishedAt},
 		{ColumnName: "spent_seconds", Value: subtask.SpentSeconds},
 		//{ColumnName: "finished_records", Value: subtask.FinishedRecords}, // FinishedRecords is zero always.
 		{ColumnName: "number", Value: subtask.Number},
-	}, where); err != nil {
-		basicRes.GetLogger().Error(err, "error writing subtask %d status to DB: %v", subtask.ID)
-	}
+		{ColumnName: "is_failed", Value: subtask.IsFailed},
+		{ColumnName: "message", Value: subtask.Message},
+	}, where)
 }
 
 func getTaskLogger(parentLogger log.Logger, task *models.Task) (log.Logger, errors.Error) {

@@ -18,12 +18,14 @@ limitations under the License.
 package api
 
 import (
+	gocontext "context"
 	"time"
 
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models"
+	"github.com/apache/devlake/core/plugin"
 )
 
 // CollectorStateManager manages the state of the collector. It is used to determine whether
@@ -66,6 +68,11 @@ func NewCollectorStateManager(basicRes context.BasicRes, syncPolicy *models.Sync
 
 	// fullsync by default
 	now := time.Now()
+	if exec, ok := basicRes.(interface{ GetContext() gocontext.Context }); ok {
+		if started, found := plugin.TaskStartedAt(exec.GetContext()); found {
+			now = started
+		}
+	}
 	stateManager = &CollectorStateManager{
 		db:            db,
 		state:         state,

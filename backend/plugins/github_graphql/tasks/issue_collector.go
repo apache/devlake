@@ -173,6 +173,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	cursor, err := db.Cursor(
 		dal.From(models.GithubIssue{}.TableName()),
 		dal.Where("state = ? AND repo_id = ? AND connection_id=?", "OPEN", data.Options.GithubId, data.Options.ConnectionId),
+		dal.Orderby("github_id ASC"),
 	)
 	if err != nil {
 		return err
@@ -219,7 +220,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			return query, variables, nil
 		},
-		ResponseParser: func(queryWrapper any) (messages []json.RawMessage, err errors.Error) {
+		ResponseParserWithDal: func(queryWrapper any, tx dal.Dal) (messages []json.RawMessage, err errors.Error) {
 			query := queryWrapper.(*GraphqlQueryIssueDetailWrapper)
 			v, ok := requestedIssuesByQuery.LoadAndDelete(query)
 			var requestedIssues map[int]missingGithubIssueRef
@@ -237,7 +238,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			missingIssues := findMissingGithubIssues(requestedIssues, issues)
 			if len(missingIssues) > 0 {
-				err = cleanupMissingGithubIssues(db, taskCtx.GetLogger(), missingIssues)
+				err = cleanupMissingGithubIssues(tx, taskCtx.GetLogger(), missingIssues)
 			}
 			return
 		},

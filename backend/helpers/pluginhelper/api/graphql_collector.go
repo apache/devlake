@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/apache/devlake/core/dal"
@@ -78,17 +79,30 @@ type GraphqlCollectorArgs struct {
 	// GetPageInfo is to tell `GraphqlCollector` is page information
 	GetPageInfo func(query interface{}, args *GraphqlCollectorArgs) (*GraphqlQueryPageInfo, error)
 	BatchSize   int
-	// one of ResponseParser and ResponseParserEvenWhenDataErrors is required to parse response
-	ResponseParser    func(queryWrapper interface{}) ([]json.RawMessage, errors.Error)
-	IgnoreQueryErrors bool
+	// Exactly one of ResponseParser and ResponseParserWithDal is required.
+	ResponseParser func(queryWrapper interface{}) ([]json.RawMessage, errors.Error)
+	// ResponseParserWithDal must use the supplied transaction for all DB side
+	// effects. They commit atomically with raw rows and the input checkpoint.
+	ResponseParserWithDal func(queryWrapper interface{}, db dal.Dal) ([]json.RawMessage, errors.Error)
+	IgnoreQueryErrors     bool
+	// Stable position when a subtask contains multiple collectors sharing a table.
+	checkpointIndex    int
+	scopeLocked        bool
+	checkpointContract string
+	inputDigest        string
 }
 
 // GraphqlCollector help you collect data from Graphql services
 type GraphqlCollector struct {
 	*RawDataSubTask
-	args         *GraphqlCollectorArgs
-	workerErrors []error
-	batchSave    *BatchSave
+	args             *GraphqlCollectorArgs
+	workerErrors     []error
+	batchSave        *BatchSave
+	taskID           uint64
+	scopeHash        string
+	errorsMu         sync.Mutex
+	pageMu           sync.Mutex
+	expectedRawCount *int64
 }
 
 // ErrFinishCollect is an error which will finish this collector
@@ -99,6 +113,9 @@ var ErrFinishCollect = errors.Default.New("finish collect")
 // of response we want to save, GraphqlCollector will collect them from remote server and store them into database.
 func NewGraphqlCollector(args GraphqlCollectorArgs) (*GraphqlCollector, errors.Error) {
 	// process args
+	if args.BuildQuery == nil || args.InputStep < 0 || args.PageSize < 0 || args.BatchSize < 0 {
+		return nil, errors.BadInput.New("GraphQL BuildQuery is required and collection sizes must not be negative")
+	}
 	rawDataSubTask, err := NewRawDataSubTask(args.RawDataSubTaskArgs)
 	if err != nil {
 		return nil, err
@@ -106,8 +123,11 @@ func NewGraphqlCollector(args GraphqlCollectorArgs) (*GraphqlCollector, errors.E
 	if args.GraphqlClient == nil {
 		return nil, errors.Default.New("ApiClient is required")
 	}
-	if args.ResponseParser == nil {
-		return nil, errors.Default.New("one of ResponseParser and ResponseParserWithDataErrors is required")
+	if args.ResponseParser == nil && args.ResponseParserWithDal == nil {
+		return nil, errors.Default.New("one of ResponseParser and ResponseParserWithDal is required")
+	}
+	if args.ResponseParser != nil && args.ResponseParserWithDal != nil {
+		return nil, errors.BadInput.New("only one GraphQL response parser may be supplied")
 	}
 	if args.BatchSize == 0 {
 		args.BatchSize = 100
@@ -118,6 +138,7 @@ func NewGraphqlCollector(args GraphqlCollectorArgs) (*GraphqlCollector, errors.E
 	apiCollector := &GraphqlCollector{
 		RawDataSubTask: rawDataSubTask,
 		args:           &args,
+		taskID:         plugin.TaskID(args.Ctx.GetContext()),
 		batchSave: errors.Must1(NewBatchSave(
 			args.Ctx,
 			reflect.TypeOf(&RawData{}),
@@ -130,6 +151,45 @@ func NewGraphqlCollector(args GraphqlCollectorArgs) (*GraphqlCollector, errors.E
 
 // Execute api collection
 func (collector *GraphqlCollector) Execute() errors.Error {
+	inputClosed := false
+	if collector.args.Input != nil {
+		defer func() {
+			if !inputClosed {
+				_ = collector.args.Input.Close()
+			}
+		}()
+	}
+	if err := collector.args.Ctx.GetContext().Err(); err != nil {
+		return errors.Convert(err)
+	}
+	if !collector.args.scopeLocked {
+		release, err := acquireGraphqlScope(collector.table, collector.params)
+		if err != nil {
+			return err
+		}
+		defer release()
+	}
+	if collector.taskID != 0 {
+		binary, err := graphqlBinaryIdentity()
+		if err != nil {
+			return errors.Convert(err)
+		}
+		contract, err := json.Marshal([]interface{}{binary, plugin.TaskCode(collector.args.Ctx.GetContext()), collector.args.InputStep, collector.args.PageSize, collector.args.GetPageInfo != nil})
+		if err != nil {
+			return errors.Convert(err)
+		}
+		collector.args.checkpointContract = graphqlCollectorInputHash(string(contract))
+		if collector.args.Input != nil {
+			inputClosed = true
+			staged, digest, err := stageGraphqlInput(collector.args.Ctx.GetContext(), collector.args.Input)
+			if err != nil {
+				return err
+			}
+			collector.args.Input = staged
+			collector.args.inputDigest = digest
+			inputClosed = false
+		}
+	}
 	logger := collector.args.Ctx.GetLogger()
 	logger.Info("start graphql collection")
 
@@ -139,18 +199,21 @@ func (collector *GraphqlCollector) Execute() errors.Error {
 	if err != nil {
 		return errors.Default.Wrap(err, "error running auto-migrate")
 	}
-	// flush data if not incremental collection
-	if !collector.args.Incremental {
-		err = db.Delete(&RawData{}, dal.From(collector.table), dal.Where("params = ?", collector.params))
-		if err != nil {
-			return errors.Default.Wrap(err, "error deleting data from collector")
+	completed, err := collector.prepareCheckpoint()
+	if err != nil {
+		return err
+	}
+	if completed {
+		if collector.args.Input != nil {
+			inputClosed = true
+			return collector.args.Input.Close()
 		}
+		return nil
 	}
 
 	collector.args.Ctx.SetProgress(0, -1)
 	if collector.args.Input != nil {
 		iterator := collector.args.Input
-		defer iterator.Close()
 		// the comment about difference is written at GraphqlCollectorArgs.InputStep
 		if collector.args.InputStep == 1 {
 			for iterator.HasNext() && !collector.HasError() {
@@ -185,6 +248,14 @@ func (collector *GraphqlCollector) Execute() errors.Error {
 
 	logger.Debug("wait for all async api to finished")
 	collector.args.GraphqlClient.Wait()
+	collector.checkError(collector.args.Ctx.GetContext().Err())
+	if collector.args.Input != nil {
+		if source, ok := collector.args.Input.(interface{ Err() error }); ok {
+			collector.checkError(source.Err())
+		}
+		collector.checkError(collector.args.Input.Close())
+		inputClosed = true
+	}
 
 	if collector.HasError() {
 		err = errors.Default.Combine(collector.workerErrors)
@@ -196,13 +267,17 @@ func (collector *GraphqlCollector) Execute() errors.Error {
 	}
 
 	err = collector.batchSave.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	return collector.completeCheckpoint()
 }
 
 func (collector *GraphqlCollector) exec(input interface{}) {
 	inputJson, err := json.Marshal(input)
 	if err != nil {
 		collector.checkError(errors.Default.Wrap(err, `input can not be marshal to json`))
+		return
 	}
 	reqData := new(GraphqlRequestData)
 	reqData.Input = input
@@ -211,45 +286,28 @@ func (collector *GraphqlCollector) exec(input interface{}) {
 		SkipCursor: nil,
 		Size:       collector.args.PageSize,
 	}
-	if collector.args.GetPageInfo != nil {
-		collector.fetchOneByOne(reqData)
-	} else {
-		collector.fetchAsync(reqData, nil)
-	}
-}
-
-// fetchOneByOne fetches data of all pages for APIs that return paging information
-func (collector *GraphqlCollector) fetchOneByOne(reqData *GraphqlRequestData) {
-	// fetch first page
-	var fetchNextPage func(query interface{}) errors.Error
-	fetchNextPage = func(query interface{}) errors.Error {
-		pageInfo, err := collector.args.GetPageInfo(query, collector.args)
+	if collector.taskID != 0 {
+		state, err := loadGraphqlCollectorState(collector.args.Ctx.GetDal(), collector.scopeHash, graphqlCollectorInputHash(string(inputJson)))
 		if err != nil {
-			return errors.Default.Wrap(err, "fetchPagesDetermined get totalPages failed")
+			collector.checkError(err)
+			return
 		}
-		if pageInfo == nil {
-			return errors.Default.New("fetchPagesDetermined got pageInfo is nil")
+		if state != nil && state.TaskID == collector.taskID {
+			if state.Completed {
+				return
+			}
+			if state.SkipCursor != "" {
+				reqData.Pager.SkipCursor = &state.SkipCursor
+			}
 		}
-		if pageInfo.HasNextPage {
-			collector.args.GraphqlClient.NextTick(func() errors.Error {
-				reqDataTemp := &GraphqlRequestData{
-					Pager: &CursorPager{
-						SkipCursor: &pageInfo.EndCursor,
-						Size:       collector.args.PageSize,
-					},
-					Input:     reqData.Input,
-					InputJSON: reqData.InputJSON,
-				}
-				collector.fetchAsync(reqDataTemp, fetchNextPage)
-				return nil
-			}, collector.checkError)
-		}
-		return nil
 	}
-	collector.fetchAsync(reqData, fetchNextPage)
+	collector.fetchAsync(reqData)
 }
 
-func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handler func(query interface{}) errors.Error) {
+func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData) {
+	if collector.HasError() {
+		return
+	}
 	if reqData.Pager == nil {
 		reqData.Pager = &CursorPager{
 			SkipCursor: nil,
@@ -275,7 +333,7 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 		return
 	}
 	if len(dataErrors) > 0 {
-		if !collector.args.IgnoreQueryErrors {
+		if !collector.args.IgnoreQueryErrors || collector.taskID != 0 {
 			hasNonIgnorableDataErrors := false
 			for _, dataError := range dataErrors {
 				if isIgnorableGraphqlQueryError(dataError) {
@@ -289,7 +347,7 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 				return
 			}
 		}
-		// else: error will deal by ResponseParserWithDataErrors
+		// Task-less legacy callers may explicitly opt into partial responses.
 	}
 	defer logger.Debug("fetchAsync >>> done for %v %v", query, variables)
 
@@ -300,39 +358,97 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 		return
 	}
 
-	results, err := collector.args.ResponseParser(query)
-	for _, result := range results {
-		row := &RawData{
-			Params: collector.params,
-			Data:   result,
-			Url:    queryStr,
-			Input:  variablesJson,
-		}
-		// collector.batchSave.Add(row)
-		err = db.Create(row, dal.From(collector.table))
-		if err != nil {
-			collector.checkError(errors.Default.Wrap(err, `not created row table in graphql collector`))
-			return
-		}
-	}
-	if err != nil {
-		if errors.Is(err, ErrFinishCollect) {
-			logger.Info("collector finish by parser")
-			handler = nil
+	var pageInfo *GraphqlQueryPageInfo
+	var insertedRows int64
+	// Parse within the transaction too: parsers may delete stale source data.
+	savePage := func(db dal.Dal) errors.Error {
+		var results []json.RawMessage
+		var parseErr errors.Error
+		if collector.args.ResponseParserWithDal != nil {
+			results, parseErr = collector.args.ResponseParserWithDal(query, db)
 		} else {
-			collector.checkError(errors.Default.Wrap(err, `not parsed response in graphql collector`))
-			return
+			results, parseErr = collector.args.ResponseParser(query)
 		}
+		finished := errors.Is(parseErr, ErrFinishCollect)
+		if parseErr != nil && !finished {
+			return errors.Default.Wrap(parseErr, "graphql response parser failed")
+		}
+		if !finished && collector.args.GetPageInfo != nil {
+			var pageErr error
+			pageInfo, pageErr = collector.args.GetPageInfo(query, collector.args)
+			if pageErr != nil {
+				return errors.Convert(pageErr)
+			}
+			if pageInfo == nil {
+				return errors.Default.New("graphql pageInfo is nil")
+			}
+			if pageInfo.HasNextPage && (pageInfo.EndCursor == "" || (reqData.Pager.SkipCursor != nil && pageInfo.EndCursor == *reqData.Pager.SkipCursor)) {
+				return errors.Default.New("graphql cursor did not advance")
+			}
+		}
+		if err := collector.args.Ctx.GetContext().Err(); err != nil {
+			return errors.Convert(err)
+		}
+		for _, result := range results {
+			if err := db.Create(&RawData{Params: collector.params, Data: result, Url: queryStr, Input: variablesJson}, dal.From(collector.table)); err != nil {
+				return err
+			}
+			insertedRows++
+		}
+		if collector.taskID != 0 {
+			state := collector.checkpoint(graphqlCollectorInputHash(string(reqData.InputJSON)))
+			state.Completed = pageInfo == nil || !pageInfo.HasNextPage
+			if !state.Completed {
+				state.SkipCursor = pageInfo.EndCursor
+			}
+			return saveGraphqlCollectorState(db, state)
+		}
+		return nil
 	}
-
-	collector.args.Ctx.IncProgress(1)
-	if handler != nil {
-		// trigger next fetch, but return if ErrFinishCollect got from ResponseParser
-		err = handler(query)
-		if err != nil {
-			collector.checkError(errors.Default.Wrap(err, `handle failed in graphql collector`))
-			return
+	var saveErr errors.Error
+	collector.pageMu.Lock()
+	defer collector.pageMu.Unlock()
+	if collector.taskID != 0 || collector.args.ResponseParserWithDal != nil {
+		tx := db.Begin()
+		defer tx.Rollback()
+		saveErr = savePage(tx)
+		var rawCount int64
+		if saveErr == nil && collector.args.checkpointContract != "" {
+			// Pure parsers only append rows. Recounting the entire growing raw
+			// scope on every page would make a long collection quadratic.
+			if collector.args.ResponseParserWithDal == nil && collector.expectedRawCount != nil {
+				rawCount = *collector.expectedRawCount + insertedRows
+			} else {
+				// Transactional parsers may also delete raw rows.
+				rawCount, saveErr = tx.Count(dal.From(collector.table), dal.Where("params = ?", collector.params))
+			}
+			if saveErr == nil {
+				marker := collector.rawCheckpoint()
+				marker.RawCount = &rawCount
+				saveErr = saveGraphqlCollectorState(tx, marker)
+			}
 		}
+		if saveErr == nil {
+			saveErr = tx.Commit()
+			if saveErr == nil && collector.args.checkpointContract != "" {
+				collector.expectedRawCount = &rawCount
+			}
+		}
+	} else {
+		saveErr = savePage(db)
+	}
+	if saveErr != nil {
+		collector.checkError(saveErr)
+		return
+	}
+	collector.args.Ctx.IncProgress(1)
+	if pageInfo != nil && pageInfo.HasNextPage {
+		next := *reqData
+		next.Pager = &CursorPager{SkipCursor: &pageInfo.EndCursor, Size: collector.args.PageSize}
+		collector.args.GraphqlClient.NextTick(func() errors.Error {
+			collector.fetchAsync(&next)
+			return nil
+		}, collector.checkError)
 	}
 }
 
@@ -340,11 +456,15 @@ func (collector *GraphqlCollector) checkError(err error) {
 	if err == nil {
 		return
 	}
+	collector.errorsMu.Lock()
+	defer collector.errorsMu.Unlock()
 	collector.workerErrors = append(collector.workerErrors, err)
 }
 
 // HasError return if any error occurred
 func (collector *GraphqlCollector) HasError() bool {
+	collector.errorsMu.Lock()
+	defer collector.errorsMu.Unlock()
 	return len(collector.workerErrors) > 0
 }
 

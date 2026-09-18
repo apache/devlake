@@ -81,6 +81,7 @@ func CollectAccount(taskCtx plugin.SubTaskContext) errors.Error {
 	// and only enriches it from _tool_github_accounts when a row is there.
 	cursor, err := db.Cursor(
 		dal.Select("login"),
+		dal.Orderby("login ASC"),
 		dal.From(models.GithubRepoAccount{}.TableName()),
 		dal.Where(
 			"repo_github_id = ? and connection_id = ? and login not like ?",

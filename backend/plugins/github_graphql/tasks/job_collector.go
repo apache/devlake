@@ -291,7 +291,8 @@ func CollectJobs(taskCtx plugin.SubTaskContext) errors.Error {
 		dal.Select("check_suite_node_id"),
 		dal.From(models.GithubRun{}.TableName()),
 		dal.Where("repo_id = ? and connection_id=?", data.Options.GithubId, data.Options.ConnectionId),
-		dal.Orderby("github_updated_at DESC"),
+		// Stable tie-breaker keeps batches identical when the task resumes.
+		dal.Orderby("github_updated_at DESC, check_suite_node_id ASC"),
 	}
 	if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
 		clauses = append(clauses, dal.Where("github_updated_at > ?", *apiCollector.GetSince()))

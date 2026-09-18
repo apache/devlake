@@ -36,6 +36,26 @@ on:
     - cron: '0 0 * * *' # run ci every night
 
 jobs:
+  graphql-resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [mysql, postgres]
+    steps:
+    - uses: actions/checkout@v7
+    - name: GraphQL real database crash and resume
+      env:
+        DEVLAKE_CRASH_DRIVER: ${{ matrix.database }}
+        TMPDIR: ${{ runner.temp }}
+      run: bash backend/test/graphql-resume-crash.sh
+    - name: Preserve failure and resume logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: graphql-resume-${{ matrix.database }}
+        path: ${{ runner.temp }}/devlake-graphql-crash.*/*.log
   test:
     strategy:
       matrix:

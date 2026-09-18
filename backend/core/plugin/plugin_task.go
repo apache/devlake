@@ -19,6 +19,8 @@ package plugin
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	corecontext "github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/errors"
@@ -26,6 +28,49 @@ import (
 )
 
 type ProgressType int
+
+type taskIDContextKey struct{}
+type taskStartContextKey struct{}
+type taskCodeContextKey struct{}
+
+var loadedPluginCode sync.Map
+
+// RegisterPluginCode records the loaded shared object's digest, not its path.
+func RegisterPluginCode(name, digest string) { loadedPluginCode.Store(name, digest) }
+
+func WithTaskCode(ctx context.Context, name string) context.Context {
+	digest, _ := loadedPluginCode.Load(name)
+	if digest == nil {
+		digest = ""
+	}
+	return context.WithValue(ctx, taskCodeContextKey{}, digest)
+}
+
+func TaskCode(ctx context.Context) string {
+	digest, _ := ctx.Value(taskCodeContextKey{}).(string)
+	return digest
+}
+
+func WithTaskStartedAt(ctx context.Context, started time.Time) context.Context {
+	return context.WithValue(ctx, taskStartContextKey{}, started)
+}
+
+func TaskStartedAt(ctx context.Context) (time.Time, bool) {
+	started, ok := ctx.Value(taskStartContextKey{}).(time.Time)
+	return started, ok
+}
+
+// WithTaskID identifies the persisted task across process restarts, without
+// changing the TaskContext interface implemented by plugins and test clients.
+func WithTaskID(ctx context.Context, id uint64) context.Context {
+	return context.WithValue(ctx, taskIDContextKey{}, id)
+}
+
+// TaskID returns zero for callers outside the persisted task runner.
+func TaskID(ctx context.Context) uint64 {
+	id, _ := ctx.Value(taskIDContextKey{}).(uint64)
+	return id
+}
 
 const (
 	TaskSetProgress ProgressType = iota

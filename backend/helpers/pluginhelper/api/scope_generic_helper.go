@@ -551,7 +551,7 @@ func (gs *GenericScopeApiHelper[Conn, Scope, ScopeConfig]) transactionalDelete(t
 			params = []interface{}{rawDataParams}
 		} else {
 			// framework tables: should check plugin, connection and scope
-			if table == (models.CollectorLatestState{}.TableName()) {
+			if table == (models.CollectorLatestState{}.TableName()) || table == (models.GraphqlCollectorState{}.TableName()) {
 				// diff sync state
 				where = "raw_data_table LIKE ? AND raw_data_params = ?"
 			} else {
@@ -661,6 +661,9 @@ func (gs *GenericScopeApiHelper[Conn, Scope, ScopeConfig]) getAffectedTables(plu
 		}
 		// additional tables
 		tables = append(tables, models.CollectorLatestState{}.TableName())
+		if gs.db.HasTable(&models.GraphqlCollectorState{}) {
+			tables = append(tables, models.GraphqlCollectorState{}.TableName())
+		}
 	}
 	gs.log.Debug("Discovered %d tables used by plugin \"%s\": %v", len(tables), pluginName, tables)
 	return tables, nil

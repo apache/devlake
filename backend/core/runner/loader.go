@@ -18,8 +18,12 @@ limitations under the License.
 package runner
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
 	goplugin "plugin"
 	"strings"
@@ -70,6 +74,20 @@ func LoadGoPlugins(basicRes context.BasicRes) errors.Error {
 			if !ok {
 				return errors.Default.New(fmt.Sprintf("%s PluginEntry must implement PluginMeta interface", pluginName))
 			}
+			file, readErr := os.Open(path)
+			if readErr != nil {
+				return readErr
+			}
+			hash := sha256.New()
+			_, readErr = io.Copy(hash, file)
+			closeErr := file.Close()
+			if readErr != nil {
+				return readErr
+			}
+			if closeErr != nil {
+				return closeErr
+			}
+			plugin.RegisterPluginCode(pluginName, hex.EncodeToString(hash.Sum(nil)))
 			wg.Add(1)
 			go func(pluginName string, pluginMeta plugin.PluginMeta) {
 				defer func() {
