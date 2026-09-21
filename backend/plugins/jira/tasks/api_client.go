@@ -25,13 +25,42 @@ import (
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/jira/models"
+	"github.com/apache/devlake/plugins/jira/token"
 )
 
 func NewJiraApiClient(taskCtx plugin.TaskContext, connection *models.JiraConnection) (*api.ApiAsyncClient, errors.Error) {
-	// create synchronize api client so we can calculate api rate limit dynamically
-	apiClient, err := api.NewApiClientFromConnection(taskCtx.GetContext(), taskCtx, connection)
-	if err != nil {
-		return nil, err
+	var apiClient *api.ApiClient
+	var err errors.Error
+	if connection.IsOAuth2() {
+		connection.ApplyGatewayEndpoint()
+		apiClient, err = api.NewApiClient(
+			taskCtx.GetContext(),
+			connection.GetEndpoint(),
+			nil,
+			0,
+			connection.GetProxy(),
+			taskCtx,
+		)
+		if err != nil {
+			return nil, err
+		}
+		logger := taskCtx.GetLogger()
+		var tp *token.TokenProvider
+		tp, err = token.NewTokenProvider(&connection.JiraConn, logger)
+		if err != nil {
+			return nil, err
+		}
+		baseTransport := apiClient.GetClient().Transport
+		if baseTransport == nil {
+			baseTransport = http.DefaultTransport
+		}
+		apiClient.GetClient().Transport = token.NewRefreshRoundTripper(baseTransport, tp)
+		logger.Info("Installed oauth2 token refresh round tripper for Jira connection %d", connection.ID)
+	} else {
+		apiClient, err = api.NewApiClientFromConnection(taskCtx.GetContext(), taskCtx, connection)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// create rate limit calculator
