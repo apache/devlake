@@ -64,6 +64,7 @@ import (
 	testmo "github.com/apache/devlake/plugins/testmo/impl"
 	trello "github.com/apache/devlake/plugins/trello/impl"
 	webhook "github.com/apache/devlake/plugins/webhook/impl"
+	youtrack "github.com/apache/devlake/plugins/youtrack/impl"
 	zentao "github.com/apache/devlake/plugins/zentao/impl"
 )
 
@@ -106,6 +107,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("testmo/models", testmo.Testmo{}.GetTablesInfo)
 	checker.FeedIn("trello/models", trello.Trello{}.GetTablesInfo)
 	checker.FeedIn("webhook/models", webhook.Webhook{}.GetTablesInfo)
+	checker.FeedIn("youtrack/models", youtrack.Youtrack{}.GetTablesInfo)
 	checker.FeedIn("zentao/models", zentao.Zentao{}.GetTablesInfo)
 	checker.FeedIn("claude_code/models", claudeCode.ClaudeCode{}.GetTablesInfo)
 	checker.FeedIn("cursor/models", cursor.Cursor{}.GetTablesInfo)

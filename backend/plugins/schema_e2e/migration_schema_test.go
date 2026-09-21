@@ -88,6 +88,7 @@ import (
 	testmo "github.com/apache/devlake/plugins/testmo/impl"
 	trello "github.com/apache/devlake/plugins/trello/impl"
 	webhook "github.com/apache/devlake/plugins/webhook/impl"
+	youtrack "github.com/apache/devlake/plugins/youtrack/impl"
 	zentao "github.com/apache/devlake/plugins/zentao/impl"
 )
 
@@ -139,6 +140,7 @@ func allGoPlugins() []plugin.PluginMeta {
 		testmo.Testmo{},
 		trello.Trello{},
 		webhook.Webhook{},
+		youtrack.Youtrack{},
 		zentao.Zentao{},
 	}
 }
