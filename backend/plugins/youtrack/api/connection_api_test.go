@@ -204,8 +204,10 @@ func TestSuccessMessage(t *testing.T) {
 
 // fakeYoutrack is a minimal stand-in for a YouTrack instance: it answers
 // users/me and config under {base}/api and records the Authorization header.
+// Tests for other endpoints register their own handlers on f.mux.
 type fakeYoutrack struct {
 	server    *httptest.Server
+	mux       *http.ServeMux
 	user      map[string]interface{}
 	userCode  int
 	config    map[string]interface{}
@@ -215,12 +217,12 @@ type fakeYoutrack struct {
 
 func newFakeYoutrack(t *testing.T) *fakeYoutrack {
 	f := &fakeYoutrack{
+		mux:      http.NewServeMux(),
 		user:     map[string]interface{}{"id": "1-2", "login": "jane.doe", "fullName": "Jane Doe", "guest": false},
 		userCode: http.StatusOK,
 		config:   map[string]interface{}{"version": "2025.3", "build": "12345"},
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/users/me", func(w http.ResponseWriter, r *http.Request) {
+	f.mux.HandleFunc("/api/users/me", func(w http.ResponseWriter, r *http.Request) {
 		f.lastAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(f.userCode)
@@ -228,7 +230,7 @@ func newFakeYoutrack(t *testing.T) *fakeYoutrack {
 			assert.NoError(t, json.NewEncoder(w).Encode(f.user))
 		}
 	})
-	mux.HandleFunc("/api/config", func(w http.ResponseWriter, r *http.Request) {
+	f.mux.HandleFunc("/api/config", func(w http.ResponseWriter, r *http.Request) {
 		f.configHit = true
 		w.Header().Set("Content-Type", "application/json")
 		if f.config == nil {
@@ -238,10 +240,10 @@ func newFakeYoutrack(t *testing.T) *fakeYoutrack {
 		assert.NoError(t, json.NewEncoder(w).Encode(f.config))
 	})
 	// any other path answers 404, like a wrong base URL would
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	f.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
-	f.server = httptest.NewServer(mux)
+	f.server = httptest.NewServer(f.mux)
 	t.Cleanup(f.server.Close)
 	return f
 }
