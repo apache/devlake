@@ -23,6 +23,7 @@ import (
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
+	coreModels "github.com/apache/devlake/core/models"
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/api"
@@ -39,6 +40,7 @@ var _ interface {
 	plugin.PluginModel
 	plugin.PluginSource
 	plugin.PluginMigration
+	plugin.DataSourcePluginBlueprintV200
 } = (*Youtrack)(nil)
 
 type Youtrack struct{}
@@ -159,5 +161,42 @@ func (p Youtrack) ApiResources() map[string]map[string]plugin.ApiResourceHandler
 		"connections/:connectionId/test": {
 			"POST": api.TestExistingConnection,
 		},
+		"connections/:connectionId/remote-scopes": {
+			"GET": api.RemoteScopes,
+		},
+		"connections/:connectionId/proxy/rest/*path": {
+			"GET": api.Proxy,
+		},
+		"connections/:connectionId/scope-configs": {
+			"POST": api.PostScopeConfig,
+			"GET":  api.GetScopeConfigList,
+		},
+		"connections/:connectionId/scope-configs/:scopeConfigId": {
+			"PATCH":  api.PatchScopeConfig,
+			"GET":    api.GetScopeConfig,
+			"DELETE": api.DeleteScopeConfig,
+		},
+		"connections/:connectionId/scopes": {
+			"GET": api.GetScopeList,
+			"PUT": api.PutScopes,
+		},
+		"connections/:connectionId/scopes/:scopeId": {
+			"GET":    api.GetScope,
+			"PATCH":  api.PatchScope,
+			"DELETE": api.DeleteScope,
+		},
+		// the config-ui's attached-projects lookup. Singular `scope-config`,
+		// NOT nested under `connections/:connectionId` — the asymmetry is
+		// Linear's, copied verbatim or the UI call 404s.
+		"scope-config/:scopeConfigId/projects": {
+			"GET": api.GetProjectsByScopeConfig,
+		},
 	}
+}
+
+func (p Youtrack) MakeDataSourcePipelinePlanV200(
+	connectionId uint64,
+	scopes []*coreModels.BlueprintScope,
+) (coreModels.PipelinePlan, []plugin.Scope, errors.Error) {
+	return api.MakePipelinePlanV200(p.SubTaskMetas(), connectionId, scopes)
 }

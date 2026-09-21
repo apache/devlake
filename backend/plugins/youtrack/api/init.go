@@ -28,6 +28,8 @@ import (
 var vld *validator.Validate
 var basicRes context.BasicRes
 var dsHelper *api.DsHelper[models.YoutrackConnection, models.YoutrackProject, models.YoutrackScopeConfig]
+var raProxy *api.DsRemoteApiProxyHelper[models.YoutrackConnection]
+var raScopeList *api.DsRemoteApiScopeListHelper[models.YoutrackConnection, models.YoutrackProject, YoutrackRemotePagination]
 
 func Init(br context.BasicRes, p plugin.PluginMeta) {
 	basicRes = br
@@ -44,4 +46,6 @@ func Init(br context.BasicRes, p plugin.PluginMeta) {
 		nil,
 		nil,
 	)
+	raProxy = api.NewDsRemoteApiProxyHelper[models.YoutrackConnection](dsHelper.ConnApi.ModelApiHelper)
+	raScopeList = api.NewDsRemoteApiScopeListHelper[models.YoutrackConnection, models.YoutrackProject, YoutrackRemotePagination](raProxy, listYoutrackRemoteScopes)
 }
