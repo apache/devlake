@@ -81,7 +81,7 @@ func CollectComments(taskCtx plugin.SubTaskContext) errors.Error {
 		dal.From(&models.YoutrackIssue{}),
 		dal.Where("connection_id = ? AND project_id = ?", data.Options.ConnectionId, data.Options.ProjectId),
 	}
-	if since := commentInputSince(apiCollector.IsIncremental(), apiCollector.GetSince()); since != nil {
+	if since := changedIssuesSince(apiCollector.IsIncremental(), apiCollector.GetSince()); since != nil {
 		clauses = append(clauses, dal.Where("updated >= ?", *since))
 	}
 	cursor, err := db.Cursor(clauses...)
@@ -116,10 +116,11 @@ func CollectComments(taskCtx plugin.SubTaskContext) errors.Error {
 	return apiCollector.Execute()
 }
 
-// commentInputSince is the lower bound for the comment collector's issue
-// input: on incremental runs only issues with updated >= since
-// drive per-issue comment calls; on full sync every issue does (nil bound).
-func commentInputSince(isIncremental bool, since *time.Time) *time.Time {
+// changedIssuesSince is the lower bound for the per-issue collectors'
+// (comments, changelogs) issue input: on incremental runs only
+// issues with updated >= since drive the per-issue calls; on full sync
+// every issue does (nil bound).
+func changedIssuesSince(isIncremental bool, since *time.Time) *time.Time {
 	if isIncremental {
 		return since
 	}

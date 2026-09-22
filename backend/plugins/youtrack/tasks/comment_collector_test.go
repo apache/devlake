@@ -24,20 +24,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// The comment collector's bounding rule: an incremental run walks
-// only tool-layer issues with updated >= since; a full sync walks them all.
-func TestCommentInputSince(t *testing.T) {
+// The per-issue collectors' bounding rule: an incremental run
+// walks only tool-layer issues with updated >= since; a full sync walks
+// them all.
+func TestChangedIssuesSince(t *testing.T) {
 	since := time.Date(2026, 9, 21, 12, 0, 0, 0, time.UTC)
 
 	t.Run("incremental run bounds the input by the bookmark", func(t *testing.T) {
-		assert.Equal(t, &since, commentInputSince(true, &since))
+		assert.Equal(t, &since, changedIssuesSince(true, &since))
 	})
 
-	t.Run("full sync collects comments for all issues", func(t *testing.T) {
-		assert.Nil(t, commentInputSince(false, &since))
+	t.Run("full sync walks all issues", func(t *testing.T) {
+		assert.Nil(t, changedIssuesSince(false, &since))
 	})
 
-	t.Run("full sync without a bookmark collects all issues", func(t *testing.T) {
-		assert.Nil(t, commentInputSince(false, nil))
+	t.Run("full sync without a bookmark walks all issues", func(t *testing.T) {
+		assert.Nil(t, changedIssuesSince(false, nil))
 	})
 }
