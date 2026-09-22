@@ -19,6 +19,8 @@ package tasks
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -27,6 +29,21 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
+
+// parseJsonArrayResponse is the ResponseParser for YouTrack list endpoints
+// (issues, comments): the body is one JSON array with no total count, so
+// undetermined pagination walks $skip/$top until a short page.
+func parseJsonArrayResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
+	blob, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.Convert(err)
+	}
+	var items []json.RawMessage
+	if err := json.Unmarshal(blob, &items); err != nil {
+		return nil, errors.Convert(err)
+	}
+	return items, nil
+}
 
 // apiCustomField is one element of an issue's `customFields` array. Value is
 // kept raw because its shape depends on $type: a bundle-element object

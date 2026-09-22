@@ -103,10 +103,13 @@ func (p Youtrack) SubTaskMetas() []plugin.SubTaskMeta {
 		tasks.ExtractWorkflowStatesMeta,
 		tasks.CollectIssuesMeta,
 		tasks.ExtractIssuesMeta,
+		tasks.CollectCommentsMeta,
+		tasks.ExtractCommentsMeta,
 		tasks.ConvertProjectsMeta,
 		tasks.ConvertAccountsMeta,
 		tasks.ConvertIssuesMeta,
 		tasks.ConvertIssueLabelsMeta,
+		tasks.ConvertCommentsMeta,
 	}
 }
 

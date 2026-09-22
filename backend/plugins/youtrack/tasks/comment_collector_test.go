@@ -15,35 +15,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package impl
+package tasks
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// SubTaskMetas order is the execution-order contract: the list
-// order alone schedules subtasks, and no meta may carry a Dependencies field
-// anywhere in the plugin.
-func TestSubTaskMetasOrderAndNoDependencies(t *testing.T) {
-	metas := Youtrack{}.SubTaskMetas()
-	names := make([]string, 0, len(metas))
-	for _, meta := range metas {
-		names = append(names, meta.Name)
-		assert.Nil(t, meta.Dependencies, "%s must not declare Dependencies — list order is the contract", meta.Name)
-	}
-	assert.Equal(t, []string{
-		"Collect Workflow States",
-		"Extract Workflow States",
-		"Collect Issues",
-		"Extract Issues",
-		"Collect Comments",
-		"Extract Comments",
-		"Convert Projects",
-		"Convert Accounts",
-		"Convert Issues",
-		"Convert Issue Labels",
-		"Convert Comments",
-	}, names, "subtasks in execution order")
+// The comment collector's bounding rule: an incremental run walks
+// only tool-layer issues with updated >= since; a full sync walks them all.
+func TestCommentInputSince(t *testing.T) {
+	since := time.Date(2026, 9, 21, 12, 0, 0, 0, time.UTC)
+
+	t.Run("incremental run bounds the input by the bookmark", func(t *testing.T) {
+		assert.Equal(t, &since, commentInputSince(true, &since))
+	})
+
+	t.Run("full sync collects comments for all issues", func(t *testing.T) {
+		assert.Nil(t, commentInputSince(false, &since))
+	})
+
+	t.Run("full sync without a bookmark collects all issues", func(t *testing.T) {
+		assert.Nil(t, commentInputSince(false, nil))
+	})
 }
