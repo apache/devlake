@@ -40,10 +40,13 @@ func TestSubTaskMetasOrderAndNoDependencies(t *testing.T) {
 		"Extract Issues",
 		"Collect Comments",
 		"Extract Comments",
+		"Collect Issue Changelogs",
+		"Extract Issue Changelogs",
 		"Convert Projects",
 		"Convert Accounts",
 		"Convert Issues",
 		"Convert Issue Labels",
 		"Convert Comments",
+		"Convert Issue Changelogs",
 	}, names, "subtasks in execution order")
 }

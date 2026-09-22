@@ -1,0 +1,30 @@
+id,issue_id,author_id,author_name,field_id,field_name,original_from_value,original_to_value,from_value,to_value,created_date
+youtrack:YoutrackIssueChangelog:1:0-3.9-1,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:58-1,User 3,,Blocked?,,Moving,,92-2,2023-11-21T13:50:59.041+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-11,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:1-1,User 1,,resolved,,1700730426959,,1700730426959,2023-11-23T09:07:07.008+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-16,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:43-1,User 88,,Days in stage,,1,,1,2024-06-04T10:11:00.557+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-17,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:43-1,User 88,,Days in stage,1,2,1,2,2024-06-04T10:13:02.205+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-17561,youtrack:YoutrackIssue:1:2-170,youtrack:YoutrackAccount:1:1-9,User 10,,Deadline,,1750766400000,,1750766400000,2025-05-29T08:36:14.122+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-17976,youtrack:YoutrackIssue:1:2-191,youtrack:YoutrackAccount:1:1-23,User 25,,State,Backlog,Discard [Discovery],TODO,DONE,2025-08-21T15:43:23.922+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-18032,youtrack:YoutrackIssue:1:2-195,youtrack:YoutrackAccount:1:1-8,User 9,,State,To Do,Backlog,TODO,TODO,2025-05-20T09:41:42.651+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-18033,youtrack:YoutrackIssue:1:2-195,youtrack:YoutrackAccount:1:1-8,User 9,,summary,the pricing service adds the delivery fee ,[traffic] the pricing service adds the delivery fee ,the pricing service adds the delivery fee ,[traffic] the pricing service adds the delivery fee ,2025-05-20T09:41:43.667+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-2,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:58-1,User 3,,State,,To Do,,TODO,2023-11-21T13:50:59.041+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20472,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-48,User 50,,Assignee,,"[""User 52"",""User 55""]",,"[""youtrack:YoutrackAccount:1:1-49"",""youtrack:YoutrackAccount:1:1-52""]",2025-11-06T10:35:55.475+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20474,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-48,User 50,,Assignee,"[""User 52"",""User 55""]",,"[""youtrack:YoutrackAccount:1:1-49"",""youtrack:YoutrackAccount:1:1-52""]",,2025-11-06T10:36:26.503+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20513,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-53,User 56,,Assignee,"[""User 52"",""User 55""]",User 56,"[""youtrack:YoutrackAccount:1:1-49"",""youtrack:YoutrackAccount:1:1-52""]",youtrack:YoutrackAccount:1:1-53,2025-11-06T11:07:29.376+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20590,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-48,User 50,,resolved,1762520345945,,1762520345945,,2025-11-07T13:17:48.466+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20591,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-48,User 50,,State,Declined,To Do,DONE,TODO,2025-11-07T13:17:48.466+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20696,youtrack:YoutrackIssue:1:2-384,youtrack:YoutrackAccount:1:1-48,User 50,,State,Declined,Closed,DONE,DONE,2025-11-13T11:17:12.712+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20804,youtrack:YoutrackIssue:1:2-387,youtrack:YoutrackAccount:1:1-48,User 50,,tags,back,,6-20,,2025-11-05T11:15:59.845+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20833,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-48,User 50,,Reason for blocking,,route a late order (should trigger),,route a late order (should trigger),2025-09-16T08:45:20.789+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20835,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-45,User 47,,summary,own opening hours delivery zone and minimum,captured after the restaurant accepts/the,own opening hours delivery zone and minimum,captured after the restaurant accepts/the,2025-09-17T08:13:07.258+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20836,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-56,User 59,,Reason for blocking,route a late order (should trigger),,route a late order (should trigger),,2025-10-21T08:28:44.330+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20842,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-48,User 50,,Assignee,User 50,,youtrack:YoutrackAccount:1:1-48,,2025-10-29T14:19:35.388+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20855,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-53,User 56,,Assignee,User 56,User 55,youtrack:YoutrackAccount:1:1-53,youtrack:YoutrackAccount:1:1-52,2025-11-13T08:33:00.216+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-20857,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-52,User 55,,Assignee,User 55,"[""User 47"",""User 56""]",youtrack:YoutrackAccount:1:1-52,"[""youtrack:YoutrackAccount:1:1-45"",""youtrack:YoutrackAccount:1:1-53""]",2025-11-13T10:05:30.333+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-21055,youtrack:YoutrackIssue:1:2-399,youtrack:YoutrackAccount:1:1-48,User 50,,tags,okr,back,6-25,6-20,2025-12-03T13:56:16.903+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-4432,youtrack:YoutrackIssue:1:2-26,youtrack:YoutrackAccount:1:1-9,User 10,,Assignee,,,,,2023-12-14T08:55:51.686+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-46,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:43-1,User 88,,tags,,Долго в работе,,6-1,2024-06-12T20:00:12.408+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-7,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:58-1,User 3,,Assignee,,User 8,,youtrack:YoutrackAccount:1:1-7,2023-11-21T13:51:53.383+00:00
+youtrack:YoutrackIssueChangelog:1:0-3.9-7241,youtrack:YoutrackIssue:1:2-44,youtrack:YoutrackAccount:1:1-6,User 7,,State,Ready for Test,Ready for Stage,TODO,TODO,2024-01-24T14:40:40.767+00:00
+youtrack:YoutrackIssueChangelog:1:2-1.0-3,youtrack:YoutrackIssue:1:2-1,youtrack:YoutrackAccount:1:1-2,User 2,,,,,,,2023-11-21T13:39:13.357+00:00
+youtrack:YoutrackIssueChangelog:1:2-388.0-3,youtrack:YoutrackIssue:1:2-388,youtrack:YoutrackAccount:1:1-45,User 47,,,,,,,2025-09-04T14:59:12.286+00:00
