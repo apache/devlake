@@ -41,6 +41,7 @@ import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
 import { TAPDConfig } from './tapd';
 import { WebhookConfig } from './webhook';
+import { YoutrackConfig } from './youtrack';
 import { ZenTaoConfig } from './zentao';
 import { OpsgenieConfig } from './opsgenie';
 import { TeambitionConfig } from './teambition';
@@ -77,6 +78,7 @@ export const pluginConfigs: IPluginConfig[] = [
   TestmoConfig,
   ZenTaoConfig,
   WebhookConfig,
+  YoutrackConfig,
   OpsgenieConfig,
   TeambitionConfig,
 ].sort((a, b) => a.sort - b.sort);
