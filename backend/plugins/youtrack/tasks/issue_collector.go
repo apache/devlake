@@ -18,10 +18,7 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -115,17 +112,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		// made mid-run shift every later issue back one slot and drop the one
 		// that crosses an already-fetched page boundary (Jira orders by
 		// created ASC for the same reason).
-		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			blob, err := io.ReadAll(res.Body)
-			if err != nil {
-				return nil, errors.Convert(err)
-			}
-			var items []json.RawMessage
-			if err := json.Unmarshal(blob, &items); err != nil {
-				return nil, errors.Convert(err)
-			}
-			return items, nil
-		},
+		ResponseParser: parseJsonArrayResponse,
 	})
 	if err != nil {
 		return err
