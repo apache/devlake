@@ -67,3 +67,9 @@ type YoutrackApiParams struct {
 	ConnectionId uint64
 	ProjectId    string
 }
+
+// GetParams implements helper.TaskOptions: the raw-data identity is the
+// params struct itself ({"ConnectionId":...,"ProjectId":...}).
+func (p YoutrackApiParams) GetParams() any {
+	return p
+}

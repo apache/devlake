@@ -1,0 +1,4 @@
+connection_id,id,login,full_name,email,avatar_url,guest
+1,1-100,user-100,User 100,user-100@example.com,https://youtrack.example.com/avatar/100,0
+1,1-101,user-101,User 101,user-101@example.com,https://youtrack.example.com/avatar/101,0
+1,1-102,guest,Guest,,,1
