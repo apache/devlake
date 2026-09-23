@@ -23,6 +23,7 @@ import (
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
+	"github.com/apache/devlake/core/utils"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
@@ -75,11 +76,48 @@ const stateProjectCustomFieldType = "StateProjectCustomField"
 func ExtractWorkflowStates(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*YoutrackTaskData)
 	db := taskCtx.GetDal()
+	rawArgs := helper.RawDataSubTaskArgs{
+		Ctx: taskCtx,
+		Options: models.YoutrackApiParams{
+			ConnectionId: data.Options.ConnectionId,
+			ProjectId:    data.Options.ProjectId,
+		},
+		Table: RAW_WORKFLOW_STATES_TABLE,
+	}
 
-	// Full refresh: the collector re-fetches the whole bundle set
-	// each run, so replace the scope's rows — a state renamed or removed
-	// upstream must not linger (this table feeds the changelog std-status
-	// lookup in the changelog convertor).
+	// Current-snapshot semantics ("full refresh each run"): only
+	// the newest raw row defines the scope's workflow states. The collector
+	// already keeps one snapshot per scope; reading the latest explicitly
+	// makes the extractor immune to any deeper history (a database written
+	// by an older collector, or a hand-run extractor on replayed raw data).
+	var latestId uint64
+	hasSnapshot := false
+	rawTable := "_raw_" + RAW_WORKFLOW_STATES_TABLE
+	rawParams := utils.ToJsonString(models.YoutrackApiParams{
+		ConnectionId: data.Options.ConnectionId,
+		ProjectId:    data.Options.ProjectId,
+	})
+	if db.HasTable(rawTable) {
+		latest := &helper.RawData{}
+		err := db.First(
+			latest,
+			dal.From(rawTable),
+			dal.Where("params = ?", rawParams),
+			dal.Orderby("id DESC"),
+		)
+		if err != nil && !db.IsErrorNotFound(err) {
+			return errors.Default.Wrap(err, "error resolving the latest workflow-states snapshot")
+		}
+		if err == nil {
+			latestId, hasSnapshot = latest.ID, true
+		}
+	}
+
+	// Full refresh: replace the scope's rows — a state renamed or
+	// removed upstream must not linger (this table feeds the changelog
+	// std-status lookup in the changelog convertor). The replace is explicit
+	// and unconditional, so a scope whose newest snapshot is EMPTY (a token
+	// that lost Read Project, or no State fields at all) is cleared too.
 	if err := db.Delete(
 		&models.YoutrackWorkflowState{},
 		dal.Where("connection_id = ? AND project_id = ?", data.Options.ConnectionId, data.Options.ProjectId),
@@ -88,15 +126,13 @@ func ExtractWorkflowStates(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	extractor, err := helper.NewApiExtractor(helper.ApiExtractorArgs{
-		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			Options: models.YoutrackApiParams{
-				ConnectionId: data.Options.ConnectionId,
-				ProjectId:    data.Options.ProjectId,
-			},
-			Table: RAW_WORKFLOW_STATES_TABLE,
-		},
+		RawDataSubTaskArgs: rawArgs,
 		Extract: func(row *helper.RawData) ([]interface{}, errors.Error) {
+			// only the current snapshot expands; older retained rows are
+			// history, not state
+			if !hasSnapshot || row.ID != latestId {
+				return nil, nil
+			}
 			var payload []apiProjectCustomField
 			if err := errors.Convert(json.Unmarshal(row.Data, &payload)); err != nil {
 				return nil, err

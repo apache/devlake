@@ -26,6 +26,7 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/didgen"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
+	"github.com/apache/devlake/core/utils"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
@@ -58,6 +59,21 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		return errors.Default.New("youtrack task data carries no project scope")
 	}
 	shortName := data.Project.ShortName
+
+	// Issues and board_issues are emitted for every issue, so the divider's
+	// lazy wipe always fires for them; issue_assignees is emitted only for
+	// assigned issues, so once no issue in the project has an assignee the
+	// stale rows would survive. Delete them first.
+	params := utils.ToJsonString(models.YoutrackApiParams{
+		ConnectionId: connectionId,
+		ProjectId:    data.Options.ProjectId,
+	})
+	if err := db.Delete(
+		&ticket.IssueAssignee{},
+		dal.Where("_raw_data_table = ? AND _raw_data_params = ?", "_raw_"+RAW_ISSUES_TABLE, params),
+	); err != nil {
+		return err
+	}
 
 	cursor, err := db.Cursor(
 		dal.From(&models.YoutrackIssue{}),

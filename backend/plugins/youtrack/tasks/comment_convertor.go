@@ -26,6 +26,7 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/didgen"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
+	"github.com/apache/devlake/core/utils"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
@@ -50,6 +51,23 @@ func ConvertComments(taskCtx plugin.SubTaskContext) errors.Error {
 	commentIdGen := didgen.NewDomainIdGenerator(&models.YoutrackIssueComment{})
 	issueIdGen := didgen.NewDomainIdGenerator(&models.YoutrackIssue{})
 	accountIdGen := didgen.NewDomainIdGenerator(&models.YoutrackAccount{})
+
+	// Explicit output replacement (deleted comments must disappear
+	// from domain metrics). The converter's divider wipes the params' rows
+	// lazily — only when an output row is actually emitted — so a scope
+	// whose comments ALL became deleted would emit nothing and the stale
+	// domain rows would survive. Delete first, independently of whether any
+	// row survives the filter below.
+	params := utils.ToJsonString(models.YoutrackApiParams{
+		ConnectionId: connectionId,
+		ProjectId:    data.Options.ProjectId,
+	})
+	if err := db.Delete(
+		&ticket.IssueComment{},
+		dal.Where("_raw_data_table = ? AND _raw_data_params = ?", "_raw_"+RAW_ISSUE_COMMENTS_TABLE, params),
+	); err != nil {
+		return err
+	}
 
 	// scope the comments to this project via their parent issue
 	cursor, err := db.Cursor(

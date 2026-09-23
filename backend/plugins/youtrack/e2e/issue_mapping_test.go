@@ -18,7 +18,9 @@ limitations under the License.
 package e2e
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
@@ -128,6 +130,120 @@ func TestYoutrackIssueDataFlowWithMappings(t *testing.T) {
 		Where("connection_id = 1 AND type_name = 'Story' AND std_type = ?", ticket.REQUIREMENT).Count(&storyAsRequirement).Error)
 	assert.Positive(t, storyAsTask, "changed mapping re-applies from the raw layer")
 	assert.Zero(t, storyAsRequirement, "no row keeps the stale mapping")
+}
+
+// TestYoutrackMappingReplayPreservesState covers the transition the
+// DataFlowTester.Subtask reruns above cannot: Subtask deletes subtask state
+// and forces FullSync, so it can never verify that a config change
+// invalidates PERSISTED incremental state. This scenario keeps the state:
+//
+//	run 1  initial extraction (full sync: no prior state)
+//	run 2  incremental update — one issue re-collected without its tag
+//	run 3  mapping change — full re-extraction replayed from the raw layer
+//
+// asserting (a) the incremental run processes only the new raw version,
+// (b) the replay never re-hits the API and never resurrects the removed
+// tag from the retained old version, and (c) the new mapping applies.
+func TestYoutrackMappingReplayPreservesState(t *testing.T) {
+	var youtrack impl.Youtrack
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	beginStatefulScenario(t, dataflowTester)
+
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
+	dataflowTester.FlushTabler(&models.YoutrackIssue{})
+	dataflowTester.FlushTabler(&models.YoutrackIssueLabel{})
+	dataflowTester.FlushTabler(&models.YoutrackAccount{})
+
+	// run 1: initial full extraction
+	for _, projectId := range []string{"0-1", "0-2"} {
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssuesMeta, newTaskData(projectId, mappedConfig()))
+	}
+
+	// the fixture's tagged issue in project 0-1 (PROJ1-1, tag "Долго в работе")
+	const taggedIssue = "2-1"
+	countLabels := func(issueId string) int64 {
+		var n int64
+		require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssueLabel{}).
+			Where("connection_id = 1 AND issue_id = ?", issueId).Count(&n).Error)
+		return n
+	}
+	var totalLabels int64
+	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssueLabel{}).
+		Where("connection_id = 1").Count(&totalLabels).Error)
+	require.Equal(t, int64(1), countLabels(taggedIssue), "run 1 extracts the fixture's tag")
+	require.Positive(t, totalLabels)
+
+	// the incremental update: the same issue re-collected tagless, updated later
+	var rawCountBefore int64
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_issues").Count(&rawCountBefore).Error)
+	type rawIssueRow struct {
+		Params string
+		Data   []byte
+		Url    string
+	}
+	var rows []rawIssueRow
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_issues").
+		Where("params LIKE ?", `%0-1%`).Find(&rows).Error)
+	var src rawIssueRow
+	var v2data []byte
+	for _, row := range rows {
+		var issue map[string]interface{}
+		require.NoError(t, json.Unmarshal(row.Data, &issue))
+		if issue["id"] != taggedIssue {
+			continue
+		}
+		issue["tags"] = []interface{}{}
+		issue["updated"] = issue["updated"].(float64) + 60000
+		v2, err := json.Marshal(issue)
+		require.NoError(t, err)
+		v2data = v2
+		src = row
+		break
+	}
+	require.NotNil(t, v2data, "the fixture must contain issue %s in project 0-1", taggedIssue)
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_issues").Create(map[string]interface{}{
+		"params":     src.Params,
+		"data":       v2data,
+		"url":        src.Url,
+		"created_at": time.Now(), // inside run 2's incremental window
+	}).Error)
+
+	// run 2: same config, state preserved -> incremental — only the new
+	// version is processed, the tag disappears
+	for _, projectId := range []string{"0-1", "0-2"} {
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssuesMeta, newTaskData(projectId, mappedConfig()))
+	}
+	assert.Zero(t, countLabels(taggedIssue), "incremental re-extraction replaces the issue's labels")
+	assert.Equal(t, totalLabels-1, func() int64 {
+		var n int64
+		require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssueLabel{}).
+			Where("connection_id = 1").Count(&n).Error)
+		return n
+	}(), "every other issue's labels are untouched")
+
+	// run 3: a mapping change must invalidate the persisted incremental
+	// state -> full re-extraction replayed from the raw layer. The retained
+	// v1 still carries the tag; only latest-version expansion keeps it dead.
+	remapped := mappedConfig()
+	remapped.TypeMappings = map[string]string{"Story": ticket.TASK, "Bug": ticket.BUG}
+	for _, projectId := range []string{"0-1", "0-2"} {
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssuesMeta, newTaskData(projectId, remapped))
+	}
+	assert.Zero(t, countLabels(taggedIssue),
+		"mapping replay must not resurrect the tag from the retained old raw version")
+
+	var storyAsTask, storyAsRequirement int64
+	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssue{}).
+		Where("connection_id = 1 AND type_name = 'Story' AND std_type = ?", ticket.TASK).Count(&storyAsTask).Error)
+	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssue{}).
+		Where("connection_id = 1 AND type_name = 'Story' AND std_type = ?", ticket.REQUIREMENT).Count(&storyAsRequirement).Error)
+	assert.Positive(t, storyAsTask, "the changed mapping re-applies from the raw layer")
+	assert.Zero(t, storyAsRequirement, "no row keeps the stale mapping")
+
+	var rawCountAfter int64
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_issues").Count(&rawCountAfter).Error)
+	assert.Equal(t, rawCountBefore+1, rawCountAfter,
+		"the replay read the raw layer only — no collection call (the task data carries no API client)")
 }
 
 // TestYoutrackIssueDataFlowMissingField covers the renamed-field trap: a

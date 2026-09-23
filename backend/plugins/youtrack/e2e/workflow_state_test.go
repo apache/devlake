@@ -18,7 +18,9 @@ limitations under the License.
 package e2e
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/helpers/e2ehelper"
@@ -113,4 +115,90 @@ func TestYoutrackWorkflowStateFullRefresh(t *testing.T) {
 	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackWorkflowState{}).
 		Where("connection_id = 1 AND project_id = '0-2'").Count(&otherScopeRowsAfter).Error)
 	assert.Equal(t, otherScopeRowsBefore, otherScopeRowsAfter, "the refresh is per-scope")
+}
+
+// TestYoutrackWorkflowStateLatestSnapshot covers the current-snapshot
+// semantics: only the NEWEST raw row defines the scope's states. An older
+// retained row must never replay a state the newer snapshot removed, and an
+// empty newest snapshot (a token that lost Read Project) must clear the
+// scope's rows rather than resurrect history.
+func TestYoutrackWorkflowStateLatestSnapshot(t *testing.T) {
+	var youtrack impl.Youtrack
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	taskData := &tasks.YoutrackTaskData{
+		Options:     &tasks.YoutrackOptions{ConnectionId: 1, ProjectId: "0-1"},
+		ScopeConfig: &models.YoutrackScopeConfig{},
+	}
+
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_workflow_states.csv", "_raw_youtrack_workflow_states")
+	dataflowTester.FlushTabler(&models.YoutrackWorkflowState{})
+	for _, projectId := range []string{"0-1", "0-2"} {
+		dataflowTester.Subtask(tasks.ExtractWorkflowStatesMeta, &tasks.YoutrackTaskData{
+			Options:     &tasks.YoutrackOptions{ConnectionId: 1, ProjectId: projectId},
+			ScopeConfig: &models.YoutrackScopeConfig{},
+		})
+	}
+
+	scopeCount := func(projectId string) int64 {
+		var n int64
+		require.NoError(t, dataflowTester.Db.Model(&models.YoutrackWorkflowState{}).
+			Where("connection_id = 1 AND project_id = ?", projectId).Count(&n).Error)
+		return n
+	}
+	baseline := scopeCount("0-1")
+	require.Positive(t, baseline)
+	otherBaseline := scopeCount("0-2")
+	require.Positive(t, otherBaseline)
+
+	// a newer snapshot with one State value removed upstream
+	var src struct {
+		Params string
+		Data   []byte
+		Url    string
+	}
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_workflow_states").
+		Where("params LIKE ?", `%0-1%`).First(&src).Error)
+	var payload []map[string]interface{}
+	require.NoError(t, json.Unmarshal(src.Data, &payload))
+	var droppedName string
+	for _, field := range payload {
+		f, _ := field["field"].(map[string]interface{})
+		bundle, _ := field["bundle"].(map[string]interface{})
+		if f == nil || bundle == nil || f["name"] != "State" {
+			continue
+		}
+		values, _ := bundle["values"].([]interface{})
+		require.NotEmpty(t, values)
+		dropped, _ := values[0].(map[string]interface{})
+		droppedName, _ = dropped["name"].(string)
+		bundle["values"] = values[1:]
+	}
+	require.NotEmpty(t, droppedName, "the fixture must carry a State bundle with values")
+	trimmed, err := json.Marshal(payload)
+	require.NoError(t, err)
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_workflow_states").Create(map[string]interface{}{
+		"params":     src.Params,
+		"data":       trimmed,
+		"url":        src.Url,
+		"created_at": time.Now(),
+	}).Error)
+
+	dataflowTester.Subtask(tasks.ExtractWorkflowStatesMeta, taskData)
+	var droppedCount int64
+	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackWorkflowState{}).
+		Where("connection_id = 1 AND project_id = '0-1' AND name = ?", droppedName).Count(&droppedCount).Error)
+	assert.Zero(t, droppedCount, "value %q absent from the newest snapshot must not be replayed from history", droppedName)
+	assert.Equal(t, baseline-1, scopeCount("0-1"), "the newest snapshot fully replaces the scope's rows")
+	assert.Equal(t, otherBaseline, scopeCount("0-2"), "the replace stays per-scope")
+
+	// a newer EMPTY snapshot (token lost Read Project): the scope clears
+	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_workflow_states").Create(map[string]interface{}{
+		"params":     src.Params,
+		"data":       `[]`,
+		"url":        src.Url,
+		"created_at": time.Now().Add(time.Second),
+	}).Error)
+	dataflowTester.Subtask(tasks.ExtractWorkflowStatesMeta, taskData)
+	assert.Zero(t, scopeCount("0-1"), "an empty newest snapshot clears the scope's rows")
+	assert.Equal(t, otherBaseline, scopeCount("0-2"), "the other scope is untouched")
 }

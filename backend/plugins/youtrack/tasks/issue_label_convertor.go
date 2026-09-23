@@ -25,6 +25,7 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/didgen"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
+	"github.com/apache/devlake/core/utils"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
@@ -46,6 +47,20 @@ func ConvertIssueLabels(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*YoutrackTaskData)
 	connectionId := data.Options.ConnectionId
 	issueIdGen := didgen.NewDomainIdGenerator(&models.YoutrackIssue{})
+
+	// The converter's divider wipes the params' rows lazily — only when an
+	// output row is emitted — so once a project's last tag is removed nothing
+	// is emitted and the stale domain labels would survive. Delete first.
+	params := utils.ToJsonString(models.YoutrackApiParams{
+		ConnectionId: connectionId,
+		ProjectId:    data.Options.ProjectId,
+	})
+	if err := db.Delete(
+		&ticket.IssueLabel{},
+		dal.Where("_raw_data_table = ? AND _raw_data_params = ?", "_raw_"+RAW_ISSUES_TABLE, params),
+	); err != nil {
+		return err
+	}
 
 	cursor, err := db.Cursor(
 		dal.Select("l.*"),

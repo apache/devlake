@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"time"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -73,9 +72,10 @@ func CollectComments(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	// input = the scope's tool-layer issues, bounded to the ones changed
-	// since the bookmark on incremental runs. The issue collector
-	// ran earlier in the pipeline, so this sees the run's fresh issue rows.
+	// input = the scope's tool-layer issues, bounded to the changed-issue
+	// window of changedIssuesSince — the same contract the
+	// changelog collector applies. The issue collector ran earlier in the
+	// pipeline, so this sees the run's fresh issue rows.
 	clauses := []dal.Clause{
 		dal.Select("id"),
 		dal.From(&models.YoutrackIssue{}),
@@ -109,20 +109,10 @@ func CollectComments(taskCtx plugin.SubTaskContext) errors.Error {
 		// no total count in the response: undetermined pagination walks
 		// $skip/$top until a short page (same shape as the issues endpoint)
 		ResponseParser: parseJsonArrayResponse,
+		AfterResponse:  ignoreHTTPStatus404,
 	})
 	if err != nil {
 		return err
 	}
 	return apiCollector.Execute()
-}
-
-// changedIssuesSince is the lower bound for the per-issue collectors'
-// (comments, changelogs) issue input: on incremental runs only
-// issues with updated >= since drive the per-issue calls; on full sync
-// every issue does (nil bound).
-func changedIssuesSince(isIncremental bool, since *time.Time) *time.Time {
-	if isIncremental {
-		return since
-	}
-	return nil
 }
