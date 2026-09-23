@@ -94,11 +94,20 @@ func (p Youtrack) GetTablesInfo() []dal.Tabler {
 	}
 }
 
-// SubTaskMetas is empty for now: collectors/extractors/converters land with
-// the entity slices. Execution order will be this list's order (Linear idiom)
-// — no Dependencies fields anywhere in the plugin.
+// SubTaskMetas declares every subtask in execution order: this list's order
+// is the contract (Linear idiom) — no Dependencies fields anywhere
+// in the plugin.
 func (p Youtrack) SubTaskMetas() []plugin.SubTaskMeta {
-	return []plugin.SubTaskMeta{}
+	return []plugin.SubTaskMeta{
+		tasks.CollectWorkflowStatesMeta,
+		tasks.ExtractWorkflowStatesMeta,
+		tasks.CollectIssuesMeta,
+		tasks.ExtractIssuesMeta,
+		tasks.ConvertProjectsMeta,
+		tasks.ConvertAccountsMeta,
+		tasks.ConvertIssuesMeta,
+		tasks.ConvertIssueLabelsMeta,
+	}
 }
 
 func (p Youtrack) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]interface{}) (interface{}, errors.Error) {
@@ -128,11 +137,32 @@ func (p Youtrack) PrepareTaskData(taskCtx plugin.TaskContext, options map[string
 			return nil, errors.Default.Wrap(err, "error getting scope config for YouTrack plugin")
 		}
 	}
+	// An empty selection means "all domain types", exactly as the blueprint
+	// planner reads it (srvhelper setDefaultEntities / MakePipelinePlanSubtasks):
+	// otherwise the planner schedules the CROSS subtasks while the extractors,
+	// seeing no CROSS here, derive no accounts for them to convert.
+	if len(scopeConfig.Entities) == 0 {
+		scopeConfig.Entities = plugin.DOMAIN_TYPES
+	}
+
+	// The scope row carries the shortName needed for the `project: {}` query
+	// and for Issue.OriginalProject.
+	project := &models.YoutrackProject{}
+	if err := taskCtx.GetDal().First(project, dal.Where("connection_id = ? AND id = ?", op.ConnectionId, op.ProjectId)); err != nil {
+		return nil, errors.Default.Wrap(err, "error getting project scope for YouTrack plugin")
+	}
+
+	apiClient, err := tasks.NewYoutrackApiClient(taskCtx, connection)
+	if err != nil {
+		return nil, err
+	}
 
 	taskData := &tasks.YoutrackTaskData{
 		Options:     &op,
 		Connection:  connection,
 		ScopeConfig: scopeConfig,
+		Project:     project,
+		ApiClient:   apiClient,
 	}
 	if op.TimeAfter != "" {
 		timeAfter, errConv := errors.Convert01(time.Parse(time.RFC3339, op.TimeAfter))

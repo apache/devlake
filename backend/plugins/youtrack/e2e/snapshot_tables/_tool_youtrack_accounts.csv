@@ -1,0 +1,14 @@
+connection_id,id,login,full_name,email,avatar_url,guest
+1,1-1,user-1,User 1,user-1@example.com,https://youtrack.example.com/avatar/1,0
+1,1-2,user-2,User 2,user-2@example.com,https://youtrack.example.com/avatar/2,0
+1,1-21,user-23,User 23,user-23@example.com,https://youtrack.example.com/avatar/22,0
+1,1-23,user-25,User 25,user-25@example.com,https://youtrack.example.com/avatar/24,0
+1,1-44,user-46,User 46,user-46@example.com,https://youtrack.example.com/avatar/45,0
+1,1-45,user-47,User 47,user-47@example.com,https://youtrack.example.com/avatar/46,0
+1,1-48,user-50,User 50,user-50@example.com,https://youtrack.example.com/avatar/49,0
+1,1-5,user-6,User 6,user-6@example.com,https://youtrack.example.com/avatar/6,0
+1,1-53,user-56,User 56,user-56@example.com,https://youtrack.example.com/avatar/54,0
+1,1-56,user-59,User 59,user-59@example.com,https://youtrack.example.com/avatar/57,0
+1,1-7,user-8,User 8,user-8@example.com,https://youtrack.example.com/avatar/8,0
+1,1-8,user-9,User 9,user-9@example.com,https://youtrack.example.com/avatar/9,0
+1,1-9,user-10,User 10,user-10@example.com,https://youtrack.example.com/avatar/10,0

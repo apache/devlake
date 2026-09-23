@@ -20,6 +20,7 @@ package tasks
 import (
 	"time"
 
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
 
@@ -30,6 +31,9 @@ type YoutrackOptions struct {
 	ScopeConfigId uint64 `json:"scopeConfigId" mapstructure:"scopeConfigId,omitempty"`
 	// TimeAfter limits collection to data created/updated after this time.
 	TimeAfter string `json:"timeAfter" mapstructure:"timeAfter,omitempty"`
+	// PageSize is the issues page size ($top): default 100, capped at 3500
+	// (the server's undocumented hard limit).
+	PageSize int `json:"pageSize" mapstructure:"pageSize,omitempty"`
 }
 
 // YoutrackTaskData is the shared context handed to every YouTrack subtask.
@@ -37,6 +41,12 @@ type YoutrackTaskData struct {
 	Options    *YoutrackOptions
 	Connection *models.YoutrackConnection
 	TimeAfter  *time.Time
+	// ApiClient is the rate-limited REST client (tasks/api_client.go). Nil in
+	// e2e tests, which import raw CSVs instead of collecting.
+	ApiClient *helper.ApiAsyncClient
+	// Project is the scope being collected: collectors need its ShortName for
+	// the `project: {}` query, convertors for Issue.OriginalProject.
+	Project *models.YoutrackProject
 	// ScopeConfig carries the resolved scope config (field-name slots and
 	// type/status mappings). Never nil: PrepareTaskData defaults it to an
 	// empty config so subtasks can rely on it.

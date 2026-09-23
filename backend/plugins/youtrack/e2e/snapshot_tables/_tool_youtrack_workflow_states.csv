@@ -1,0 +1,55 @@
+connection_id,project_id,id,name,is_resolved,ordinal,archived
+1,0-1,94-1,Declined,1,17,0
+1,0-1,94-10,Ready for Delivery,0,0,0
+1,0-1,94-11,To Do,0,2,0
+1,0-1,94-12,Analysis,0,3,0
+1,0-1,94-13,Decomposition,0,4,0
+1,0-1,94-14,Ready for Dev,0,5,0
+1,0-1,94-15,In Progress,0,6,0
+1,0-1,94-16,Review,0,7,0
+1,0-1,94-17,Dev Test,0,9,0
+1,0-1,94-18,Ready for Stage Test,0,10,0
+1,0-1,94-19,Stage Test,0,11,0
+1,0-1,94-2,Closed,1,16,0
+1,0-1,94-20,Ready for PreProd,0,12,0
+1,0-1,94-21,PreProd Test,0,13,0
+1,0-1,94-22,Ready for Release,0,14,0
+1,0-1,94-23,Prod Review,0,15,0
+1,0-1,94-24,Research,0,18,0
+1,0-1,94-25,Description [Discovery],0,19,0
+1,0-1,94-26,Prioritization [Discovery],0,20,0
+1,0-1,94-27,Новый,0,21,0
+1,0-1,94-28,Локальный тест,0,23,0
+1,0-1,94-29,Устранение замечаний,0,24,0
+1,0-1,94-3,Discard [Discovery],1,1,0
+1,0-1,94-30,Согласование с проектом,0,25,0
+1,0-1,94-31,On hold,0,26,0
+1,0-1,94-32,Analyzing,0,27,0
+1,0-1,94-33,Estimate,0,28,0
+1,0-1,94-34,Scored Backlog,0,29,0
+1,0-1,94-35,Проверка на платформе,0,22,0
+1,0-1,94-36,In Progress Delivery,0,30,0
+1,0-1,94-4,Backlog,0,-2,0
+1,0-1,94-9,Dec / Arch,0,-1,0
+1,0-2,94-37,To Do,0,2,0
+1,0-2,94-38,Analysis,0,3,0
+1,0-2,94-39,Review,0,6,0
+1,0-2,94-40,Ready for Dev,0,4,0
+1,0-2,94-41,In Progress,0,5,0
+1,0-2,94-42,Dev Test,0,8,0
+1,0-2,94-43,Ready for Test,0,7,0
+1,0-2,94-44,PreProd Test,0,12,0
+1,0-2,94-45,Ready for Release,0,14,0
+1,0-2,94-46,Ready for PreProd,0,11,0
+1,0-2,94-47,Prod Review,0,15,0
+1,0-2,94-48,Decomposition,0,-1,0
+1,0-2,94-49,Ready for Delivery [Discovery],0,0,0
+1,0-2,94-5,Closed,1,16,0
+1,0-2,94-50,Ready for Stage,0,9,1
+1,0-2,94-51,Stage Test,0,10,1
+1,0-2,94-52,Estimate,0,18,1
+1,0-2,94-53,Scored Backlog,0,19,1
+1,0-2,94-54,In Progress Delivery,0,20,1
+1,0-2,94-6,Declined,1,17,0
+1,0-2,94-7,Declined [Discovery],1,1,0
+1,0-2,94-8,Backlog,0,-4,0

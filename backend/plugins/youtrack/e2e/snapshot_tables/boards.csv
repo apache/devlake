@@ -1,0 +1,3 @@
+id,name,description,url,created_date,type
+youtrack:YoutrackProject:1:0-1,Project 1,,https://youtrack.example.com/youtrack/projects/PROJ1,,
+youtrack:YoutrackProject:1:0-2,Project 2,,https://youtrack.example.com/youtrack/projects/PROJ2,,
