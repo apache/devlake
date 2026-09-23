@@ -57,6 +57,9 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		dal.From("_tool_tempo_worklogs"),
 		dal.Where("connection_id = ?", connectionId),
 	}
+	if data.Options.TeamId != 0 {
+		clauses = append(clauses, dal.Where("team_id = ?", data.Options.TeamId))
+	}
 	cursor, err := db.Cursor(clauses...)
 	if err != nil {
 		return errors.Default.Wrap(err, "failed to query Tempo worklogs")
@@ -68,6 +71,7 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 			Ctx: taskCtx,
 			Params: models.TempoApiParams{
 				ConnectionId: connectionId,
+				TeamId:       data.Options.TeamId,
 			},
 			Table: RAW_WORKLOG_TABLE,
 		},

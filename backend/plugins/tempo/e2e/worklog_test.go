@@ -47,6 +47,36 @@ func TestWorklogDataFlow(t *testing.T) {
 	)
 }
 
+func TestWorklogExtraction(t *testing.T) {
+	var plugin impl.Tempo
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "tempo", plugin)
+
+	taskData := &tasks.TempoTaskData{
+		Options: &tasks.TempoOptions{
+			ConnectionId: 1,
+			TeamId:       4,
+		},
+	}
+
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_tempo_api_worklogs.csv", "_raw_tempo_api_worklogs")
+	dataflowTester.FlushTabler(&models.TempoWorklog{})
+	dataflowTester.Subtask(tasks.ExtractWorklogsMeta, taskData)
+	dataflowTester.VerifyTable(
+		models.TempoWorklog{},
+		"./snapshot_tables/_tool_tempo_worklogs_extracted.csv",
+		e2ehelper.ColumnWithRawData(
+			"connection_id",
+			"tempo_worklog_id",
+			"team_id",
+			"issue_id",
+			"author_account_id",
+			"time_spent_seconds",
+			"start_date",
+			"start_time",
+		),
+	)
+}
+
 func TestTeamDataFlow(t *testing.T) {
 	var plugin impl.Tempo
 	dataflowTester := e2ehelper.NewDataFlowTester(t, "tempo", plugin)
