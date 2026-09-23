@@ -18,6 +18,8 @@ limitations under the License.
 package tasks
 
 import (
+	"net/http"
+
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
@@ -33,10 +35,13 @@ const defaultRateLimitPerHour = 10000
 // NewYoutrackApiClient builds the rate-limited async REST client for the
 // YouTrack API from the given connection.
 //
-// Retry/timeout policy: the transport retries 429 and 5xx (incl.
-// the observed 504) with exponential backoff + jitter, honouring Retry-After
-// (retry_transport.go) — the framework's own retry of any status >= 400 on a
-// fixed tick stays as a last-ditch layer but is not the policy. When
+// Retry/timeout policy has exactly ONE owner: the transport
+// (retry_transport.go) retries 429 and 5xx (incl. the observed 504) with
+// exponential backoff + jitter, honouring Retry-After. The framework async
+// client's own loop — any status >= 400, fixed tick, no backoff — is
+// explicitly disabled via SetMaxRetry(0): left active it would multiply the
+// transport's attempts (3x3 network calls per logical request) and retry
+// pointlessly on YouTrack's 400s (bad query/fields params). When
 // API_TIMEOUT is unset the framework applies a 120s default.
 func NewYoutrackApiClient(taskCtx plugin.TaskContext, connection *models.YoutrackConnection) (*helper.ApiAsyncClient, errors.Error) {
 	apiClient, err := helper.NewApiClientFromConnection(taskCtx.GetContext(), taskCtx, connection)
@@ -48,7 +53,28 @@ func NewYoutrackApiClient(taskCtx plugin.TaskContext, connection *models.Youtrac
 	if rateLimitPerHour <= 0 {
 		rateLimitPerHour = defaultRateLimitPerHour
 	}
-	return helper.CreateAsyncApiClient(taskCtx, apiClient, &helper.ApiRateLimitCalculator{
+	asyncClient, err := helper.CreateAsyncApiClient(taskCtx, apiClient, &helper.ApiRateLimitCalculator{
 		UserRateLimitPerHour: rateLimitPerHour,
 	})
+	if err != nil {
+		return nil, err
+	}
+	// single retry owner: the transport (see above)
+	asyncClient.SetMaxRetry(0)
+	return asyncClient, nil
+}
+
+// ignoreHTTPStatus404 is the AfterResponse for per-issue collectors: an issue
+// deleted in YouTrack stays in the tool layer (incremental runs never prune
+// it), so its comments/activities endpoint answers 404. Skipping that request
+// keeps the subtask — and its bookmark — moving instead of failing every run
+// until a full resync. 401 keeps the framework's default authentication error.
+func ignoreHTTPStatus404(res *http.Response) errors.Error {
+	if res.StatusCode == http.StatusUnauthorized {
+		return errors.Unauthorized.New("authentication failed, please check your AccessToken")
+	}
+	if res.StatusCode == http.StatusNotFound {
+		return helper.ErrIgnoreAndContinue
+	}
+	return nil
 }

@@ -46,25 +46,29 @@ var _ plugin.SubTaskEntryPoint = CollectWorkflowStates
 
 func CollectWorkflowStates(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*YoutrackTaskData)
-	apiCollector, err := helper.NewStatefulApiCollector(helper.RawDataSubTaskArgs{
-		Ctx: taskCtx,
-		Options: models.YoutrackApiParams{
-			ConnectionId: data.Options.ConnectionId,
-			ProjectId:    data.Options.ProjectId,
-		},
-		Table: RAW_WORKFLOW_STATES_TABLE,
-	})
-	if err != nil {
-		return err
-	}
 
-	// Full refresh: one unpaginated request returns every custom field with
-	// its bundle. A 200 with an empty array means the token lacks
-	// Read Project on this project — never "the project has no fields" —
-	// so the extractor's warn and the config-ui banner carry the signal.
-	err = apiCollector.InitCollector(helper.ApiCollectorArgs{
+	// Canonical NON-incremental collection ("full refresh each
+	// run"): with Incremental unset the collector replaces the params' raw
+	// rows before fetching, so the raw table holds exactly one current
+	// snapshot per scope — no stale snapshot can accumulate and replay a
+	// state removed upstream. A failed run leaves the extractor's rows from
+	// the previous success untouched (the pipeline stops before extraction).
+	apiCollector, err := helper.NewApiCollector(helper.ApiCollectorArgs{
+		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
+			Ctx: taskCtx,
+			Options: models.YoutrackApiParams{
+				ConnectionId: data.Options.ConnectionId,
+				ProjectId:    data.Options.ProjectId,
+			},
+			Table: RAW_WORKFLOW_STATES_TABLE,
+		},
 		ApiClient:   data.ApiClient,
 		UrlTemplate: "admin/projects/{{ .Params.ProjectId }}/customFields",
+		// Full refresh: one unpaginated request returns every custom field
+		// with its bundle. A 200 with an empty array means the
+		// token lacks Read Project on this project — never "the project has
+		// no fields" — so the extractor's warn and the config-ui banner
+		// carry the signal.
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			return url.Values{"fields": []string{workflowStatesFields}}, nil
 		},

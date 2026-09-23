@@ -80,6 +80,10 @@ func ExtractIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	deriveAccounts := utils.StringsContains(data.ScopeConfig.Entities, plugin.DOMAIN_TYPE_CROSS)
 	resolver := newCustomFieldResolver(data.ScopeConfig, taskCtx.GetLogger())
 
+	// latestVersionByIssue is resolved against the extractor's window after
+	// construction (below) and read by Extract at Execute time; declare it
+	// before the closure that captures it.
+	var latestVersionByIssue map[string]uint64
 	extractor, err := helper.NewStatefulApiExtractor(&helper.StatefulApiExtractorArgs[apiIssue]{
 		SubtaskCommonArgs: &helper.SubtaskCommonArgs{
 			SubTaskContext: taskCtx,
@@ -94,18 +98,26 @@ func ExtractIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			SubtaskConfig: data.ScopeConfig,
 		},
 		BeforeExtract: func(issue *apiIssue, stateManager *helper.SubtaskStateManager) errors.Error {
-			// replace the issue's labels on incremental re-extraction; the
-			// issue/account rows themselves upsert by PK. On full sync the
-			// batch-save divider wipes the params' rows instead.
-			if stateManager.IsIncremental() {
-				return db.Delete(
-					&models.YoutrackIssueLabel{},
-					dal.Where("connection_id = ? AND issue_id = ?", connectionId, issue.Id),
-				)
-			}
-			return nil
+			// Replace the issue's labels on EVERY extraction, both modes: the
+			// issue/account rows themselves upsert by PK, but labels are a
+			// per-issue child collection. Only the newest retained version of
+			// an issue reaches Extract (see latestVersionByIssue below), so
+			// this delete can never race an older version's buffered writes.
+			// The divider's full-sync wipe alone would not do: it fires only
+			// when a label row is actually emitted, so an all-tagless replay
+			// would leave the previous run's labels in place.
+			return db.Delete(
+				&models.YoutrackIssueLabel{},
+				dal.Where("connection_id = ? AND issue_id = ?", connectionId, issue.Id),
+			)
 		},
 		Extract: func(apiIssue *apiIssue, row *helper.RawData) ([]interface{}, errors.Error) {
+			// a stale retained version (superseded by a newer raw row within
+			// this run's window) must not expand its child collections — it
+			// would resurrect tags the newest version no longer carries
+			if latestId, ok := latestVersionByIssue[apiIssue.Id]; ok && row.ID != latestId {
+				return nil, nil
+			}
 			fields, err := resolver.resolve(apiIssue.CustomFields)
 			if err != nil {
 				return nil, err
@@ -177,7 +189,63 @@ func ExtractIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	if err != nil {
 		return err
 	}
+
+	// Mapping replay re-extracts every retained raw version of an
+	// issue, in raw-id order; an older version would resurrect labels a
+	// newer version removed (its delete runs before the newer version's
+	// buffered writes land). Resolve the newest raw row per issue over
+	// exactly the window the extractor is about to walk, so Extract can
+	// expand only the current snapshot of each issue.
+	latestVersionByIssue, err = latestIssueRawVersions(db, extractor)
+	if err != nil {
+		return err
+	}
 	return extractor.Execute()
+}
+
+// latestIssueRawVersions maps issue id -> newest raw row id over the same
+// window the stateful extractor will process (its params, its incremental
+// since, its until). Versions of one issue always arrive in raw-id order,
+// so the newest version is the one with the highest raw id.
+func latestIssueRawVersions(db dal.Dal, extractor *helper.StatefulApiExtractor[apiIssue]) (map[string]uint64, errors.Error) {
+	latest := map[string]uint64{}
+	table := extractor.GetRawDataTable()
+	if !db.HasTable(table) {
+		return latest, nil
+	}
+	clauses := []dal.Clause{
+		dal.Select("id, data"),
+		dal.From(table),
+		dal.Where("params = ?", extractor.GetRawDataParams()),
+		dal.Orderby("id ASC"),
+	}
+	if extractor.IsIncremental() {
+		if since := extractor.GetSince(); since != nil {
+			clauses = append(clauses, dal.Where("created_at >= ?", *since))
+		}
+	}
+	clauses = append(clauses, dal.Where("created_at < ?", *extractor.GetUntil()))
+	cursor, err := db.Cursor(clauses...)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close()
+	for cursor.Next() {
+		row := &helper.RawData{}
+		if err := db.Fetch(cursor, row); err != nil {
+			return nil, errors.Default.Wrap(err, "error scanning raw issue versions")
+		}
+		var head struct {
+			Id string `json:"id"`
+		}
+		// a row whose id cannot be read is simply absent from the map:
+		// Extract's miss-then-process default keeps it on the safe path
+		if err := json.Unmarshal(row.Data, &head); err != nil || head.Id == "" {
+			continue
+		}
+		latest[head.Id] = row.ID // id ASC order: the last write wins
+	}
+	return latest, nil
 }
 
 // deriveAccount maps a user reference to a tool-layer account row, or nil

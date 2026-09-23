@@ -30,6 +30,34 @@ import (
 	"github.com/apache/devlake/plugins/youtrack/models"
 )
 
+// changedIssuesSince is THE changed-issue selection contract shared by all
+// three collectors, defined once so no collector reinterprets its
+// bookmark independently. The issue collector fetches issues with
+// `updated >= LatestSuccessStart − 26h` (incrementalOverlap absorbs the
+// profile-timezone hazard; see issue_collector.go), and the per-issue
+// collectors (comments, changelogs) must revisit exactly the issues that
+// window covers — so their input is the scope's tool-layer issues with
+// `updated >= <own LatestSuccessStart> − 26h`. Two invariants make the
+// per-collector bookmarks safe to share this rule:
+//
+//   - Pipeline order (issues → comments → changelogs) plus stop-on-failure
+//     keeps each child bookmark at or behind the issue collector's, so a
+//     child's window always covers the issue window — an issue recovered
+//     through the overlap is never excluded from comment/changelog
+//     collection.
+//   - A child collector that fails keeps its older bookmark, so the next
+//     run re-collects the missed window (retry after partial failure);
+//     re-collection is idempotent because extraction upserts by id.
+//
+// A nil bound (full sync, or no bookmark yet) means: every issue.
+func changedIssuesSince(isIncremental bool, since *time.Time) *time.Time {
+	if !isIncremental || since == nil {
+		return nil
+	}
+	adjusted := since.Add(-incrementalOverlap)
+	return &adjusted
+}
+
 // parseJsonArrayResponse is the ResponseParser for YouTrack list endpoints
 // (issues, comments): the body is one JSON array with no total count, so
 // undetermined pagination walks $skip/$top until a short page.

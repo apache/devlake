@@ -44,6 +44,10 @@ import (
 func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
 	var youtrack impl.Youtrack
 	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	// stateful scenario: the rerun at the end must exercise the real
+	// config-change transition against persisted state, not the tester's
+	// forced full sync
+	beginStatefulScenario(t, dataflowTester)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issue_changelogs.csv", "_raw_youtrack_issue_changelogs")
@@ -53,8 +57,8 @@ func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
 
 	for _, projectId := range []string{"0-1", "0-2"} {
 		taskData := newTaskData(projectId, zeroConfig())
-		dataflowTester.Subtask(tasks.ExtractIssuesMeta, taskData)
-		dataflowTester.Subtask(tasks.ExtractIssueChangelogsMeta, taskData)
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssuesMeta, taskData)
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssueChangelogsMeta, taskData)
 	}
 
 	dataflowTester.VerifyTableWithOptions(models.YoutrackIssueChangelog{}, e2ehelper.TableOptions{
@@ -115,7 +119,7 @@ func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_workflow_states.csv", &models.YoutrackWorkflowState{})
 	dataflowTester.FlushTabler(&ticket.IssueChangelogs{})
 	for _, projectId := range []string{"0-1", "0-2"} {
-		dataflowTester.Subtask(tasks.ConvertIssueChangelogsMeta, newTaskData(projectId, zeroConfig()))
+		runSubtaskPreservingState(t, dataflowTester, tasks.ConvertIssueChangelogsMeta, newTaskData(projectId, zeroConfig()))
 	}
 
 	dataflowTester.VerifyTableWithOptions(ticket.IssueChangelogs{}, e2ehelper.TableOptions{
@@ -194,14 +198,15 @@ func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
 	assert.Positive(t, domainCountWhere("author_name != ''"), "AuthorName carries the display name")
 
 	// re-walks are idempotent via upsert by activity id: the
-	// config change flips the extractor to full sync, so every
-	// raw row is reprocessed — the counts must not move
+	// config change against the PRESERVED state flips the extractor to full
+	// sync — no collection involved — so every raw row is
+	// reprocessed and the counts must not move
 	reextract := zeroConfig()
 	reextract.StoryPointField = "Days in stage"
 	for _, projectId := range []string{"0-1", "0-2"} {
 		taskData := newTaskData(projectId, reextract)
-		dataflowTester.Subtask(tasks.ExtractIssueChangelogsMeta, taskData)
-		dataflowTester.Subtask(tasks.ConvertIssueChangelogsMeta, taskData)
+		runSubtaskPreservingState(t, dataflowTester, tasks.ExtractIssueChangelogsMeta, taskData)
+		runSubtaskPreservingState(t, dataflowTester, tasks.ConvertIssueChangelogsMeta, taskData)
 	}
 	assert.Equal(t, toolCount, countWhere(&models.YoutrackIssueChangelog{}, "1 = 1"),
 		"a full re-extraction upserts by activity id — no duplicate tool rows")

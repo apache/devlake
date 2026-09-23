@@ -100,10 +100,10 @@ func CollectIssueChangelogs(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	// input = the scope's tool-layer issues, bounded to the ones changed
-	// since the bookmark on incremental runs — the same changed-issues
-	// input as the comment collector. Re-walks are idempotent
-	// because extraction upserts by activity id.
+	// input = the scope's tool-layer issues, bounded by changedIssuesSince —
+	// the same changed-issue selection contract the comment collector
+	// applies. Re-walks are idempotent because extraction upserts
+	// by activity id.
 	clauses := []dal.Clause{
 		dal.Select("id"),
 		dal.From(&models.YoutrackIssue{}),
@@ -139,6 +139,7 @@ func CollectIssueChangelogs(taskCtx plugin.SubTaskContext) errors.Error {
 		// back full ($top) until the last, so the two rules agree here.
 		GetNextPageCustomData: nextActivityCursor,
 		ResponseParser:        parseActivityPageResponse,
+		AfterResponse:         ignoreHTTPStatus404,
 	})
 	if err != nil {
 		return err

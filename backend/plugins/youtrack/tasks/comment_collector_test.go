@@ -22,16 +22,30 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// The per-issue collectors' bounding rule: an incremental run
-// walks only tool-layer issues with updated >= since; a full sync walks
-// them all.
+// The changed-issue selection contract: an incremental run walks
+// only tool-layer issues with updated >= bookmark − 26h (the same window
+// the issue collector fetches); a full sync walks them all.
 func TestChangedIssuesSince(t *testing.T) {
 	since := time.Date(2026, 9, 21, 12, 0, 0, 0, time.UTC)
 
-	t.Run("incremental run bounds the input by the bookmark", func(t *testing.T) {
-		assert.Equal(t, &since, changedIssuesSince(true, &since))
+	t.Run("incremental run bounds the input by the bookmark minus the overlap", func(t *testing.T) {
+		got := changedIssuesSince(true, &since)
+		require.NotNil(t, got)
+		assert.Equal(t, since.Add(-incrementalOverlap), *got,
+			"the 26h overlap applies here exactly as in the issue query, or overlap-recovered issues miss their comments/changelogs")
+	})
+
+	t.Run("incremental run never mutates the caller's bookmark", func(t *testing.T) {
+		bookmark := since
+		changedIssuesSince(true, &bookmark)
+		assert.Equal(t, since, bookmark)
+	})
+
+	t.Run("incremental run without a bookmark walks all issues", func(t *testing.T) {
+		assert.Nil(t, changedIssuesSince(true, nil))
 	})
 
 	t.Run("full sync walks all issues", func(t *testing.T) {

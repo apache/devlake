@@ -18,26 +18,30 @@ limitations under the License.
 package tasks
 
 import (
+	"context"
 	"io"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-// retryTransport retries 429 and 5xx responses (incl. the observed 504 on
-// expensive queries) with exponential backoff + jitter, honouring
-// `Retry-After` when present. The framework's async client retries
-// any status >= 400 on a fixed tick with no backoff — the wrong policy for
-// an instance whose failure mode is overload, so the policy lives here at
-// the transport. Requests are all GETs (no bodies to rewind).
+// retryTransport is the plugin's single retry-policy owner: it
+// retries 429 and 5xx responses (incl. the observed 504 on expensive
+// queries) and network-level failures with exponential backoff + jitter,
+// honouring `Retry-After` when present. The framework async client's own
+// retry loop (any status >= 400 on a fixed tick) is explicitly disabled in
+// NewYoutrackApiClient so the two never multiply each other's attempts.
+// Requests are all GETs (no bodies to rewind). Backoff sleeps observe the
+// request context, so pipeline cancellation interrupts a wait promptly, and
+// the jitter draws from math/rand/v2's concurrency-safe global source —
+// async workers share one transport instance.
 type retryTransport struct {
 	base        http.RoundTripper
 	maxAttempts int           // total attempts including the first
 	baseDelay   time.Duration // backoff = baseDelay * 2^(attempt-1), +/-25% jitter, capped
 	maxDelay    time.Duration
-	random      *rand.Rand
-	sleep       func(time.Duration) // injectable for tests
+	sleep       func(ctx context.Context, d time.Duration) error // injectable for tests
 }
 
 func newRetryTransport(base http.RoundTripper) *retryTransport {
@@ -46,8 +50,7 @@ func newRetryTransport(base http.RoundTripper) *retryTransport {
 		maxAttempts: 3,
 		baseDelay:   1 * time.Second,
 		maxDelay:    30 * time.Second,
-		random:      rand.New(rand.NewSource(time.Now().UnixNano())),
-		sleep:       time.Sleep,
+		sleep:       sleepContext,
 	}
 }
 
@@ -58,6 +61,10 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		res, err = t.base.RoundTrip(req)
 		retry := false
 		if err != nil {
+			// cancellation is terminal, never a retry signal
+			if req.Context().Err() != nil {
+				return res, err
+			}
 			// network-level failure (timeout, reset, temporary DNS): retry
 			retry = true
 		} else if res.StatusCode == http.StatusTooManyRequests || res.StatusCode >= 500 {
@@ -71,7 +78,9 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			_, _ = io.Copy(io.Discard, res.Body)
 			_ = res.Body.Close()
 		}
-		t.sleep(wait)
+		if sleepErr := t.sleep(req.Context(), wait); sleepErr != nil {
+			return nil, sleepErr
+		}
 	}
 }
 
@@ -93,10 +102,22 @@ func (t *retryTransport) waitFor(res *http.Response, attempt int) time.Duration 
 		}
 	}
 	wait := t.baseDelay << (attempt - 1)
-	jitter := 0.75 + t.random.Float64()*0.5
+	jitter := 0.75 + rand.Float64()*0.5
 	wait = time.Duration(float64(wait) * jitter)
 	if wait > t.maxDelay {
 		wait = t.maxDelay
 	}
 	return wait
+}
+
+// sleepContext waits for d or until ctx is done, whichever comes first.
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }

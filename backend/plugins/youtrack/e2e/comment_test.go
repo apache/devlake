@@ -146,3 +146,45 @@ func TestYoutrackCommentDataFlow(t *testing.T) {
 	require.NoError(t, dataflowTester.Db.Model(&crossdomain.Account{}).Count(&domainAccounts).Error)
 	assert.Positive(t, domainAccounts)
 }
+
+// TestYoutrackCommentAllDeletedReplacement covers the replacement edge the
+// lazy divider cleanup cannot reach: a scope whose comments have ALL become
+// deleted emits zero output rows, and the previously converted domain rows
+// must still disappear (deleted comments leave domain metrics).
+func TestYoutrackCommentAllDeletedReplacement(t *testing.T) {
+	var youtrack impl.Youtrack
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issue_comments.csv", "_raw_youtrack_issue_comments")
+	dataflowTester.FlushTabler(&models.YoutrackIssue{})
+	dataflowTester.FlushTabler(&models.YoutrackIssueComment{})
+	dataflowTester.FlushTabler(&ticket.IssueComment{})
+
+	for _, projectId := range []string{"0-1", "0-2"} {
+		taskData := newTaskData(projectId, zeroConfig())
+		dataflowTester.Subtask(tasks.ExtractIssuesMeta, taskData)
+		dataflowTester.Subtask(tasks.ExtractCommentsMeta, taskData)
+	}
+	for _, projectId := range []string{"0-1", "0-2"} {
+		dataflowTester.Subtask(tasks.ConvertCommentsMeta, newTaskData(projectId, zeroConfig()))
+	}
+
+	domainCount := func() int64 {
+		var n int64
+		require.NoError(t, dataflowTester.Db.Model(&ticket.IssueComment{}).Count(&n).Error)
+		return n
+	}
+	require.Positive(t, domainCount(), "populated scope converts comments into the domain layer")
+
+	// every comment becomes deleted upstream (the tool layer keeps the rows,
+	// flag set — exactly what the next incremental collection would extract)
+	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackIssueComment{}).
+		Where("connection_id = 1").Update("deleted", true).Error)
+
+	for _, projectId := range []string{"0-1", "0-2"} {
+		dataflowTester.Subtask(tasks.ConvertCommentsMeta, newTaskData(projectId, zeroConfig()))
+	}
+	assert.Zero(t, domainCount(),
+		"conversion emitting zero rows must still replace the scope's previous domain output")
+}
