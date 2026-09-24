@@ -1,0 +1,2 @@
+connection_id,incident_id,user_id,role_name,user_name
+1,6,grafana-incident:user-6aae6b80244e1a8626a0a593,commander,Service Account: grafana-irm-plugin-dev

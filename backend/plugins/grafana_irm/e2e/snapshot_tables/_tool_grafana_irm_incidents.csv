@@ -1,0 +1,5 @@
+connection_id,id,title,url,status,severity,created_date,updated_date,resolved_date
+1,4,[DevLake seed] API gateway latency degradation,https://grafana-irm-plugin-dev.grafana.net/a/grafana-irm-app/incidents/4/devlake-seed-api-gateway-latency-degradation,active,Major,2026-09-19T11:32:53.254+00:00,2026-09-19T11:32:54.999+00:00,
+1,5,[DevLake seed] Cache cluster node failure,https://grafana-irm-plugin-dev.grafana.net/a/grafana-irm-app/incidents/5/devlake-seed-cache-cluster-node-failure,resolved,Minor,2026-09-19T11:33:10.948+00:00,2026-09-19T11:33:27.648+00:00,2026-09-19T11:33:27.176+00:00
+1,6,[DevLake seed] Database connection pool exhaustion,https://grafana-irm-plugin-dev.grafana.net/a/grafana-irm-app/incidents/6/devlake-seed-database-connection-pool-exhaustion,active,Critical,2026-09-20T05:01:00.946+00:00,2026-09-20T05:01:15.377+00:00,
+1,7,[DevLake seed] Payment webhook retries failing,https://grafana-irm-plugin-dev.grafana.net/a/grafana-irm-app/incidents/7/devlake-seed-payment-webhook-retries-failing,resolved,Minor,2026-09-20T05:01:28.559+00:00,2026-09-20T05:01:43.133+00:00,2026-09-20T05:01:42.712+00:00

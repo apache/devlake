@@ -65,6 +65,7 @@ import (
 	github "github.com/apache/devlake/plugins/github/impl"
 	githubGraphql "github.com/apache/devlake/plugins/github_graphql/impl"
 	gitlab "github.com/apache/devlake/plugins/gitlab/impl"
+	grafanaIrm "github.com/apache/devlake/plugins/grafana_irm/impl"
 	icla "github.com/apache/devlake/plugins/icla/impl"
 	incidentio "github.com/apache/devlake/plugins/incidentio/impl"
 	issueTrace "github.com/apache/devlake/plugins/issue_trace/impl"
@@ -116,6 +117,7 @@ func allGoPlugins() []plugin.PluginMeta {
 		github.Github{},
 		githubGraphql.GithubGraphql{},
 		gitlab.Gitlab{},
+		grafanaIrm.GrafanaIrm{},
 		icla.Icla{},
 		incidentio.Incidentio{},
 		issueTrace.IssueTrace{},

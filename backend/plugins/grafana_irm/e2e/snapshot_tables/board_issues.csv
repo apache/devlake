@@ -1,0 +1,5 @@
+board_id,issue_id
+grafana_irm:GrafanaIrmScope:1:default,grafana_irm:Incident:1:4
+grafana_irm:GrafanaIrmScope:1:default,grafana_irm:Incident:1:5
+grafana_irm:GrafanaIrmScope:1:default,grafana_irm:Incident:1:6
+grafana_irm:GrafanaIrmScope:1:default,grafana_irm:Incident:1:7
