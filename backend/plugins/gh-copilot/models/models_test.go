@@ -33,6 +33,7 @@ func TestGetTablesInfo(t *testing.T) {
 		(&GhCopilotMetricsByLanguageFeature{}).TableName():     false,
 		(&GhCopilotMetricsByLanguageModel{}).TableName():       false,
 		(&GhCopilotMetricsByModelFeature{}).TableName():        false,
+		(&GhCopilotMetricsByAiAdoptionPhase{}).TableName():     false,
 		(&GhCopilotUserDailyMetrics{}).TableName():             false,
 		(&GhCopilotUserMetricsByIde{}).TableName():             false,
 		(&GhCopilotUserMetricsByFeature{}).TableName():         false,

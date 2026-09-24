@@ -38,7 +38,13 @@ type GhCopilotUserDailyMetrics struct {
 	UsedCli                      bool    `json:"usedCli" gorm:"comment:Whether user used Copilot CLI"`
 	UsedCopilotCodeReviewActive  bool    `json:"usedCopilotCodeReviewActive" gorm:"comment:Whether user actively used code review"`
 	UsedCopilotCodeReviewPassive bool    `json:"usedCopilotCodeReviewPassive" gorm:"comment:Whether user passively used code review"`
+	UsedCopilotCodingAgent       bool    `json:"usedCopilotCodingAgent" gorm:"comment:Whether user used the Copilot coding agent"`
+	UsedCopilotCloudAgent        bool    `json:"usedCopilotCloudAgent" gorm:"comment:Whether user used the Copilot cloud agent"`
 	AiCreditsUsed                float64 `json:"aiCreditsUsed" gorm:"comment:AI credits consumed on this day"`
+
+	// AI adoption cohort classification (phase 0-3), added 2026-05-29.
+	AiAdoptionPhase        int `json:"aiAdoptionPhase" gorm:"comment:0=no cohort,1=code-first,2=agent-first,3=multi-agent"`
+	AiAdoptionPhaseVersion int `json:"aiAdoptionPhaseVersion" gorm:"comment:Classification logic version, starts at 1"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
 	CopilotCliMetrics      `mapstructure:",squash"`
