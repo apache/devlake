@@ -1,0 +1,1247 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "bolt",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homepage",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/Lv1XbLHnk/data-specific-dashboards-homepage"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "Data Source Specific Dashboard"
+      ],
+      "targetBlank": false,
+      "title": "Metric dashboards",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- Use Cases: This dashboard shows the basic project management metrics from JetBrains YouTrack: throughput, lead time, and issue activity.\n- Data Source Required: YouTrack. The plugin collects issues, comments, changelogs (activity feed), tags, accounts and workflow states; each YouTrack project appears as a board.\n- Custom Fields: YouTrack's Type/State/Priority/Assignee are custom fields whose names vary by instance. Field names and type/status mappings are configured per scope config; unmapped statuses fall back to YouTrack's `isResolved` flag (resolved → DONE, unresolved → TODO).\n- Kanban projects: set the scope config's State Field to `Stage` for the standard Kanban template. Its issues may have no Type field; select `(no type)` in Issue Type to include them. The transitions chart uses each project's configured State Field.\n- Not collected in v1 (so no panels here): sprints, worklogs/time tracking, epics and issue links.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "1. Issue Throughput",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total number of issues created in the selected time range and board(s).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Count",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementCount"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  count(distinct i.id) as value\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere \n  coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and $__timeFilter(i.created_date)\n  and bi.board_id in (${board_id})",
+          "refId": "A"
+        }
+      ],
+      "title": "Number of Issues [Issues Created in Selected Time Range]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total number of issues resolved (standard status DONE) in the selected time range and board(s).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 4,
+        "y": 4
+      },
+      "id": 4,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Count",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementCount"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  count(distinct i.id) as value\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere \n  coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and i.status = 'DONE'\n  and $__timeFilter(i.resolution_date)\n  and bi.board_id in (${board_id})",
+          "refId": "A"
+        }
+      ],
+      "title": "Number of Resolved Issues [Issues Resolved in Selected Time Range]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Monthly created vs resolved (standard status DONE) issue counts. Created is bucketed by created_date, resolved by resolution_date.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 6,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Created"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resolved"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 16,
+        "x": 8,
+        "y": 4
+      },
+      "id": 5,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Count",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementCount"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "with _created as(\n  select\n    date(concat(extract(year from i.created_date), '-', extract(month from i.created_date), '-01')) as time,\n    count(distinct i.id) as cnt\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and $__timeFilter(i.created_date)\n    and bi.board_id in (${board_id})\n  group by 1\n),\n_resolved as(\n  select\n    date(concat(extract(year from i.resolution_date), '-', extract(month from i.resolution_date), '-01')) as time,\n    count(distinct i.id) as cnt\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and i.status = 'DONE'\n    and $__timeFilter(i.resolution_date)\n    and bi.board_id in (${board_id})\n  group by 1\n),\n_union as(\n  select time, cnt as created, 0 as resolved from _created\n  union all\n  select time, 0 as created, cnt as resolved from _resolved\n)\n\nselect\n  time,\n  sum(created) as \"Created\",\n  sum(resolved) as \"Resolved\"\nfrom _union\ngroup by time\norder by time",
+          "refId": "A"
+        }
+      ],
+      "title": "Created vs Resolved over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Issue Delivery Rate = count(Issues Resolved in Selected Time Range)/count(Issues Created in Selected Time Range)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 10
+      },
+      "id": 6,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Delivery Rate",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementDeliveryRate"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "with _created as(\n  select\n    count(distinct i.id) as cnt\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and $__timeFilter(i.created_date)\n    and bi.board_id in (${board_id})\n),\n_resolved as(\n  select\n    count(distinct i.id) as cnt\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and i.status = 'DONE'\n    and $__timeFilter(i.resolution_date)\n    and bi.board_id in (${board_id})\n)\n\nselect \n  case when _created.cnt = 0 then null else 1.0 * _resolved.cnt / _created.cnt end as value\nfrom _created, _resolved",
+          "refId": "A"
+        }
+      ],
+      "title": "Issue Delivery Rate [Created vs Resolved in Selected Time Range]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of issues created in the selected time range by standard status (TODO/IN_PROGRESS/DONE/OTHER). Standard statuses come from the scope config's status mappings, falling back to YouTrack's isResolved flag (resolved → DONE, unresolved → TODO).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DONE"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IN_PROGRESS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TODO"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OTHER"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "rgba(205, 204, 206, 1)",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 4,
+        "y": 10
+      },
+      "id": 7,
+      "options": {
+        "displayLabels": [
+          "value",
+          "percent"
+        ],
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  case when i.status = '' then 'UNKNOWN' else i.status end as status,\n  count(distinct i.id) as value\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere \n  coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and $__timeFilter(i.created_date)\n  and bi.board_id in (${board_id})\ngroup by 1\norder by 2 desc",
+          "refId": "A"
+        }
+      ],
+      "title": "Issue Status Distribution [Issues Created in Selected Time Range]",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of issues created in the selected time range by standard issue type (from the scope config's type field and type mappings; unmapped types are upper-cased original names).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 14,
+        "y": 10
+      },
+      "id": 8,
+      "options": {
+        "displayLabels": [
+          "value",
+          "percent"
+        ],
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  case when i.type = '' then '(no type)' else i.type end as type,\n  count(distinct i.id) as value\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere \n  coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and $__timeFilter(i.created_date)\n  and bi.board_id in (${board_id})\ngroup by 1\norder by 2 desc",
+          "refId": "A"
+        }
+      ],
+      "title": "Issues by Type [Issues Created in Selected Time Range]",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 9,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "2. Issue Lead Time",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Mean lead time (created → resolved) of issues resolved in the selected time range, in days.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 14
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 17
+      },
+      "id": 10,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Lead Time",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  avg(i.lead_time_minutes/1440.0) as value\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere \n  coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and i.status = 'DONE'\n  and $__timeFilter(i.resolution_date)\n  and bi.board_id in (${board_id})",
+          "refId": "A"
+        }
+      ],
+      "title": "Mean Issue Lead Time in Days [Issues Resolved in Selected Time Range]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "80% of issues resolved in the selected time range had a lead time (created → resolved) below this many days.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 21
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 4,
+        "y": 17
+      },
+      "id": 11,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Lead Time",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "with _ranks as(\n  select \n    i.lead_time_minutes,\n    percent_rank() over (order by i.lead_time_minutes asc) as ranks\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and i.status = 'DONE'\n    and $__timeFilter(i.resolution_date)\n    and bi.board_id in (${board_id})\n)\n\nselect\n  max(lead_time_minutes/1440.0) as value\nfrom _ranks\nwhere \n  ranks <= 0.8",
+          "refId": "A"
+        }
+      ],
+      "title": "80% Issues' Lead Time are less than # days [Issues Resolved in Selected Time Range]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "The cumulative distribution of issue lead time. Each bar refers to the percent rank of a lead time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 8,
+        "y": 17
+      },
+      "id": 12,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Requirement Lead Time",
+          "url": "https://devlake.apache.org/docs/Metrics/RequirementLeadTime"
+        }
+      ],
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.51,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "with _ranks as(\n  select \n    round(i.lead_time_minutes/1440.0) as lead_time_day\n  from issues i\n    join board_issues bi on i.id = bi.issue_id\n  where \n    coalesce(nullif(i.type, ''), '(no type)') in (${type})\n    and i.status = 'DONE'\n    and $__timeFilter(i.resolution_date)\n    and bi.board_id in (${board_id})\n)\n\nselect \n  now() as time,\n  lpad(concat(lead_time_day, 'd'), 4, ' ') as metric,\n  percent_rank() over (order by lead_time_day asc) as value\nfrom _ranks\norder by lead_time_day asc",
+          "refId": "A"
+        }
+      ],
+      "title": "Cumulative Distribution of Issue Lead Time [Issues Resolved in Selected Time Range]",
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "current"
+            ]
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 13,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "3. Activity",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Daily count of issue state transitions, stacked by the standardized target status (to_value). The field name is read from each project's scope config (default State, or Stage for a standard Kanban project). Std statuses come from the scope config's status mappings, falling back to YouTrack's isResolved flag.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 65,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DONE"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IN_PROGRESS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TODO"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OTHER"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "rgba(205, 204, 206, 1)",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 0,
+        "y": 25
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "select \n  date(cl.created_date) as time,\n  cl.to_value as metric,\n  count(*) as value\nfrom issue_changelogs cl\n  join issues i on cl.issue_id = i.id\n  join board_issues bi on i.id = bi.issue_id\n  join _tool_youtrack_projects p on bi.board_id = concat('youtrack:YoutrackProject:', p.connection_id, ':', p.id)\n  left join _tool_youtrack_scope_configs sc on sc.id = p.scope_config_id and sc.connection_id = p.connection_id\nwhere \n  cl.field_name = coalesce(nullif(sc.state_field, ''), 'State')\n  and cl.to_value in ('TODO', 'IN_PROGRESS', 'DONE', 'OTHER')\n  and coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and $__timeFilter(cl.created_date)\n  and bi.board_id in (${board_id})\ngroup by 1, 2\norder by 1",
+          "refId": "A"
+        }
+      ],
+      "title": "State Transitions over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Assignees with the most open (standard status not DONE) issues created in the selected time range, joined to accounts. Only single-value assignee fields are collected in v1: on instances whose Assignee field is multi-value, issues carry no assignee and this panel stays empty.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 15,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "open_issues"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n  a.full_name as assignee,\n  count(distinct i.id) as open_issues\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\n  join issue_assignees ia on i.id = ia.issue_id\n  join accounts a on ia.assignee_id = a.id\nwhere \n  i.status != 'DONE'\n  and coalesce(nullif(i.type, ''), '(no type)') in (${type})\n  and $__timeFilter(i.created_date)\n  and bi.board_id in (${board_id})\ngroup by 1\norder by 2 desc\nlimit 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Assignees by Open Issues",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 16,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<br/>\n\nThis dashboard is created based on this [data schema](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema). Want to add more metrics? Please follow the [guide](https://devlake.apache.org/docs/Configuration/Dashboards/GrafanaUserGuide).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "youtrack",
+    "ticket"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "mysql",
+        "definition": "select concat(name, '--', id) from boards where id like 'youtrack%'",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Choose Board",
+        "multi": true,
+        "name": "board_id",
+        "options": [],
+        "query": "select concat(name, '--', id) from boards where id like 'youtrack%'",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)--(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "mysql",
+        "definition": "select distinct coalesce(nullif(i.type, ''), '(no type)') from issues i join board_issues bi on i.id = bi.issue_id where bi.board_id like 'youtrack:%'",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Issue Type",
+        "multi": true,
+        "name": "type",
+        "options": [],
+        "query": "select distinct coalesce(nullif(i.type, ''), '(no type)') from issues i join board_issues bi on i.id = bi.issue_id where bi.board_id like 'youtrack:%'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3y",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Youtrack",
+  "uid": "youtrack",
+  "version": 1,
+  "weekStart": ""
+}
