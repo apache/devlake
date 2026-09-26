@@ -167,56 +167,11 @@ func NewStatefulApiCollectorForFinalizableEntity(args FinalizableApiCollectorArg
 			return nil, nil
 		},
 		MinTickInterval: args.CollectNewRecordsByList.MinTickInterval,
-		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			items, err := args.CollectNewRecordsByList.ResponseParser(res)
-			if err != nil {
-				return nil, err
-			}
-			if len(items) == 0 {
-				return nil, nil
-			}
-
-			// time filter or diff sync
-			if createdAfter != nil && args.CollectNewRecordsByList.GetCreated != nil {
-				// if the first record of the page was created before createdAfter and not a zero value, return empty set and stop
-				firstCreated, err := args.CollectNewRecordsByList.GetCreated(items[0])
-				if err != nil {
-					return nil, err
-				}
-				if firstCreated.Before(*createdAfter) && !firstCreated.IsZero() {
-					return nil, ErrFinishCollect
-				}
-
-				// If last record was created before CreatedAfter, including a zero value, check each record individually
-				lastCreated, err := args.CollectNewRecordsByList.GetCreated(items[len(items)-1])
-				if err != nil {
-					return nil, err
-				}
-				if lastCreated.Before(*createdAfter) {
-					var validItems []json.RawMessage
-					// Only collect items that were created after the last successful collection to prevent duplicates
-					for _, item := range items {
-						itemCreatedAt, err := args.CollectNewRecordsByList.GetCreated(item)
-						if err != nil {
-							return nil, err
-						}
-
-						if itemCreatedAt.IsZero() {
-							// If zero then timestamp is null on the response - accept as valid for downstream processing
-							validItems = append(validItems, item)
-							continue
-						}
-
-						if itemCreatedAt.Before(*createdAfter) {
-							// Once we reach an item that was created before the last successful collection, stop & return
-							return validItems, ErrFinishCollect
-						}
-						validItems = append(validItems, item)
-					}
-				}
-			}
-			return items, err
-		},
+		ResponseParser: newStatefulResponseParser(
+			args.CollectNewRecordsByList.ResponseParser,
+			args.CollectNewRecordsByList.GetCreated,
+			createdAfter,
+		),
 		AfterResponse: args.CollectNewRecordsByList.AfterResponse,
 		RequestBody:   args.CollectNewRecordsByList.RequestBody,
 		Method:        args.CollectNewRecordsByList.Method,
@@ -266,6 +221,74 @@ func NewStatefulApiCollectorForFinalizableEntity(args FinalizableApiCollectorArg
 		Method:          args.CollectUnfinishedDetails.Method,
 	})
 	return manager, err
+}
+
+// newStatefulResponseParser wraps a plugin's ResponseParser with the incremental time filter, so a
+// page is cut down to the records created after the last successful collection.
+//
+// Both this filter and the plugin parsers it wraps stop collecting by returning the valid prefix of
+// a page together with ErrFinishCollect. fetchAsync persists whatever is returned and then stops
+// paginating, so the prefix must be passed through rather than dropped: discarding it silently loses
+// the in-window records on the last page of a time-bounded collection.
+func newStatefulResponseParser(
+	parseResponse func(res *http.Response) ([]json.RawMessage, errors.Error),
+	getCreated func(item json.RawMessage) (time.Time, errors.Error),
+	createdAfter *time.Time,
+) func(res *http.Response) ([]json.RawMessage, errors.Error) {
+	return func(res *http.Response) ([]json.RawMessage, errors.Error) {
+		items, err := parseResponse(res)
+		parserFinished := errors.Is(err, ErrFinishCollect)
+		if err != nil && !parserFinished {
+			return nil, err
+		}
+		if len(items) == 0 {
+			if parserFinished {
+				return nil, ErrFinishCollect
+			}
+			return nil, nil
+		}
+
+		// time filter or diff sync
+		if createdAfter != nil && getCreated != nil {
+			// if the first record of the page was created before createdAfter and not a zero value, return empty set and stop
+			firstCreated, err := getCreated(items[0])
+			if err != nil {
+				return nil, err
+			}
+			if firstCreated.Before(*createdAfter) && !firstCreated.IsZero() {
+				return nil, ErrFinishCollect
+			}
+
+			// If last record was created before CreatedAfter, including a zero value, check each record individually
+			lastCreated, err := getCreated(items[len(items)-1])
+			if err != nil {
+				return nil, err
+			}
+			if lastCreated.Before(*createdAfter) {
+				var validItems []json.RawMessage
+				// Only collect items that were created after the last successful collection to prevent duplicates
+				for _, item := range items {
+					itemCreatedAt, err := getCreated(item)
+					if err != nil {
+						return nil, err
+					}
+
+					if itemCreatedAt.IsZero() {
+						// If zero then timestamp is null on the response - accept as valid for downstream processing
+						validItems = append(validItems, item)
+						continue
+					}
+
+					if itemCreatedAt.Before(*createdAfter) {
+						// Once we reach an item that was created before the last successful collection, stop & return
+						return validItems, ErrFinishCollect
+					}
+					validItems = append(validItems, item)
+				}
+			}
+		}
+		return items, err
+	}
 }
 
 type FinalizableApiCollectorArgs struct {
