@@ -23,7 +23,6 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/utils"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/require"
@@ -42,8 +41,7 @@ func countRows(t *testing.T, dataflowTester *e2ehelper.DataFlowTester, model int
 // TestYoutrackIssueLabelsAllRemovedReplacement: the project's last tag is
 // removed — the extractor wipes the tool labels, the converter emits nothing.
 func TestYoutrackIssueLabelsAllRemovedReplacement(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.FlushTabler(&models.YoutrackIssue{})
@@ -71,8 +69,7 @@ func TestYoutrackIssueLabelsAllRemovedReplacement(t *testing.T) {
 // TestYoutrackIssueAssigneesAllRemovedReplacement: every issue of the project
 // becomes unassigned — issues still convert, but no assignee row is emitted.
 func TestYoutrackIssueAssigneesAllRemovedReplacement(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_projects.csv", &models.YoutrackProject{})
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_issues_assignee_seed.csv", &models.YoutrackIssue{})

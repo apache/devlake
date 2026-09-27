@@ -19,12 +19,13 @@ package e2e
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/assert"
@@ -32,8 +33,7 @@ import (
 )
 
 func TestYoutrackWorkflowStateDataFlow(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	taskData := &tasks.YoutrackTaskData{
 		Options:     &tasks.YoutrackOptions{ConnectionId: 1, ProjectId: "0-1"},
@@ -69,17 +69,23 @@ func TestYoutrackWorkflowStateDataFlow(t *testing.T) {
 	assert.Positive(t, archived, "fixture must carry archived bundle values")
 
 	// mixed-language workflow vocabulary survives extraction verbatim
-	var cyrillic int64
+	// checked in Go: REGEXP is MySQL-only
+	var names []string
 	require.NoError(t, dataflowTester.Db.Model(&models.YoutrackWorkflowState{}).
-		Where("connection_id = 1 AND name REGEXP '[^ -~]'").Count(&cyrillic).Error)
-	assert.Greater(t, cyrillic, int64(0), "mixed-language state names (e.g. Новый) must be preserved")
+		Where("connection_id = 1").Pluck("name", &names).Error)
+	cyrillic := 0
+	for _, name := range names {
+		if strings.IndexFunc(name, func(r rune) bool { return r > unicode.MaxASCII }) >= 0 {
+			cyrillic++
+		}
+	}
+	assert.Greater(t, cyrillic, 0, "mixed-language state names (e.g. Новый) must be preserved")
 }
 
 // TestYoutrackWorkflowStateFullRefresh covers the "full refresh each
 // run": a state renamed or removed upstream must not linger in the table.
 func TestYoutrackWorkflowStateFullRefresh(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 	taskData := &tasks.YoutrackTaskData{
 		Options:     &tasks.YoutrackOptions{ConnectionId: 1, ProjectId: "0-1"},
 		ScopeConfig: &models.YoutrackScopeConfig{},
@@ -123,8 +129,7 @@ func TestYoutrackWorkflowStateFullRefresh(t *testing.T) {
 // empty newest snapshot (a token that lost Read Project) must clear the
 // scope's rows rather than resurrect history.
 func TestYoutrackWorkflowStateLatestSnapshot(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 	taskData := &tasks.YoutrackTaskData{
 		Options:     &tasks.YoutrackOptions{ConnectionId: 1, ProjectId: "0-1"},
 		ScopeConfig: &models.YoutrackScopeConfig{},
@@ -177,6 +182,7 @@ func TestYoutrackWorkflowStateLatestSnapshot(t *testing.T) {
 	trimmed, err := json.Marshal(payload)
 	require.NoError(t, err)
 	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_workflow_states").Create(map[string]interface{}{
+		"id":         nextRawId(t, dataflowTester, "_raw_youtrack_workflow_states"),
 		"params":     src.Params,
 		"data":       trimmed,
 		"url":        src.Url,
@@ -193,6 +199,7 @@ func TestYoutrackWorkflowStateLatestSnapshot(t *testing.T) {
 
 	// a newer EMPTY snapshot (token lost Read Project): the scope clears
 	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_workflow_states").Create(map[string]interface{}{
+		"id":         nextRawId(t, dataflowTester, "_raw_youtrack_workflow_states"),
 		"params":     src.Params,
 		"data":       `[]`,
 		"url":        src.Url,

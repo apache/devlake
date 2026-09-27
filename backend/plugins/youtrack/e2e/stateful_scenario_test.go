@@ -63,3 +63,13 @@ func runSubtaskPreservingState(t *testing.T, dataflowTester *e2ehelper.DataFlowT
 	)
 	require.NoError(t, subtaskMeta.EntryPoint(subtaskCtx))
 }
+
+// nextRawId returns an id past every row of a raw table. Tests that append a
+// raw row after ImportCsvIntoRawTable must set it explicitly: the CSV import
+// writes explicit ids, which leaves a PostgreSQL sequence at 1.
+func nextRawId(t *testing.T, dataflowTester *e2ehelper.DataFlowTester, table string) uint64 {
+	t.Helper()
+	var maxId uint64
+	require.NoError(t, dataflowTester.Db.Table(table).Select("COALESCE(MAX(id), 0)").Row().Scan(&maxId))
+	return maxId + 1
+}

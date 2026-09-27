@@ -23,7 +23,6 @@ import (
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/assert"
@@ -35,8 +34,7 @@ import (
 // guest account must never reach the domain layer. The live
 // fixture carries no guest refs, so the tool table is seeded directly.
 func TestYoutrackConvertAccountsSkipsGuest(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_accounts_seed.csv", &models.YoutrackAccount{})
 	dataflowTester.FlushTabler(&crossdomain.Account{})

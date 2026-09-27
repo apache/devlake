@@ -20,6 +20,7 @@ package e2e
 import (
 	"testing"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
@@ -31,6 +32,30 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// newDataFlowTester opens a youtrack DataFlowTester and creates every table
+// the plugin's subtasks read or delete from. Subtasks clear stale rows
+// before writing (labels, assignees, ...), so a test that never flushed one
+// of those tables would otherwise fail on a fresh database, as CI's is.
+func newDataFlowTester(t *testing.T) *e2ehelper.DataFlowTester {
+	var youtrack impl.Youtrack
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	// the connection is skipped: subtasks never touch it, and its encrypted
+	// token needs a serializer the tester does not register
+	tables := []dal.Tabler{
+		&ticket.Board{}, &ticket.BoardIssue{}, &ticket.Issue{}, &ticket.IssueAssignee{},
+		&ticket.IssueLabel{}, &ticket.IssueComment{}, &ticket.IssueChangelogs{}, &crossdomain.Account{},
+	}
+	for _, table := range youtrack.GetTablesInfo() {
+		if _, isConnection := table.(*models.YoutrackConnection); !isConnection {
+			tables = append(tables, table)
+		}
+	}
+	for _, table := range tables {
+		require.NoError(t, dataflowTester.Db.AutoMigrate(table))
+	}
+	return dataflowTester
+}
 
 // newTaskData builds the per-project task data for an e2e run: the REST
 // client stays nil (raw CSVs are imported instead of collecting), and the
@@ -66,8 +91,7 @@ func zeroConfig() *models.YoutrackScopeConfig {
 // type`, invisible to the default `Type`), the assignee field is multi-value
 // (ineligible), and states are resolved via isResolved alone.
 func TestYoutrackIssueDataFlowZeroConfig(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.FlushTabler(&models.YoutrackIssue{})
@@ -186,8 +210,7 @@ func TestYoutrackIssueDataFlowZeroConfig(t *testing.T) {
 // instance's Assignee field is multi-value, which the extractor rejects by
 // design — so the tool table is seeded directly.
 func TestYoutrackConvertIssuesEmitsIssueAssignees(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_projects.csv", &models.YoutrackProject{})
 	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_youtrack_issues_assignee_seed.csv", &models.YoutrackIssue{})

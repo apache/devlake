@@ -26,7 +26,6 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/assert"
@@ -59,8 +58,7 @@ func mappedConfig() *models.YoutrackScopeConfig {
 // when named. It then changes a mapping and re-extracts from the raw layer —
 // no new YouTrack API calls (the raw import is untouched).
 func TestYoutrackIssueDataFlowWithMappings(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.FlushTabler(&models.YoutrackIssue{})
@@ -145,8 +143,7 @@ func TestYoutrackIssueDataFlowWithMappings(t *testing.T) {
 // (b) the replay never re-hits the API and never resurrects the removed
 // tag from the retained old version, and (c) the new mapping applies.
 func TestYoutrackMappingReplayPreservesState(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 	beginStatefulScenario(t, dataflowTester)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
@@ -202,6 +199,7 @@ func TestYoutrackMappingReplayPreservesState(t *testing.T) {
 	}
 	require.NotNil(t, v2data, "the fixture must contain issue %s in project 0-1", taggedIssue)
 	require.NoError(t, dataflowTester.Db.Table("_raw_youtrack_issues").Create(map[string]interface{}{
+		"id":         nextRawId(t, dataflowTester, "_raw_youtrack_issues"),
 		"params":     src.Params,
 		"data":       v2data,
 		"url":        src.Url,
@@ -250,8 +248,7 @@ func TestYoutrackMappingReplayPreservesState(t *testing.T) {
 // configured-but-absent field warns per scope and leaves the dedicated
 // columns empty; the run completes (warn, never fail).
 func TestYoutrackIssueDataFlowMissingField(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.FlushTabler(&models.YoutrackIssue{})
@@ -278,8 +275,7 @@ func TestYoutrackIssueDataFlowMissingField(t *testing.T) {
 // TestYoutrackAccountsOnlyWithCross covers the entity gating: accounts
 // derive inline only when CROSS is among the scope config's entities.
 func TestYoutrackAccountsOnlyWithCross(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.FlushTabler(&models.YoutrackAccount{})

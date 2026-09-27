@@ -24,7 +24,6 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/assert"
@@ -40,8 +39,7 @@ import (
 // first because the comment convertor scopes comments to the project via
 // their parent issue, exactly like the pipeline's SubTaskMetas order.
 func TestYoutrackCommentDataFlow(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issue_comments.csv", "_raw_youtrack_issue_comments")
@@ -152,8 +150,7 @@ func TestYoutrackCommentDataFlow(t *testing.T) {
 // deleted emits zero output rows, and the previously converted domain rows
 // must still disappear (deleted comments leave domain metrics).
 func TestYoutrackCommentAllDeletedReplacement(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issue_comments.csv", "_raw_youtrack_issue_comments")

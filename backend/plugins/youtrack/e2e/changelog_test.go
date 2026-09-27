@@ -23,7 +23,6 @@ import (
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/helpers/e2ehelper"
-	"github.com/apache/devlake/plugins/youtrack/impl"
 	"github.com/apache/devlake/plugins/youtrack/models"
 	"github.com/apache/devlake/plugins/youtrack/tasks"
 	"github.com/stretchr/testify/assert"
@@ -42,8 +41,7 @@ import (
 // because the changelog convertor scopes rows to the project via their
 // parent issue, exactly like the pipeline's SubTaskMetas order.
 func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 	// stateful scenario: the rerun at the end must exercise the real
 	// config-change transition against persisted state, not the tester's
 	// forced full sync
@@ -218,8 +216,7 @@ func TestYoutrackIssueChangelogDataFlow(t *testing.T) {
 // conversion: a configured status mapping beats the isResolved fallback,
 // from the same raw capture.
 func TestYoutrackIssueChangelogMappedStatuses(t *testing.T) {
-	var youtrack impl.Youtrack
-	dataflowTester := e2ehelper.NewDataFlowTester(t, "youtrack", youtrack)
+	dataflowTester := newDataFlowTester(t)
 
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issues.csv", "_raw_youtrack_issues")
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_youtrack_issue_changelogs.csv", "_raw_youtrack_issue_changelogs")
