@@ -91,9 +91,14 @@ func ExtractSeats(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, err
 			}
 
+			seatOrganization := connection.Organization
+			if seat.Organization != nil && seat.Organization.Login != "" {
+				seatOrganization = seat.Organization.Login
+			}
+
 			toolSeat := &models.GhCopilotSeat{
 				ConnectionId:            data.Options.ConnectionId,
-				Organization:            connection.Organization,
+				Organization:            seatOrganization,
 				UserLogin:               seat.Assignee.Login,
 				UserId:                  seat.Assignee.Id,
 				UserName:                seat.Assignee.Name,
