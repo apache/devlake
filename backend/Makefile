@@ -72,7 +72,9 @@ debug: build-plugin-debug
 	dlv debug server/main.go
 
 mock:
-	rm -rf mocks
+	# Remove previously generated mocks but keep the tracked doc.go placeholders,
+	# which keep the mock import paths resolvable for `go mod tidy`.
+	if [ -d mocks ]; then find mocks -type f ! -name doc.go -delete && find mocks -type d -empty -delete; fi
 	# mockery v3 is configured via YAML instead of CLI flags. Two invocations are
 	# required (and must run in this order): `helpers/unithelper` imports the
 	# generated `mocks/core/...` packages, and v3 type-checks the sources it

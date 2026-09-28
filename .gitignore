@@ -154,7 +154,10 @@ libgit2
 .playwright-cli/
 
 # auto generated code
-backend/mocks/
+# backend/mocks: only the doc.go placeholders are tracked, they keep the mock
+# import paths resolvable for `go mod tidy` on a fresh clone
+backend/mocks/**/*.go
+!backend/mocks/**/doc.go
 backend/server/api/docs/swagger.json
 backend/server/api/docs/swagger.yaml
 backend/server/api/docs/docs.go
