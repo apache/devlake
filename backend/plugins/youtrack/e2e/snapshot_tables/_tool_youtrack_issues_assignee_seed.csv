@@ -1,0 +1,2 @@
+connection_id,id,id_readable,number_in_project,project_id,summary,description,created,updated,resolved,comments_count,reporter_id,reporter_name,state_name,state_is_resolved,type_name,priority_name,assignee_id,assignee_name,story_point,due_date,std_type,std_status,lead_time_minutes,custom_fields_json
+1,2-999,PROJ1-999,999,0-1,Seeded issue with assignee,,2026-09-01 10:00:00,2026-09-02 10:00:00,,0,1-100,User 100,To Do,0,Task,Normal,1-100,User 100,,,TASK,TODO,,"[]"

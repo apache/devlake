@@ -28,6 +28,10 @@ export interface IPluginConfig {
     docLink: string;
     initialValues?: Record<string, any>;
     fields: any[];
+    // when true, a successful Test Connection shows the message returned by
+    // the plugin's test API (e.g. the authenticated login, soft warnings)
+    // instead of the generic toast
+    showTestResultMessage?: boolean;
   };
   dataScope: {
     localSearch?: boolean;
