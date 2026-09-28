@@ -49,7 +49,7 @@ RUN if [ "$(arch)" != "x86_64" ] ; then \
         apt-get install -y gcc-x86-64-linux-gnu binutils-x86-64-linux-gnu ; \
     fi
 
-RUN go install github.com/vektra/mockery/v3@v3.7.2
+RUN go install github.com/vektra/mockery/v3@v3.7.4
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 COPY --from=debian-amd64 /usr/include /rootfs-amd64/usr/include
