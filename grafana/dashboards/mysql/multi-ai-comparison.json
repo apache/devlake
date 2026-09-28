@@ -49,6 +49,17 @@
       "title": "Cursor Usage",
       "type": "link",
       "url": "/d/cursor_usage"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Claude Code Adoption",
+      "type": "link",
+      "url": "/d/claude_code_adoption"
     }
   ],
   "panels": [
@@ -70,7 +81,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "## Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor\nCompare GitHub Copilot, Kiro, and Cursor adoption and activity side by side.\n\n**Semantic boundary:** Copilot exports code-generation and acceptance events. Kiro exports usage reports and completion responses, but no acceptance event. Cursor metrics come from `_tool_cursor_daily_usage`. Returned Kiro lines, Copilot LOC added, and Cursor LOC added are displayed with explicit labels and must not be treated as equivalent productivity measures.",
+        "content": "## Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor vs Claude Code\nCompare GitHub Copilot, Kiro, Cursor, and Claude Code adoption and activity side by side.\n\n**Semantic boundary:** Copilot and Cursor export IDE code-generation and tab completion events. Kiro exports completion logs. Claude Code is an agentic CLI tool; its activity tracks tool execution approvals (accepted vs rejected edit/write tool actions) and lines added. Returned Kiro lines, Copilot LOC added, Cursor LOC Added, and Claude LOC Added are displayed with explicit labels and must not be treated as equivalent productivity measures.",
         "mode": "markdown"
       },
       "title": "About",
@@ -170,6 +181,16 @@
           "rawQuery": true,
           "rawSql": "SELECT\n  DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY) AS time,\n  COUNT(DISTINCT user_id) AS 'Cursor Active Users'\nFROM _tool_cursor_daily_usage\nWHERE connection_id = ${cursor_connection_id}\n  AND scope_id = '${cursor_scope_id}'\n  AND is_active = 1\n  AND $__timeFilter(usage_date)\nGROUP BY DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY)\nORDER BY time",
           "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "devlake-mysql-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  COUNT(DISTINCT user_id) AS 'Claude Code Active Users'\nFROM _tool_claude_code_user_activity\nWHERE connection_id = ${claude_code_connection_id}\n  AND scope_id = '${claude_code_scope_id}'\n  AND $__timeFilter(date)\n  AND (\n    cc_session_count > 0\n    OR cc_commit_count > 0\n    OR cc_pull_request_count > 0\n    OR cc_lines_added > 0\n    OR cc_lines_removed > 0\n    OR edit_tool_accepted + edit_tool_rejected + multi_edit_tool_accepted + multi_edit_tool_rejected\n      + write_tool_accepted + write_tool_rejected + notebook_edit_tool_accepted + notebook_edit_tool_rejected > 0\n  )\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "D"
         }
       ],
       "title": "Weekly Active Users Comparison",
@@ -361,6 +382,46 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "mysql",
+        "uid": "devlake-mysql-api"
+      },
+      "description": "Weekly Claude Code tool modification actions: accepted vs rejected (edit, write, and notebook tools)",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisLabel": "", "axisPlacement": "auto",
+            "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2,
+            "pointSize": 5, "showPoints": "never", "spanNulls": true,
+            "stacking": { "mode": "none" }, "thresholdsStyle": { "mode": "off" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "id": 14,
+      "options": {
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "devlake-mysql-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time,\n  SUM(edit_tool_accepted + write_tool_accepted + multi_edit_tool_accepted + notebook_edit_tool_accepted) AS 'Claude: Accepted Actions',\n  SUM(edit_tool_rejected + write_tool_rejected + multi_edit_tool_rejected + notebook_edit_tool_rejected) AS 'Claude: Rejected Actions'\nFROM _tool_claude_code_user_activity\nWHERE connection_id = ${claude_code_connection_id}\n  AND scope_id = '${claude_code_scope_id}'\n  AND $__timeFilter(date)\nGROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code: Tool Actions",
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -435,11 +496,11 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, SUM(kiro_lines) AS 'Kiro Returned Lines', SUM(copilot_loc) AS 'Copilot LOC Added', SUM(cursor_loc) AS 'Cursor LOC Added' FROM (SELECT DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(DATE(timestamp)) DAY) AS time, SUM(returned_line_count) AS kiro_lines, 0 AS copilot_loc, 0 AS cursor_loc FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(DATE(timestamp)) DAY) UNION ALL SELECT DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) AS time, 0 AS kiro_lines, SUM(loc_added_sum) AS copilot_loc, 0 AS cursor_loc FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) UNION ALL SELECT DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY) AS time, 0 AS kiro_lines, 0 AS copilot_loc, SUM(lines_added) AS cursor_loc FROM _tool_cursor_daily_usage WHERE connection_id = ${cursor_connection_id} AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date) GROUP BY DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY)) combined GROUP BY time ORDER BY time",
+          "rawSql": "SELECT time, SUM(kiro_lines) AS 'Kiro Returned Lines', SUM(copilot_loc) AS 'Copilot LOC Added', SUM(cursor_loc) AS 'Cursor LOC Added', SUM(claude_loc) AS 'Claude LOC Added' FROM (SELECT DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(DATE(timestamp)) DAY) AS time, SUM(returned_line_count) AS kiro_lines, 0 AS copilot_loc, 0 AS cursor_loc, 0 AS claude_loc FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(DATE(timestamp)) DAY) UNION ALL SELECT DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) AS time, 0 AS kiro_lines, SUM(loc_added_sum) AS copilot_loc, 0 AS cursor_loc, 0 AS claude_loc FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY DATE_SUB(DATE(day), INTERVAL WEEKDAY(DATE(day)) DAY) UNION ALL SELECT DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY) AS time, 0 AS kiro_lines, 0 AS copilot_loc, SUM(lines_added) AS cursor_loc, 0 AS claude_loc FROM _tool_cursor_daily_usage WHERE connection_id = ${cursor_connection_id} AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date) GROUP BY DATE_SUB(DATE(usage_date), INTERVAL WEEKDAY(DATE(usage_date)) DAY) UNION ALL SELECT DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY) AS time, 0 AS kiro_lines, 0 AS copilot_loc, 0 AS cursor_loc, SUM(cc_lines_added) AS claude_loc FROM _tool_claude_code_user_activity WHERE connection_id = ${claude_code_connection_id} AND scope_id = '${claude_code_scope_id}' AND $__timeFilter(date) GROUP BY DATE_SUB(DATE(date), INTERVAL WEEKDAY(DATE(date)) DAY)) combined GROUP BY time ORDER BY time",
           "refId": "A"
         }
       ],
-      "title": "Kiro Returned Lines vs Copilot LOC Added",
+      "title": "Kiro Returned Lines vs Copilot/Cursor/Claude LOC Added",
       "type": "timeseries"
     },
     {
@@ -492,7 +553,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT 'Kiro (not exported)' AS 'Tool', CAST(NULL AS DECIMAL(10,2)) AS 'Acceptance Rate' UNION ALL SELECT 'Copilot' AS 'Tool', ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) AS 'Acceptance Rate' FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) UNION ALL SELECT 'Cursor' AS Tool, ROUND(SUM(tabs_accepted) * 100.0 / NULLIF(SUM(tabs_shown), 0), 1) AS 'Acceptance Rate' FROM _tool_cursor_daily_usage WHERE connection_id = ${cursor_connection_id} AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date)",
+          "rawSql": "SELECT 'Kiro (not exported)' AS 'Tool', CAST(NULL AS DECIMAL(10,2)) AS 'Acceptance Rate' UNION ALL SELECT 'Copilot' AS 'Tool', ROUND(SUM(code_acceptance_activity_count) * 100.0 / NULLIF(SUM(code_generation_activity_count), 0), 1) AS 'Acceptance Rate' FROM _tool_copilot_enterprise_daily_metrics WHERE connection_id = ${copilot_connection_id} AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) UNION ALL SELECT 'Cursor' AS Tool, ROUND(SUM(tabs_accepted) * 100.0 / NULLIF(SUM(tabs_shown), 0), 1) AS 'Acceptance Rate' FROM _tool_cursor_daily_usage WHERE connection_id = ${cursor_connection_id} AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date) UNION ALL SELECT 'Claude Code' AS 'Tool', ROUND(SUM(edit_tool_accepted + write_tool_accepted + multi_edit_tool_accepted + notebook_edit_tool_accepted) * 100.0 / NULLIF(SUM(edit_tool_accepted + write_tool_accepted + multi_edit_tool_accepted + notebook_edit_tool_accepted + edit_tool_rejected + write_tool_rejected + multi_edit_tool_rejected + notebook_edit_tool_rejected), 0), 1) AS 'Acceptance Rate' FROM _tool_claude_code_user_activity WHERE connection_id = ${claude_code_connection_id} AND scope_id = '${claude_code_scope_id}' AND $__timeFilter(date)",
           "refId": "A"
         }
       ],
@@ -507,6 +568,7 @@
     "kiro",
     "copilot",
     "cursor",
+    "claude",
     "comparison"
   ],
   "templating": {
@@ -564,6 +626,36 @@
         "query": "SELECT DISTINCT id FROM _tool_cursor_scopes WHERE connection_id = CAST('${cursor_connection_id}' AS UNSIGNED)",
         "refresh": 1,
         "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "devlake-mysql-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_claude_code_scopes ORDER BY connection_id DESC",
+        "hide": 0,
+        "label": "Claude Code Connection",
+        "name": "claude_code_connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_claude_code_scopes ORDER BY connection_id DESC",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "devlake-mysql-api"
+        },
+        "definition": "SELECT DISTINCT id FROM _tool_claude_code_scopes WHERE connection_id = CAST('${claude_code_connection_id}' AS UNSIGNED)",
+        "hide": 0,
+        "label": "Claude Code Scope",
+        "name": "claude_code_scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id FROM _tool_claude_code_scopes WHERE connection_id = CAST('${claude_code_connection_id}' AS UNSIGNED)",
+        "refresh": 1,
+        "type": "query"
       }
     ]
   },
@@ -573,7 +665,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor",
+  "title": "Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor vs Claude Code",
   "uid": "multi_ai_comparison",
-  "version": 2
+  "version": 3
 }
