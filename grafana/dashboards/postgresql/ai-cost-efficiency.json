@@ -27,6 +27,17 @@
       "title": "Kiro Usage Dashboard",
       "type": "link",
       "url": "/d/kiro_user_report"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage"
     }
   ],
   "panels": [
@@ -559,6 +570,389 @@
       ],
       "title": "Weekly AI Activity Volume",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Cursor Cost Efficiency",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 25
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(100, 0) AS \"Total Spend\" FROM _tool_cursor_usage_events WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(event_time)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor Total Spend",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 25
+      },
+      "id": 32,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(CAST(CAST(SUM(e.charged_cents) AS NUMERIC) / NULLIF(100, 0) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT pr.id), 0), 0) AS DECIMAL), 2) AS \"$ / PR\" FROM _tool_cursor_usage_events AS e CROSS JOIN (SELECT DISTINCT id FROM pull_requests WHERE NOT merged_date IS NULL AND $__timeFilter(merged_date)) AS pr WHERE ('${cursor_connection_id}' = '' OR e.connection_id::text = '${cursor_connection_id}') AND e.scope_id = '${cursor_scope_id}' AND $__timeFilter(e.event_time)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor $ per PR",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 25
+      },
+      "id": 33,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(CAST(CAST(SUM(e.charged_cents) AS NUMERIC) / NULLIF(100, 0) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT cdc.cicd_deployment_id), 0), 0) AS DECIMAL), 2) AS \"$ / Deploy\" FROM _tool_cursor_usage_events AS e CROSS JOIN (SELECT DISTINCT cicd_deployment_id FROM cicd_deployment_commits WHERE result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(finished_date)) AS cdc WHERE ('${cursor_connection_id}' = '' OR e.connection_id::text = '${cursor_connection_id}') AND e.scope_id = '${cursor_scope_id}' AND $__timeFilter(e.event_time)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor $ per Deployment",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 25
+      },
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(CAST(CAST(CAST(SUM(e.charged_cents) AS NUMERIC) / NULLIF(100, 0) AS NUMERIC) / NULLIF(NULLIF(COUNT(DISTINCT i.id), 0), 0) AS DECIMAL), 2) AS \"$ / Issue\" FROM _tool_cursor_usage_events AS e CROSS JOIN (SELECT DISTINCT id FROM issues WHERE NOT resolution_date IS NULL AND type <> 'INCIDENT' AND $__timeFilter(resolution_date)) AS i WHERE ('${cursor_connection_id}' = '' OR e.connection_id::text = '${cursor_connection_id}') AND e.scope_id = '${cursor_scope_id}' AND $__timeFilter(e.event_time)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor $ per Issue Resolved",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Weekly Cursor spend per merged PR",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "id": 35,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _spend AS (SELECT CAST(event_time AS DATE) - (EXTRACT(ISODOW FROM CAST(event_time AS DATE)) - 1) * INTERVAL '1 day' AS week_start, CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(100, 0) AS spend_usd FROM _tool_cursor_usage_events WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(event_time) GROUP BY CAST(event_time AS DATE) - (EXTRACT(ISODOW FROM CAST(event_time AS DATE)) - 1) * INTERVAL '1 day'), _prs AS (SELECT CAST(merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(merged_date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, COUNT(*) AS prs FROM pull_requests WHERE NOT merged_date IS NULL AND $__timeFilter(merged_date) GROUP BY CAST(merged_date AS DATE) - (EXTRACT(ISODOW FROM CAST(merged_date AS DATE)) - 1) * INTERVAL '1 day') SELECT s.week_start AS time, ROUND(CAST(s.spend_usd AS NUMERIC) / NULLIF(NULLIF(p.prs, 0), 0), 2) AS \"$ per PR\" FROM _spend AS s LEFT JOIN _prs AS p ON s.week_start = p.week_start ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor $ per Merged PR (Weekly)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Weekly Cursor spend per production deployment",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "id": 36,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH _spend AS (SELECT CAST(event_time AS DATE) - (EXTRACT(ISODOW FROM CAST(event_time AS DATE)) - 1) * INTERVAL '1 day' AS week_start, CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(100, 0) AS spend_usd FROM _tool_cursor_usage_events WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(event_time) GROUP BY CAST(event_time AS DATE) - (EXTRACT(ISODOW FROM CAST(event_time AS DATE)) - 1) * INTERVAL '1 day'), _deploys AS (SELECT CAST(finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) * INTERVAL '1 day' AS week_start, COUNT(DISTINCT cicd_deployment_id) AS deploys FROM cicd_deployment_commits WHERE result = 'SUCCESS' AND environment = 'PRODUCTION' AND $__timeFilter(finished_date) GROUP BY CAST(finished_date AS DATE) - (EXTRACT(ISODOW FROM CAST(finished_date AS DATE)) - 1) * INTERVAL '1 day') SELECT s.week_start AS time, ROUND(CAST(s.spend_usd AS NUMERIC) / NULLIF(NULLIF(d.deploys, 0), 0), 2) AS \"$ per Deploy\" FROM _spend AS s LEFT JOIN _deploys AS d ON s.week_start = d.week_start ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor $ per Deployment (Weekly)",
+      "type": "timeseries"
     }
   ],
   "preload": false,
@@ -566,11 +960,43 @@
   "schemaVersion": 41,
   "tags": [
     "kiro",
+    "cursor",
     "cost",
     "efficiency"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id DESC NULLS LAST",
+        "hide": 0,
+        "label": "Cursor Connection",
+        "name": "cursor_connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id DESC NULLS LAST",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT id FROM _tool_cursor_scopes WHERE connection_id = CAST('${cursor_connection_id}' AS BIGINT)",
+        "hide": 0,
+        "label": "Cursor Scope",
+        "name": "cursor_scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id FROM _tool_cursor_scopes WHERE connection_id = CAST('${cursor_connection_id}' AS BIGINT)",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-90d",
@@ -580,5 +1006,5 @@
   "timezone": "utc",
   "title": "AI Cost-Efficiency",
   "uid": "ai_cost_efficiency-pg",
-  "version": 1
+  "version": 2
 }

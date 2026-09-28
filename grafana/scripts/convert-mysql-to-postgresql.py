@@ -472,6 +472,9 @@ def convert_sql_mysql_to_postgres(sql: str) -> str:
                     # Skip if already quoted, contains operators/functions, or is *
                     if col.startswith('"') or col == '*' or '(' in col or '.' in col or 'AS ' in col.upper():
                         columns.append(col)
+                    # Skip SQL keywords / constants
+                    elif col.upper() in ('NULL', 'TRUE', 'FALSE', 'CURRENT_DATE', 'CURRENT_TIMESTAMP', 'CURRENT_TIME'):
+                        columns.append(col)
                     # Quote capitalized bare word (e.g., Activity, Details, Name)
                     elif re.match(r'^[A-Z]\w*$', col):
                         columns.append(f'"{col}"')
@@ -1315,11 +1318,17 @@ def process_dashboard_recursive(obj: Any, path: str = "") -> Any:
             elif key in ("query", "definition") and isinstance(value, str) and ("SELECT" in value.upper() or "CAST" in value.upper()):
                 result[key] = convert_sql_mysql_to_postgres(value)
             # Convert datasource string references
-            elif key == "datasource" and isinstance(value, str) and value == "mysql":
-                result[key] = "postgresql"
+            elif key == "datasource" and isinstance(value, str) and value in ("mysql", "postgresql"):
+                result[key] = {
+                    "type": "grafana-postgresql-datasource",
+                    "uid": "devlake-postgres-api",
+                }
             # Convert datasource object references
-            elif key == "datasource" and isinstance(value, dict) and value.get("type") == "mysql":
-                result[key] = {**value, "type": "postgres"}
+            elif key == "datasource" and isinstance(value, dict) and (value.get("type") in ("mysql", "postgres", "postgresql") or value.get("uid") in ("devlake-mysql-api", "devlake-postgres-api")):
+                result[key] = {
+                    "type": "grafana-postgresql-datasource",
+                    "uid": "devlake-postgres-api",
+                }
             # Recursively process nested objects
             else:
                 result[key] = process_dashboard_recursive(value, current_path)
