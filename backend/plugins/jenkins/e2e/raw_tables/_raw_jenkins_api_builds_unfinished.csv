@@ -1,0 +1,3 @@
+id,params,data,url,input,created_at
+1,"{""ConnectionId"":1,""FullName"":""devlake""}","{""_class"":""org.jenkinsci.plugins.workflow.job.WorkflowRun"",""number"":5,""timestamp"":1767052800000,""duration"":0,""estimatedDuration"":600000,""building"":true,""result"":null,""actions"":[]}",https://jenkins/job/devlake/api/json,null,2026-01-01 00:30:00
+2,"{""ConnectionId"":1,""FullName"":""devlake""}","{""_class"":""org.jenkinsci.plugins.workflow.job.WorkflowRun"",""number"":5,""timestamp"":1767052800000,""duration"":90000000,""estimatedDuration"":600000,""building"":false,""result"":""SUCCESS"",""actions"":[]}",https://jenkins/job/devlake/5/api/json,"{""Number"":""5"",""FullName"":""devlake#5""}",2026-01-02 00:30:00
