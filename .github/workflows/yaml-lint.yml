@@ -27,7 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: github/super-linter/slim@v4
+        with:
+          fetch-depth: 0
+      - uses: github/super-linter/slim@v7
         env:
-          FILTER_REGEX_INCLUDE: workspace/(docker-compose.yml|deployment/k8s/k8s-deploy.yaml)
+          # only run yamllint; other linters are out of scope for this job
+          VALIDATE_YAML: true
+          # no commit status reports -> no GITHUB_TOKEN / statuses:write needed (also works for fork PRs)
+          MULTI_STATUS: false
+          FILTER_REGEX_INCLUDE: (^|/)(docker-compose-dev-(mysql|postgresql)\.yml|docker-compose\.datasources\.yml|devops/deployment/k8s/k8s-deploy\.yaml)$
 
