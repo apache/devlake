@@ -56,13 +56,15 @@ func CalculateDeploymentCommitsDiff(taskCtx plugin.SubTaskContext) errors.Error 
 		dal.From("cicd_deployment_commits dc"),
 		dal.Join("LEFT JOIN project_mapping pm ON (pm.table = 'cicd_scopes' AND pm.row_id = dc.cicd_scope_id)"),
 		dal.Join("LEFT JOIN cicd_deployment_commits p ON (dc.prev_success_deployment_commit_id = p.id)"),
+		// p.commit_sha is NULL when there is no previous successful deployment, while the
+		// finished pair is stored with an empty old_commit_sha, so compare against ''
 		dal.Where(
 			`
 			pm.project_name = ?
 			AND NOT EXISTS (
 				SELECT 1
 				FROM _tool_refdiff_finished_commits_diffs fcd
-				WHERE fcd.new_commit_sha = dc.commit_sha AND fcd.old_commit_sha = p.commit_sha
+				WHERE fcd.new_commit_sha = dc.commit_sha AND fcd.old_commit_sha = COALESCE(p.commit_sha, '')
 			)
 			`,
 			data.Options.ProjectName,
