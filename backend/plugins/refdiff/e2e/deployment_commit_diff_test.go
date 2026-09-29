@@ -58,4 +58,12 @@ func TestDeploymentCommitDiffDataFlow(t *testing.T) {
 	dataflowTester.VerifyTableWithOptions(&models.FinishedCommitsDiff{}, e2ehelper.TableOptions{
 		CSVRelPath: "./deployment_commit_diff/_tool_refdiff_finished_commits_diffs.csv",
 	})
+
+	// a second run must not recalculate any finished pair, including deployments
+	// without a previous successful deployment (finished with an empty old sha)
+	dataflowTester.FlushTabler(&code.CommitsDiff{})
+	dataflowTester.Subtask(tasks.CalculateDeploymentCommitsDiffMeta, taskData)
+	dataflowTester.VerifyTableWithOptions(&code.CommitsDiff{}, e2ehelper.TableOptions{
+		CSVRelPath: "./deployment_commit_diff/commits_diffs_rerun.csv",
+	})
 }
