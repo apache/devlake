@@ -48,8 +48,6 @@ Apache DevLake is used by Engineering Leads, Open Source Software Maintainers an
 
 The main way you interact with DevLake is through the integrated dashboards powered by [Grafana](https://github.com/grafana/grafana). 
 
-[Live DORA Dashboard](https://grafana-lake.demo.devlake.io/grafana/d/qNo8_0M4z/dora?orgId=1)
-
 [Dashboards for Engineering Leads](https://devlake.apache.org/livedemo/EngineeringLeads)
 
 [Dashboards for OSS Maintainers](https://devlake.apache.org/livedemo/OSSMaintainers)
