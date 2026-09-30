@@ -194,7 +194,7 @@ func TestBootstrapStateFromCollectorStateIfNeeded(t *testing.T) {
 	latest := errors.Must1(time.Parse(time.RFC3339, "2026-04-27T18:05:31Z"))
 	timeAfter := errors.Must1(time.Parse(time.RFC3339, "2024-12-20T00:00:00Z"))
 
-	t.Run("bootstrap prev_started_at and time_after from collector state", func(t *testing.T) {
+	t.Run("bootstrap time_after but not prev_started_at from collector state", func(t *testing.T) {
 		mockDal := new(mockdal.Dal)
 		mockDal.On("HasTable", mock.Anything).Return(true).Once()
 		mockDal.On("First", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
@@ -212,9 +212,7 @@ func TestBootstrapStateFromCollectorStateIfNeeded(t *testing.T) {
 
 		bootstrapped, err := bootstrapStateFromCollectorStateIfNeeded(mockDal, state, args)
 		assert.Nil(t, err)
-		if assert.NotNil(t, bootstrapped.PrevStartedAt) {
-			assert.True(t, bootstrapped.PrevStartedAt.Equal(latest))
-		}
+		assert.Nil(t, bootstrapped.PrevStartedAt)
 		if assert.NotNil(t, bootstrapped.TimeAfter) {
 			assert.True(t, bootstrapped.TimeAfter.Equal(timeAfter))
 		}
@@ -344,6 +342,50 @@ func TestBootstrapStateFromCollectorStateIfNeeded(t *testing.T) {
 		assert.Nil(t, bootstrapped.PrevStartedAt)
 		assert.Nil(t, bootstrapped.TimeAfter)
 		mockDal.AssertNotCalled(t, "First", mock.Anything, mock.Anything)
+		mockDal.AssertExpectations(t)
+	})
+
+	t.Run("first-ever converter run stays full-sync even when collector already succeeded", func(t *testing.T) {
+		mockDal := new(mockdal.Dal)
+		mockDal.On("HasTable", mock.Anything).Return(true).Once()
+		mockDal.On("First", mock.MatchedBy(func(v interface{}) bool {
+			_, ok := v.(*models.SubtaskState)
+			return ok
+		}), mock.Anything).Run(func(args mock.Arguments) {
+			dst := args.Get(0).(*models.SubtaskState)
+			*dst = models.SubtaskState{
+				Plugin:  "github",
+				Subtask: "Convert Workflow Runs",
+				Params:  testGithubScopeParams,
+			}
+		}).Return(nil).Once()
+		mockDal.On("First", mock.MatchedBy(func(v interface{}) bool {
+			_, ok := v.(*models.CollectorLatestState)
+			return ok
+		}), mock.Anything).Run(func(args mock.Arguments) {
+			dst := args.Get(0).(*models.CollectorLatestState)
+			now := time.Now()
+			dst.LatestSuccessStart = &now
+		}).Return(nil).Once()
+		mockDal.On("CreateOrUpdate", mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockTaskCtx := new(mockplugin.TaskContext)
+		mockTaskCtx.On("SyncPolicy").Return(&models.SyncPolicy{})
+		mockTaskCtx.On("GetName").Return("github")
+		mockSubtaskCtx := new(mockplugin.SubTaskContext)
+		mockSubtaskCtx.On("TaskContext").Return(mockTaskCtx)
+		mockSubtaskCtx.On("GetName").Return("Convert Workflow Runs")
+		mockSubtaskCtx.On("GetDal").Return(mockDal)
+
+		stateManager, err := NewSubtaskStateManager(&SubtaskCommonArgs{
+			SubTaskContext: mockSubtaskCtx,
+			Table:          "github_api_runs",
+			Params:         testGithubScopeParams,
+		})
+		assert.Nil(t, err)
+		assert.False(t, stateManager.IsIncremental(), "first-ever run must be full sync, not incremental")
+		assert.Nil(t, stateManager.Close())
+		assert.NotNil(t, stateManager.state.PrevStartedAt)
 		mockDal.AssertExpectations(t)
 	})
 }
