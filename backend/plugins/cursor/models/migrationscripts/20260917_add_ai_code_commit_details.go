@@ -20,8 +20,8 @@ package migrationscripts
 import (
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/models/migrationscripts/archived"
 	"github.com/apache/devlake/helpers/migrationhelper"
-	"github.com/apache/devlake/plugins/cursor/models"
 )
 
 type addCursorAiCodeCommitDetails struct{}
@@ -38,19 +38,62 @@ type cursorAiCodeCommit20260917 struct {
 
 func (cursorAiCodeCommit20260917) TableName() string { return "_tool_cursor_ai_code_commits" }
 
+// Snapshot of the tool tables. Migration scripts must not import the live models
+// package; later model edits would change the behavior of a script that already shipped.
+type cursorAiCodeConversation20260917 struct {
+	ConnectionId   uint64 `gorm:"primaryKey"`
+	ScopeId        string `gorm:"primaryKey;type:varchar(255)"`
+	ConversationId string `gorm:"primaryKey;type:varchar(64)"`
+
+	Title          string `gorm:"type:varchar(512)"`
+	Tldr           string `gorm:"type:text"`
+	Overview       string `gorm:"type:text"`
+	SummaryBullets string `gorm:"type:text"`
+
+	archived.NoPKModel
+}
+
+func (cursorAiCodeConversation20260917) TableName() string {
+	return "_tool_cursor_ai_code_conversations"
+}
+
+type cursorAiCodeRangeAnnotation20260917 struct {
+	ConnectionId uint64 `gorm:"primaryKey"`
+	ScopeId      string `gorm:"primaryKey;type:varchar(255)"`
+	AnnotationId string `gorm:"primaryKey;type:varchar(64)"`
+
+	CommitHash     string `gorm:"type:varchar(64);index"`
+	FilePath       string `gorm:"type:varchar(1024)"`
+	ConversationId string `gorm:"type:varchar(64);index"`
+	RangeStart     int
+	RangeEnd       int
+	Model          string `gorm:"type:varchar(255)"`
+	OperationType  string `gorm:"type:varchar(64)"`
+	LineCount      int
+
+	archived.NoPKModel
+}
+
+func (cursorAiCodeRangeAnnotation20260917) TableName() string {
+	return "_tool_cursor_ai_code_range_annotations"
+}
+
 func (*addCursorAiCodeCommitDetails) Up(basicRes context.BasicRes) errors.Error {
-	// Drop on retry if a prior attempt failed while creating the wide composite PK.
-	if basicRes.GetDal().HasTable(models.CursorAiCodeRangeAnnotation{}.TableName()) {
-		if err := basicRes.GetDal().DropTables(models.CursorAiCodeRangeAnnotation{}.TableName()); err != nil {
-			return errors.Convert(err)
+	// A failed create of the earlier wide primary key can leave a table that
+	// AutoMigrate cannot alter. Drop only that broken shape.
+	db := basicRes.GetDal()
+	table := cursorAiCodeRangeAnnotation20260917{}.TableName()
+	if db.HasTable(table) && !db.HasColumn(table, "annotation_id") {
+		if err := db.DropTables(table); err != nil {
+			return err
 		}
 	}
 	return migrationhelper.AutoMigrateTables(
 		basicRes,
 		&cursorConnection20260917{},
 		&cursorAiCodeCommit20260917{},
-		&models.CursorAiCodeConversation{},
-		&models.CursorAiCodeRangeAnnotation{},
+		&cursorAiCodeConversation20260917{},
+		&cursorAiCodeRangeAnnotation20260917{},
 	)
 }
 
