@@ -31,5 +31,6 @@ func All() []plugin.MigrationScript {
 		new(addCursorBugbotReviews),
 		new(addCursorConversationInsights),
 		new(addCursorAiCodeCommitDetails),
+		new(ensureCursorAiCodeRangeAnnotations),
 	}
 }

@@ -1,0 +1,784 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise-pg"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- **Use case:** Automated PR review analytics from Cursor BugBot (`GET /analytics/team/bugbot-reviews`).\n- **Data source:** Cursor plugin \u2014 requires `hasBugbotReviews` on the connection.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage-pg) for usage and cost; [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise-pg) for AI code tracking and conversation insights.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Completed BugBot reviews in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Reviews\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Reviews",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Sum of bugs_found across reviews in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(bugs_found) AS \"Findings\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Findings",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Share of findings marked resolved vs findings with a resolution status",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(SUM(CASE WHEN f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(CASE WHEN f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 0) AS \"Resolution Rate\" FROM _tool_cursor_bugbot_reviews AS r JOIN _tool_cursor_bugbot_findings AS f ON r.connection_id = f.connection_id AND r.scope_id = f.scope_id AND r.request_id = f.request_id WHERE $__timeFilter(r.timestamp) AND ('${connection_id}' = '' OR r.connection_id::text = '${connection_id}') AND r.scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Resolution Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Sum of review cost (cost_cents / 100) in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(SUM(COALESCE(cost_cents, 0)) AS NUMERIC) / NULLIF(100, 0) AS \"Cost\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Review Cost",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 100,
+      "title": "Review Trends",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Completed BugBot reviews per day from GET /analytics/team/bugbot-reviews, stacked by publication status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 321,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, COALESCE(NULLIF(publication_status, ''), 'unknown') AS metric, COUNT(*) AS value FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY CAST(timestamp AS DATE), \"metric\" ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Review Volume by Status",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Total BugBot review cost (cost_cents / 100) over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 322,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(timestamp AS DATE) AS time, CAST(SUM(COALESCE(cost_cents, 0)) AS NUMERIC) / NULLIF(100, 0) AS \"Review Cost\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY CAST(timestamp AS DATE) ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "BugBot Cost Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Share of findings marked resolved vs total findings with a resolution status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 17
+      },
+      "id": 323,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(r.timestamp AS DATE) AS time, CAST(SUM(CASE WHEN f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(CASE WHEN f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 0) AS \"Resolution Rate\" FROM _tool_cursor_bugbot_reviews AS r JOIN _tool_cursor_bugbot_findings AS f ON r.connection_id = f.connection_id AND r.scope_id = f.scope_id AND r.request_id = f.request_id WHERE $__timeFilter(r.timestamp) AND ('${connection_id}' = '' OR r.connection_id::text = '${connection_id}') AND r.scope_id = '${scope_id}' GROUP BY CAST(r.timestamp AS DATE) ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Finding Resolution Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Finding counts by severity over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 17
+      },
+      "id": 324,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(r.timestamp AS DATE) AS time, COALESCE(NULLIF(f.severity, ''), 'unknown') AS metric, COUNT(*) AS value FROM _tool_cursor_bugbot_reviews AS r JOIN _tool_cursor_bugbot_findings AS f ON r.connection_id = f.connection_id AND r.scope_id = f.scope_id AND r.request_id = f.request_id WHERE $__timeFilter(r.timestamp) AND ('${connection_id}' = '' OR r.connection_id::text = '${connection_id}') AND r.scope_id = '${scope_id}' GROUP BY CAST(r.timestamp AS DATE), \"metric\" ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Finding Severity Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Repositories ranked by total bugs_found in the selected period",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 17
+      },
+      "id": 325,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT repo AS \"Repo\", COUNT(*) AS \"Reviews\", SUM(bugs_found) AS \"Findings\", ROUND(CAST(CAST(SUM(COALESCE(cost_cents, 0)) AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) AS \"Cost ($)\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND repo <> '' GROUP BY \"repo\" ORDER BY SUM(bugs_found) DESC NULLS LAST LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Repos by Findings",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Average bugs found per pull request by repository",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 326,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT repo AS \"Repo\", pr_number AS \"PR\", COUNT(*) AS \"Reviews\", ROUND(CAST(AVG(bugs_found) AS DECIMAL), 2) AS \"Avg Findings\", SUM(bugs_found) AS \"Total Findings\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND NOT pr_number IS NULL GROUP BY \"repo\", \"pr_number\" ORDER BY AVG(bugs_found) DESC NULLS LAST, SUM(bugs_found) DESC NULLS LAST LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Bugs per PR",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 104,
+      "title": "Diagnostics",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "description": "Row counts and latest timestamps for BugBot tool tables",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 24
+          },
+          "id": 40,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "devlake-postgres-api"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT '_tool_cursor_bugbot_reviews' AS table_name, COUNT(*) AS row_count, MAX(timestamp) AS latest FROM _tool_cursor_bugbot_reviews WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_cursor_bugbot_findings', COUNT(*), NULL FROM _tool_cursor_bugbot_findings WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+              "refId": "A"
+            }
+          ],
+          "title": "Data Volume",
+          "type": "table"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "cursor",
+    "devlake",
+    "ai",
+    "bugbot"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "2",
+          "value": "2"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "team",
+          "value": "team"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Cursor BugBot Review Analytics",
+  "uid": "cursor_bugbot-pg",
+  "version": 1,
+  "weekStart": ""
+}
