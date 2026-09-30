@@ -31,7 +31,7 @@ COPY . .
 RUN yarn install
 RUN yarn build
 
-FROM nginxinc/nginx-unprivileged:1.31.5
+FROM nginxinc/nginx-unprivileged:1.31.6
 USER 0
 #ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 #RUN chmod +x /wait
