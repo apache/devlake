@@ -146,15 +146,15 @@ Run the blueprint on a daily schedule to keep usage and cost data current.
 
 ## Dashboards
 
-Grafana dashboard JSON lives under `grafana/dashboards/mysql/`:
+Grafana dashboard JSON lives under both `grafana/dashboards/mysql/` and `grafana/dashboards/postgresql/`. PostgreSQL UIDs add a `-pg` suffix.
 
-| Dashboard | File | UID |
-|-----------|------|-----|
-| Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` |
-| Cursor Enterprise AI Code & Insights | `cursor-enterprise.json` | `cursor_enterprise` |
-| Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` |
-| AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — |
-| Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — |
+| Dashboard | File | MySQL UID | PostgreSQL UID |
+|-----------|------|-----------|----------------|
+| Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` | `cursor_usage-pg` |
+| Cursor Enterprise AI Code & Insights | `cursor-enterprise.json` | `cursor_enterprise` | `cursor_enterprise-pg` |
+| Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` | `cursor_bugbot-pg` |
+| AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — | — |
+| Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — | — |
 
 ## Error handling
 
