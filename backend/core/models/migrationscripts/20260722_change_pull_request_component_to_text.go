@@ -15,32 +15,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package tasks
+package migrationscripts
 
-import "github.com/apache/devlake/core/plugin"
+import (
+	"github.com/apache/incubator-devlake/core/context"
+	"github.com/apache/incubator-devlake/core/errors"
+	"github.com/apache/incubator-devlake/core/plugin"
+)
 
-// GetSubTaskMetas returns the ordered list of Copilot subtasks.
-func GetSubTaskMetas() []plugin.SubTaskMeta {
-	return []plugin.SubTaskMeta{
-		// Collectors
-		CollectOrgMetricsMeta,
-		CollectCopilotSeatAssignmentsMeta,
-		CollectEnterpriseMetricsMeta,
-		CollectUserMetricsMeta,
-		CollectUserTeamsMeta,
-		CollectEnterpriseMetrics28DayMeta,
-		CollectOrgMetrics28DayMeta,
-		CollectUserMetrics28DayMeta,
-		CollectAiCreditUsageMeta,
-		// Extractors
-		ExtractSeatsMeta,
-		ExtractOrgMetricsMeta,
-		ExtractEnterpriseMetricsMeta,
-		ExtractUserMetricsMeta,
-		ExtractUserTeamsMeta,
-		ExtractEnterpriseMetrics28DayMeta,
-		ExtractOrgMetrics28DayMeta,
-		ExtractUserMetrics28DayMeta,
-		ExtractAiCreditUsageMeta,
-	}
+var _ plugin.MigrationScript = (*changePullRequestComponentToText)(nil)
+
+type changePullRequestComponentToText struct{}
+
+func (*changePullRequestComponentToText) Up(basicRes context.BasicRes) errors.Error {
+	return basicRes.GetDal().ModifyColumnType("pull_requests", "component", "text")
+}
+
+func (*changePullRequestComponentToText) Version() uint64 {
+	return 20260722120000
+}
+
+func (*changePullRequestComponentToText) Name() string {
+	return "change pull_requests.component type to text"
 }

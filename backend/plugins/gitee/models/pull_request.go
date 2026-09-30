@@ -42,7 +42,7 @@ type GiteePullRequest struct {
 	MergedAt       *time.Time
 	Body           string
 	Type           string `gorm:"type:varchar(255)"`
-	Component      string `gorm:"type:varchar(255)"`
+	Component      string `gorm:"type:text"`
 	MergeCommitSha string `gorm:"type:varchar(40)"`
 	HeadRef        string `gorm:"type:varchar(255)"`
 	BaseRef        string `gorm:"type:varchar(255)"`

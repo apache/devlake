@@ -177,6 +177,12 @@ func collectRawReportRecords(meta *reportMetadataResponse, logger log.Logger) ([
 }
 
 func parseRawReportResponse(res *http.Response, logger log.Logger) ([]json.RawMessage, errors.Error) {
+	// NOTE: res.Body must only be read once. It previously was read here AND
+	// again inside parseReportMetadataResponse, so the second read always
+	// returned an empty buffer (io.Reader is not rewindable) and every
+	// enterprise report was silently treated as having no download links.
+
+	meta, err := parseReportMetadataResponse(res, logger)
 	body, readErr := io.ReadAll(res.Body)
 	res.Body.Close()
 	if readErr != nil {

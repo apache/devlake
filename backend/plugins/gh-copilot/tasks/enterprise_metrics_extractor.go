@@ -30,14 +30,23 @@ import (
 // --- Enterprise report JSON structures ---
 
 type enterpriseDayTotal struct {
-	Day                     string `json:"day"`
-	EnterpriseId            string `json:"enterprise_id"`
+	Day          string `json:"day"`
+	EnterpriseId string `json:"enterprise_id"`
+	// OrganizationId is only present on organization-level reports (org report
+	// shares this same flat schema). Needed so ExtractOrgMetrics can stamp the
+	// owning org onto rows instead of leaving them unidentifiable.
+	OrganizationId          string `json:"organization_id"`
 	DailyActiveUsers        int    `json:"daily_active_users"`
 	WeeklyActiveUsers       int    `json:"weekly_active_users"`
 	MonthlyActiveUsers      int    `json:"monthly_active_users"`
 	MonthlyActiveChatUsers  int    `json:"monthly_active_chat_users"`
 	MonthlyActiveAgentUsers int    `json:"monthly_active_agent_users"`
 	DailyActiveCliUsers     int    `json:"daily_active_cli_users"`
+
+	// Copilot cloud agent (coding agent) active user counts — added in 2026-03-10.
+	DailyActiveCopilotCloudAgentUsers   int `json:"daily_active_copilot_cloud_agent_users"`
+	WeeklyActiveCopilotCloudAgentUsers  int `json:"weekly_active_copilot_cloud_agent_users"`
+	MonthlyActiveCopilotCloudAgentUsers int `json:"monthly_active_copilot_cloud_agent_users"`
 
 	// Code review user counts
 	DailyActiveCopilotCodeReviewUsers    int `json:"daily_active_copilot_code_review_users"`
@@ -69,6 +78,12 @@ type enterpriseDayTotal struct {
 	TotalsByModelFeature          []totalsByModelFeature `json:"totals_by_model_feature"`
 	TotalsByCli                   *totalsByCli           `json:"totals_by_cli"`
 	PullRequests                  *pullRequestStats      `json:"pull_requests"`
+
+	// TotalsByAiAdoptionPhase groups engagement/activity metrics by AI adoption
+	// cohort (phase 0-3). Added 2026-05-29, extended with review-cycle metrics
+	// 2026-07-07. Only present on enterprise/org reports, not user reports.
+	TotalsByAiAdoptionPhase []totalsByAiAdoptionPhase `json:"totals_by_ai_adoption_phase"`
+
 }
 
 type totalsByIde struct {
@@ -130,18 +145,58 @@ type pullRequestStats struct {
 	MedianMinToMergeCopilotReviewed float64 `json:"median_minutes_to_merge_copilot_reviewed"`
 	TotalCopilotSuggestions         int     `json:"total_copilot_suggestions"`
 	TotalCopilotAppliedSuggestions  int     `json:"total_copilot_applied_suggestions"`
+
+	// CopilotSuggestionsByCommentType breaks total_copilot_suggestions down by
+	// the kind of PR review comment Copilot generated (e.g. "suggestion", "explanation").
+	CopilotSuggestionsByCommentType []prSuggestionsByCommentType `json:"copilot_suggestions_by_comment_type"`
+}
+
+type prSuggestionsByCommentType struct {
+	CommentType      string `json:"comment_type"`
+	TotalSuggestions int    `json:"total_suggestions"`
+	TotalApplied     int    `json:"total_applied_suggestions"`
 }
 
 type totalsByCli struct {
-	SessionCount int        `json:"session_count"`
-	RequestCount int        `json:"request_count"`
-	PromptCount  int        `json:"prompt_count"`
-	TokenUsage   *cliTokens `json:"token_usage"`
+	SessionCount        int        `json:"session_count"`
+	RequestCount        int        `json:"request_count"`
+	PromptCount         int        `json:"prompt_count"`
+	TokenUsage          *cliTokens `json:"token_usage"`
+	LastKnownCliVersion string     `json:"last_known_cli_version"`
 }
 
 type cliTokens struct {
-	OutputTokensSum int `json:"output_tokens_sum"`
-	PromptTokensSum int `json:"prompt_tokens_sum"`
+	OutputTokensSum     int     `json:"output_tokens_sum"`
+	PromptTokensSum     int     `json:"prompt_tokens_sum"`
+	AvgTokensPerRequest float64 `json:"avg_tokens_per_request"`
+}
+
+// totalsByAiAdoptionPhase is one entry of the totals_by_ai_adoption_phase
+// breakdown on enterprise/org reports. Per-user fields are averages within the
+// phase, not sums (per GitHub's docs) — the *_total fields are true sums.
+type totalsByAiAdoptionPhase struct {
+	Phase   int `json:"phase"`
+	Version int `json:"version"`
+
+	EngagedUsers int `json:"engaged_users"`
+
+	AvgUserInitiatedInteractionCount float64 `json:"avg_user_initiated_interaction_count"`
+	AvgCodeGenerationActivityCount   float64 `json:"avg_code_generation_activity_count"`
+	AvgCodeAcceptanceActivityCount   float64 `json:"avg_code_acceptance_activity_count"`
+	AvgLocAddedSum                   float64 `json:"avg_loc_added_sum"`
+	AvgLocDeletedSum                 float64 `json:"avg_loc_deleted_sum"`
+
+	AvgPullRequestsCreated  float64 `json:"avg_pull_requests_created"`
+	AvgPullRequestsMerged   float64 `json:"avg_pull_requests_merged"`
+	AvgPullRequestsReviewed float64 `json:"avg_pull_requests_reviewed"`
+	AvgMedianMinutesToMerge float64 `json:"avg_median_minutes_to_merge"`
+
+	// Added 2026-07-07.
+	AvgPullRequestsMinutesToReview float64 `json:"avg_pull_requests_minutes_to_review"`
+	AvgPullRequestsReviewCycles    float64 `json:"avg_pull_requests_review_cycles"`
+
+	// Added 2026-06-26 — true total rather than a per-user average.
+	TotalPullRequestsMerged int `json:"total_pull_requests_merged"`
 }
 
 type totalsByModelFeature struct {
@@ -203,12 +258,17 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				ScopeId:                 data.Options.ScopeId,
 				Day:                     day,
 				EnterpriseId:            dt.EnterpriseId,
+				OrganizationId:          dt.OrganizationId,
 				DailyActiveUsers:        dt.DailyActiveUsers,
 				WeeklyActiveUsers:       dt.WeeklyActiveUsers,
 				MonthlyActiveUsers:      dt.MonthlyActiveUsers,
 				MonthlyActiveChatUsers:  dt.MonthlyActiveChatUsers,
 				MonthlyActiveAgentUsers: dt.MonthlyActiveAgentUsers,
 				DailyActiveCliUsers:     dt.DailyActiveCliUsers,
+
+				DailyActiveCopilotCloudAgentUsers:   dt.DailyActiveCopilotCloudAgentUsers,
+				WeeklyActiveCopilotCloudAgentUsers:  dt.WeeklyActiveCopilotCloudAgentUsers,
+				MonthlyActiveCopilotCloudAgentUsers: dt.MonthlyActiveCopilotCloudAgentUsers,
 
 				DailyActiveCopilotCodeReviewUsers:    dt.DailyActiveCopilotCodeReviewUsers,
 				DailyPassiveCopilotCodeReviewUsers:   dt.DailyPassiveCopilotCodeReviewUsers,
@@ -236,13 +296,15 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			if dt.TotalsByCli != nil {
 				dailyMetrics.CopilotCliMetrics = models.CopilotCliMetrics{
-					CliSessionCount: dt.TotalsByCli.SessionCount,
-					CliRequestCount: dt.TotalsByCli.RequestCount,
-					CliPromptCount:  dt.TotalsByCli.PromptCount,
+					CliSessionCount:     dt.TotalsByCli.SessionCount,
+					CliRequestCount:     dt.TotalsByCli.RequestCount,
+					CliPromptCount:      dt.TotalsByCli.PromptCount,
+					CliLastKnownVersion: dt.TotalsByCli.LastKnownCliVersion,
 				}
 				if dt.TotalsByCli.TokenUsage != nil {
 					dailyMetrics.CopilotCliMetrics.CliOutputTokenSum = dt.TotalsByCli.TokenUsage.OutputTokensSum
 					dailyMetrics.CopilotCliMetrics.CliPromptTokenSum = dt.TotalsByCli.TokenUsage.PromptTokensSum
+					dailyMetrics.CopilotCliMetrics.CliAvgTokensPerRequest = dt.TotalsByCli.TokenUsage.AvgTokensPerRequest
 				}
 			}
 			if dt.PullRequests != nil {
@@ -260,8 +322,41 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				dailyMetrics.PRMedianMinToMergeCopilotReviewed = dt.PullRequests.MedianMinToMergeCopilotReviewed
 				dailyMetrics.PRTotalCopilotSuggestions = dt.PullRequests.TotalCopilotSuggestions
 				dailyMetrics.PRTotalCopilotAppliedSuggestions = dt.PullRequests.TotalCopilotAppliedSuggestions
+
+				// Stored as a JSON blob rather than a normalized breakdown table for
+				// now — comment-type cardinality is small (suggestion/explanation)
+				// and doesn't warrant its own table + primary key the way IDE/feature
+				// breakdowns do. Revisit if GitHub adds more comment types.
+				if len(dt.PullRequests.CopilotSuggestionsByCommentType) > 0 {
+					if b, jsonErr := json.Marshal(dt.PullRequests.CopilotSuggestionsByCommentType); jsonErr == nil {
+						dailyMetrics.PRCopilotSuggestionsByCommentType = string(b)
+					}
+				}
 			}
 			results = append(results, dailyMetrics)
+			// By AI adoption phase
+			for _, phase := range dt.TotalsByAiAdoptionPhase {
+				results = append(results, &models.GhCopilotMetricsByAiAdoptionPhase{
+					ConnectionId:                     data.Options.ConnectionId,
+					ScopeId:                          data.Options.ScopeId,
+					Day:                              day,
+					Phase:                            phase.Phase,
+					PhaseVersion:                     phase.Version,
+					EngagedUsers:                     phase.EngagedUsers,
+					AvgUserInitiatedInteractionCount: phase.AvgUserInitiatedInteractionCount,
+					AvgCodeGenerationActivityCount:   phase.AvgCodeGenerationActivityCount,
+					AvgCodeAcceptanceActivityCount:   phase.AvgCodeAcceptanceActivityCount,
+					AvgLocAddedSum:                   phase.AvgLocAddedSum,
+					AvgLocDeletedSum:                 phase.AvgLocDeletedSum,
+					AvgPullRequestsCreated:           phase.AvgPullRequestsCreated,
+					AvgPullRequestsMerged:            phase.AvgPullRequestsMerged,
+					AvgPullRequestsReviewed:          phase.AvgPullRequestsReviewed,
+					AvgMedianMinutesToMerge:          phase.AvgMedianMinutesToMerge,
+					AvgPullRequestsMinutesToReview:   phase.AvgPullRequestsMinutesToReview,
+					AvgPullRequestsReviewCycles:      phase.AvgPullRequestsReviewCycles,
+					TotalPullRequestsMerged:          phase.TotalPullRequestsMerged,
+				})
+			}
 
 			// By IDE
 			for _, ide := range dt.TotalsByIde {
