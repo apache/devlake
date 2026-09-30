@@ -158,6 +158,30 @@ func TestConvertStringToTime(t *testing.T) {
 			err:    nil,
 		},
 		{
+			name:   "Valid time string with 7 fractional digits (.NET round-trip format)",
+			input:  "2025-09-15T16:53:36.3379321+08:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 337932100, time.UTC),
+			err:    nil,
+		},
+		{
+			name:   "Valid time string with 9 fractional digits (Go RFC3339Nano)",
+			input:  "2025-09-15T17:53:36.337932123+09:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 337932123, time.UTC),
+			err:    nil,
+		},
+		{
+			name:   "Valid time string with 4 fractional digits (trailing zeros trimmed)",
+			input:  "2025-09-15T10:53:36.3379+02:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 337900000, time.UTC),
+			err:    nil,
+		},
+		{
+			name:   "Valid time string with 1 fractional digit",
+			input:  "2025-09-15T08:53:36.3+00:00",
+			output: time.Date(2025, 9, 15, 8, 53, 36, 300000000, time.UTC),
+			err:    nil,
+		},
+		{
 			name:   "Invalid time string",
 			input:  "invalid",
 			output: time.Time{},
@@ -309,6 +333,13 @@ func TestConvertStringToTimeInLoc(t *testing.T) {
 			input:  "2023-03-01",
 			loc:    loc,
 			output: time.Date(2023, 3, 1, 0, 0, 0, 0, loc),
+			err:    nil,
+		},
+		{
+			name:   "Valid time string with 7 fractional digits and location",
+			input:  "2023-03-01T12:30:00.1234567+08:00",
+			loc:    loc,
+			output: time.Date(2023, 3, 1, 12, 30, 0, 123456700, loc),
 			err:    nil,
 		},
 		{

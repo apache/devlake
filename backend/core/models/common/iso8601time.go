@@ -57,12 +57,11 @@ func init() {
 			Format:  "2006-01-02T15:04:05-0700",
 		},
 		{
-			Matcher: regexp.MustCompile(`[\d]{6}[+-][\d]{2}:[\d]{2}$`),
-			Format:  "2006-01-02T15:04:05.000000-07:00",
-		},
-		{
-			Matcher: regexp.MustCompile(`[\d]{3}[+-][\d]{2}:[\d]{2}$`),
-			Format:  "2006-01-02T15:04:05.000-07:00",
+			// Fractional seconds of any length: Jira/GitLab use 3 digits, Bitbucket
+			// Cloud 6, .NET's round-trip format 7, and Go's RFC3339Nano up to 9 with
+			// trailing zeros trimmed. The ".999999999" layout accepts all of them.
+			Matcher: regexp.MustCompile(`\.[\d]+[+-][\d]{2}:[\d]{2}$`),
+			Format:  "2006-01-02T15:04:05.999999999-07:00",
 		},
 		{
 			Matcher: regexp.MustCompile(`[+-][\d]{2}:[\d]{2}$`),
