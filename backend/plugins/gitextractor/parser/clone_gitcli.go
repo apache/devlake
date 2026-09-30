@@ -18,12 +18,14 @@ limitations under the License.
 package parser
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,6 +38,10 @@ import (
 
 var _ RepoCloner = (*GitcliCloner)(nil)
 var ErrNoData = errors.NotModified.New("No data to be collected")
+
+// maxExtraDeepenRounds caps the extra deepen rounds in deepenUntilSince. The
+// depth doubles every round, so up to 1023 extra generations are covered.
+const maxExtraDeepenRounds = 10
 
 // CloneRepoConfig is the configuration for the CloneRepo method
 // the subtask should run in Full Sync mode whenever the configuration is changed
@@ -200,6 +206,7 @@ func (g *GitcliCloner) CloneRepo() errors.Error {
 		if err := g.deepen(); err != nil {
 			return err
 		}
+		g.deepenUntilSince()
 		g.success = true
 	}
 	return nil
@@ -229,6 +236,76 @@ func (g *GitcliCloner) deepen() errors.Error {
 		g.logger.Error(err, "failed to deepen the cloned repo")
 	}
 	return nil
+}
+
+// deepenUntilSince fetches more history for as long as a shallow boundary
+// commit is newer than g.since, doubling the depth each round (1, 2, 4, ...).
+//
+// Git makes a commit shallow (cuts it off from all of its parents) when any of
+// its parents is older than --shallow-since. For a merge commit whose
+// feature-branch parent is old, this also hides newer commits on its other
+// parent, and a single --deepen=1 can still leave them without their own first
+// parent. The collectors skip commits whose first parent is missing, and the
+// next incremental run starts after them, so they would never be collected.
+// See https://github.com/apache/devlake/issues/9189
+func (g *GitcliCloner) deepenUntilSince() {
+	depth := 1
+	for round := 0; ; round++ {
+		newest, err := g.newestShallowCommitTime()
+		if err != nil {
+			g.logger.Warn(err, "failed to read the shallow boundary")
+			return
+		}
+		if newest.Before(*g.since) {
+			return
+		}
+		if round == maxExtraDeepenRounds {
+			g.logger.Warn(nil, "shallow boundary is still newer than %s after %d extra deepen rounds", g.since.Format(time.RFC3339), maxExtraDeepenRounds)
+			return
+		}
+		if err := g.gitFetch(fmt.Sprintf("--deepen=%d", depth)); err != nil {
+			g.logger.Warn(err, "failed to deepen the cloned repo")
+			return
+		}
+		depth *= 2
+	}
+}
+
+// newestShallowCommitTime returns the newest committer time of the shallow
+// boundary commits present in the local repo, or the zero time if there are none.
+func (g *GitcliCloner) newestShallowCommitTime() (time.Time, errors.Error) {
+	// all clones are bare, so the shallow file is in the repo dir itself
+	shallow, e := os.ReadFile(path.Join(g.localDir, "shallow"))
+	if os.IsNotExist(e) {
+		return time.Time{}, nil
+	}
+	if e != nil {
+		return time.Time{}, errors.Convert(e)
+	}
+	// the shallow file may list commits that were not fetched; `git log` fails on those
+	objects, err := g.gitOutput(shallow, "cat-file", "--batch-check=%(objectname) %(objecttype)")
+	if err != nil {
+		return time.Time{}, err
+	}
+	var commits bytes.Buffer
+	for _, line := range strings.Split(objects, "\n") {
+		if sha, objectType, ok := strings.Cut(line, " "); ok && objectType == "commit" {
+			commits.WriteString(sha + "\n")
+		}
+	}
+	if commits.Len() == 0 {
+		return time.Time{}, nil
+	}
+	// --no-walk lists the given commits newest first by committer time
+	newest, err := g.gitOutput(commits.Bytes(), "log", "--no-walk", "--stdin", "-n1", "--format=%ct")
+	if err != nil {
+		return time.Time{}, err
+	}
+	seconds, e := strconv.ParseInt(strings.TrimSpace(newest), 10, 64)
+	if e != nil {
+		return time.Time{}, errors.Convert(e)
+	}
+	return time.Unix(seconds, 0), nil
 }
 
 func (g *GitcliCloner) shallowClone() errors.Error {
@@ -318,6 +395,11 @@ func (g *GitcliCloner) gitCmd(gitcmd string, args ...string) errors.Error {
 }
 
 func (g *GitcliCloner) git(env []string, dir string, gitcmd string, args ...string) errors.Error {
+	return g.execCommand(g.gitCommand(env, dir, gitcmd, args...))
+}
+
+// gitCommand builds a git command with the global config args (auth, credential helper).
+func (g *GitcliCloner) gitCommand(env []string, dir string, gitcmd string, args ...string) *exec.Cmd {
 	g.logger.Debug("git %s %v", gitcmd, sanitizeArgs(args)) // CWE-532: sanitize before logging
 	cmdArgs := append([]string{}, g.globalConfigArgs...)
 	cmdArgs = append(cmdArgs, gitcmd)
@@ -325,7 +407,26 @@ func (g *GitcliCloner) git(env []string, dir string, gitcmd string, args ...stri
 	cmd := exec.CommandContext(g.ctx.GetContext(), "git", cmdArgs...)
 	cmd.Env = env
 	cmd.Dir = dir
-	return g.execCommand(cmd)
+	return cmd
+}
+
+// gitOutput runs a git command in the cloned repo and returns its stdout.
+//
+// In a partial clone (--filter=blob:none, used when SkipCommitStat is set),
+// looking up a missing object makes git fetch it from origin. GIT_NO_LAZY_FETCH
+// prevents that where it is supported (git 2.45+ and some backports); with older
+// git the fetch uses the same auth and proxy settings as the other fetches.
+func (g *GitcliCloner) gitOutput(stdin []byte, gitcmd string, args ...string) (string, errors.Error) {
+	cmd := g.gitCommand(g.syncEnvs, g.localDir, gitcmd, args...)
+	cmd.Env = append(cmd.Environ(), "GIT_NO_LAZY_FETCH=1")
+	cmd.Stdin = bytes.NewReader(stdin)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	output, e := cmd.Output()
+	if e != nil {
+		return "", errors.Default.New(fmt.Sprintf("git %s in %s failed: %s", gitcmd, cmd.Dir, generateErrMsg(stderr.Bytes(), e)))
+	}
+	return string(output), nil
 }
 
 func (g *GitcliCloner) execCommand(cmd *exec.Cmd) errors.Error {
