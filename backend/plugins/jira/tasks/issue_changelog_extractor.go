@@ -74,9 +74,9 @@ func ExtractIssueChangelogs(subtaskCtx plugin.SubTaskContext) errors.Error {
 				result = append(result, user)
 			}
 			// collect changelog_items
-			for _, item := range changelog.Items {
-				result = append(result, item.ToToolLayer(connectionId, changelog.ID))
-				extractedUsersFromChangelogItem := item.ExtractUser(connectionId, userFieldMap)
+			for _, indexed := range apiv2models.IndexChangelogItems(changelog.Items) {
+				result = append(result, indexed.Item.ToToolLayer(connectionId, changelog.ID, indexed.ItemIndex))
+				extractedUsersFromChangelogItem := indexed.Item.ExtractUser(connectionId, userFieldMap)
 				for _, u := range extractedUsersFromChangelogItem {
 					if u != nil && u.AccountId != "" {
 						result = append(result, u)
