@@ -61,7 +61,10 @@ COPY --from=debian-arm64 /usr/lib/aarch64-linux-gnu /rootfs-arm64/usr/lib/aarch6
 COPY --from=debian-arm64 /lib/aarch64-linux-gnu /rootfs-arm64/lib/aarch64-linux-gnu
 
 
-RUN for arch in aarch64 x86_64 ; do \
+# set -e: otherwise a build failure for one arch is silently skipped and the
+# other arch's libgit2 is never installed under /usr/local/deps.
+RUN set -e; \
+    for arch in aarch64 x86_64 ; do \
         mkdir -p /tmp/build/${arch} && cd /tmp/build/${arch} && \
         wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.5.0.tar.gz -O - | tar -xz && \
         cd libgit2-1.5.0 && \

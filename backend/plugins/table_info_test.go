@@ -41,6 +41,7 @@ import (
 	github "github.com/apache/devlake/plugins/github/impl"
 	githubGraphql "github.com/apache/devlake/plugins/github_graphql/impl"
 	gitlab "github.com/apache/devlake/plugins/gitlab/impl"
+	grafanaIrm "github.com/apache/devlake/plugins/grafana_irm/impl"
 	icla "github.com/apache/devlake/plugins/icla/impl"
 	incidentio "github.com/apache/devlake/plugins/incidentio/impl"
 	issueTrace "github.com/apache/devlake/plugins/issue_trace/impl"
@@ -87,6 +88,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("github/models", github.Github{}.GetTablesInfo)
 	checker.FeedIn("github_graphql", githubGraphql.GithubGraphql{}.GetTablesInfo)
 	checker.FeedIn("gitlab/models", gitlab.Gitlab{}.GetTablesInfo)
+	checker.FeedIn("grafana_irm/models", grafanaIrm.GrafanaIrm{}.GetTablesInfo)
 	checker.FeedIn("icla/models", icla.Icla{}.GetTablesInfo)
 	checker.FeedIn("incidentio/models", incidentio.Incidentio{}.GetTablesInfo)
 	checker.FeedIn("jenkins/models", jenkins.Jenkins{}.GetTablesInfo)

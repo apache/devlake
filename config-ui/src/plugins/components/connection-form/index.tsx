@@ -52,6 +52,9 @@ const buildUpdateTestPayload = (connection: any, values: any, customHeaders: ICu
   token: isEqual(connection?.token, values.token) ? undefined : values.token,
   appId: isEqual(connection?.appId, values.appId) ? undefined : values.appId,
   secretKey: isEqual(connection?.secretKey, values.secretKey) ? undefined : values.secretKey,
+  cloudId: isEqual(connection?.cloudId, values.cloudId) ? undefined : values.cloudId,
+  clientId: isEqual(connection?.clientId, values.clientId) ? undefined : values.clientId,
+  clientSecret: isEqual(connection?.clientSecret, values.clientSecret) ? undefined : values.clientSecret,
   proxy: isEqual(connection?.proxy, values.proxy) ? undefined : values.proxy,
   rateLimitPerHour: isEqual(connection?.rateLimitPerHour, values.rateLimitPerHour)
     ? undefined
@@ -74,6 +77,9 @@ const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: 
     'authMethod',
     'appId',
     'secretKey',
+    'cloudId',
+    'clientId',
+    'clientSecret',
     'accessKeyId',
     'secretAccessKey',
     'region',

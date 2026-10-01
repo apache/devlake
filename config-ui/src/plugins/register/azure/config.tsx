@@ -30,7 +30,7 @@ export const AzureConfig: IPluginConfig = {
   sort: 2,
   isDeprecated: true,
   deprecationMessage:
-    'This Python-based Azure DevOps plugin is DEPRECATED and will be removed in 3 months. Please migrate to the Go-based "Azure DevOps Go" plugin. See https://github.com/apache/devlake/issues/9092 for the deprecation plan and migration guide.',
+    'Python-based Azure DevOps plugin is DEPRECATED and will be removed in 3 months. Please migrate to the Go-based "Azure DevOps Go" plugin. See https://github.com/apache/devlake/issues/9092 for the deprecation plan and migration guide.',
   connection: {
     docLink: DOC_URL.PLUGIN.AZUREDEVOPS.BASIS,
     initialValues: {},

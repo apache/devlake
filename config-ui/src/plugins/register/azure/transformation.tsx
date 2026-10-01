@@ -85,8 +85,8 @@ const renderCollapseItems = ({
           </p>
           <div>Convert a Azure Pipeline Run as a DevLake Deployment when: </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>
-            <span>
-              The name of the <strong>Azure pipeline</strong> or <strong>one of its jobs</strong> matches
+              <span>
+              The <strong>pipeline name</strong>, <strong>run name</strong>, or <strong>one of its jobs</strong> matches
             </span>
             <Input
               style={{ width: 200, margin: '0 8px' }}
@@ -104,7 +104,7 @@ const renderCollapseItems = ({
             <HelpTooltip content="Azure Pipelines: https://learn.microsoft.com/en-us/azure/devops/pipelines/get-started/what-is-azure-pipelines?view=azure-devops#continuous-testing" />
           </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>
-            <span>If the name also matches</span>
+            <span>If the pipeline name, run name, or job name also matches</span>
             <Input
               style={{ width: 200, margin: '0 8px' }}
               placeholder="prod(.*)"

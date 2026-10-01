@@ -129,6 +129,7 @@ func CollectApiPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 					res.Body.Close()
 					return []json.RawMessage{body}, nil
 				},
+				AfterResponse: ignoreHTTPStatus404,
 			},
 		},
 	})

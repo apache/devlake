@@ -32,6 +32,9 @@ export interface IConnectionAPI {
   password?: string;
   appId?: string;
   secretKey?: string;
+  cloudId?: string;
+  clientId?: string;
+  clientSecret?: string;
   dbUrl?: string;
   companyId?: number;
   proxy: string;
@@ -89,6 +92,9 @@ export interface IConnection {
   password?: string;
   appId?: string;
   secretKey?: string;
+  cloudId?: string;
+  clientId?: string;
+  clientSecret?: string;
   dbUrl?: string;
   companyId?: number;
   proxy: string;

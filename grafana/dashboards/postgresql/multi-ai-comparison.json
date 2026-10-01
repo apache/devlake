@@ -38,6 +38,17 @@
       "title": "Copilot Adoption",
       "type": "link",
       "url": "/d/copilot_adoption"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage",
+      "type": "link",
+      "url": "/d/cursor_usage"
     }
   ],
   "panels": [
@@ -59,7 +70,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "## Multi-AI Tool Comparison: Copilot vs Kiro\nCompare GitHub Copilot and Kiro adoption and activity side by side.\n\n**Semantic boundary:** Copilot exports code-generation and acceptance events. Kiro exports usage reports and completion responses, but no acceptance event. Returned Kiro lines and Copilot LOC added are displayed with explicit labels and must not be treated as equivalent productivity measures.",
+        "content": "## Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor\nCompare GitHub Copilot, Kiro, and Cursor adoption and activity side by side.\n\n**Semantic boundary:** Copilot exports code-generation and acceptance events. Kiro exports usage reports and completion responses, but no acceptance event. Cursor metrics come from `_tool_cursor_daily_usage`. Returned Kiro lines, Copilot LOC added, and Cursor LOC added are displayed with explicit labels and must not be treated as equivalent productivity measures.",
         "mode": "markdown"
       },
       "title": "About",
@@ -152,6 +163,16 @@
           "rawQuery": true,
           "rawSql": "SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day' AS time, MAX(daily_active_users) AS \"Copilot Active Users\" FROM _tool_copilot_enterprise_daily_metrics WHERE ('${copilot_connection_id}' = '' OR connection_id::text = '${copilot_connection_id}') AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(DISTINCT user_id) AS \"Cursor Active Users\" FROM _tool_cursor_daily_usage WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND is_active = TRUE AND $__timeFilter(usage_date) GROUP BY CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "refId": "C"
         }
       ],
       "title": "Weekly Active Users Comparison",
@@ -232,7 +253,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(*) AS \"Kiro: Completion Requests\", SUM(CASE WHEN completions_count > 0 THEN 1 ELSE 0 END) AS \"Kiro: Requests with Results\" FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time",
+          "rawSql": "SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' AS time, COUNT(*) AS \"Kiro: Completion Requests\", SUM(CASE WHEN completions_count > 0 THEN 1 ELSE 0 END) AS \"Kiro: Requests with Results\" FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -309,12 +330,81 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Weekly Cursor tab completions: shown vs accepted",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(tabs_shown) AS \"Cursor: Suggestions\", SUM(tabs_accepted) AS \"Cursor: Accepted\" FROM _tool_cursor_daily_usage WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date) GROUP BY CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day' ORDER BY time NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Cursor: Tab Completions",
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 29
       },
       "id": 20,
       "panels": [],
@@ -358,7 +448,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 30
       },
       "id": 21,
       "options": {
@@ -383,7 +473,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT time, SUM(kiro_lines) AS \"Kiro Returned Lines\", SUM(copilot_loc) AS \"Copilot LOC Added\" FROM (SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(returned_line_count) AS kiro_lines, 0 AS copilot_loc FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day' AS time, 0 AS kiro_lines, SUM(loc_added_sum) AS copilot_loc FROM _tool_copilot_enterprise_daily_metrics WHERE ('${copilot_connection_id}' = '' OR connection_id::text = '${copilot_connection_id}') AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day') combined GROUP BY time ORDER BY time",
+          "rawSql": "SELECT time, SUM(kiro_lines) AS \"Kiro Returned Lines\", SUM(copilot_loc) AS \"Copilot LOC Added\", SUM(cursor_loc) AS \"Cursor LOC Added\" FROM (SELECT CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' AS time, SUM(returned_line_count) AS kiro_lines, 0 AS copilot_loc, 0 AS cursor_loc FROM _tool_kiro_completion_log WHERE $__timeFilter(timestamp) GROUP BY CAST(timestamp AS DATE) - (EXTRACT(ISODOW FROM CAST(timestamp AS DATE)) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day' AS time, 0 AS kiro_lines, SUM(loc_added_sum) AS copilot_loc, 0 AS cursor_loc FROM _tool_copilot_enterprise_daily_metrics WHERE ('${copilot_connection_id}' = '' OR connection_id::text = '${copilot_connection_id}') AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) GROUP BY CAST(day AS DATE) - (EXTRACT(ISODOW FROM CAST(day AS DATE)) - 1) * INTERVAL '1 day' UNION ALL SELECT CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day' AS time, 0 AS kiro_lines, 0 AS copilot_loc, SUM(lines_added) AS cursor_loc FROM _tool_cursor_daily_usage WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date) GROUP BY CAST(usage_date AS DATE) - (EXTRACT(ISODOW FROM CAST(usage_date AS DATE)) - 1) * INTERVAL '1 day') AS combined GROUP BY time ORDER BY time NULLS FIRST",
           "refId": "A"
         }
       ],
@@ -419,7 +509,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 30
       },
       "id": 22,
       "options": {
@@ -440,7 +530,7 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT 'Kiro (not exported)' AS \"Tool\", CAST(NULL AS NUMERIC) AS \"Acceptance Rate\" UNION ALL SELECT 'Copilot' AS \"Tool\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(SUM(code_generation_activity_count), 0), 1) AS \"Acceptance Rate\" FROM _tool_copilot_enterprise_daily_metrics WHERE ('${copilot_connection_id}' = '' OR connection_id::text = '${copilot_connection_id}') AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day)",
+          "rawSql": "SELECT 'Kiro (not exported)' AS \"Tool\", CAST(NULL AS DECIMAL(10, 2)) AS \"Acceptance Rate\" UNION ALL SELECT 'Copilot' AS \"Tool\", ROUND(CAST(SUM(code_acceptance_activity_count) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(code_generation_activity_count), 0), 0), 1) AS \"Acceptance Rate\" FROM _tool_copilot_enterprise_daily_metrics WHERE ('${copilot_connection_id}' = '' OR connection_id::text = '${copilot_connection_id}') AND scope_id = '${copilot_scope_id}' AND $__timeFilter(day) UNION ALL SELECT 'Cursor' AS \"Tool\", ROUND(CAST(SUM(tabs_accepted) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(tabs_shown), 0), 0), 1) AS \"Acceptance Rate\" FROM _tool_cursor_daily_usage WHERE ('${cursor_connection_id}' = '' OR connection_id::text = '${cursor_connection_id}') AND scope_id = '${cursor_scope_id}' AND $__timeFilter(usage_date)",
           "refId": "A"
         }
       ],
@@ -454,6 +544,7 @@
   "tags": [
     "kiro",
     "copilot",
+    "cursor",
     "comparison"
   ],
   "templating": {
@@ -487,6 +578,36 @@
         "query": "SELECT DISTINCT id FROM _tool_copilot_scopes WHERE connection_id = CAST('${copilot_connection_id}' AS BIGINT)",
         "refresh": 1,
         "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id DESC NULLS LAST",
+        "hide": 0,
+        "label": "Cursor Connection",
+        "name": "cursor_connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id DESC NULLS LAST",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT id FROM _tool_cursor_scopes WHERE connection_id = CAST('${cursor_connection_id}' AS BIGINT)",
+        "hide": 0,
+        "label": "Cursor Scope",
+        "name": "cursor_scope_id",
+        "options": [],
+        "query": "SELECT DISTINCT id FROM _tool_cursor_scopes WHERE connection_id = CAST('${cursor_connection_id}' AS BIGINT)",
+        "refresh": 1,
+        "type": "query"
       }
     ]
   },
@@ -496,7 +617,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Multi-AI Tool Comparison",
+  "title": "Multi-AI Tool Comparison: Copilot vs Kiro vs Cursor",
   "uid": "multi_ai_comparison-pg",
-  "version": 1
+  "version": 2
 }

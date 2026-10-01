@@ -17,6 +17,7 @@
  */
 
 import styled from 'styled-components';
+import { Alert } from 'antd';
 
 export const Wrapper = styled.div`
   h2 {
@@ -93,15 +94,6 @@ export const Wrapper = styled.div`
       border-radius: 8px;
     }
 
-    & > .deprecation-note {
-      margin-top: 4px;
-      padding: 0 8px;
-      font-size: 11px;
-      line-height: 1.4;
-      color: ${({ theme }) => theme.colors.error};
-      text-align: center;
-    }
-
     & > .logo {
       width: 60px;
       height: 60px;
@@ -133,6 +125,18 @@ export const Wrapper = styled.div`
     & > .count {
       color: ${({ theme }) => theme.colors.textMuted};
     }
+  }
+`;
+
+export const DeprecationAlert = styled(Alert)`
+  margin-top: 12px;
+
+  & + h4 {
+    margin-top: 12px;
+  }
+
+  .ant-alert-description {
+    white-space: pre-line;
   }
 `;
 

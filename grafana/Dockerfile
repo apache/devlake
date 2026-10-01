@@ -23,7 +23,7 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
-FROM grafana/grafana:13.2.1
+FROM grafana/grafana:13.2.2
 COPY ./provisioning/dashboards /etc/grafana/provisioning/dashboards
 COPY ./dashboards /etc/grafana/dashboards
 COPY ./scripts/entrypoint.sh /entrypoint.sh

@@ -28,5 +28,6 @@ func All() []plugin.MigrationScript {
 		new(extendRepoTable),
 		new(addEndpointToAzuredevops),
 		new(addUsernameToAzuredevops),
+		new(addRunNameToAzuredevopsBuild),
 	}
 }

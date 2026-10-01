@@ -47,15 +47,13 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 
 	logger.Info("converting Tempo worklogs to domain layer")
 
-	issueIdMapping, err := buildIssueIdMapping(db, connectionId)
-	if err != nil {
-		return errors.Default.Wrap(err, "failed to build issue ID mapping")
-	}
-
 	clauses := []dal.Clause{
 		dal.Select("*"),
 		dal.From("_tool_tempo_worklogs"),
 		dal.Where("connection_id = ?", connectionId),
+	}
+	if data.Options.TeamId != 0 {
+		clauses = append(clauses, dal.Where("team_id = ?", data.Options.TeamId))
 	}
 	cursor, err := db.Cursor(clauses...)
 	if err != nil {
@@ -68,6 +66,7 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 			Ctx: taskCtx,
 			Params: models.TempoApiParams{
 				ConnectionId: connectionId,
+				TeamId:       data.Options.TeamId,
 			},
 			Table: RAW_WORKLOG_TABLE,
 		},
@@ -76,11 +75,14 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			tempoWorklog := inputRow.(*models.TempoWorklog)
 
-			domainIssueId := ""
-			if domainId, ok := issueIdMapping[tempoWorklog.IssueId]; ok {
-				domainIssueId = domainId
-			} else {
-				domainIssueId = fmt.Sprintf("jira:JiraIssues:%d:%d", connectionId, tempoWorklog.IssueId)
+			// Must match the domain ids the jira plugin generates with didgen
+			// for JiraIssue / JiraAccount (plugins may not import each other),
+			// so worklogs join issues and accounts. Like before, this assumes
+			// the Tempo connection id equals the Jira connection id.
+			domainIssueId := fmt.Sprintf("jira:JiraIssue:%d:%d", connectionId, tempoWorklog.IssueId)
+			authorId := ""
+			if tempoWorklog.AuthorAccountId != "" {
+				authorId = fmt.Sprintf("jira:JiraAccount:%d:%s", connectionId, tempoWorklog.AuthorAccountId)
 			}
 
 			domainWorklogId := fmt.Sprintf("tempo:TempoWorklog:%d", tempoWorklog.TempoWorklogId)
@@ -105,7 +107,7 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 					Id: domainWorklogId,
 				},
 				IssueId:          domainIssueId,
-				AuthorId:         tempoWorklog.AuthorAccountId,
+				AuthorId:         authorId,
 				TimeSpentMinutes: timeSpentMinutes,
 				StartedDate:      startedDate,
 				LoggedDate:       loggedDate,
@@ -121,35 +123,4 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
-}
-
-func buildIssueIdMapping(db dal.Dal, connectionId uint64) (map[int64]string, errors.Error) {
-	mapping := make(map[int64]string)
-
-	if !db.HasTable("_tool_jira_issues") {
-		return mapping, nil
-	}
-
-	clauses := []dal.Clause{
-		dal.Select("issue_id"),
-		dal.From("_tool_jira_issues"),
-		dal.Where("connection_id = ?", connectionId),
-	}
-
-	rows, err := db.Cursor(clauses...)
-	if err != nil {
-		return nil, errors.Default.Wrap(err, "failed to query jira issues")
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var issueId uint64
-		if err := rows.Scan(&issueId); err != nil {
-			return nil, errors.Default.Wrap(err, "failed to scan issue")
-		}
-		domainId := fmt.Sprintf("jira:JiraIssues:%d:%d", connectionId, issueId)
-		mapping[int64(issueId)] = domainId
-	}
-
-	return mapping, nil
 }

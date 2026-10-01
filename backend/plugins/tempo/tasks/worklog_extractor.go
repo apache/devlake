@@ -61,6 +61,7 @@ func ExtractWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 			Ctx: taskCtx,
 			Params: models.TempoApiParams{
 				ConnectionId: data.Options.ConnectionId,
+				TeamId:       data.Options.TeamId,
 			},
 			Table: RAW_WORKLOG_TABLE,
 		},
@@ -74,6 +75,7 @@ func ExtractWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 			worklog := &models.TempoWorklog{
 				ConnectionId:     data.Options.ConnectionId,
 				TempoWorklogId:   apiWorklog.TempoWorklogId,
+				TeamId:           data.Options.TeamId,
 				IssueId:          apiWorklog.Issue.Id,
 				TimeSpentSeconds: apiWorklog.TimeSpentSeconds,
 				BillableSeconds:  apiWorklog.BillableSeconds,

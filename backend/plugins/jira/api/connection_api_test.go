@@ -20,6 +20,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -141,4 +142,61 @@ func TestTestConnection_NonGateway404ShowsHint(t *testing.T) {
 	require.NotNil(t, errMissingRest)
 	assert.Contains(t, errMissingRest.Error(), "please try",
 		"non-gateway 404 should include the /rest/ hint")
+}
+
+func TestTestConnection_OAuth2RequiresCredentials(t *testing.T) {
+	initTestDeps(t)
+
+	conn := models.JiraConn{}
+	conn.AuthMethod = models.AUTH_METHOD_OAUTH2
+	conn.CloudId = "cloud-1"
+
+	_, err := testConnection(context.Background(), conn)
+	require.NotNil(t, err)
+	assert.Contains(t, err.Error(), "clientId, clientSecret and cloudId are required")
+}
+
+func TestJiraHTTPErrorDetail(t *testing.T) {
+	tests := []struct {
+		name   string
+		body   string
+		header string
+		want   string
+	}{
+		{
+			name: "classic jira errorMessages",
+			body: `{"errorMessages":["Client must be authenticated to access this resource."],"errors":{}}`,
+			want: "Client must be authenticated to access this resource.",
+		},
+		{
+			name: "atlassian gateway message",
+			body: `{"code":401,"message":"Unauthorized; scope does not match"}`,
+			want: "Unauthorized; scope does not match",
+		},
+		{
+			name:   "www-authenticate when body empty",
+			header: `Bearer error="insufficient_scope"`,
+			want:   `Bearer error="insufficient_scope"`,
+		},
+		{
+			name: "html body ignored",
+			body: `<html><body>Unauthorized</body></html>`,
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := &http.Response{
+				StatusCode: http.StatusUnauthorized,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(tt.body)),
+			}
+			if tt.header != "" {
+				res.Header.Set("WWW-Authenticate", tt.header)
+			}
+			if got := jiraHTTPErrorDetail(res); got != tt.want {
+				t.Errorf("jiraHTTPErrorDetail() = %q, want %q", got, tt.want)
+			}
+		})
+	}
 }

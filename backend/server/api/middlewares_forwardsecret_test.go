@@ -57,9 +57,13 @@ type proxyAuthResponse struct {
 }
 
 func newProxyAuthRouter(secret string) *gin.Engine {
-	gin.SetMode(gin.TestMode)
 	cfg := viper.New()
 	cfg.Set("FORWARDED_USER_SECRET", secret)
+	return newProxyAuthRouterWithConfig(cfg)
+}
+
+func newProxyAuthRouterWithConfig(cfg *viper.Viper) *gin.Engine {
+	gin.SetMode(gin.TestMode)
 	basicRes := &proxyAuthTestBasicRes{
 		cfg:    cfg,
 		logger: logruslog.Global,

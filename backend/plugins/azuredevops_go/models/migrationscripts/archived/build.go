@@ -29,6 +29,7 @@ type AzuredevopsBuild struct {
 	AzuredevopsId int    `gorm:"primaryKey"`
 	RepositoryId  string `gorm:"type:varchar(255)"`
 	Name          string `gorm:"type:varchar(100)"`
+	RunName       string `gorm:"type:varchar(255)"`
 	Status        string `gorm:"type:varchar(255)"`
 	Result        string `gorm:"type:varchar(255)"`
 	SourceBranch  string `gorm:"type:varchar(255)"`

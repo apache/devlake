@@ -41,18 +41,29 @@ export type RequestConfig = {
 
 const isLoginRoute = () => window.location.pathname.replace(/\/+$/, '').endsWith('/login');
 
+// Plugin connection tests often return 401 when the *remote* credential is
+// wrong. That is not a DevLake session expiry — do not wipe the form.
+const isPluginConnectionTest = (url?: string) =>
+  !!url && /\/plugins\/[^/]+(?:\/connections\/[^/]+)?\/test\/?$/.test(url);
+
 let redirectingToLogin = false;
 
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const requestUrl = error.config?.url as string | undefined;
 
     if (status === 428) {
       window.location.replace('/db-migrate');
     }
 
-    if (status === 401 && !isLoginRoute() && !redirectingToLogin) {
+    if (
+      status === 401 &&
+      !isLoginRoute() &&
+      !redirectingToLogin &&
+      !isPluginConnectionTest(requestUrl)
+    ) {
       redirectingToLogin = true;
       const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.replace(`/login?return_url=${returnUrl}`);

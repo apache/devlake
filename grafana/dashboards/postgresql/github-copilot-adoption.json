@@ -1270,7 +1270,7 @@
           "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Agent Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND used_agent = 1",
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Agent Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND used_agent IS TRUE",
           "refId": "A"
         }
       ],
@@ -1324,7 +1324,7 @@
           "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND used_chat = 1",
+          "rawSql": "SELECT COUNT(DISTINCT user_login) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND used_chat IS TRUE",
           "refId": "A"
         }
       ],
@@ -1809,7 +1809,7 @@
           "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT day AS time, COUNT(DISTINCT CASE WHEN used_agent = 1 THEN user_login END) AS \"Agent Users\", COUNT(DISTINCT CASE WHEN used_chat = 1 THEN user_login END) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY \"day\" ORDER BY 1 NULLS FIRST",
+          "rawSql": "SELECT day AS time, COUNT(DISTINCT CASE WHEN used_agent IS TRUE THEN user_login END) AS \"Agent Users\", COUNT(DISTINCT CASE WHEN used_chat IS TRUE THEN user_login END) AS \"Chat Users\" FROM _tool_copilot_user_daily_metrics WHERE $__timeFilter(day) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY \"day\" ORDER BY 1 NULLS FIRST",
           "refId": "A"
         }
       ],

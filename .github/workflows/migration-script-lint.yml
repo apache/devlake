@@ -30,6 +30,8 @@ jobs:
     container: mericodev/lake-builder:latest
     steps:
       - uses: actions/checkout@v7
+      - name: Install Go 1.26.6
+        run: backend/scripts/install-go.sh
       - name: migration script linting
         run: |
           go version

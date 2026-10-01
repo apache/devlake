@@ -93,7 +93,14 @@ func getBasicAuthUserInfo(c *gin.Context, basicRes context.BasicRes) (*common.Us
 
 func OAuth2ProxyAuthentication(basicRes context.BasicRes) gin.HandlerFunc {
 	logger := basicRes.GetLogger()
-	forwardedUserSecret := strings.TrimSpace(basicRes.GetConfigReader().GetString("FORWARDED_USER_SECRET"))
+	cfg := basicRes.GetConfigReader()
+	forwardedUserSecret := strings.TrimSpace(cfg.GetString("FORWARDED_USER_SECRET"))
+	// A Basic header is only an identity nginx (config-ui) has already verified
+	// against ADMIN_USER/ADMIN_PASS; the lake never checks the password. With
+	// AUTH_ENABLED the lake is the authenticator (session cookie, API key, or
+	// forwarded headers with the shared secret), so an unverified Basic header
+	// must not become a user, or any username:password passes RequireAuth.
+	trustBasicAuth := !(cfg.IsSet("AUTH_ENABLED") && cfg.GetBool("AUTH_ENABLED"))
 	return func(c *gin.Context) {
 		_, exist := c.Get(common.USER)
 		if !exist {
@@ -101,7 +108,7 @@ func OAuth2ProxyAuthentication(basicRes context.BasicRes) gin.HandlerFunc {
 			if err != nil {
 				logger.Warn(err, "rejected forwarded user headers")
 			}
-			if user == nil || user.Name == "" {
+			if (user == nil || user.Name == "") && trustBasicAuth {
 				// fetch with basic auth header
 				user, err = getBasicAuthUserInfo(c, basicRes)
 				if err != nil {

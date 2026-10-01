@@ -21,6 +21,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 
+// Allow DevLake API access from the dev server when using Dev Container or custom host/port
+const devlakeOrigin = process.env.VITE_DEVLAKE_URL || 'http://localhost:8080';
+
 // Allow Grafana access from the dev server when using Dev Container
 const grafanaProtocol = process.env.VITE_GRAFANA_PROTOCOL || 'http';
 const grafanaHost = process.env.VITE_GRAFANA_HOST || 'localhost';
@@ -38,7 +41,7 @@ export default defineConfig({
     port: 4000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080/',
+        target: devlakeOrigin,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\//, ''),
       },

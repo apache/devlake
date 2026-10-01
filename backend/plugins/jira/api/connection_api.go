@@ -19,7 +19,9 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -39,8 +41,13 @@ type JiraTestConnResponse struct {
 }
 
 func testConnection(ctx context.Context, connection models.JiraConn) (*JiraTestConnResponse, errors.Error) {
-	// validate
-	if vld != nil {
+	// OAuth2 is plugin-specific and is not in MultiAuth's oneof, so validate it
+	// separately. Other auth methods keep the existing StructExcept path.
+	if connection.IsOAuth2() {
+		if err := connection.ValidateConnection(&connection, vld); err != nil {
+			return nil, err
+		}
+	} else if vld != nil {
 		e := vld.StructExcept(connection, "BasicAuth", "AccessToken")
 		if e != nil {
 			return nil, errors.Convert(e)
@@ -74,10 +81,12 @@ func testConnection(ctx context.Context, connection models.JiraConn) (*JiraTestC
 		return nil, errors.NotFound.New(fmt.Sprintf("Seems like an invalid Endpoint URL, please try %s", restUrl.String()))
 	}
 	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
-		return nil, errors.HttpStatus(res.StatusCode).New("Please check your credential")
+		// 400 not 401: Config UI treats HTTP 401 as a DevLake session expiry and
+		// navigates to /login, wiping the connection form.
+		return nil, errors.BadInput.New(withJiraHTTPDetail(res, "Please check your credential"))
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.HttpStatus(res.StatusCode).New(fmt.Sprintf("%s unexpected status code: %d", serverInfoFail, res.StatusCode))
+		return nil, errors.HttpStatus(res.StatusCode).New(withJiraHTTPDetail(res, fmt.Sprintf("%s unexpected status code: %d", serverInfoFail, res.StatusCode)))
 	}
 
 	resBody := &models.JiraServerInfo{}
@@ -101,13 +110,16 @@ func testConnection(ctx context.Context, connection models.JiraConn) (*JiraTestC
 	}
 	getStatusFail += ": [ " + res.Request.URL.String() + " ]"
 
-	errMsg := ""
-	if res.StatusCode == http.StatusUnauthorized {
-		return nil, errors.HttpStatus(res.StatusCode).New("Please check your credential")
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		return nil, errors.BadInput.New(withJiraHTTPDetail(res, fmt.Sprintf(
+			"Jira accepted the connection (serverInfo OK) but GET %s returned %d",
+			res.Request.URL.String(),
+			res.StatusCode,
+		)))
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.HttpStatus(res.StatusCode).New(fmt.Sprintf("%s Unexpected [%s] status code: %d %s", getStatusFail, res.Request.URL, res.StatusCode, errMsg))
+		return nil, errors.HttpStatus(res.StatusCode).New(withJiraHTTPDetail(res, fmt.Sprintf("%s Unexpected [%s] status code: %d", getStatusFail, res.Request.URL, res.StatusCode)))
 	}
 	connection = connection.Sanitize()
 	body := JiraTestConnResponse{}
@@ -221,4 +233,63 @@ func ListConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 // @Router /plugins/jira/connections/{connectionId} [GET]
 func GetConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	return dsHelper.ConnApi.GetDetail(input)
+}
+
+func withJiraHTTPDetail(res *http.Response, msg string) string {
+	if detail := jiraHTTPErrorDetail(res); detail != "" {
+		return msg + ": " + detail
+	}
+	return msg
+}
+
+// jiraHTTPErrorDetail reads Jira's error payload. Classic REST uses
+// errorMessages; the Atlassian OAuth gateway often uses message and/or
+// WWW-Authenticate (e.g. insufficient_scope).
+func jiraHTTPErrorDetail(res *http.Response) string {
+	if res == nil || res.Body == nil {
+		return ""
+	}
+	defer res.Body.Close()
+	raw, err := io.ReadAll(io.LimitReader(res.Body, 4096))
+	if err != nil {
+		return ""
+	}
+	if parsed := parseJiraErrorBody(strings.TrimSpace(string(raw))); parsed != "" {
+		return parsed
+	}
+	if auth := strings.TrimSpace(res.Header.Get("WWW-Authenticate")); auth != "" {
+		return auth
+	}
+	text := strings.TrimSpace(string(raw))
+	if text == "" || strings.HasPrefix(text, "<") {
+		return ""
+	}
+	const maxLen = 500
+	if len(text) > maxLen {
+		return text[:maxLen] + "..."
+	}
+	return text
+}
+
+func parseJiraErrorBody(text string) string {
+	if text == "" || text[0] != '{' {
+		return ""
+	}
+	var payload struct {
+		ErrorMessages []string `json:"errorMessages"`
+		Message       string   `json:"message"`
+	}
+	if json.Unmarshal([]byte(text), &payload) != nil {
+		return ""
+	}
+	parts := make([]string, 0, len(payload.ErrorMessages)+1)
+	for _, m := range payload.ErrorMessages {
+		if m = strings.TrimSpace(m); m != "" {
+			parts = append(parts, m)
+		}
+	}
+	if m := strings.TrimSpace(payload.Message); m != "" {
+		parts = append(parts, m)
+	}
+	return strings.Join(parts, "; ")
 }

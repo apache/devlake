@@ -87,6 +87,10 @@ export const getPluginScopeName = (plugin: string, scope: any) => {
     return rawId;
   }
 
+  if (plugin === 'gitlab') {
+    return `${scope.pathWithNamespace ?? scope.fullName ?? scope.name ?? scope.id ?? ''}`;
+  }
+
   return `${scope.fullName ?? scope.name ?? scope.id ?? ''}`;
 };
 
