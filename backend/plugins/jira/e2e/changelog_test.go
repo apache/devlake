@@ -63,6 +63,7 @@ func TestIssueChangelogDataFlow(t *testing.T) {
 			"connection_id",
 			"changelog_id",
 			"field",
+			"item_index",
 			"field_type",
 			"field_id",
 			"from_value",
