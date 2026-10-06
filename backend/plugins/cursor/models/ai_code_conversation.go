@@ -24,14 +24,14 @@ import (
 // CursorAiCodeConversation stores conversation metadata referenced by commit-detail
 // range annotations from GET /analytics/ai-code/commits/:commitHash (Enterprise API).
 type CursorAiCodeConversation struct {
-	ConnectionId     uint64 `gorm:"primaryKey" json:"connectionId"`
-	ScopeId          string `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
-	ConversationId   string `gorm:"primaryKey;type:varchar(64)" json:"conversationId"`
+	ConnectionId   uint64 `gorm:"primaryKey" json:"connectionId"`
+	ScopeId        string `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	ConversationId string `gorm:"primaryKey;type:varchar(255)" json:"conversationId"`
 
-	Title            string `gorm:"type:varchar(512)" json:"title"`
-	Tldr             string `gorm:"type:text" json:"tldr"`
-	Overview         string `gorm:"type:text" json:"overview"`
-	SummaryBullets   string `gorm:"type:text" json:"summaryBullets"`
+	Title          string `gorm:"type:varchar(512)" json:"title"`
+	Tldr           string `gorm:"type:text" json:"tldr"`
+	Overview       string `gorm:"type:text" json:"overview"`
+	SummaryBullets string `gorm:"type:text" json:"summaryBullets"`
 
 	common.NoPKModel
 }
