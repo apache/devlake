@@ -132,7 +132,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Sum of bugs_found across reviews in the selected time range",
+      "description": "Bugs BugBot reported across reviews in the selected time range",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -179,11 +179,11 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(bugs_found) AS \"Findings\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+          "rawSql": "SELECT SUM(bugs_found) AS \"Bugs\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
           "refId": "A"
         }
       ],
-      "title": "Total Findings",
+      "title": "Total Bugs",
       "type": "stat"
     },
     {
@@ -191,7 +191,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Share of findings marked resolved vs findings with a resolution status",
+      "description": "Share of bugs marked resolved vs bugs with a resolution status",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -323,7 +323,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Completed BugBot reviews per day from GET /analytics/team/bugbot-reviews, stacked by publication status",
+      "description": "Completed BugBot reviews per day",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -373,7 +373,7 @@
           "refId": "A"
         }
       ],
-      "title": "Review Volume by Status",
+      "title": "BugBot Reviews Over Time",
       "type": "timeseries",
       "transformations": [
         {
@@ -454,42 +454,104 @@
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Share of findings marked resolved vs total findings with a resolution status",
+      "description": "Share of bugs marked resolved within each severity for the selected time range.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "green",
-            "mode": "fixed"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "showPoints": "auto",
-            "pointSize": 4
+            "mode": "palette-classic"
           },
           "unit": "percent",
-          "decimals": 1
+          "decimals": 1,
+          "min": 0,
+          "max": 100
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "High"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Medium"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Low"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 17
       },
       "id": 323,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
         "legend": {
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "11.0.0",
       "targets": [
@@ -500,19 +562,19 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CAST(r.timestamp AS DATE) AS time, CAST(SUM(CASE WHEN f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(CASE WHEN f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 0) AS \"Resolution Rate\" FROM _tool_cursor_bugbot_reviews AS r JOIN _tool_cursor_bugbot_findings AS f ON r.connection_id = f.connection_id AND r.scope_id = f.scope_id AND r.request_id = f.request_id WHERE $__timeFilter(r.timestamp) AND ('${connection_id}' = '' OR r.connection_id::text = '${connection_id}') AND r.scope_id = '${scope_id}' GROUP BY CAST(r.timestamp AS DATE) ORDER BY 1 NULLS FIRST",
+          "rawSql": "SELECT 'Severity' AS metric, ROUND(CAST(SUM(CASE WHEN f.severity = 'high' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(SUM(CASE WHEN f.severity = 'high' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS high, ROUND(CAST(SUM(CASE WHEN f.severity = 'medium' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(SUM(CASE WHEN f.severity = 'medium' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS medium, ROUND(CAST(SUM(CASE WHEN f.severity = 'low' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(SUM(CASE WHEN f.severity = 'low' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS low FROM _tool_cursor_bugbot_reviews AS r JOIN _tool_cursor_bugbot_findings AS f ON r.connection_id = f.connection_id AND r.scope_id = f.scope_id AND r.request_id = f.request_id WHERE $__timeFilter(r.timestamp) AND ('${connection_id}' = '' OR r.connection_id::text = '${connection_id}') AND r.scope_id = '${scope_id}'",
           "refId": "A"
         }
       ],
-      "title": "Finding Resolution Rate",
-      "type": "timeseries"
+      "title": "Bug Resolution by Severity",
+      "type": "barchart"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Finding counts by severity over time",
+      "description": "Bug counts by severity over time",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -533,8 +595,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 17
       },
       "id": 324,
@@ -562,7 +624,7 @@
           "refId": "A"
         }
       ],
-      "title": "Finding Severity Over Time",
+      "title": "Bug Severity Over Time",
       "type": "timeseries",
       "transformations": [
         {
@@ -585,16 +647,129 @@
         "type": "grafana-postgresql-datasource",
         "uid": "devlake-postgres-api"
       },
-      "description": "Repositories ranked by total bugs_found in the selected period",
+      "description": "Repositories ranked by bugs BugBot reported. PRs is the number of distinct pull requests. Bugs per PR is total bugs divided by that count.",
       "fieldConfig": {
         "defaults": {},
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 360
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reviews"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PRs"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bugs"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bugs per PR"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cost ($)"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 17
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 25
       },
       "id": 325,
       "options": {
@@ -613,51 +788,11 @@
           },
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT repo AS \"Repo\", COUNT(*) AS \"Reviews\", SUM(bugs_found) AS \"Findings\", ROUND(CAST(CAST(SUM(COALESCE(cost_cents, 0)) AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) AS \"Cost ($)\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND repo <> '' GROUP BY \"repo\" ORDER BY SUM(bugs_found) DESC NULLS LAST LIMIT 10",
+          "rawSql": "SELECT repo AS \"Repo\", COUNT(*) AS \"Reviews\", COUNT(DISTINCT pr_number) AS \"PRs\", SUM(bugs_found) AS \"Bugs\", ROUND(CAST(SUM(bugs_found) AS NUMERIC) / NULLIF(COUNT(DISTINCT pr_number), 0), 2) AS \"Bugs per PR\", ROUND(CAST(SUM(COALESCE(cost_cents, 0)) AS NUMERIC) / 100, 2) AS \"Cost ($)\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND repo <> '' GROUP BY repo ORDER BY SUM(bugs_found) DESC NULLS LAST LIMIT 10",
           "refId": "A"
         }
       ],
-      "title": "Top Repos by Findings",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "devlake-postgres-api"
-      },
-      "description": "Average bugs found per pull request by repository",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 25
-      },
-      "id": 326,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "devlake-postgres-api"
-          },
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT repo AS \"Repo\", pr_number AS \"PR\", COUNT(*) AS \"Reviews\", ROUND(CAST(AVG(bugs_found) AS DECIMAL), 2) AS \"Avg Findings\", SUM(bugs_found) AS \"Total Findings\" FROM _tool_cursor_bugbot_reviews WHERE $__timeFilter(timestamp) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND NOT pr_number IS NULL GROUP BY \"repo\", \"pr_number\" ORDER BY AVG(bugs_found) DESC NULLS LAST, SUM(bugs_found) DESC NULLS LAST LIMIT 15",
-          "refId": "A"
-        }
-      ],
-      "title": "Average Bugs per PR",
+      "title": "Top Repos by Bugs",
       "type": "table"
     },
     {
@@ -666,7 +801,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 34
       },
       "id": 104,
       "title": "Diagnostics",
@@ -680,13 +815,58 @@
           "description": "Row counts and latest timestamps for BugBot tool tables",
           "fieldConfig": {
             "defaults": {},
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "table_name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.minWidth",
+                    "value": 280
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "row_count"
+                },
+                "properties": [
+                  {
+                    "id": "custom.align",
+                    "value": "right"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 110
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "latest"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 190
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 24
+            "y": 35
           },
           "id": 40,
           "options": {

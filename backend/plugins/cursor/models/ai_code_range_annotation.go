@@ -30,7 +30,7 @@ type CursorAiCodeRangeAnnotation struct {
 
 	CommitHash     string `gorm:"type:varchar(64);index" json:"commitHash"`
 	FilePath       string `gorm:"type:varchar(1024)" json:"filePath"`
-	ConversationId string `gorm:"type:varchar(64);index" json:"conversationId"`
+	ConversationId string `gorm:"type:varchar(255);index" json:"conversationId"`
 	RangeStart     int    `json:"rangeStart"`
 	RangeEnd       int    `json:"rangeEnd"`
 	Model          string `gorm:"type:varchar(255)" json:"model"`
