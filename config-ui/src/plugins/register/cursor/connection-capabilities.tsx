@@ -56,10 +56,11 @@ export const getCursorCapabilities = (source: CursorCapabilitySource): CursorCap
     return [];
   }
 
-  const bugbotStatus = getCursorCapabilityStatus(source.hasBugbotReviews, true);
+  const enterpriseOptional = keyTier === 'enterprise';
+  const bugbotStatus = getCursorCapabilityStatus(source.hasBugbotReviews, enterpriseOptional);
   const insightsStatus = getCursorCapabilityStatus(
     source.hasConversationInsights,
-    keyTier === 'enterprise',
+    enterpriseOptional,
   );
 
   return [
