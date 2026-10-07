@@ -202,7 +202,68 @@
           "unit": "locale",
           "decimals": 0
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IDE"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CLI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cloud"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -227,7 +288,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": true
+          "values": false
         },
         "tooltip": {
           "mode": "single",
@@ -240,7 +301,7 @@
           "datasource": "mysql",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT CASE LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown'))\n    WHEN 'ide' THEN 'IDE'\n    WHEN 'cli' THEN 'CLI'\n    WHEN 'cloud' THEN 'Cloud'\n    ELSE 'Unknown'\n  END AS \"Source\",\n  COUNT(*) AS \"Commits\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY 1\nORDER BY 2 DESC",
+          "rawSql": "SELECT\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'ide' THEN 1 ELSE 0 END) AS IDE,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cli' THEN 1 ELSE 0 END) AS CLI,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cloud' THEN 1 ELSE 0 END) AS Cloud,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) NOT IN ('ide', 'cli', 'cloud') THEN 1 ELSE 0 END) AS Unknown\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
           "refId": "A"
         }
       ],
