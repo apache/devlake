@@ -64,6 +64,8 @@ func CollectWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		urlTemplate = fmt.Sprintf("worklogs/team/%d", data.Options.TeamId)
 	}
 
+	// one period end for every page, even if the collection crosses midnight
+	startedAt := time.Now()
 	err = apiCollector.InitCollector(api.ApiCollectorArgs{
 		RawDataSubTaskArgs: rawDataSubTaskArgs,
 		ApiClient:          data.ApiClient,
@@ -74,7 +76,7 @@ func CollectWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		// fetched until one comes back short.
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			return buildWorklogQuery(data.Options, reqData.Pager,
-				apiCollector.IsIncremental(), apiCollector.GetSince()), nil
+				apiCollector.IsIncremental(), apiCollector.GetSince(), startedAt), nil
 		},
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var response struct {
@@ -98,8 +100,9 @@ func CollectWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 // buildWorklogQuery builds the query for one page of worklogs. Explicit
 // fromDate/toDate options win; otherwise an incremental run asks for what
 // changed since the last successful collection (updatedFrom) and a full sync
-// starts at the sync policy's timeAfter (from).
-func buildWorklogQuery(opts *TempoOptions, pager *api.Pager, incremental bool, since *time.Time) url.Values {
+// starts at the sync policy's timeAfter (from). Tempo rejects a period with
+// "from" but no "to" ("Non valid period ... to 'null'"), so "to" defaults to now.
+func buildWorklogQuery(opts *TempoOptions, pager *api.Pager, incremental bool, since *time.Time, now time.Time) url.Values {
 	if pager == nil {
 		pager = &api.Pager{Page: 1, Skip: 0, Size: 1000}
 	}
@@ -119,6 +122,9 @@ func buildWorklogQuery(opts *TempoOptions, pager *api.Pager, incremental bool, s
 		query.Set("updatedFrom", since.UTC().Format(time.RFC3339))
 	case since != nil:
 		query.Set("from", since.UTC().Format("2006-01-02"))
+	}
+	if query.Get("from") != "" && query.Get("to") == "" {
+		query.Set("to", now.UTC().Format("2006-01-02"))
 	}
 	return query
 }
