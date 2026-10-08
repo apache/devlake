@@ -34,6 +34,20 @@ import (
 
 const RAW_BUILD_TABLE = "jenkins_api_builds"
 
+// buildFields is the tree of fields requested for every build, as a list item or on its own
+const buildFields = "timestamp,number,duration,building,estimatedDuration,fullDisplayName,result,actions[lastBuiltRevision[SHA1,branch[name]],remoteUrls,mercurialRevisionNumber,causes[*]],changeSet[kind,revisions[revision]]"
+
+// UnfinishedBuilds selects the builds of a single job that were still running when last
+// collected, so their final state can be collected once they finish.
+func UnfinishedBuilds(options *JenkinsOptions) []dal.Clause {
+	return []dal.Clause{
+		dal.Select("tjb.number,tjb.full_name"),
+		dal.From("_tool_jenkins_builds as tjb"),
+		dal.Where(`tjb.connection_id = ? and tjb.job_path = ? and tjb.job_name = ? and tjb.building = ?`,
+			options.ConnectionId, options.JobPath, options.JobName, true),
+	}
+}
+
 var CollectApiBuildsMeta = plugin.SubTaskMeta{
 	Name:             "collectApiBuilds",
 	EntryPoint:       CollectApiBuilds,
@@ -72,6 +86,7 @@ func CollectApiBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 func collectSingleJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 	// The API input is defined in the plugin's task definition, be that the UI or advanced blueprint.
 	data := taskCtx.GetData().(*JenkinsTaskData)
+	db := taskCtx.GetDal()
 	collector, err := helper.NewStatefulApiCollectorForFinalizableEntity(helper.FinalizableApiCollectorArgs{
 		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
 			Params: JenkinsApiParams{
@@ -89,12 +104,15 @@ func collectSingleJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 				UrlTemplate: fmt.Sprintf("%sjob/%s/api/json", data.Options.JobPath, data.Options.JobName),
 				Query: func(reqData *helper.RequestData, createdAfter *time.Time) (url.Values, errors.Error) {
 					query := url.Values{}
-					treeValue := fmt.Sprintf(
-						"allBuilds[timestamp,number,duration,building,estimatedDuration,fullDisplayName,result,actions[lastBuiltRevision[SHA1,branch[name]],remoteUrls,mercurialRevisionNumber,causes[*]],changeSet[kind,revisions[revision]]]{%d,%d}",
-						reqData.Pager.Skip, reqData.Pager.Skip+reqData.Pager.Size)
+					treeValue := fmt.Sprintf("allBuilds[%s]{%d,%d}",
+						buildFields, reqData.Pager.Skip, reqData.Pager.Skip+reqData.Pager.Size)
 					query.Set("tree", treeValue)
 					return query, nil
 				},
+				// Running builds are kept too: the list only returns builds that started since
+				// the last collection, so a build still running now would never be listed
+				// again. Stored as building, CollectUnfinishedDetails re-collects it until it
+				// finishes.
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 					var data struct {
 						Builds []json.RawMessage `json:"allBuilds"`
@@ -103,20 +121,7 @@ func collectSingleJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 					if err != nil {
 						return nil, err
 					}
-
-					builds := make([]json.RawMessage, 0, len(data.Builds))
-					for _, build := range data.Builds {
-						var buildObj map[string]interface{}
-						err := json.Unmarshal(build, &buildObj)
-						if err != nil {
-							return nil, errors.Convert(err)
-						}
-						if buildObj["result"] != nil {
-							builds = append(builds, build)
-						}
-					}
-
-					return builds, nil
+					return data.Builds, nil
 				},
 			},
 			GetCreated: func(item json.RawMessage) (time.Time, errors.Error) {
@@ -128,6 +133,33 @@ func collectSingleJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error {
 				seconds := b.Timestamp / 1000
 				nanos := (b.Timestamp % 1000) * 1000000
 				return time.Unix(seconds, nanos), nil
+			},
+		},
+		CollectUnfinishedDetails: &helper.FinalizableApiCollectorDetailArgs{
+			BuildInputIterator: func() (helper.Iterator, errors.Error) {
+				cursor, err := db.Cursor(UnfinishedBuilds(data.Options)...)
+				if err != nil {
+					return nil, err
+				}
+				return helper.NewDalCursorIterator(db, cursor, reflect.TypeOf(SimpleBuild{}))
+			},
+			FinalizableApiCollectorCommonArgs: helper.FinalizableApiCollectorCommonArgs{
+				UrlTemplate: fmt.Sprintf("%sjob/%s/{{ .Input.Number }}/api/json", data.Options.JobPath, data.Options.JobName),
+				Query: func(reqData *helper.RequestData, createdAfter *time.Time) (url.Values, errors.Error) {
+					return url.Values{"tree": {buildFields}}, nil
+				},
+				// A build deleted while running (e.g. by hand) is skipped instead of failing the task
+				AfterResponse: func(res *http.Response) errors.Error {
+					if res.StatusCode == http.StatusNotFound {
+						return helper.ErrIgnoreAndContinue
+					}
+					return nil
+				},
+				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
+					var build json.RawMessage
+					err := helper.UnmarshalResponse(res, &build)
+					return []json.RawMessage{build}, err
+				},
 			},
 		},
 	})
@@ -189,7 +221,7 @@ func collectMultiBranchJobApiBuilds(taskCtx plugin.SubTaskContext) errors.Error 
 		UrlTemplate: "{{ .Input.Path }}api/json",
 		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
-			treeValue := "allBuilds[timestamp,number,duration,building,estimatedDuration,fullDisplayName,result,actions[lastBuiltRevision[SHA1,branch[name]],remoteUrls,mercurialRevisionNumber,causes[*]],changeSet[kind,revisions[revision]]]"
+			treeValue := fmt.Sprintf("allBuilds[%s]", buildFields)
 			query.Set("tree", treeValue)
 
 			logger.Debug("Query: %v", query)
