@@ -14,13 +14,15 @@
 # limitations under the License.
 #
 
-FROM --platform=linux/amd64 debian:bullseye AS debian-amd64
+# Debian 11 (bullseye) reached the end of its LTS period on 2026-08-31 and its
+# security suite is no longer served, so `apt upgrade` fails there. All stages
+# use Debian 12 (bookworm), matching the runtime image in backend/Dockerfile.
+FROM --platform=linux/amd64 debian:bookworm AS debian-amd64
 RUN apt-get -y update && apt -y upgrade &&\
     apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
 
-# This stage only cross-builds libgit2, it does not need a Go toolchain (and
-# `golang:<version>-bullseye` no longer exists for current Go releases).
-FROM --platform=linux/amd64 debian:bullseye AS builder
+# This stage only cross-builds libgit2, it does not need a Go toolchain.
+FROM --platform=linux/amd64 debian:bookworm AS builder
 
 # Base dependencies
 RUN apt-get -y update && apt -y upgrade &&\
@@ -43,7 +45,8 @@ RUN \
     cp *libgit2* /tmp/deps/ &&\
     cp -r ../include /tmp/deps/include
 
-FROM python:3.9-slim-bullseye
+# Same Python line as the runtime image in backend/Dockerfile.
+FROM python:3.11-slim-bookworm
 
 RUN apt -y update && apt -y upgrade && apt -y install tzdata make tar curl gcc g++ pkg-config git \
     libssh2-1 zlib1g libffi-dev  \
@@ -57,15 +60,22 @@ COPY --from=builder /tmp/deps/include/ /usr/include/
 ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
 
 # Install Golang
-RUN curl -L https://git.io/vQhTU | bash -s -- --version 1.26.2
-RUN mv /root/go /go &&\
-    mv /root/.go /usr/local/go &&\
+# The previous installer was fetched from `git.io`, which GitHub shut down in
+# 2022, so the image could no longer be rebuilt. Fetch the official archive
+# from go.dev and verify it. Version and checksum match
+# backend/scripts/install-go.sh.
+ARG GO_VERSION=1.26.6
+ARG GO_SHA256=708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89
+RUN curl --fail --location --retry 3 "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" --output /tmp/go.tar.gz &&\
+    echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum --check --strict &&\
+    tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz &&\
+    mkdir -p /go &&\
     ln -sf /usr/local/go/bin/* /usr/bin
 
-# Install Golang Tools
+# Install Golang Tools (versions match backend/Dockerfile and backend/Makefile)
 RUN export GOPATH=/go &&  \
     go install github.com/vektra/mockery/v3@v3.7.4 &&  \
-    go install github.com/swaggo/swag/cmd/swag@v1.16.1
+    go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 # Golang Env
 ENV GOPATH=/go
