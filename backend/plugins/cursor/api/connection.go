@@ -18,12 +18,14 @@ limitations under the License.
 package api
 
 import (
+	gocontext "context"
 	"strings"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/cursor/models"
+	"github.com/apache/devlake/plugins/cursor/service"
 )
 
 // PostConnections creates a new Cursor connection.
@@ -35,6 +37,9 @@ func PostConnections(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 
 	connection.Normalize()
 	if err := validateConnection(connection); err != nil {
+		return nil, err
+	}
+	if err := service.PopulateKeyTier(gocontext.Background(), basicRes, connection); err != nil {
 		return nil, err
 	}
 
@@ -49,12 +54,18 @@ func PatchConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput,
 	if err := connectionHelper.First(connection, input.Params); err != nil {
 		return nil, err
 	}
+	originalToken := connection.Token
 	if err := (&models.CursorConnection{}).MergeFromRequest(connection, input.Body); err != nil {
 		return nil, errors.Convert(err)
 	}
 	connection.Normalize()
 	if err := validateConnection(connection); err != nil {
 		return nil, err
+	}
+	if connection.Token != originalToken {
+		if err := service.PopulateKeyTier(gocontext.Background(), basicRes, connection); err != nil {
+			return nil, err
+		}
 	}
 	if err := connectionHelper.SaveWithCreateOrUpdate(connection); err != nil {
 		return nil, err

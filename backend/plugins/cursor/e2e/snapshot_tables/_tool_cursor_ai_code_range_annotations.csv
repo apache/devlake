@@ -1,0 +1,3 @@
+connection_id,scope_id,annotation_id,commit_hash,file_path,conversation_id,range_start,range_end,model,operation_type,line_count
+1,team,78df395abdff390575f26e99e073a4f4cecdc6c04da2072d22404db3aceb22e7,abc123def456,backend/plugins/cursor/tasks/ai_code_commits_collector.go,846952e0-0221-473b-bb1d-e5d016f071b1,10,25,composer-2.5-fast,insert,16
+1,team,7d79a3782b8e62c1ee7535d714540444800fec64513eff43b84575bfe07baa65,abc123def456,backend/plugins/cursor/tasks/ai_code_commits_collector.go,846952e0-0221-473b-bb1d-e5d016f071b1,42,58,composer-2.5-fast,insert,17

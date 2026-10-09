@@ -83,6 +83,11 @@ fi
 echo "Plugin build parallelism: $PARALLELISM"
 for PLUG in $PLUGINS; do
     NAME=$(basename $PLUG)
+    ROOT_GO_FILES=$(find "$PLUG" -maxdepth 1 -name '*.go' -print)
+    if [ -z "$ROOT_GO_FILES" ]; then
+        echo "Skipping plugin $NAME: no root-level *.go entrypoint in $PLUG" >&2
+        continue
+    fi
     echo "Building plugin $NAME to bin/plugins/$NAME/$NAME.so with args: $*  --gcflags="$GCFLAGS""
     go build -buildmode=plugin --gcflags="$GCFLAGS" -o $PLUGIN_OUTPUT_DIR/$NAME/$NAME.so $PLUG/*.go &
     PIDS="$PIDS $!"

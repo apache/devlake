@@ -31,6 +31,15 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | `/teams/filtered-usage-events` | POST | Event-level usage and charges |
 | `/teams/daily-usage-data` | POST | Per-user per-day adoption metrics |
 
+**Cursor Enterprise API endpoints (Enterprise keys only -- skipped for Team keys):**
+
+| Endpoint | Method | Data |
+|----------|--------|------|
+| `/analytics/ai-code/commits` | GET | Per-commit AI line attribution (TAB vs Composer vs non-AI) |
+| `/analytics/ai-code/commits/:commitHash` | GET | Commit-detail file blame and conversation metadata (limited alpha) |
+| `/analytics/ai-code/changes` | GET | Granular accepted AI changes with per-file metadata |
+| `/analytics/team/conversation-insights` | GET | Aggregate conversation work classifications (intents, categories, complexity) |
+
 **Stored data (tool layer):**
 
 | Table | Description |
@@ -39,6 +48,11 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | `_tool_cursor_usage_events` | Billable usage events with model, tokens, and charged amounts |
 | `_tool_cursor_user_spend` | Per-user spend for the current billing cycle (on-demand and included) |
 | `_tool_cursor_daily_usage` | Daily adoption metrics: completions, requests by feature, tab acceptance, line edits |
+| `_tool_cursor_ai_code_commits` | Per-commit AI line attribution: TAB, Composer, and non-AI lines (Enterprise only) |
+| `_tool_cursor_ai_code_range_annotations` | File-level blame rows from commit-detail API with conversation and model (Enterprise alpha) |
+| `_tool_cursor_ai_code_conversations` | Conversation metadata referenced by commit-detail range annotations (Enterprise alpha) |
+| `_tool_cursor_ai_code_changes` | Accepted AI changes with source, model, and per-file metadata (Enterprise only) |
+| `_tool_cursor_conversation_insights` | Flattened Conversation Insights metrics: intents, categories, complexity, guidance, work types (Enterprise only) |
 
 Data is collected in the **Raw → Tool** layers only. There is no domain-layer converter in this plugin; Grafana dashboards query `_tool_cursor_*` tables directly.
 
@@ -60,6 +74,10 @@ flowchart LR
 2. `collectUsageEvents` → `extractUsageEvents`
 3. `collectUserSpend` → `extractUserSpend`
 4. `collectDailyUsage` → `extractDailyUsage`
+5. `collectAiCodeCommits` → `extractAiCodeCommits` *(Enterprise only -- skipped for Team keys)*
+6. `collectAiCodeCommitDetails` → `extractAiCodeCommitDetails` *(Enterprise alpha -- skipped when commit-details inaccessible)*
+7. `collectAiCodeChanges` → `extractAiCodeChanges` *(Enterprise only -- skipped for Team keys)*
+8. `collectConversationInsights` → `extractConversationInsights` *(Enterprise only -- skipped when insights disabled or inaccessible)*
 
 ## Repository layout
 
@@ -124,17 +142,19 @@ Run the blueprint on a daily schedule to keep usage and cost data current.
 - **Date range chunking**: both `/teams/daily-usage-data` and `/teams/filtered-usage-events` requests are split into **30-day** chunks (API limit for daily usage; applied to usage events for resilience).
 - **Extract**: `extractUsageEvents` and `extractDailyUsage` use a cursor-local stateful extractor (incremental by default). Incremental runs also promote any raw rows with `id > MAX(_raw_data_id)` already in the tool table, so collected-but-unpromoted raw data is healed without a full refresh. A config version bump (`extractorVersion`) triggers a one-time full re-extract after upgrade.
 - **Dashboards**: query `_tool_cursor_*` tables only. Legacy domain tables (`cursor_usage`, `cursor_team_events`) are unrelated and must not be used.
-- **Rate limiting**: collectors honor `Retry-After` response headers and respect the configured `rateLimitPerHour`.
+- **Rate limiting**: collectors honor `Retry-After` response headers and respect the configured `rateLimitPerHour`. The Admin API documents **20 requests/minute**; the connection default of **1,200/hour** (~20/min) matches that limit. Enterprise Analytics endpoints use separate quotas — **AI Code Tracking** (`/analytics/ai-code/*`) is **20 requests/minute**; team-level analytics (`/analytics/team/*`) is **100 requests/minute**. If enterprise collection triggers throttling, lower `rateLimitPerHour` on the connection.
 
 ## Dashboards
 
-Grafana dashboard JSON lives under `grafana/dashboards/mysql/`:
+Grafana dashboard JSON lives under both `grafana/dashboards/mysql/` and `grafana/dashboards/postgresql/`. PostgreSQL UIDs add a `-pg` suffix.
 
-| Dashboard | File | UID |
-|-----------|------|-----|
-| Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` |
-| AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — |
-| Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — |
+| Dashboard | File | MySQL UID | PostgreSQL UID |
+|-----------|------|-----------|----------------|
+| Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` | `cursor_usage-pg` |
+| Cursor Enterprise AI Code & Insights | `cursor-enterprise.json` | `cursor_enterprise` | `cursor_enterprise-pg` |
+| Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` | `cursor_bugbot-pg` |
+| AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — | — |
+| Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — | — |
 
 ## Error handling
 
@@ -149,30 +169,52 @@ Grafana dashboard JSON lives under `grafana/dashboards/mysql/`:
 
 Tokens are sanitized before persisting. Connection test results include a `permissions` object showing which Admin API endpoints succeeded.
 
-## Not collected (Enterprise AI Code Tracking)
+## Enterprise AI Code Tracking
 
-The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/account/teams/ai-code-tracking-api) are **Enterprise plan only** and are **not implemented** in this plugin (no collector, extractor, or `_tool_cursor_*` table):
+The following endpoints from the [AI Code Tracking API](https://cursor.com/docs/account/teams/ai-code-tracking-api) are **Enterprise plan only** and are collected when the connection uses an Enterprise Admin API key:
+
+| Endpoint | Purpose | Tool table |
+|----------|---------|------------|
+| `GET /analytics/ai-code/commits` | Per-commit AI line attribution (TAB vs Composer vs non-AI) | `_tool_cursor_ai_code_commits` |
+| `GET /analytics/ai-code/commits/:commitHash` | File-level blame and conversation metadata (limited alpha) | `_tool_cursor_ai_code_range_annotations`, `_tool_cursor_ai_code_conversations` |
+| `GET /analytics/ai-code/changes` | Granular accepted AI changes | `_tool_cursor_ai_code_changes` |
+
+Team/Business Admin API keys receive **401** on these routes. `TestConnection` probes `/analytics/team/dau`, `/analytics/ai-code/commits`, and `/analytics/team/conversation-insights` to detect Enterprise access. The detected `KeyTier` (`personal`, `team`, or `enterprise`) is stored on the connection when you create, update the token, or test an existing connection. **Optional endpoints** (`hasBugbotReviews`, `hasConversationInsights`, `hasAiCodeCommitDetails`) are re-probed at the start of each pipeline run and persisted on the connection, so changes in the Cursor dashboard are picked up without a manual Test Connection. Enterprise collectors check `KeyTier` at runtime and skip silently for non-enterprise keys. Commit-detail collectors require `hasAiCodeCommitDetails` (limited alpha — probed via first commit hash from the list endpoint). Conversation Insights collectors also require `hasConversationInsights` on the connection (false when insights are disabled in Cursor team settings).
+
+## Conversation Insights
+
+The following endpoint from the [Analytics API](https://cursor.com/docs/account/teams/analytics-api) is **Enterprise plan only** and is collected when the connection uses an Enterprise Admin API key with Conversation Insights enabled:
+
+| Endpoint | Purpose | Tool table |
+|----------|---------|------------|
+| `GET /analytics/team/conversation-insights` | Aggregate work classifications (intents, complexity, categories, guidance levels, work types) | `_tool_cursor_conversation_insights` |
+
+Returns **aggregate** insights only — no raw conversation content or conversation IDs. Collectors request all five `include` slices per date chunk. Optional access is re-probed at pipeline start; enable Conversation Insights in Cursor team settings and re-run the pipeline (Test Connection is optional but shows the current status in Config UI).
+
+## BugBot Review Analytics
+
+The following endpoint from the [BugBot Analytics API](https://cursor.com/docs/bugbot) is collected when `TestConnection` confirms access via `GET /analytics/team/bugbot-reviews`:
+
+| Endpoint | Purpose | Tool tables |
+|----------|---------|-------------|
+| `GET /analytics/team/bugbot-reviews` | Completed BugBot reviews with findings, cost, and resolution status | `_tool_cursor_bugbot_reviews`, `_tool_cursor_bugbot_findings` |
+
+Access is probed during connection test and persisted as `hasBugbotReviews` on the connection (may be available on Team or Enterprise keys). Collectors skip silently when the flag is false.
+
+**Not yet collected:**
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /analytics/ai-code/commits` | Per-commit AI line attribution (TAB vs Composer vs non-AI) |
-| `GET /analytics/ai-code/changes` | Granular accepted AI changes |
-| `GET /analytics/ai-code/commits.csv` / `changes.csv` | Bulk CSV exports of the above |
-
-Team/Business Admin API keys typically receive **401** on these routes. Connection test optionally probes `GET /analytics/team/dau` (`probeEnterpriseAnalytics`) to detect Enterprise access; it does **not** ingest analytics data.
-
-**Metrics this would unlock** (shown on the Cursor native dashboard but absent from DevLake today):
-
-- AI share of **committed** code (not editor line acceptance)
-- Per-commit `commitSource`: IDE, CLI, or cloud
-- Repo name and primary-branch filters
-- TAB vs Composer line attribution on commits
-
-The **Cursor Usage** Grafana dashboard (`grafana/dashboards/mysql/cursor-usage.json`) uses Admin API proxies from `_tool_cursor_daily_usage` and `_tool_cursor_usage_events` instead; panel descriptions note where metrics are approximate.
+| `GET /analytics/ai-code/commits.csv` / `changes.csv` | Bulk CSV exports (not needed; JSON pagination covers the same data) |
+| `GET /analytics/team/agent-edits` | Agent edit metrics (suggested vs accepted diffs) |
+| `GET /analytics/team/tabs` | Tab suggestion/accept/reject with line counts |
+| `GET /analytics/team/dau` | CLI/Cloud/BugBot DAU breakdown |
+| `GET /analytics/team/models` | Model usage by message count per day |
+| `GET /analytics/by-user/*` | Per-user breakdowns of the above |
 
 ## Limitations
 
-- **Team/Business Admin API only** — Enterprise-only Analytics API endpoints (`/analytics/*`) are not collected in this plugin (see [Not collected (Enterprise AI Code Tracking)](#not-collected-enterprise-ai-code-tracking) above).
+- **Enterprise API endpoints are conditional** — AI Code Tracking (`/analytics/ai-code/*`) is collected only with Enterprise Admin keys. Conversation Insights runs when `hasConversationInsights` is true. BugBot review analytics (`/analytics/team/bugbot-reviews`) runs when `hasBugbotReviews` is true on the connection. Other Analytics endpoints (`/analytics/team/*`) are not yet collected (see sections above).
 - **Tool layer only** — no domain-layer tables; cross-plugin joins (Jira, GitHub PRs, etc.) are done in Grafana SQL or separate tooling.
 - **Team-level scope** — one scope per connection represents the whole team; per-team multi-tenant collection is not supported.
 - **Beta** — the plugin is marked beta in Config UI while the Admin API surface continues to evolve.

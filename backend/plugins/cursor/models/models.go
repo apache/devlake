@@ -29,5 +29,12 @@ func GetTablesInfo() []dal.Tabler {
 		&CursorUserSpend{},
 		&CursorMember{},
 		&CursorDailyUsage{},
+		&CursorAiCodeCommit{},
+		&CursorAiCodeChange{},
+		&CursorAiCodeConversation{},
+		&CursorAiCodeRangeAnnotation{},
+		&CursorBugBotReview{},
+		&CursorBugBotFinding{},
+		&CursorConversationInsight{},
 	}
 }

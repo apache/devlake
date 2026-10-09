@@ -18,6 +18,8 @@ limitations under the License.
 package impl
 
 import (
+	gocontext "context"
+
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -27,6 +29,7 @@ import (
 	"github.com/apache/devlake/plugins/cursor/api"
 	"github.com/apache/devlake/plugins/cursor/models"
 	"github.com/apache/devlake/plugins/cursor/models/migrationscripts"
+	"github.com/apache/devlake/plugins/cursor/service"
 	"github.com/apache/devlake/plugins/cursor/tasks"
 )
 
@@ -91,6 +94,10 @@ func (p Cursor) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]i
 	}
 
 	NormalizeConnection(connection)
+
+	if err := service.RefreshAndPersistOptionalPermissions(gocontext.Background(), taskCtx, connection); err != nil {
+		taskCtx.GetLogger().Warn(err, "cursor: optional permission refresh failed; using stored connection capabilities")
+	}
 
 	return &tasks.CursorTaskData{
 		Options:    &op,

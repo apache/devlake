@@ -1,0 +1,1241 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor BugBot Review Analytics",
+      "type": "link",
+      "url": "/d/cursor_bugbot-pg"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- **Use case:** AI code tracking, repo/PR attribution, and conversation insights from Cursor Enterprise Analytics (`/analytics/ai-code/*`, Conversation Insights).\n- **Data source:** Cursor plugin \u2014 requires `key_tier=enterprise` on the connection. Commit-detail cost panels also require `hasAiCodeCommitDetails`.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage-pg) for billing and adoption; [Cursor BugBot Review Analytics](/d/cursor_bugbot-pg) for automated PR reviews.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 300,
+      "title": "Enterprise AI Code Tracking",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Share of committed lines attributed to TAB, Composer, and non-AI coding from GET /analytics/ai-code/commits (Enterprise API). Requires an enterprise key.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TAB"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Composer"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Non-AI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 301,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(ts AS DATE) AS time, metric, SUM(value) AS value FROM (SELECT COALESCE(commit_ts, ingested_at, created_at) AS ts, 'TAB' AS metric, tab_lines_added AS value FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT COALESCE(commit_ts, ingested_at, created_at), 'Composer', composer_lines_added FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT COALESCE(commit_ts, ingested_at, created_at), 'Non-AI', COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0)) FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}') AS src GROUP BY CAST(ts AS DATE), \"metric\" ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Committed Lines by AI Source",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Distribution of commits by source channel (IDE, CLI, Cloud) from GET /analytics/ai-code/commits",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IDE"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CLI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cloud"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 302,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'ide' THEN 1 ELSE 0 END) AS \"IDE\", SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cli' THEN 1 ELSE 0 END) AS \"CLI\", SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cloud' THEN 1 ELSE 0 END) AS \"Cloud\", SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) NOT IN ('ide', 'cli', 'cloud') THEN 1 ELSE 0 END) AS \"Unknown\" FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Commits by Source",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Users ranked by TAB + Composer lines committed in the selected period",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 303,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_email AS \"User\", SUM(tab_lines_added + composer_lines_added) AS \"AI Lines Added\", SUM(total_lines_added) AS \"Total Lines Added\", ROUND(CAST(SUM(tab_lines_added + composer_lines_added) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(total_lines_added), 0), 0), 1) AS \"AI Share %\" FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY \"user_email\" HAVING SUM(total_lines_added) > 0 ORDER BY SUM(tab_lines_added + composer_lines_added) DESC NULLS LAST LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Contributors by AI-Assisted Lines",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Repositories ranked by AI-assisted committed lines and attributed AI usage cost in the selected period. Cost requires Tier 4 commit-detail data and is deduplicated per conversation.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Share %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 480
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Commits"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Cost (USD)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conversations"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 305,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH conv_cost AS (SELECT conversation_id, SUM(charged_cents) AS cost_cents FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND $__timeFilter(event_time) GROUP BY conversation_id), repo_lines AS (SELECT COALESCE(NULLIF(repo_name, ''), 'Unknown') AS repo_name, COUNT(*) AS commit_count, SUM(total_lines_added) AS line_count, ROUND(CAST(SUM(tab_lines_added + composer_lines_added) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(total_lines_added), 0), 0), 1) AS ai_share_pct FROM _tool_cursor_ai_code_commits WHERE $__timeFilter(COALESCE(commit_ts, \"ingested_at\", created_at)) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' GROUP BY COALESCE(NULLIF(repo_name, ''), 'Unknown')), repo_cost AS (SELECT rc.repo_name, COUNT(DISTINCT rc.conversation_id) AS conversations, SUM(cc.cost_cents) AS cost_cents FROM (SELECT DISTINCT COALESCE(NULLIF(c.repo_name, ''), 'Unknown') AS repo_name, rann.conversation_id FROM _tool_cursor_ai_code_range_annotations AS rann JOIN _tool_cursor_ai_code_commits AS c ON c.commit_hash = rann.commit_hash AND c.connection_id = rann.connection_id AND c.scope_id = rann.scope_id WHERE ('${connection_id}' = '' OR rann.connection_id::text = '${connection_id}') AND rann.scope_id = '${scope_id}' AND rann.conversation_id <> '') AS rc JOIN conv_cost AS cc ON cc.conversation_id = rc.conversation_id GROUP BY rc.repo_name) SELECT COALESCE(rl.repo_name, rc.repo_name) AS \"Repo\", COALESCE(rl.commit_count, 0) AS \"Commits\", COALESCE(rl.line_count, 0) AS \"Lines\", rl.ai_share_pct AS \"AI Share %\", COALESCE(rc.conversations, 0) AS \"Conversations\", ROUND(CAST(CAST(COALESCE(rc.cost_cents, 0) AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) AS \"AI Cost (USD)\" FROM repo_lines AS rl LEFT JOIN repo_cost AS rc ON rc.repo_name = rl.repo_name WHERE COALESCE(rl.line_count, 0) > 0 OR COALESCE(rc.cost_cents, 0) > 0 UNION SELECT rc.repo_name, 0, 0, \"NULL\", rc.conversations, ROUND(CAST(CAST(rc.cost_cents AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) FROM repo_cost AS rc LEFT JOIN repo_lines AS rl ON rl.repo_name = rc.repo_name WHERE rl.repo_name IS NULL ORDER BY \"AI Cost (USD)\" DESC NULLS LAST, \"Lines\" DESC NULLS LAST LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Repos by AI Lines & Cost",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Pull requests with AI line attribution and attributed AI usage cost in the selected period. Requires GitHub/GitLab blueprint data and Tier 4 commit-detail data. Cost is deduplicated per conversation.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Share %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR #"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Commits"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "URL"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Cost (USD)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conversations"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 306,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH conv_cost AS (SELECT conversation_id, SUM(charged_cents) AS cost_cents FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND $__timeFilter(event_time) GROUP BY conversation_id), pr_lines AS (SELECT pr.pull_request_key, pr.status, COALESCE(r.name, c.repo_name) AS repo_name, pr.title, pr.url, COUNT(DISTINCT c.commit_hash) AS commit_count, SUM(c.total_lines_added) AS line_count, ROUND(CAST(SUM(c.tab_lines_added + c.composer_lines_added) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(c.total_lines_added), 0), 0), 1) AS ai_share_pct FROM _tool_cursor_ai_code_commits AS c JOIN (SELECT prc.commit_sha, prc.pull_request_id FROM pull_request_commits AS prc UNION SELECT pr.merge_commit_sha, pr.id FROM pull_requests AS pr WHERE NOT pr.merge_commit_sha IS NULL AND pr.merge_commit_sha <> '') AS pr_map ON pr_map.commit_sha = c.commit_hash JOIN pull_requests AS pr ON pr.id = pr_map.pull_request_id LEFT JOIN repos AS r ON r.id = pr.base_repo_id WHERE $__timeFilter(COALESCE(c.commit_ts, c.ingested_at, c.created_at)) AND ('${connection_id}' = '' OR c.connection_id::text = '${connection_id}') AND c.scope_id = '${scope_id}' GROUP BY COALESCE(r.name, c.repo_name), pr.pull_request_key, pr.title, pr.url, pr.status), pr_cost AS (SELECT pc.pull_request_key, pc.status, pc.repo_name, pc.title, pc.url, COUNT(DISTINCT pc.conversation_id) AS conversations, SUM(cc.cost_cents) AS cost_cents FROM (SELECT DISTINCT pr.pull_request_key, pr.title, pr.status, COALESCE(r.name, c.repo_name) AS repo_name, pr.url, rann.conversation_id FROM _tool_cursor_ai_code_range_annotations AS rann JOIN _tool_cursor_ai_code_commits AS c ON c.commit_hash = rann.commit_hash AND c.connection_id = rann.connection_id AND c.scope_id = rann.scope_id JOIN (SELECT prc.commit_sha, prc.pull_request_id FROM pull_request_commits AS prc UNION SELECT pr.merge_commit_sha, pr.id FROM pull_requests AS pr WHERE NOT pr.merge_commit_sha IS NULL AND pr.merge_commit_sha <> '') AS pr_map ON pr_map.commit_sha = rann.commit_hash JOIN pull_requests AS pr ON pr.id = pr_map.pull_request_id LEFT JOIN repos AS r ON r.id = pr.base_repo_id WHERE ('${connection_id}' = '' OR rann.connection_id::text = '${connection_id}') AND rann.scope_id = '${scope_id}' AND rann.conversation_id <> '') AS pc JOIN conv_cost AS cc ON cc.conversation_id = pc.conversation_id GROUP BY pc.pull_request_key, pc.status, pc.repo_name, pc.title, pc.url) SELECT COALESCE(pl.pull_request_key, pc.pull_request_key) AS \"PR #\", COALESCE(pl.status, pc.status) AS \"Status\", COALESCE(pl.repo_name, pc.repo_name) AS \"Repo\", COALESCE(pl.title, pc.title) AS \"Title\", COALESCE(pl.url, pc.url) AS \"URL\", COALESCE(pl.commit_count, 0) AS \"Commits\", COALESCE(pl.line_count, 0) AS \"Lines\", pl.ai_share_pct AS \"AI Share %\", COALESCE(pc.conversations, 0) AS \"Conversations\", ROUND(CAST(CAST(COALESCE(pc.cost_cents, 0) AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) AS \"AI Cost (USD)\" FROM pr_lines AS pl LEFT JOIN pr_cost AS pc ON pc.pull_request_key = pl.pull_request_key AND pc.repo_name = pl.repo_name AND pc.title = pl.title AND pc.url = pl.url AND pc.status = pl.status WHERE COALESCE(pl.line_count, 0) > 0 OR COALESCE(pc.cost_cents, 0) > 0 UNION SELECT pc.pull_request_key, pc.status, pc.repo_name, pc.title, pc.url, 0, 0, \"NULL\", pc.conversations, ROUND(CAST(CAST(pc.cost_cents AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) FROM pr_cost AS pc LEFT JOIN pr_lines AS pl ON pc.pull_request_key = pl.pull_request_key AND pc.repo_name = pl.repo_name AND pc.title = pl.title AND pc.url = pl.url AND pc.status = pl.status WHERE pl.pull_request_key IS NULL ORDER BY \"AI Cost (USD)\" DESC NULLS LAST, \"Lines\" DESC NULLS LAST LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "PR AI Lines & Cost",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 320,
+      "title": "Conversation Insights",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Work category mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 326,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (SELECT dimension_value AS \"Category\", SUM(count) AS cnt FROM _tool_cursor_conversation_insights WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND insight_type = 'categories' AND aggregation_type = 'timeSeries' AND $__timeFilter(metric_date) GROUP BY dimension_value) SELECT \"Category\", ROUND(CAST(cnt * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(cnt) OVER (), 0), 0), 1) AS \"Share %\" FROM totals ORDER BY cnt DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Categories",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Category",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Work type mix for the selected dashboard period. KTLO = Keep The Lights On (maintenance, tech debt, dependency updates).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 325,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (SELECT CASE LOWER(dimension_value) WHEN 'ktlo' THEN 'Maintenance (KTLO)' WHEN 'maintenance' THEN 'Maintenance (KTLO)' WHEN 'new_feature' THEN 'New Features' WHEN 'bug' THEN 'Bug Fixing' WHEN 'bug_fix' THEN 'Bug Fixing' ELSE dimension_value END AS \"Work Type\", SUM(count) AS cnt FROM _tool_cursor_conversation_insights WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND insight_type = 'workTypes' AND aggregation_type = 'timeSeries' AND $__timeFilter(metric_date) GROUP BY 1) SELECT \"Work Type\", ROUND(CAST(cnt * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(cnt) OVER (), 0), 0), 1) AS \"Share %\" FROM totals ORDER BY cnt DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Types",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Work Type",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Conversation intent mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 321,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (SELECT dimension_value AS \"Intent\", SUM(count) AS cnt FROM _tool_cursor_conversation_insights WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND insight_type = 'intents' AND aggregation_type = 'timeSeries' AND $__timeFilter(metric_date) GROUP BY dimension_value) SELECT \"Intent\", ROUND(CAST(cnt * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(cnt) OVER (), 0), 0), 1) AS \"Share %\" FROM totals ORDER BY cnt DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Conversation Intents",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Intent",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Task complexity mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 323,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (SELECT CASE LOWER(dimension_value) WHEN 'low' THEN 'Low' WHEN 'medium' THEN 'Medium' WHEN 'high' THEN 'High' WHEN 'trivial' THEN 'Trivial' ELSE dimension_value END AS \"Complexity\", SUM(count) AS cnt FROM _tool_cursor_conversation_insights WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND insight_type = 'complexity' AND aggregation_type = 'timeSeries' AND $__timeFilter(metric_date) GROUP BY 1) SELECT \"Complexity\", ROUND(CAST(cnt * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(cnt) OVER (), 0), 0), 1) AS \"Share %\" FROM totals ORDER BY CASE Complexity WHEN 'Trivial' THEN 1 WHEN 'Low' THEN 2 WHEN 'Medium' THEN 3 WHEN 'High' THEN 4 END NULLS FIRST, cnt DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Task Complexity",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Complexity",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 104,
+      "title": "Diagnostics",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "description": "Row counts and latest timestamps for enterprise Cursor tool tables",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 43
+          },
+          "id": 40,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "devlake-postgres-api"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT '_tool_cursor_ai_code_commits' AS table_name, COUNT(*) AS row_count, MAX(COALESCE(commit_ts, ingested_at, created_at)) AS latest FROM _tool_cursor_ai_code_commits WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(COALESCE(ingested_at, created_at)) FROM _tool_cursor_ai_code_changes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_cursor_ai_code_range_annotations', COUNT(*), MAX(COALESCE(ingested_at, created_at)) FROM _tool_cursor_ai_code_range_annotations WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_cursor_ai_code_conversations', COUNT(*), MAX(COALESCE(ingested_at, created_at)) FROM _tool_cursor_ai_code_conversations WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' UNION ALL SELECT '_tool_cursor_conversation_insights', COUNT(*), MAX(COALESCE(metric_date, period_end)) FROM _tool_cursor_conversation_insights WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}'",
+              "refId": "A"
+            }
+          ],
+          "title": "Data Volume",
+          "type": "table"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "cursor",
+    "devlake",
+    "ai",
+    "enterprise"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "2",
+          "value": "2"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "team",
+          "value": "team"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Cursor Enterprise AI Code & Insights",
+  "uid": "cursor_enterprise-pg",
+  "version": 2,
+  "weekStart": ""
+}

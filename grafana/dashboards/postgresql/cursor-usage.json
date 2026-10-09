@@ -18,7 +18,30 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor BugBot Review Analytics",
+      "type": "link",
+      "url": "/d/cursor_bugbot-pg"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
