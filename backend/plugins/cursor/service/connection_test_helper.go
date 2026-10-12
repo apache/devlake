@@ -38,20 +38,25 @@ const (
 	usageEventsEndpoint = "teams/filtered-usage-events"
 )
 
-// AdminApiPermissions reports which Cursor Admin API endpoints the key can access.
+// AdminApiPermissions reports which Cursor API endpoints the key can access.
 type AdminApiPermissions struct {
-	Members     bool `json:"members"`
-	Spend       bool `json:"spend"`
-	UsageEvents bool `json:"usageEvents"`
+	Members        bool `json:"members"`
+	Spend          bool `json:"spend"`
+	UsageEvents    bool `json:"usageEvents"`
+	Analytics      bool `json:"analytics"`
+	AiCodeTracking bool `json:"aiCodeTracking"`
+	BugbotReviews           bool `json:"bugbotReviews"`
+	ConversationInsights    bool `json:"conversationInsights"`
+	AiCodeCommitDetails     bool `json:"aiCodeCommitDetails"`
 }
 
 // TestConnectionResult represents the payload returned by the connection test endpoints.
 type TestConnectionResult struct {
-	Success                bool                `json:"success"`
-	Message                string              `json:"message"`
-	MemberCount            int                 `json:"memberCount,omitempty"`
-	Permissions            AdminApiPermissions `json:"permissions,omitempty"`
-	HasEnterpriseAnalytics bool                `json:"hasEnterpriseAnalytics,omitempty"`
+	Success     bool                `json:"success"`
+	Message     string              `json:"message"`
+	MemberCount int                 `json:"memberCount,omitempty"`
+	Permissions AdminApiPermissions `json:"permissions,omitempty"`
+	KeyTier     string              `json:"keyTier,omitempty"`
 }
 
 // TestConnection exercises the Cursor Admin API to validate credentials and permissions.
@@ -78,6 +83,7 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 		return &TestConnectionResult{
 			Success: false,
 			Message: userKeyErr.Error(),
+			KeyTier: models.KeyTierPersonal,
 		}, nil
 	}
 
@@ -105,23 +111,74 @@ func TestConnection(ctx stdctx.Context, br corectx.BasicRes, connection *models.
 	}
 
 	if len(failures) > 0 {
-		return &TestConnectionResult{
+		result := &TestConnectionResult{
 			Success:     false,
 			Message:     buildPermissionFailureMessage(failures),
 			MemberCount: memberCount,
 			Permissions: permissions,
-		}, nil
+		}
+		if permissions.Members || permissions.Spend || permissions.UsageEvents {
+			result.KeyTier = models.KeyTierTeam
+		}
+		return result, nil
 	}
 
-	hasEnterpriseAnalytics := probeEnterpriseAnalytics(apiClient)
+	optional := probeOptionalEndpoints(apiClient)
+	permissions.Analytics = optional.Analytics
+	permissions.AiCodeTracking = optional.AiCodeTracking
+	permissions.BugbotReviews = optional.BugbotReviews
+	permissions.ConversationInsights = optional.ConversationInsights
+	permissions.AiCodeCommitDetails = optional.AiCodeCommitDetails
+
+	keyTier := models.KeyTierTeam
+	if permissions.Analytics || permissions.AiCodeTracking {
+		keyTier = models.KeyTierEnterprise
+	}
+
+	msg := "Team Admin API key validated. Members, spend, and usage events are accessible."
+	if keyTier == models.KeyTierEnterprise {
+		msg = "Enterprise Admin API key validated. Team data, analytics, and AI code tracking are accessible."
+	}
+	if permissions.BugbotReviews {
+		msg += " BugBot review analytics are accessible."
+	}
+	if permissions.ConversationInsights {
+		msg += " Conversation Insights are accessible."
+	}
+	if permissions.AiCodeCommitDetails {
+		msg += " AI code commit details are accessible."
+	}
 
 	return &TestConnectionResult{
-		Success:                true,
-		Message:                "Team Admin API key validated. Members, spend, and usage events are accessible.",
-		MemberCount:            memberCount,
-		Permissions:            permissions,
-		HasEnterpriseAnalytics: hasEnterpriseAnalytics,
+		Success:     true,
+		Message:     msg,
+		MemberCount: memberCount,
+		Permissions: permissions,
+		KeyTier:     keyTier,
 	}, nil
+}
+
+// ApplyTestResultToConnection copies detected capabilities from a test result onto the connection.
+func ApplyTestResultToConnection(connection *models.CursorConnection, result *TestConnectionResult) {
+	if connection == nil || result == nil {
+		return
+	}
+	if result.KeyTier != "" {
+		connection.KeyTier = result.KeyTier
+	}
+	connection.HasBugbotReviews = result.Permissions.BugbotReviews
+	connection.HasConversationInsights = result.Permissions.ConversationInsights
+	connection.HasAiCodeCommitDetails = result.Permissions.AiCodeCommitDetails
+}
+
+// PopulateKeyTier probes the Cursor API and sets connection.KeyTier from the result.
+func PopulateKeyTier(ctx stdctx.Context, br corectx.BasicRes, connection *models.CursorConnection) errors.Error {
+	result, err := TestConnection(ctx, br, connection)
+	if err != nil {
+		return err
+	}
+	ApplyTestResultToConnection(connection, result)
+	return nil
 }
 
 func probeMembers(apiClient *helper.ApiClient) (int, errors.Error) {
@@ -234,8 +291,8 @@ func detectUserApiKey(apiClient *helper.ApiClient) errors.Error {
 	return nil
 }
 
-func probeEnterpriseAnalytics(apiClient *helper.ApiClient) bool {
-	res, err := apiClient.Get("analytics/team/dau?startDate=7d&endDate=today", nil, nil)
+func probeEndpoint(apiClient *helper.ApiClient, path string) bool {
+	res, err := apiClient.Get(path, nil, nil)
 	if err != nil || res == nil {
 		return false
 	}

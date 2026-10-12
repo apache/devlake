@@ -87,6 +87,12 @@ export const ConnectionList = ({ plugin, onCreate }: Props) => {
             title: 'Connection Name',
             dataIndex: 'name',
             key: 'name',
+            render: (name, row) => (
+              <>
+                {name}
+                {pluginConfig.connection.renderConnectionMeta?.(row, 'list')}
+              </>
+            ),
           },
           {
             title: 'Status',

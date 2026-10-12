@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/log"
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/cursor/models"
 )
 
@@ -209,6 +210,60 @@ func parseDailyUsageResponse(res *http.Response) ([]json.RawMessage, errors.Erro
 	return response.Data, nil
 }
 
+type aiCodeTrackingListResponse struct {
+	Items      []json.RawMessage `json:"items"`
+	Data       []json.RawMessage `json:"data"`
+	TotalCount int               `json:"totalCount"`
+	PageSize   int               `json:"pageSize"`
+	TotalPages int               `json:"totalPages"`
+}
+
+// parseAiCodeTrackingItemsResponse decodes AI Code Tracking list payloads.
+// Cursor docs use "items"; some responses may still expose "data".
+func parseAiCodeTrackingItemsResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
+	body, err := readResponseBody(res)
+	if err != nil {
+		return nil, err
+	}
+	return parseAiCodeTrackingItemsBody(body)
+}
+
+func parseAiCodeTrackingItemsBody(body []byte) ([]json.RawMessage, errors.Error) {
+	var response aiCodeTrackingListResponse
+	if jsonErr := json.Unmarshal(body, &response); jsonErr != nil {
+		return nil, errors.Default.Wrap(errors.Convert(jsonErr), "failed to decode ai-code tracking response")
+	}
+	if len(response.Items) > 0 {
+		return response.Items, nil
+	}
+	return response.Data, nil
+}
+
+func parseAiCodeTrackingTotalPages(body []byte, defaultPageSize int) (int, errors.Error) {
+	var response aiCodeTrackingListResponse
+	if jsonErr := json.Unmarshal(body, &response); jsonErr != nil {
+		return 0, errors.Default.Wrap(errors.Convert(jsonErr), "failed to decode ai-code tracking pagination")
+	}
+	if response.TotalPages > 0 {
+		return response.TotalPages, nil
+	}
+	if response.TotalCount <= 0 {
+		return 1, nil
+	}
+	pageSize := response.PageSize
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
+	}
+	if pageSize <= 0 {
+		pageSize = 1
+	}
+	totalPages := (response.TotalCount + pageSize - 1) / pageSize
+	if totalPages <= 0 {
+		return 1, nil
+	}
+	return totalPages, nil
+}
+
 func parseMembersResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
 	body, err := readResponseBody(res)
 	if err != nil {
@@ -269,6 +324,16 @@ func computeEventId(timestamp, userEmail, conversationId, model string, chargedC
 	payload := fmt.Sprintf("%s|%s|%s|%s|%v|%v", timestamp, userEmail, conversationId, model, chargedCents, requestsCosts)
 	sum := sha256.Sum256([]byte(payload))
 	return hex.EncodeToString(sum[:])
+}
+
+func ignoreHTTPStatus404(res *http.Response) errors.Error {
+	if res.StatusCode == http.StatusUnauthorized {
+		return errors.Unauthorized.New("authentication failed, please check your AccessToken")
+	}
+	if res.StatusCode == http.StatusNotFound {
+		return helper.ErrIgnoreAndContinue
+	}
+	return nil
 }
 
 func normalizeNullableString(value string) string {

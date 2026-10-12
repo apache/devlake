@@ -295,10 +295,13 @@ export const Connection = () => {
         </title>
       </Helmet>
       <Space style={{ display: 'flex' }} direction="vertical" size={36}>
-        <div>
-          <span style={{ marginRight: 4 }}>Status:</span>
-          <ConnectionStatus connection={connection} />
-        </div>
+        <Space direction="vertical" size="small">
+          <div>
+            <span style={{ marginRight: 4 }}>Status:</span>
+            <ConnectionStatus connection={connection} />
+          </div>
+          {pluginConfig.connection.renderConnectionMeta?.(connection, 'detail')}
+        </Space>
         <div>Please note: In order to view DORA metrics, you will need to add Scope Configs.</div>
         <div>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleShowCreateDataScopeDialog}>
