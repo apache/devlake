@@ -40,3 +40,6 @@ export const update = (plugin: string, connectionId: ID, id: ID, data: any) =>
 
 export const check = (plugin: string, id: ID): Promise<ICheck> =>
   request(`/plugins/${plugin}/scope-config/${id}/projects`);
+
+export const listAll = (plugin: string) =>
+  request(`/plugins/${plugin}/scope-configs`);
