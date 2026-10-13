@@ -42,12 +42,56 @@ type issueWithBoardId struct {
 	BoardId string
 }
 
+// inScopeIncidentIssueClauses builds the query that selects the INCIDENT issues
+// belonging to a single DevLake project's slice of a (possibly shared) Jira
+// board.
+//
+// When several projects point at the same board, each project's Extra JQL
+// records its slice on board_issues.project_name at collection time. This query
+// therefore filters on BOTH the board-level project_mapping (pm.project_name)
+// AND the issue-level slice (bi.project_name), so a project only turns its own
+// issues into incidents. The empty/NULL bi.project_name fallback preserves
+// pre-feature (single-project) data that was collected before project_name
+// existed on board_issues.
+func inScopeIncidentIssueClauses(db dal.Dal, projectName string) []dal.Clause {
+	return []dal.Clause{
+		dal.Select("i.*, bi.board_id as board_id"),
+		dal.From(`issues i`),
+		dal.Join(`join board_issues bi on bi.issue_id = i.id`),
+		dal.Join("join project_mapping pm on pm.row_id = bi.board_id and " + quoteTableColumn(db, "pm") + " = 'boards'"),
+		dal.Where(
+			`i.type = ? and pm.project_name = ?
+				and (
+					bi.project_name = ?
+					or not exists (
+						select 1 from board_issues b2
+						where b2.board_id = bi.board_id
+						  and b2.project_name is not null and b2.project_name <> ''
+					)
+				)`,
+			"INCIDENT", projectName, projectName,
+		),
+	}
+}
+
+// quoteTableColumn returns the `table` column of the given alias quoted for the
+// current dialect. `table` is a reserved word: MySQL quotes identifiers with
+// backticks, while Postgres (and SQLite, used by the unit tests) use double
+// quotes.
+func quoteTableColumn(db dal.Dal, alias string) string {
+	if db.Dialect() == "mysql" {
+		return alias + ".`table`"
+	}
+	return alias + `."table"`
+}
+
 func ConvertIssuesToIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
 	data := taskCtx.GetData().(*DoraTaskData)
 	if data.DisableIssueToIncidentGenerator {
 		return nil
 	}
+	pmTable := quoteTableColumn(db, "pm")
 	// clear previous incidents and incident_assignees from the project
 	deleteIncidentsSql := `
 		DELETE
@@ -55,13 +99,20 @@ func ConvertIssuesToIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		WHERE id IN
 			(SELECT i.id
 			 FROM issues i
-			 LEFT JOIN board_issues bi ON bi.issue_id = i.id
-			 LEFT JOIN project_mapping pm ON pm.row_id = bi.board_id
+			 JOIN board_issues bi ON bi.issue_id = i.id
+			 JOIN project_mapping pm ON pm.row_id = bi.board_id AND ` + pmTable + ` = 'boards'
 			 WHERE i.type = ?
 			   AND pm.project_name = ?
-		       AND pm.table = ?)
+			   AND (
+			     bi.project_name = ?
+			     OR NOT EXISTS (
+			       SELECT 1 FROM board_issues b2
+			       WHERE b2.board_id = bi.board_id
+			         AND b2.project_name IS NOT NULL AND b2.project_name <> ''
+			     )
+			   ))
 	`
-	if err := db.Exec(deleteIncidentsSql, "INCIDENT", data.Options.ProjectName, "boards"); err != nil {
+	if err := db.Exec(deleteIncidentsSql, "INCIDENT", data.Options.ProjectName, data.Options.ProjectName); err != nil {
 		return errors.Default.Wrap(err, "error deleting previous incidents")
 
 	}
@@ -71,28 +122,25 @@ func ConvertIssuesToIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		WHERE incident_id IN
 			(SELECT i.id
 			 FROM issues i
-			 LEFT JOIN board_issues bi ON bi.issue_id = i.id
-			 LEFT JOIN project_mapping pm ON pm.row_id = bi.board_id
+			 JOIN board_issues bi ON bi.issue_id = i.id
+			 JOIN project_mapping pm ON pm.row_id = bi.board_id AND ` + pmTable + ` = 'boards'
 			 WHERE i.type = ?
 			   AND pm.project_name = ?
-		       AND pm.table = ?)
+			   AND (
+			     bi.project_name = ?
+			     OR NOT EXISTS (
+			       SELECT 1 FROM board_issues b2
+			       WHERE b2.board_id = bi.board_id
+			         AND b2.project_name IS NOT NULL AND b2.project_name <> ''
+			     )
+			   ))
 	`
-	if err := db.Exec(deleteIncidentAssigneesSql, "INCIDENT", data.Options.ProjectName, "boards"); err != nil {
+	if err := db.Exec(deleteIncidentAssigneesSql, "INCIDENT", data.Options.ProjectName, data.Options.ProjectName); err != nil {
 		return errors.Default.Wrap(err, "error deleting previous incident_assignees")
 	}
 
-	// select all issues belongs to the board
-	clauses := []dal.Clause{
-		dal.Select("i.*, bi.board_id as board_id"),
-		dal.From(`issues i`),
-		dal.Join(`left join board_issues bi on bi.issue_id = i.id`),
-		dal.Join(`left join project_mapping pm on pm.row_id = bi.board_id`),
-		dal.Where(
-			"i.type = ? and pm.project_name = ? and pm.table = ?",
-			"INCIDENT", data.Options.ProjectName, "boards",
-		),
-	}
-	cursor, err := db.Cursor(clauses...)
+	// select all issues belongs to the board, scoped to this project's slice
+	cursor, err := db.Cursor(inScopeIncidentIssueClauses(db, data.Options.ProjectName)...)
 	if err != nil {
 		return err
 	}
