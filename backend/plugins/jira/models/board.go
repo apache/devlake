@@ -63,4 +63,7 @@ func (JiraBoard) TableName() string {
 type JiraApiParams struct {
 	ConnectionId uint64
 	BoardId      uint64
+	// ProjectName is omitted from the serialized params when empty, so raw data
+	// collected without a project keeps its existing params.
+	ProjectName string `json:",omitempty"`
 }

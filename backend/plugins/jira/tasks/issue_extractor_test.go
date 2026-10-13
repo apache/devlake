@@ -97,6 +97,84 @@ func TestExtractIssuesEpicKeyField(t *testing.T) {
 	}
 }
 
+// TestExtractIssuesStampsProjectName verifies the earlier (tool) layer of the
+// per-project isolation feature: when the Jira pipeline runs for a DevLake
+// project, the extractor must stamp that project's name onto the
+// _tool_jira_board_issues row. This is what later lets a shared board's issues
+// be partitioned per project so DORA metrics (e.g. Change Failure Rate) only
+// count the project's own slice.
+//
+// It calls the REAL extractIssues function (no DB, no Docker) and asserts the
+// JiraBoardIssue it produces carries the expected project_name.
+func TestExtractIssuesStampsProjectName(t *testing.T) {
+	mappings := &typeMappings{
+		TypeIdMappings:         map[string]string{},
+		StdTypeMappings:        map[string]string{},
+		StandardStatusMappings: map[string]models.StatusMappings{},
+	}
+
+	tests := []struct {
+		name            string
+		projectName     string
+		wantProjectName string
+	}{
+		{
+			name:            "stamps the collecting project's name",
+			projectName:     "ProjectA",
+			wantProjectName: "ProjectA",
+		},
+		{
+			name:            "empty project name is preserved (legacy single-project pipeline)",
+			projectName:     "",
+			wantProjectName: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := minimalIssueJSON("")
+			var apiIssue apiv2models.Issue
+			if err := json.Unmarshal(raw, &apiIssue); err != nil {
+				t.Fatalf("unmarshal issue: %v", err)
+			}
+
+			data := &JiraTaskData{
+				Options: &JiraOptions{
+					ConnectionId: 1,
+					BoardId:      7,
+					ProjectName:  tt.projectName,
+					ScopeConfig:  &models.JiraScopeConfig{},
+				},
+				ProjectName: tt.projectName,
+			}
+			results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil)
+			if err != nil {
+				t.Fatalf("extractIssues() error = %v", err)
+			}
+			boardIssue := jiraBoardIssueFromResults(results)
+			if boardIssue == nil {
+				t.Fatal("extractIssues() did not return a JiraBoardIssue")
+			}
+			if boardIssue.ProjectName != tt.wantProjectName {
+				t.Errorf("JiraBoardIssue.ProjectName = %q, want %q", boardIssue.ProjectName, tt.wantProjectName)
+			}
+			// The board/issue identity must still be set correctly alongside the stamp.
+			if boardIssue.BoardId != 7 {
+				t.Errorf("JiraBoardIssue.BoardId = %d, want 7", boardIssue.BoardId)
+			}
+		})
+	}
+}
+
+func jiraBoardIssueFromResults(results []interface{}) *models.JiraBoardIssue {
+	for _, r := range results {
+		if bi, ok := r.(*models.JiraBoardIssue); ok {
+			return bi
+		}
+	}
+	return nil
+}
+
 func minimalIssueJSON(fieldsExtra string) []byte {
 	if fieldsExtra != "" {
 		fieldsExtra = "," + fieldsExtra

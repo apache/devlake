@@ -25,6 +25,7 @@ type JiraBoardIssue struct {
 	ConnectionId uint64 `gorm:"primaryKey"`
 	BoardId      uint64 `gorm:"primaryKey"`
 	IssueId      uint64 `gorm:"primaryKey"`
+	ProjectName  string `gorm:"primaryKey;type:varchar(255);default:''"`
 	common.NoPKModel
 }
 
