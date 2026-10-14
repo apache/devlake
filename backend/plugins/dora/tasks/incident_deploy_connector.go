@@ -44,6 +44,37 @@ type simpleCicdDeploymentCommit struct {
 	FinishedDate *time.Time
 }
 
+// connectIncidentInScopeClauses selects the incidents that belong to a single
+// DevLake project's slice of a (possibly shared) Jira board.
+//
+// An incident is scoped only by scope_id (= board id), so joining it to
+// project_mapping alone matches EVERY project pointing at that board. When
+// several projects share a board, that leaks one project's incidents into
+// another's Change Failure Rate. We therefore additionally join board_issues
+// (which carries the per-project slice stamped at collection time via ExtraJQL)
+// and keep only the incidents whose underlying issue was collected for this
+// project. The empty/NULL board_issues.project_name fallback preserves
+// pre-feature / single-project data.
+func connectIncidentInScopeClauses(db dal.Dal, projectName string) []dal.Clause {
+	return []dal.Clause{
+		dal.From(`incidents i`),
+		dal.Join("join project_mapping pm on pm.row_id = i.scope_id and " + quoteTableColumn(db, "pm") + " = " + quoteTableColumn(db, "i")),
+		dal.Join(`left join board_issues bi on bi.issue_id = i.id and bi.board_id = i.scope_id`),
+		dal.Where(
+			`pm.project_name = ?
+				and (
+					bi.project_name = ?
+					or not exists (
+						select 1 from board_issues b2
+						where b2.board_id = i.scope_id
+						  and b2.project_name is not null and b2.project_name <> ''
+					)
+				)`,
+			projectName, projectName,
+		),
+	}
+}
+
 // ConnectIncidentToDeployment will generate data to crossdomain.ProjectIncidentDeploymentRelationship.
 func ConnectIncidentToDeployment(taskCtx plugin.SubTaskContext) errors.Error {
 	db := taskCtx.GetDal()
@@ -55,12 +86,8 @@ func ConnectIncidentToDeployment(taskCtx plugin.SubTaskContext) errors.Error {
 		return errors.Default.Wrap(err, "error deleting previous project_incident_deployment_relationships")
 	}
 	logger.Info("delete previous project_incident_deployment_relationships")
-	// select all issues belongs to the board
-	clauses := []dal.Clause{
-		dal.From(`incidents i`),
-		dal.Join(`left join project_mapping pm on pm.row_id = i.scope_id and pm.table = i.table`),
-		dal.Where("pm.project_name = ?", data.Options.ProjectName),
-	}
+	// select all incidents belonging to this project's slice of the board
+	clauses := connectIncidentInScopeClauses(db, data.Options.ProjectName)
 
 	//count, err := db.Count(
 	//	dal.From(`incidents i`),

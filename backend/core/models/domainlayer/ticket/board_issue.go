@@ -22,8 +22,9 @@ import (
 )
 
 type BoardIssue struct {
-	BoardId string `gorm:"primaryKey;type:varchar(255)"`
-	IssueId string `gorm:"primaryKey;type:varchar(255)"`
+	BoardId     string `gorm:"primaryKey;type:varchar(255)"`
+	IssueId     string `gorm:"primaryKey;type:varchar(255)"`
+	ProjectName string `gorm:"primaryKey;type:varchar(255);default:''"`
 	common.NoPKModel
 }
 

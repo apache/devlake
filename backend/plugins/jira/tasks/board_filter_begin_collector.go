@@ -60,6 +60,17 @@ func CollectBoardFilterBegin(taskCtx plugin.SubTaskContext) errors.Error {
 	logger.Info("collect board filter jql:%s", filterInfo.Jql)
 
 	jql := filterInfo.Jql
+	// Fold the rendered ExtraJQL into the change-detection key. ExtraJQL filters
+	// which issues are collected; if it changes we must force a full resync so
+	// that issues no longer matching the filter are unlinked from the board
+	// (otherwise they linger in board_issues and keep appearing on dashboards).
+	if data.Options.ScopeConfig != nil && data.Options.ScopeConfig.ExtraJQL != "" {
+		renderedExtra, renderErr := renderExtraJQL(data.Options.ScopeConfig.ExtraJQL, data)
+		if renderErr != nil {
+			return renderErr
+		}
+		jql = fmt.Sprintf("%s AND (%s)", jql, renderedExtra)
+	}
 	var record models.JiraBoard
 	err = db.First(&record, dal.Where("connection_id = ? AND board_id = ? ", data.Options.ConnectionId, data.Options.BoardId))
 	if err != nil {

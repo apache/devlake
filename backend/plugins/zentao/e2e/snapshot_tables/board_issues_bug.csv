@@ -1,7 +1,7 @@
-board_id,issue_id
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:1
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:2
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:3
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:4
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:5
-zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:6
+board_id,issue_id,project_name
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:1,
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:2,
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:3,
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:4,
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:5,
+zentao:ZentaoProject:1:1,zentao:ZentaoBug:1:6,
