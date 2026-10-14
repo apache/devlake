@@ -126,6 +126,35 @@ func TestIncrementalCloneKeepsCommitsBehindMergeBoundary(t *testing.T) {
 	assert.True(t, newest.Before(*cloner.since), "shallow boundary %s should be older than since", newest)
 }
 
+// git fetch may start `git maintenance run --auto` / `git gc --auto` in the
+// background. That repacks the repo while libgit2 is already reading it, so
+// temporary pack files (.tmp-<pid>-pack-*.idx) vanish under its feet and the
+// collection fails with "could not find ... to open".
+func TestCloneDoesNotStartAutoMaintenance(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	origin, _ := buildMergeBoundaryRepo(t)
+	cloner := newTestCloner(t, origin, time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC))
+	skipCommitStat := false
+	cloner.taskData.Options.SkipCommitStat = &skipCommitStat
+	require.NoError(t, cloner.prepareSync())
+	traceFile := filepath.Join(t.TempDir(), "git-trace.log")
+	t.Setenv("GIT_TRACE", traceFile)
+
+	require.NoError(t, cloner.CloneRepo())
+
+	trace, e := os.ReadFile(traceFile)
+	require.NoError(t, e)
+	require.Contains(t, string(trace), "fetch", "the incremental clone should run git fetch")
+	for _, line := range strings.Split(string(trace), "\n") {
+		if strings.Contains(line, "run_command:") {
+			assert.NotContains(t, line, "maintenance run", "git must not start automatic maintenance")
+			assert.NotContains(t, line, "gc --auto", "git must not start automatic gc")
+		}
+	}
+}
+
 func TestNewestShallowCommitTimeIgnoresMissingCommits(t *testing.T) {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git is not installed")

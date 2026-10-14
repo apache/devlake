@@ -94,6 +94,14 @@ func NewGitcliCloner(ctx plugin.SubTaskContext, localDir string) (*GitcliCloner,
 
 func (g *GitcliCloner) prepareSync() errors.Error {
 	taskData := g.taskData
+	// Disable automatic (detached) gc/maintenance after clone/fetch. Otherwise git may
+	// repack the repo in the background while libgit2 is already reading it, which
+	// makes temporary pack files (.tmp-<pid>-pack-*.idx) vanish and the collection fail.
+	g.globalConfigArgs = append(g.globalConfigArgs,
+		"-c", "gc.auto=0",
+		"-c", "gc.autoDetach=false",
+		"-c", "maintenance.auto=false",
+	)
 	if *taskData.Options.SkipCommitStat {
 		g.syncArgs = append(g.syncArgs, "--filter=blob:none")
 	}
