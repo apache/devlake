@@ -50,6 +50,8 @@ func TestCalculateCLTimeDataFlow(t *testing.T) {
 	dataflowTester.ImportNullableCsvIntoTabler("./change_lead_time/commits_diffs.csv", &code.CommitsDiff{})
 	dataflowTester.ImportCsvIntoTabler("./change_lead_time/pull_request_comments.csv", &code.PullRequestComment{})
 	dataflowTester.ImportCsvIntoTabler("./change_lead_time/pull_request_commits.csv", &code.PullRequestCommit{})
+	// bot1 comments on pr1 before the first human review; it must not be counted as the first review
+	dataflowTester.ImportCsvIntoTabler("./change_lead_time/accounts.csv", &crossdomain.Account{})
 
 	// verify converter
 	dataflowTester.FlushTabler(&crossdomain.ProjectPrMetric{})

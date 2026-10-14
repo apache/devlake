@@ -188,7 +188,11 @@ func TestTapdBugCustomizeDueDate(t *testing.T) {
 		},
 	}
 
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_tapd_bug_statuses.csv", &models.TapdBugStatus{})
 	dataflowTester.FlushTabler(&models.TapdBug{})
+	dataflowTester.FlushTabler(&models.TapdWorkSpaceBug{})
+	dataflowTester.FlushTabler(&models.TapdIterationBug{})
+	dataflowTester.FlushTabler(&models.TapdBugLabel{})
 	// import raw data table
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_tapd_api_bugs_for_due_date.csv", "_raw_tapd_api_bugs")
 	dataflowTester.Subtask(tasks.ExtractBugMeta, taskData)
@@ -198,6 +202,9 @@ func TestTapdBugCustomizeDueDate(t *testing.T) {
 	})
 
 	dataflowTester.FlushTabler(&ticket.Issue{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.SprintIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertBugMeta, taskData)
 	dataflowTester.VerifyTable(
 		ticket.Issue{},

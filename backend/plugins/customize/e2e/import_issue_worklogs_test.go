@@ -35,6 +35,7 @@ func TestImportIssueWorklogDataFlow(t *testing.T) {
 	// 清空表
 	dataflowTester.FlushTabler(&ticket.IssueWorklog{})
 	dataflowTester.FlushTabler(&crossdomain.Account{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
 
 	// 初始化服务
 	svc := service.NewService(dataflowTester.Dal)

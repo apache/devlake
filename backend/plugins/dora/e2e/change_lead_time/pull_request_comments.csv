@@ -1,5 +1,6 @@
 id,pull_request_id,created_date,account_id
 comment00,pr0,2022-1-11 8:51:47,a
+comment01_bot,pr1,2023-4-11 4:52:47,bot1
 comment01,pr1,2023-4-11 4:53:47,a
 comment02,pr1,2023-4-11 4:56:47,b
 comment03,pr1,2023-4-11 4:59:47,c

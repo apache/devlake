@@ -92,6 +92,8 @@ func TestGitlabIssueDataFlow(t *testing.T) {
 	// verify conversion
 	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueLabel{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertIssuesMeta, taskData)
 	dataflowTester.VerifyTable(
 		ticket.Issue{},

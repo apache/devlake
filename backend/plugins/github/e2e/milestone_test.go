@@ -52,6 +52,9 @@ func TestMilestoneDataFlow(t *testing.T) {
 
 	dataflowTester.FlushTabler(&models.GithubMilestone{})
 	dataflowTester.FlushTabler(&models.GithubIssue{})
+	dataflowTester.FlushTabler(&models.GithubIssueLabel{})
+	dataflowTester.FlushTabler(&models.GithubRepoAccount{})
+	dataflowTester.FlushTabler(&models.GithubIssueAssignee{})
 
 	// import raw data table
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_github_api_milestones.csv", "_raw_"+tasks.RAW_MILESTONE_TABLE)

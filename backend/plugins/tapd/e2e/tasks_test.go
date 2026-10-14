@@ -154,6 +154,9 @@ func TestTapdTaskCustomizeDueDate(t *testing.T) {
 
 	// verify extraction
 	dataflowTester.FlushTabler(&models.TapdTask{})
+	dataflowTester.FlushTabler(&models.TapdWorkSpaceTask{})
+	dataflowTester.FlushTabler(&models.TapdIterationTask{})
+	dataflowTester.FlushTabler(&models.TapdTaskLabel{})
 	dataflowTester.Subtask(tasks.ExtractTaskMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(&models.TapdTask{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/_tool_tapd_tasks_for_due_date.csv",
@@ -161,6 +164,9 @@ func TestTapdTaskCustomizeDueDate(t *testing.T) {
 	})
 
 	dataflowTester.FlushTabler(&ticket.Issue{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.SprintIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertTaskMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(&ticket.Issue{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/issues_task_for_due_date.csv",

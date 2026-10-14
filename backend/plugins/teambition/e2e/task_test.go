@@ -89,6 +89,8 @@ func TestTeambitionTask(t *testing.T) {
 
 	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.FlushTabler(&ticket.Issue{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.SprintIssue{})
 	dataflowTester.Subtask(tasks.ConvertTasksMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(
 		ticket.Issue{},

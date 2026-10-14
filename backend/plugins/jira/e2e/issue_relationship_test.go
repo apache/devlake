@@ -54,6 +54,7 @@ func TestIssueRelationshipDataFlow(t *testing.T) {
 	dataflowTester.FlushTabler(&models.JiraAccount{})
 	dataflowTester.FlushTabler(&models.JiraIssueType{})
 	dataflowTester.FlushTabler(&models.JiraIssueLabel{})
+	dataflowTester.FlushTabler(&models.JiraIssueField{})
 	dataflowTester.Subtask(tasks.ExtractIssuesMeta, taskData)
 
 	dataflowTester.VerifyTableWithOptions(&models.JiraIssueRelationship{}, e2ehelper.TableOptions{

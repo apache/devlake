@@ -56,6 +56,8 @@ func TestLinearIssueHistoryDataFlow(t *testing.T) {
 
 	// verify conversion: tool layer -> domain layer
 	dataflowTester.FlushTabler(&ticket.IssueChangelogs{})
+	// the convertor also updates issues.lead_time_minutes
+	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.Subtask(tasks.ConvertIssueHistoryMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(ticket.IssueChangelogs{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/issue_changelogs.csv",

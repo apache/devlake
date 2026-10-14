@@ -119,6 +119,7 @@ func TestIncidentDataFlow(t *testing.T) {
 	)
 	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
 	dataflowTester.Subtask(tasks.ConvertIncidentsMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(
 		ticket.Issue{},

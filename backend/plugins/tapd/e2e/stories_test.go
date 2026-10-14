@@ -159,10 +159,15 @@ func TestTapdStoryCustomizeDueDate(t *testing.T) {
 			},
 		},
 	}
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_tapd_workitem_types.csv", &models.TapdWorkitemType{})
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_tapd_story_statuses.csv", &models.TapdStoryStatus{})
 	// import raw data table
 	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_tapd_api_stories_for_due_date.csv",
 		"_raw_tapd_api_stories")
 	dataflowTester.FlushTabler(&models.TapdStory{})
+	dataflowTester.FlushTabler(&models.TapdWorkSpaceStory{})
+	dataflowTester.FlushTabler(&models.TapdIterationStory{})
+	dataflowTester.FlushTabler(&models.TapdStoryLabel{})
 	dataflowTester.Subtask(tasks.ExtractStoryMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(&models.TapdStory{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/_tool_tapd_stories_for_due_date.csv",
@@ -170,6 +175,9 @@ func TestTapdStoryCustomizeDueDate(t *testing.T) {
 	})
 
 	dataflowTester.FlushTabler(&ticket.Issue{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.SprintIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertStoryMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(&ticket.Issue{}, e2ehelper.TableOptions{
 		CSVRelPath:  "./snapshot_tables/issues_story_for_due_date.csv",

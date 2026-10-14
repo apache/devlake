@@ -98,6 +98,8 @@ func TestCommentDataFlow(t *testing.T) {
 	)
 
 	// verify comment conversion
+	// the issue comment convertor joins _tool_bitbucket_issues
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_bitbucket_issues.csv", &models.BitbucketIssue{})
 	dataflowTester.FlushTabler(&ticket.IssueComment{})
 	dataflowTester.FlushTabler(&code.PullRequestComment{})
 	dataflowTester.Subtask(tasks.ConvertIssueCommentsMeta, taskData)

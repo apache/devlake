@@ -57,6 +57,7 @@ func TestTeambitionSprints(t *testing.T) {
 	)
 
 	dataflowTester.FlushTabler(&ticket.Sprint{})
+	dataflowTester.FlushTabler(&ticket.BoardSprint{})
 	dataflowTester.Subtask(tasks.ConvertSprintsMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(
 		ticket.Sprint{},
