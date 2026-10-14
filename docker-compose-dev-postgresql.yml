@@ -47,6 +47,7 @@ services:
       DATABASE_NAME: "${GRAFANA_DATABASE_NAME:-lake}"
       DATABASE_USER: "${GRAFANA_DATABASE_USER:-merico}"
       DATABASE_PASSWORD: "${GRAFANA_DATABASE_PASSWORD:-merico}"
+      DATABASE_SSL_MODE: "${GRAFANA_DATABASE_SSL_MODE:-disable}"
       # Legacy vars for older dashboard images; kept in sync with generic vars above.
       POSTGRES_URL: "${GRAFANA_DATABASE_HOST:-postgres}:${GRAFANA_DATABASE_PORT:-5432}"
       POSTGRES_DATABASE: "${GRAFANA_DATABASE_NAME:-lake}"

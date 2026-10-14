@@ -137,9 +137,29 @@ cat > "$DATASOURCE_FILE" << HEADER
 HEADER
 
 # Admin credentials used by the datasource provisioning API calls below.
-# Defaults to Grafana's built-in admin password; override via GF_SECURITY_ADMIN_PASSWORD.
-# Exported so Grafana itself and the curl calls use the same value.
+# Defaults to Grafana's built-in admin user/password; override via
+# GF_SECURITY_ADMIN_USER / GF_SECURITY_ADMIN_PASSWORD.
+# Exported so Grafana itself and the curl calls use the same values. Passed to
+# curl via --user (not inside the URL), so special characters need no encoding.
+export GF_SECURITY_ADMIN_USER="${GF_SECURITY_ADMIN_USER:-admin}"
 export GF_SECURITY_ADMIN_PASSWORD="${GF_SECURITY_ADMIN_PASSWORD:-admin}"
+GRAFANA_API="http://localhost:3000/api"
+
+grafana_api() {
+  curl -s --user "${GF_SECURITY_ADMIN_USER}:${GF_SECURITY_ADMIN_PASSWORD}" "$@"
+}
+
+# DATASOURCE_CLEAN_SLATE (default: true)
+#   true  - delete ALL existing datasources before creating the DevLake one
+#   false - only replace the DevLake datasource (matched by UID) and keep all
+#           other datasources, e.g. when the Grafana state (GF_DATABASE_*) is
+#           shared with other teams or several replicas
+DATASOURCE_CLEAN_SLATE="${DATASOURCE_CLEAN_SLATE:-true}"
+if [ "$MODE" = "mysql" ]; then
+  DATASOURCE_UID="devlake-mysql-api"
+else
+  DATASOURCE_UID="devlake-postgres-api"
+fi
 
 # Start Grafana in background
 /run.sh "$@" &
@@ -158,13 +178,25 @@ done
 
 # Grafana 13+ auto-creates empty datasource instances for built-in plugins and
 # legacy volumes may contain read-only provisioned datasources with different UIDs.
-# Delete ALL existing datasources (by ID, which bypasses read-only flags) so we can
-# create a single correctly-configured datasource with the UID our dashboards expect.
-echo "Deleting all existing datasources (clean slate)..."
-for _id in $(curl -s "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources" 2>/dev/null \
-  | grep -o '"id":[0-9]*' | sed 's/"id"://g'); do
-  curl -s -X DELETE "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources/${_id}" 2>&1 || true
-done
+# Delete ALL existing datasources so we can create a single correctly-configured
+# datasource with the UID our dashboards expect.
+# Set DATASOURCE_CLEAN_SLATE=false to keep foreign datasources (see above).
+if [ "$DATASOURCE_CLEAN_SLATE" = "false" ]; then
+  echo "Replacing datasource ${DATASOURCE_UID} only (DATASOURCE_CLEAN_SLATE=false)..."
+  grafana_api -X DELETE "${GRAFANA_API}/datasources/uid/${DATASOURCE_UID}" >/dev/null 2>&1 || true
+else
+  echo "Deleting all existing datasources (clean slate)..."
+  _ds_list=$(grafana_api "${GRAFANA_API}/datasources" 2>/dev/null) || true
+  # Grafana 13 only deletes by UID; deleting by numeric ID returns "Not found",
+  # which silently kept stale datasources (and their old settings) on restart.
+  for _uid in $(echo "$_ds_list" | grep -o '"uid":"[^"]*"' | sed 's/"uid":"//; s/"$//'); do
+    grafana_api -X DELETE "${GRAFANA_API}/datasources/uid/${_uid}" >/dev/null 2>&1 || true
+  done
+  # Older Grafana versions: deleting by ID also removes read-only datasources.
+  for _id in $(echo "$_ds_list" | grep -o '"id":[0-9]*' | sed 's/"id"://g'); do
+    grafana_api -X DELETE "${GRAFANA_API}/datasources/${_id}" >/dev/null 2>&1 || true
+  done
+fi
 sleep 2
 
 # Create datasource via API (both MySQL and PostgreSQL)
@@ -191,6 +223,27 @@ APIJSON
 
 else
   SSL_MODE="${DATABASE_SSL_MODE:-disable}"
+  # Optional TLS files (paths inside the container, e.g. a mounted secret).
+  # Needed for sslmode=verify-ca/verify-full against a private CA, and for
+  # client-certificate authentication.
+  TLS_JSON=""
+  for _pair in \
+    "sslRootCertFile:${DATABASE_SSL_ROOT_CERT:-}" \
+    "sslCertFile:${DATABASE_SSL_CERT:-}" \
+    "sslKeyFile:${DATABASE_SSL_KEY:-}"; do
+    _key="${_pair%%:*}"
+    _path="${_pair#*:}"
+    if [ -n "$_path" ]; then
+      [ -r "$_path" ] || echo "WARNING: ${_key} '${_path}' is not readable"
+      TLS_JSON="${TLS_JSON}
+    \"${_key}\": \"${_path}\","
+    fi
+  done
+  if [ -n "$TLS_JSON" ]; then
+    TLS_JSON="
+    \"tlsConfigurationMethod\": \"file-path\",${TLS_JSON}"
+    echo "TLS files: configured"
+  fi
   cat > "$PAYLOAD_FILE" <<APIJSON
 {
   "uid": "devlake-postgres-api",
@@ -203,7 +256,7 @@ else
     "password": "${POSTGRES_PASSWORD}"
   },
   "jsonData": {
-    "sslmode": "${SSL_MODE}",
+    "sslmode": "${SSL_MODE}",${TLS_JSON}
     "postgresVersion": 1800,
     "database": "${POSTGRES_DATABASE}"
   },
@@ -217,28 +270,45 @@ APIJSON
 fi
 
 echo "Creating datasource via API..."
+DATASOURCE_OK=false
 for i in $(seq 1 10); do
-  RESPONSE=$(curl -s -X POST "http://admin:${GF_SECURITY_ADMIN_PASSWORD}@localhost:3000/api/datasources" \
+  # "|| true": a failing curl must not end this script (set -e) and with it the
+  # container; the status check below reports the problem instead.
+  RESPONSE=$(grafana_api -w '\nHTTP_STATUS=%{http_code}' -X POST "${GRAFANA_API}/datasources" \
     -H "Content-Type: application/json" \
-    -d @"$PAYLOAD_FILE" 2>&1)
+    -d @"$PAYLOAD_FILE" 2>&1) || true
+  STATUS="${RESPONSE##*HTTP_STATUS=}"
+  RESPONSE="${RESPONSE%$'\n'HTTP_STATUS=*}"
 
-  if echo "$RESPONSE" | grep -q '"id"'; then
+  if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
+    # Retrying cannot help: the credentials do not match the Grafana admin.
+    echo "API error (HTTP ${STATUS}): $RESPONSE"
+    echo "Check GF_SECURITY_ADMIN_USER / GF_SECURITY_ADMIN_PASSWORD"
+    break
+  elif echo "$RESPONSE" | grep -q '"id"'; then
     echo "Datasource created successfully"
+    DATASOURCE_OK=true
     break
   elif echo "$RESPONSE" | grep -q "already exists"; then
     # A datasource with this name is already present (e.g. provisioned by an
     # older image into a persistent volume). It cannot be recreated via the API
     # but is functional, so treat this as success instead of retrying.
     echo "Datasource already exists; keeping existing one"
+    DATASOURCE_OK=true
     break
   elif echo "$RESPONSE" | grep -q "database is locked"; then
     echo "DB locked, retry $i/10..."
     sleep 3
   else
-    echo "API error: $RESPONSE"
+    echo "API error (HTTP ${STATUS}): $RESPONSE"
     sleep 2
   fi
 done
+
+if [ "$DATASOURCE_OK" != "true" ]; then
+  echo "ERROR: datasource ${DATASOURCE_UID} was not created; dashboards will show"
+  echo "       'datasource not found'. Grafana keeps running - see the errors above."
+fi
 
 # Wait for Grafana
 wait $GRAFANA_PID
