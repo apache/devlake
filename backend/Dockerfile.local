@@ -23,7 +23,7 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
-FROM golang:1.26-bookworm as builder
+FROM golang:1.27-bookworm as builder
 
 ARG GOPROXY=
 ARG HTTP_PROXY=

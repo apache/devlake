@@ -52,7 +52,7 @@ jobs:
       - run: git config --global --add safe.directory $(pwd)
       - name: Install libgit2 1.5 for git2go v34
         run: backend/scripts/install-libgit2.sh
-      - name: Install Go 1.26.9
+      - name: Install Go 1.27.2
         run: backend/scripts/install-go.sh
       - name: Build Python
         run: |
@@ -96,7 +96,7 @@ jobs:
       - run: git config --global --add safe.directory $(pwd)
       - name: Install libgit2 1.5 for git2go v34
         run: backend/scripts/install-libgit2.sh
-      - name: Install Go 1.26.9
+      - name: Install Go 1.27.2
         run: backend/scripts/install-go.sh
       - name: Build Python
         run: |

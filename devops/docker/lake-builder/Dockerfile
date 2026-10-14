@@ -64,8 +64,8 @@ ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
 # 2022, so the image could no longer be rebuilt. Fetch the official archive
 # from go.dev and verify it. Version and checksum match
 # backend/scripts/install-go.sh.
-ARG GO_VERSION=1.26.9
-ARG GO_SHA256=42d158b4d8f7b61ac0a830567c940a86098fb7aac52e467a5ebec03ef5cc2f8d
+ARG GO_VERSION=1.27.2
+ARG GO_SHA256=ecbadb99091a3f46e31f5f934b068b1864eafa7995211b39eaddf76996045fe5
 RUN curl --fail --location --retry 3 "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" --output /tmp/go.tar.gz &&\
     echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum --check --strict &&\
     tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz &&\

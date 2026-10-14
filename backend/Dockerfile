@@ -31,7 +31,7 @@ FROM --platform=linux/arm64 debian:bookworm as debian-arm64
 RUN apt-get update
 RUN apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
 
-FROM --platform=$BUILDPLATFORM golang:1.26-bookworm as builder
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
 ARG GOPROXY=
