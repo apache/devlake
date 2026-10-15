@@ -104,8 +104,13 @@ func (p Dora) PrepareTaskData(taskCtx plugin.TaskContext, options map[string]int
 	if err != nil {
 		return nil, err
 	}
+	prHeadRefRegexp, err := tasks.CompilePrHeadRefPattern(op.PrHeadRefPattern)
+	if err != nil {
+		return nil, err
+	}
 	return &tasks.DoraTaskData{
-		Options: op,
+		Options:         op,
+		PrHeadRefRegexp: prHeadRefRegexp,
 	}, nil
 }
 
@@ -125,6 +130,17 @@ func (p Dora) MakeMetricPluginPipelinePlanV200(projectName string, options json.
 		if err != nil {
 			return nil, errors.Default.WrapRaw(err)
 		}
+	}
+	// validate early so that an invalid pattern fails when the plan is generated
+	prHeadRefRegexp, err := tasks.CompilePrHeadRefPattern(op.PrHeadRefPattern)
+	if err != nil {
+		return nil, err
+	}
+	changeLeadTimeOptions := map[string]interface{}{
+		"projectName": projectName,
+	}
+	if prHeadRefRegexp != nil {
+		changeLeadTimeOptions["prHeadRefPattern"] = prHeadRefRegexp.String()
 	}
 
 	plan := coreModels.PipelinePlan{
@@ -154,10 +170,8 @@ func (p Dora) MakeMetricPluginPipelinePlanV200(projectName string, options json.
 		},
 		{
 			{
-				Plugin: "dora",
-				Options: map[string]interface{}{
-					"projectName": projectName,
-				},
+				Plugin:  "dora",
+				Options: changeLeadTimeOptions,
 				Subtasks: []string{
 					"calculateChangeLeadTime",
 					tasks.IssuesToIncidentsMeta.Name,

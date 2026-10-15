@@ -79,7 +79,7 @@ func CalculateChangeLeadTime(taskCtx plugin.SubTaskContext) errors.Error {
 
 	// Get pull requests by repo project_name
 	var clauses = []dal.Clause{
-		dal.Select("pr.id, pr.pull_request_key, pr.author_id, pr.merge_commit_sha, pr.created_date, pr.merged_date"),
+		dal.Select("pr.id, pr.pull_request_key, pr.author_id, pr.merge_commit_sha, pr.created_date, pr.merged_date, pr.head_ref"),
 		dal.From("pull_requests pr"),
 		dal.Join(`LEFT JOIN project_mapping pm ON (pm.row_id = pr.base_repo_id)`),
 		dal.Where("pr.merged_date IS NOT NULL AND pm.project_name = ? AND pm.table = 'repos'", data.Options.ProjectName),
@@ -90,6 +90,7 @@ func CalculateChangeLeadTime(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 	defer cursor.Close()
 
+	var total, excluded int
 	converter, err := api.NewDataConverter(api.DataConverterArgs{
 		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
 			Ctx: taskCtx,
@@ -104,6 +105,11 @@ func CalculateChangeLeadTime(taskCtx plugin.SubTaskContext) errors.Error {
 		Input:        cursor,
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			pr := inputRow.(*code.PullRequest)
+			total++
+			if !MatchPrHeadRef(data.PrHeadRefRegexp, pr.HeadRef) {
+				excluded++
+				return nil, nil
+			}
 			// Initialize a new ProjectPrMetric
 			projectPrMetric := &crossdomain.ProjectPrMetric{}
 			projectPrMetric.Id = pr.Id
@@ -165,7 +171,13 @@ func CalculateChangeLeadTime(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	// Execute the data converter
-	return converter.Execute()
+	if err := converter.Execute(); err != nil {
+		return err
+	}
+	if data.PrHeadRefRegexp != nil {
+		logger.Info("prHeadRefPattern %q excluded %d of %d merged pull requests", data.PrHeadRefRegexp.String(), excluded, total)
+	}
+	return nil
 }
 
 func computeTimeSpan(start, end *time.Time) *int64 {

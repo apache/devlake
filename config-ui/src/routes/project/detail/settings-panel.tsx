@@ -55,6 +55,7 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
   const [name, setName] = useState('');
   const [dora, setDora] = useState({
     enable: false,
+    prHeadRefPattern: '',
   });
   const [linker, setLinker] = useState({
     enable: false,
@@ -81,6 +82,7 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
     setName(project.name);
     setDora({
       enable: dora?.enable ?? false,
+      prHeadRefPattern: dora?.pluginOption?.prHeadRefPattern ?? '',
     });
     setLinker({
       enable: linker?.enable ?? false,
@@ -132,7 +134,9 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
           metrics: [
             {
               pluginName: 'dora',
-              pluginOption: {},
+              pluginOption: {
+                prHeadRefPattern: dora.prHeadRefPattern.trim(),
+              },
               enable: dora.enable,
             },
             {
@@ -208,12 +212,38 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
           </Block>
           <Block
             title={
-              <Checkbox checked={dora.enable} onChange={(e) => setDora({ enable: e.target.checked })}>
+              <Checkbox checked={dora.enable} onChange={(e) => setDora({ ...dora, enable: e.target.checked })}>
                 Enable DORA Metrics
               </Checkbox>
             }
-            description="DORA metrics are four widely-adopted metrics for measuring software delivery performance."
-          />
+            description={
+              <span>
+                DORA metrics are four widely-adopted metrics for measuring software delivery performance. Optionally,
+                only count pull requests whose source branch matches this regex as changes for Lead Time for Changes and
+                the PR cycle time metrics. Leave empty to count all merged pull requests.
+                <HelpTooltip
+                  overlayInnerStyle={{ width: 500 }}
+                  content={
+                    <>
+                      <div>Example 1 - Only feature and fix branches: ^(feat|fix)/</div>
+                      <div>Example 2 - Same, case-insensitive, plus hotfix: (?i)^(feat|fix|hotfix)/</div>
+                      <div>Go RE2 syntax; lookahead such as (?!...) is not supported.</div>
+                      <div>The refs/heads/ prefix (Azure DevOps) is ignored when matching.</div>
+                    </>
+                  }
+                />
+              </span>
+            }
+          >
+            {dora.enable && (
+              <Input
+                style={{ width: 600 }}
+                placeholder="^(feat|fix)/"
+                value={dora.prHeadRefPattern}
+                onChange={(e) => setDora({ ...dora, prHeadRefPattern: e.target.value })}
+              />
+            )}
+          </Block>
           <Block
             title={
               <Checkbox checked={linker.enable} onChange={(e) => setLinker({ ...linker, enable: e.target.checked })}>

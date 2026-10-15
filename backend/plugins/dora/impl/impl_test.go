@@ -22,6 +22,7 @@ import (
 	"github.com/apache/devlake/plugins/dora/tasks"
 	"testing"
 
+	"github.com/apache/devlake/core/errors"
 	coreModels "github.com/apache/devlake/core/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -69,4 +70,59 @@ func TestMakeMetricPluginPipelinePlanV200(t *testing.T) {
 		},
 	}
 	assert.Equal(t, doraOutputPlan, plan)
+}
+
+func TestMakeMetricPluginPipelinePlanV200WithPrHeadRefPattern(t *testing.T) {
+	var dora Dora
+	const projectName = "TestMakePlanV200-project"
+	optionJson, err := json.Marshal(map[string]interface{}{
+		"prHeadRefPattern": " ^(feat|fix)/ ",
+	})
+	assert.Nil(t, err)
+	plan, err := dora.MakeMetricPluginPipelinePlanV200(projectName, optionJson)
+	assert.Nil(t, err)
+	assert.Len(t, plan, 3)
+	assert.Equal(t, map[string]interface{}{"projectName": projectName}, plan[0][0].Options)
+	assert.Equal(t, map[string]interface{}{"projectName": projectName}, plan[1][0].Options)
+	assert.Equal(t, map[string]interface{}{
+		"projectName":      projectName,
+		"prHeadRefPattern": "^(feat|fix)/",
+	}, plan[2][0].Options)
+}
+
+func TestMakeMetricPluginPipelinePlanV200WithBlankPrHeadRefPattern(t *testing.T) {
+	var dora Dora
+	const projectName = "TestMakePlanV200-project"
+	plan, err := dora.MakeMetricPluginPipelinePlanV200(projectName, json.RawMessage(`{"prHeadRefPattern":"  "}`))
+	assert.Nil(t, err)
+	assert.Equal(t, map[string]interface{}{"projectName": projectName}, plan[2][0].Options)
+}
+
+func TestPrepareTaskDataPrHeadRefPattern(t *testing.T) {
+	var dora Dora
+
+	data, err := dora.PrepareTaskData(nil, map[string]interface{}{"projectName": "p", "prHeadRefPattern": "^feat/"})
+	assert.Nil(t, err)
+	if re := data.(*tasks.DoraTaskData).PrHeadRefRegexp; assert.NotNil(t, re) {
+		assert.Equal(t, "^feat/", re.String())
+	}
+
+	data, err = dora.PrepareTaskData(nil, map[string]interface{}{"projectName": "p"})
+	assert.Nil(t, err)
+	assert.Nil(t, data.(*tasks.DoraTaskData).PrHeadRefRegexp)
+
+	data, err = dora.PrepareTaskData(nil, map[string]interface{}{"projectName": "p", "prHeadRefPattern": "^(feat"})
+	assert.Nil(t, data)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, errors.BadInput, err.GetType())
+	}
+}
+
+func TestMakeMetricPluginPipelinePlanV200WithInvalidPrHeadRefPattern(t *testing.T) {
+	var dora Dora
+	plan, err := dora.MakeMetricPluginPipelinePlanV200("p", json.RawMessage(`{"prHeadRefPattern":"^(feat"}`))
+	assert.Nil(t, plan)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, errors.BadInput, err.GetType())
+	}
 }

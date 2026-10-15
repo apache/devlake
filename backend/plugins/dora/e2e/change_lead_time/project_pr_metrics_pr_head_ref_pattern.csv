@@ -1,0 +1,4 @@
+id,project_name,first_commit_sha,pr_coding_time,first_review_id,pr_pickup_time,pr_review_time,deployment_commit_id,pr_deploy_time,pr_cycle_time,first_commit_authored_date,first_comment_date,pr_created_date,pr_merged_date,pr_deployed_date
+pr0,project1,pr0_commit0,1440,,,,,,44640,2022-01-10T04:51:47.000+00:00,,2022-01-11T04:51:47.000+00:00,2022-02-10T04:51:47.000+00:00,
+pr1,project1,08d2f2b6de0fa8de4d0e2b55b4b9a2e244214029,1440,comment02,5,55,5,2978,4478,2023-04-10T04:51:47.000+00:00,2023-04-11T04:56:47.000+00:00,2023-04-11T04:51:47.000+00:00,2023-04-11T05:51:47.000+00:00,2023-04-13T07:29:14.000+00:00
+pr4,project1,5ad0c09c447c19338f1dfbb65d89a3728962b3b7,11704,comment10,1500,,,,11764,2023-04-05T04:51:47.000+00:00,2023-04-14T08:55:01.000+00:00,2023-04-13T07:55:01.000+00:00,2023-04-13T08:55:01.000+00:00,
