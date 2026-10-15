@@ -106,6 +106,9 @@ func CreateProject(projectInput *models.ApiInputProject) (*models.ApiOutputProje
 	if err := VerifyStruct(projectInput); err != nil {
 		return nil, err
 	}
+	if err := validateProjectMetrics(projectInput.Name, projectInput.Metrics); err != nil {
+		return nil, err
+	}
 
 	// create transaction to update multiple tables
 	var err errors.Error
@@ -203,6 +206,15 @@ func PatchProject(name string, body map[string]interface{}) (*models.ApiOutputPr
 		return nil, err
 	}
 
+	// allowed to changed the name
+	if projectInput.Name == "" {
+		projectInput.Name = name
+	}
+	err = validateProjectMetrics(projectInput.Name, projectInput.Metrics)
+	if err != nil {
+		return nil, err
+	}
+
 	// wrap all operation inside a transaction
 	tx := db.Begin()
 	defer func() {
@@ -219,10 +231,6 @@ func PatchProject(name string, body map[string]interface{}) (*models.ApiOutputPr
 		return nil, err
 	}
 
-	// allowed to changed the name
-	if projectInput.Name == "" {
-		projectInput.Name = name
-	}
 	project.BaseProject = projectInput.BaseProject
 
 	// name changed, updates the related entities as well
@@ -447,6 +455,21 @@ func getProjectByName(tx dal.Dal, name string, additionalClauses ...dal.Clause) 
 		return nil, errors.Default.Wrap(err, "error getting project from DB")
 	}
 	return project, nil
+}
+
+// validateProjectMetrics dry-runs the plan generation of every enabled metric so that invalid
+// plugin options are rejected when the project is saved rather than when its blueprint runs.
+// The generated plans are discarded, which relies on MakeMetricPluginPipelinePlanV200 having no side effects.
+func validateProjectMetrics(projectName string, metrics []*models.BaseMetric) errors.Error {
+	for _, metric := range metrics {
+		if metric == nil || !metric.Enable {
+			continue
+		}
+		if _, err := makeMetricPluginPlan(projectName, metric.PluginName, metric.PluginOption); err != nil {
+			return errors.BadInput.Wrap(err, fmt.Sprintf("invalid options for metric plugin %s", metric.PluginName))
+		}
+	}
+	return nil
 }
 
 func refreshProjectMetrics(tx dal.Transaction, projectInput *models.ApiInputProject) errors.Error {

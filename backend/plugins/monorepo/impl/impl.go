@@ -144,7 +144,7 @@ func (p Monorepo) MakeMetricPluginPipelinePlanV200(projectName string, options j
 		return nil, errors.BadInput.New(
 			"the monorepo plugin requires a subProjects list in its metric plugin options")
 	}
-	// Validate eagerly so a bad regex is reported when the blueprint is saved rather
+	// Validate eagerly so a bad regex is reported when the project or blueprint is saved rather
 	// than midway through a pipeline run.
 	if _, err := tasks.NewSubProjectMatcher(op.SubProjects); err != nil {
 		return nil, err

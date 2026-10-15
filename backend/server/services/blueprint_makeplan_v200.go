@@ -119,25 +119,11 @@ func GeneratePlanJsonV200(
 	metricPlans := make([]coreModels.PipelinePlan, len(metrics))
 	i := 0
 	for metricPluginName, metricPluginOptJson := range metrics {
-		p, err := plugin.GetPlugin(metricPluginName)
+		metricPlans[i], err = makeMetricPluginPlan(projectName, metricPluginName, metricPluginOptJson)
 		if err != nil {
 			return nil, err
 		}
-		if pluginBp, ok := p.(plugin.MetricPluginBlueprintV200); ok {
-			// If we enable one metric plugin, even if it has nil option, we still process it
-			if len(metricPluginOptJson) == 0 {
-				metricPluginOptJson = json.RawMessage("{}")
-			}
-			metricPlans[i], err = pluginBp.MakeMetricPluginPipelinePlanV200(projectName, metricPluginOptJson)
-			if err != nil {
-				return nil, err
-			}
-			i++
-		} else {
-			return nil, errors.Default.New(
-				fmt.Sprintf("plugin %s does not support MetricPluginBlueprintV200", metricPluginName),
-			)
-		}
+		i++
 	}
 	var planForProjectMapping coreModels.PipelinePlan
 	if projectName != "" {
@@ -158,6 +144,25 @@ func GeneratePlanJsonV200(
 		ParallelizePipelinePlans(metricPlans...),
 	)
 	return plan, err
+}
+
+// makeMetricPluginPlan generates the pipeline plan of a single metric plugin.
+func makeMetricPluginPlan(projectName, pluginName string, option json.RawMessage) (coreModels.PipelinePlan, errors.Error) {
+	p, err := plugin.GetPlugin(pluginName)
+	if err != nil {
+		return nil, err
+	}
+	pluginBp, ok := p.(plugin.MetricPluginBlueprintV200)
+	if !ok {
+		return nil, errors.Default.New(
+			fmt.Sprintf("plugin %s does not support MetricPluginBlueprintV200", pluginName),
+		)
+	}
+	// If we enable one metric plugin, even if it has nil option, we still process it
+	if len(option) == 0 {
+		option = json.RawMessage("{}")
+	}
+	return pluginBp.MakeMetricPluginPipelinePlanV200(projectName, option)
 }
 
 func removeCollectorTasks(plan coreModels.PipelinePlan) coreModels.PipelinePlan {
