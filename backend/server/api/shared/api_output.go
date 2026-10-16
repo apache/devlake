@@ -47,9 +47,9 @@ type ResponsePipelines struct {
 // ApiOutputErrorWithCustomCode writes a JSON error message to the HTTP response body
 func ApiOutputErrorWithCustomCode(c *gin.Context, code int, err error) {
 	if e, ok := err.(errors.Error); ok {
-		logruslog.Global.Error(err, "HTTP %d error", e.GetType().GetHttpCode())
+		logruslog.Global.Error(err, "HTTP %d error", ClientHttpCode(e.GetType().GetHttpCode()))
 		messages := e.Messages()
-		c.JSON(e.GetType().GetHttpCode(), &ApiBody{
+		c.JSON(ClientHttpCode(e.GetType().GetHttpCode()), &ApiBody{
 			Success: false,
 			Message: e.Error(),
 			Code:    code,
@@ -69,9 +69,9 @@ func ApiOutputErrorWithCustomCode(c *gin.Context, code int, err error) {
 // ApiOutputAdvancedErrorWithCustomCode writes a JSON error message to the HTTP response body
 func ApiOutputAdvancedErrorWithCustomCode(c *gin.Context, httpStatusCode, customBusinessCode int, err error) {
 	if e, ok := err.(errors.Error); ok {
-		logruslog.Global.Error(err, "HTTP %d error", e.GetType().GetHttpCode())
+		logruslog.Global.Error(err, "HTTP %d error", ClientHttpCode(e.GetType().GetHttpCode()))
 		messages := e.Messages()
-		c.JSON(e.GetType().GetHttpCode(), &ApiBody{
+		c.JSON(ClientHttpCode(e.GetType().GetHttpCode()), &ApiBody{
 			Success: false,
 			Message: e.Error(),
 			Code:    customBusinessCode,
@@ -91,9 +91,9 @@ func ApiOutputAdvancedErrorWithCustomCode(c *gin.Context, httpStatusCode, custom
 // ApiOutputError writes a JSON error message to the HTTP response body
 func ApiOutputError(c *gin.Context, err error) {
 	if e, ok := err.(errors.Error); ok {
-		logruslog.Global.Error(err, "HTTP %d error", e.GetType().GetHttpCode())
+		logruslog.Global.Error(err, "HTTP %d error", ClientHttpCode(e.GetType().GetHttpCode()))
 		messages := e.Messages()
-		c.JSON(e.GetType().GetHttpCode(), &ApiBody{
+		c.JSON(ClientHttpCode(e.GetType().GetHttpCode()), &ApiBody{
 			Success: false,
 			Message: e.Error(),
 			Causes:  messages.Causes(),
@@ -122,10 +122,18 @@ func ApiOutputSuccess(c *gin.Context, body interface{}, status int) {
 // ApiOutputAbort writes the HTTP response code header and saves the error internally, but doesn't push it to the response
 func ApiOutputAbort(c *gin.Context, err error) {
 	if e, ok := err.(errors.Error); ok {
-		logruslog.Global.Error(err, "HTTP %d abort-error", e.GetType().GetHttpCode())
-		_ = c.AbortWithError(e.GetType().GetHttpCode(), errors.Default.New(e.Messages().Format()))
+		logruslog.Global.Error(err, "HTTP %d abort-error", ClientHttpCode(e.GetType().GetHttpCode()))
+		_ = c.AbortWithError(ClientHttpCode(e.GetType().GetHttpCode()), errors.Default.New(e.Messages().Format()))
 	} else {
 		logruslog.Global.Error(err, "HTTP %d abort-error (native)", http.StatusInternalServerError)
 		_ = c.AbortWithError(http.StatusInternalServerError, err)
 	}
+}
+
+// ClientHttpCode maps an upstream 401 to 502, since clients treat 401 as an expired DevLake session
+func ClientHttpCode(code int) int {
+	if code == http.StatusUnauthorized {
+		return http.StatusBadGateway
+	}
+	return code
 }

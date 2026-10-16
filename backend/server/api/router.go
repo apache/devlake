@@ -150,12 +150,12 @@ func handlePluginCall(basicRes context.BasicRes, pluginName string, handler plug
 		if err != nil {
 			if output != nil && output.Body != nil {
 				logruslog.Global.Error(err, "")
-				shared.ApiOutputSuccess(c, output.Body, err.GetType().GetHttpCode())
+				shared.ApiOutputSuccess(c, output.Body, shared.ClientHttpCode(err.GetType().GetHttpCode()))
 			} else {
 				shared.ApiOutputError(c, err)
 			}
 		} else if output != nil {
-			status := output.Status
+			status := shared.ClientHttpCode(output.Status)
 			if status < http.StatusContinue {
 				status = http.StatusOK
 			}
