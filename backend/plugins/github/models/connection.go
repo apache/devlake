@@ -391,9 +391,10 @@ func (gak *GithubAppKey) CreateJwt() (string, errors.Error) {
 	token := jwt.New(jwt.SigningMethodRS256)
 	t := time.Now().Unix()
 
+	// Backdate iat and keep exp under GitHub's 10 minute limit to tolerate clock drift
 	token.Claims = jwt.MapClaims{
-		"iat": t,
-		"exp": t + (10 * 60),
+		"iat": t - 60,
+		"exp": t + (9 * 60),
 		"iss": gak.AppId,
 	}
 

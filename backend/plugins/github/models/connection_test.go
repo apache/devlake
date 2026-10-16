@@ -18,11 +18,17 @@ limitations under the License.
 package models
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
 	"testing"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -279,4 +285,26 @@ func TestGithubConnection_GetHash(t *testing.T) {
 			assert.Equalf(t, tt.want, tt.connection.GetHash(), "GetHash()")
 		})
 	}
+}
+
+func TestGithubAppKey_CreateJwtToleratesClockDrift(t *testing.T) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.NoError(t, err)
+	appKey := &GithubAppKey{}
+	appKey.AppId = "123"
+	appKey.SecretKey = string(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)}))
+
+	before := time.Now().Unix()
+	tokenString, jwtErr := appKey.CreateJwt()
+	after := time.Now().Unix()
+	assert.Nil(t, jwtErr)
+
+	claims := jwt.MapClaims{}
+	_, err = jwt.ParseWithClaims(tokenString, claims, func(*jwt.Token) (any, error) { return &key.PublicKey, nil })
+	assert.NoError(t, err)
+	iat, _ := claims.GetIssuedAt()
+	exp, _ := claims.GetExpirationTime()
+	assert.LessOrEqual(t, iat.Unix(), after-60)
+	assert.GreaterOrEqual(t, iat.Unix(), before-60)
+	assert.LessOrEqual(t, exp.Unix(), after+540)
 }
