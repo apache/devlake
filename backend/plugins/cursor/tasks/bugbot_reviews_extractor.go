@@ -37,16 +37,16 @@ type bugbotFindingRecord struct {
 }
 
 type bugbotReviewRecord struct {
-	RequestId         string              `json:"request_id"`
-	Timestamp         string              `json:"timestamp"`
-	Repo              string              `json:"repo"`
-	RepoNodeId        *string             `json:"repo_node_id"`
-	PrNumber          *int                `json:"pr_number"`
-	CommitSha         *string             `json:"commit_sha"`
-	BugsFound         int                 `json:"bugs_found"`
-	CostCents         *float64            `json:"cost_cents"`
-	DryRun            bool                `json:"dry_run"`
-	PublicationStatus string              `json:"publication_status"`
+	RequestId         string                `json:"request_id"`
+	Timestamp         string                `json:"timestamp"`
+	Repo              string                `json:"repo"`
+	RepoNodeId        *string               `json:"repo_node_id"`
+	PrNumber          *int                  `json:"pr_number"`
+	CommitSha         *string               `json:"commit_sha"`
+	BugsFound         int                   `json:"bugs_found"`
+	CostCents         *float64              `json:"cost_cents"`
+	DryRun            bool                  `json:"dry_run"`
+	PublicationStatus string                `json:"publication_status"`
 	Bugs              []bugbotFindingRecord `json:"bugs"`
 }
 

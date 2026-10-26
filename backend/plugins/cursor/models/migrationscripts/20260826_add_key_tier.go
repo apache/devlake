@@ -24,8 +24,10 @@ import (
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models/migrationscripts/archived"
 	"github.com/apache/devlake/helpers/migrationhelper"
-	"github.com/apache/devlake/plugins/cursor/models"
 )
+
+// defaultKeyTier matches models.KeyTierTeam; migrations must not import plugin models.
+const defaultKeyTier = "team"
 
 type addCursorKeyTier struct{}
 
@@ -36,15 +38,15 @@ type cursorConnection20260826 struct {
 func (cursorConnection20260826) TableName() string { return "_tool_cursor_connections" }
 
 type cursorAiCodeCommit20260826 struct {
-	ConnectionId         uint64     `gorm:"primaryKey"`
-	ScopeId              string     `gorm:"primaryKey;type:varchar(255)"`
-	CommitHash           string     `gorm:"primaryKey;type:varchar(64)"`
-	UserId               string     `gorm:"type:varchar(255);index"`
-	UserEmail            string     `gorm:"type:varchar(255);index"`
-	RepoName             string     `gorm:"type:varchar(255)"`
-	BranchName           string     `gorm:"type:varchar(255)"`
+	ConnectionId         uint64 `gorm:"primaryKey"`
+	ScopeId              string `gorm:"primaryKey;type:varchar(255)"`
+	CommitHash           string `gorm:"primaryKey;type:varchar(64)"`
+	UserId               string `gorm:"type:varchar(255);index"`
+	UserEmail            string `gorm:"type:varchar(255);index"`
+	RepoName             string `gorm:"type:varchar(255)"`
+	BranchName           string `gorm:"type:varchar(255)"`
 	IsPrimaryBranch      *bool
-	CommitSource         string     `gorm:"type:varchar(20)"`
+	CommitSource         string `gorm:"type:varchar(20)"`
 	TotalLinesAdded      int
 	TotalLinesDeleted    int
 	TabLinesAdded        int
@@ -61,17 +63,17 @@ type cursorAiCodeCommit20260826 struct {
 func (cursorAiCodeCommit20260826) TableName() string { return "_tool_cursor_ai_code_commits" }
 
 type cursorAiCodeChange20260826 struct {
-	ConnectionId      uint64     `gorm:"primaryKey"`
-	ScopeId           string     `gorm:"primaryKey;type:varchar(255)"`
-	ChangeId          string     `gorm:"primaryKey;type:varchar(255)"`
-	UserId            string     `gorm:"type:varchar(255);index"`
-	UserEmail         string     `gorm:"type:varchar(255);index"`
-	Source            string     `gorm:"type:varchar(20)"`
-	Model             string     `gorm:"type:varchar(255)"`
+	ConnectionId      uint64 `gorm:"primaryKey"`
+	ScopeId           string `gorm:"primaryKey;type:varchar(255)"`
+	ChangeId          string `gorm:"primaryKey;type:varchar(255)"`
+	UserId            string `gorm:"type:varchar(255);index"`
+	UserEmail         string `gorm:"type:varchar(255);index"`
+	Source            string `gorm:"type:varchar(20)"`
+	Model             string `gorm:"type:varchar(255)"`
 	TotalLinesAdded   int
 	TotalLinesDeleted int
 	CreatedAt         *time.Time
-	Metadata          string     `gorm:"type:text"`
+	Metadata          string `gorm:"type:text"`
 	archived.NoPKModel
 }
 
@@ -88,7 +90,7 @@ func (*addCursorKeyTier) Up(basicRes context.BasicRes) errors.Error {
 	}
 	return basicRes.GetDal().Exec(
 		"UPDATE _tool_cursor_connections SET key_tier = ? WHERE key_tier IS NULL OR key_tier = ''",
-		models.KeyTierTeam,
+		defaultKeyTier,
 	)
 }
 

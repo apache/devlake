@@ -40,14 +40,14 @@ const (
 
 // AdminApiPermissions reports which Cursor API endpoints the key can access.
 type AdminApiPermissions struct {
-	Members        bool `json:"members"`
-	Spend          bool `json:"spend"`
-	UsageEvents    bool `json:"usageEvents"`
-	Analytics      bool `json:"analytics"`
-	AiCodeTracking bool `json:"aiCodeTracking"`
-	BugbotReviews           bool `json:"bugbotReviews"`
-	ConversationInsights    bool `json:"conversationInsights"`
-	AiCodeCommitDetails     bool `json:"aiCodeCommitDetails"`
+	Members              bool `json:"members"`
+	Spend                bool `json:"spend"`
+	UsageEvents          bool `json:"usageEvents"`
+	Analytics            bool `json:"analytics"`
+	AiCodeTracking       bool `json:"aiCodeTracking"`
+	BugbotReviews        bool `json:"bugbotReviews"`
+	ConversationInsights bool `json:"conversationInsights"`
+	AiCodeCommitDetails  bool `json:"aiCodeCommitDetails"`
 }
 
 // TestConnectionResult represents the payload returned by the connection test endpoints.

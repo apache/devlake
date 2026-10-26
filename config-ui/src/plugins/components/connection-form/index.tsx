@@ -179,7 +179,7 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
       }
       if (connectionOk) {
         onTestSuccess?.(res, {
-          setValues: (patch) => setValues((prev) => ({ ...prev, ...patch })),
+          setValues: (patch) => setValues((prev: any) => ({ ...prev, ...patch })),
         });
       }
       return;

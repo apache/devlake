@@ -28,12 +28,12 @@ type CursorBugBotFinding struct {
 	RequestId    string `gorm:"primaryKey;type:varchar(64)" json:"requestId"`
 	FindingIndex int    `gorm:"primaryKey" json:"findingIndex"`
 
-	CommentId         string `gorm:"type:varchar(64)" json:"commentId"`
-	ResolutionStatus  string `gorm:"type:varchar(20)" json:"resolutionStatus"`
-	Severity          string `gorm:"type:varchar(20);index" json:"severity"`
-	Title             string `gorm:"type:varchar(500)" json:"title"`
-	Description       string `gorm:"type:text" json:"description"`
-	Locations         string `gorm:"type:text" json:"locations"`
+	CommentId        string `gorm:"type:varchar(64)" json:"commentId"`
+	ResolutionStatus string `gorm:"type:varchar(20)" json:"resolutionStatus"`
+	Severity         string `gorm:"type:varchar(20);index" json:"severity"`
+	Title            string `gorm:"type:varchar(500)" json:"title"`
+	Description      string `gorm:"type:text" json:"description"`
+	Locations        string `gorm:"type:text" json:"locations"`
 
 	common.NoPKModel
 }

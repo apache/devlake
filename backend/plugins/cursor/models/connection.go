@@ -46,11 +46,11 @@ const (
 type CursorConn struct {
 	helper.RestConnection `mapstructure:",squash"`
 
-	Token            string `mapstructure:"token" json:"token"`
-	KeyTier          string `mapstructure:"keyTier" json:"keyTier" gorm:"type:varchar(20)"`
-	HasBugbotReviews           bool   `mapstructure:"hasBugbotReviews" json:"hasBugbotReviews"`
-	HasConversationInsights    bool   `mapstructure:"hasConversationInsights" json:"hasConversationInsights"`
-	HasAiCodeCommitDetails     bool   `mapstructure:"hasAiCodeCommitDetails" json:"hasAiCodeCommitDetails"`
+	Token                   string `mapstructure:"token" json:"token"`
+	KeyTier                 string `mapstructure:"keyTier" json:"keyTier" gorm:"type:varchar(20)"`
+	HasBugbotReviews        bool   `mapstructure:"hasBugbotReviews" json:"hasBugbotReviews"`
+	HasConversationInsights bool   `mapstructure:"hasConversationInsights" json:"hasConversationInsights"`
+	HasAiCodeCommitDetails  bool   `mapstructure:"hasAiCodeCommitDetails" json:"hasAiCodeCommitDetails"`
 }
 
 // SetupAuthentication uses HTTP Basic auth with the API key as username and an empty password.

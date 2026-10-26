@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	rawConversationInsightsTable      = "cursor_conversation_insights"
-	conversationInsightsIncludeParam    = "intents,complexity,categories,guidanceLevels,workTypes"
+	rawConversationInsightsTable     = "cursor_conversation_insights"
+	conversationInsightsIncludeParam = "intents,complexity,categories,guidanceLevels,workTypes"
 )
 
 // CollectConversationInsights collects aggregate Conversation Insights from

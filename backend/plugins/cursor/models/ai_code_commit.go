@@ -30,23 +30,23 @@ type CursorAiCodeCommit struct {
 	ScopeId      string `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
 	CommitHash   string `gorm:"primaryKey;type:varchar(64)" json:"commitHash"`
 
-	UserId              string    `gorm:"type:varchar(255);index" json:"userId"`
-	UserEmail           string    `gorm:"type:varchar(255);index" json:"userEmail"`
-	RepoName            string    `gorm:"type:varchar(255)" json:"repoName"`
-	BranchName          string    `gorm:"type:varchar(255)" json:"branchName"`
-	IsPrimaryBranch     *bool     `json:"isPrimaryBranch"`
-	CommitSource        string    `gorm:"type:varchar(20)" json:"commitSource"`
-	TotalLinesAdded     int       `json:"totalLinesAdded"`
-	TotalLinesDeleted   int       `json:"totalLinesDeleted"`
-	TabLinesAdded       int       `json:"tabLinesAdded"`
-	TabLinesDeleted     int       `json:"tabLinesDeleted"`
-	ComposerLinesAdded  int       `json:"composerLinesAdded"`
-	ComposerLinesDeleted int      `json:"composerLinesDeleted"`
-	NonAiLinesAdded     *int      `json:"nonAiLinesAdded"`
-	NonAiLinesDeleted   *int      `json:"nonAiLinesDeleted"`
-	CommitTs   *time.Time `json:"commitTs"`
-	IngestedAt *time.Time `gorm:"column:ingested_at" json:"createdAt"`
-	Message    string     `gorm:"type:text" json:"message"`
+	UserId               string     `gorm:"type:varchar(255);index" json:"userId"`
+	UserEmail            string     `gorm:"type:varchar(255);index" json:"userEmail"`
+	RepoName             string     `gorm:"type:varchar(255)" json:"repoName"`
+	BranchName           string     `gorm:"type:varchar(255)" json:"branchName"`
+	IsPrimaryBranch      *bool      `json:"isPrimaryBranch"`
+	CommitSource         string     `gorm:"type:varchar(20)" json:"commitSource"`
+	TotalLinesAdded      int        `json:"totalLinesAdded"`
+	TotalLinesDeleted    int        `json:"totalLinesDeleted"`
+	TabLinesAdded        int        `json:"tabLinesAdded"`
+	TabLinesDeleted      int        `json:"tabLinesDeleted"`
+	ComposerLinesAdded   int        `json:"composerLinesAdded"`
+	ComposerLinesDeleted int        `json:"composerLinesDeleted"`
+	NonAiLinesAdded      *int       `json:"nonAiLinesAdded"`
+	NonAiLinesDeleted    *int       `json:"nonAiLinesDeleted"`
+	CommitTs             *time.Time `json:"commitTs"`
+	IngestedAt           *time.Time `gorm:"column:ingested_at" json:"createdAt"`
+	Message              string     `gorm:"type:text" json:"message"`
 
 	common.NoPKModel
 }

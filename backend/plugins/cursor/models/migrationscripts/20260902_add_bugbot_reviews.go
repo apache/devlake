@@ -35,18 +35,18 @@ type cursorConnection20260902 struct {
 func (cursorConnection20260902) TableName() string { return "_tool_cursor_connections" }
 
 type cursorBugBotReview20260902 struct {
-	ConnectionId      uint64     `gorm:"primaryKey"`
-	ScopeId           string     `gorm:"primaryKey;type:varchar(255)"`
-	RequestId         string     `gorm:"primaryKey;type:varchar(64)"`
+	ConnectionId      uint64 `gorm:"primaryKey"`
+	ScopeId           string `gorm:"primaryKey;type:varchar(255)"`
+	RequestId         string `gorm:"primaryKey;type:varchar(64)"`
 	Timestamp         *time.Time
-	Repo              string     `gorm:"type:varchar(255);index"`
-	RepoNodeId        string     `gorm:"type:varchar(255)"`
+	Repo              string `gorm:"type:varchar(255);index"`
+	RepoNodeId        string `gorm:"type:varchar(255)"`
 	PrNumber          *int
-	CommitSha         string     `gorm:"type:varchar(64)"`
+	CommitSha         string `gorm:"type:varchar(64)"`
 	BugsFound         int
 	CostCents         *float64
 	DryRun            bool
-	PublicationStatus string     `gorm:"type:varchar(20)"`
+	PublicationStatus string `gorm:"type:varchar(20)"`
 	archived.NoPKModel
 }
 
