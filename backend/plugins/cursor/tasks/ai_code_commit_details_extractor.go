@@ -36,14 +36,14 @@ type aiCodeCommitDetailResponse struct {
 }
 
 type aiCodeCommitDetailCommit struct {
-	CommitHash       string                         `json:"commitHash"`
-	CommitSource     string                         `json:"commitSource"`
-	RangeAnnotations []aiCodeCommitDetailFileBlame  `json:"rangeAnnotations"`
+	CommitHash       string                        `json:"commitHash"`
+	CommitSource     string                        `json:"commitSource"`
+	RangeAnnotations []aiCodeCommitDetailFileBlame `json:"rangeAnnotations"`
 }
 
 type aiCodeCommitDetailFileBlame struct {
-	FilePath string                      `json:"filePath"`
-	Groups   []aiCodeCommitDetailGroup   `json:"groups"`
+	FilePath string                    `json:"filePath"`
+	Groups   []aiCodeCommitDetailGroup `json:"groups"`
 }
 
 type aiCodeCommitDetailGroup struct {
@@ -59,11 +59,11 @@ type aiCodeCommitDetailRange struct {
 }
 
 type aiCodeCommitDetailConversation struct {
-	Id              string   `json:"id"`
-	Title           *string  `json:"title"`
-	Tldr            *string  `json:"tldr"`
-	Overview        *string  `json:"overview"`
-	SummaryBullets  []string `json:"summaryBullets"`
+	Id             string   `json:"id"`
+	Title          *string  `json:"title"`
+	Tldr           *string  `json:"tldr"`
+	Overview       *string  `json:"overview"`
+	SummaryBullets []string `json:"summaryBullets"`
 }
 
 // ExtractAiCodeCommitDetails parses commit-detail payloads into conversation and range annotation tables.
@@ -155,8 +155,8 @@ func flattenAiCodeCommitDetailResponse(connectionId uint64, scopeId string, reco
 					}
 					operationType := strings.TrimSpace(group.OperationType)
 					rows = append(rows, &models.CursorAiCodeRangeAnnotation{
-						ConnectionId:   connectionId,
-						ScopeId:        scopeId,
+						ConnectionId: connectionId,
+						ScopeId:      scopeId,
 						AnnotationId: computeAiCodeRangeAnnotationId(
 							commitHash, filePath, conversationId, model, operationType, lineRange.Start, lineRange.End,
 						),

@@ -24,33 +24,33 @@ import (
 )
 
 const (
-	ConversationInsightTypeIntents         = "intents"
-	ConversationInsightTypeComplexity      = "complexity"
-	ConversationInsightTypeCategories      = "categories"
-	ConversationInsightTypeGuidanceLevels  = "guidanceLevels"
-	ConversationInsightTypeWorkTypes       = "workTypes"
-	ConversationInsightTypeSubcategory     = "subcategory"
+	ConversationInsightTypeIntents        = "intents"
+	ConversationInsightTypeComplexity     = "complexity"
+	ConversationInsightTypeCategories     = "categories"
+	ConversationInsightTypeGuidanceLevels = "guidanceLevels"
+	ConversationInsightTypeWorkTypes      = "workTypes"
+	ConversationInsightTypeSubcategory    = "subcategory"
 
 	ConversationInsightAggDistribution = "distribution"
 	ConversationInsightAggTopValues    = "topValues"
-	ConversationInsightAggTimeSeries     = "timeSeries"
+	ConversationInsightAggTimeSeries   = "timeSeries"
 	ConversationInsightAggSubcategory  = "subcategory"
 )
 
 // CursorConversationInsight stores flattened Conversation Insights metrics from
 // GET /analytics/team/conversation-insights (Enterprise Analytics API).
 type CursorConversationInsight struct {
-	ConnectionId     uint64    `gorm:"primaryKey" json:"connectionId"`
-	ScopeId          string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
-	RecordId         string    `gorm:"primaryKey;type:varchar(64)" json:"recordId"`
-	PeriodStart      time.Time `gorm:"index" json:"periodStart"`
-	PeriodEnd        time.Time `gorm:"index" json:"periodEnd"`
-	InsightType      string    `gorm:"type:varchar(32);index" json:"insightType"`
-	AggregationType  string    `gorm:"type:varchar(32);index" json:"aggregationType"`
-	DimensionValue   string    `gorm:"type:varchar(255);index" json:"dimensionValue"`
-	SubcategoryGroup string    `gorm:"type:varchar(32);index" json:"subcategoryGroup"`
+	ConnectionId     uint64     `gorm:"primaryKey" json:"connectionId"`
+	ScopeId          string     `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	RecordId         string     `gorm:"primaryKey;type:varchar(64)" json:"recordId"`
+	PeriodStart      time.Time  `gorm:"index" json:"periodStart"`
+	PeriodEnd        time.Time  `gorm:"index" json:"periodEnd"`
+	InsightType      string     `gorm:"type:varchar(32);index" json:"insightType"`
+	AggregationType  string     `gorm:"type:varchar(32);index" json:"aggregationType"`
+	DimensionValue   string     `gorm:"type:varchar(255);index" json:"dimensionValue"`
+	SubcategoryGroup string     `gorm:"type:varchar(32);index" json:"subcategoryGroup"`
 	MetricDate       *time.Time `gorm:"index" json:"metricDate"`
-	Count            int       `json:"count"`
+	Count            int        `json:"count"`
 
 	common.NoPKModel
 }

@@ -30,10 +30,10 @@ import (
 )
 
 type connectionCapabilities struct {
-	KeyTier                  string
-	HasBugbotReviews         bool
-	HasConversationInsights  bool
-	HasAiCodeCommitDetails   bool
+	KeyTier                 string
+	HasBugbotReviews        bool
+	HasConversationInsights bool
+	HasAiCodeCommitDetails  bool
 }
 
 func snapshotConnectionCapabilities(connection *models.CursorConnection) connectionCapabilities {

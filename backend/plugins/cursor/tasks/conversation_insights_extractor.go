@@ -37,11 +37,11 @@ type conversationInsightsPayload struct {
 }
 
 type conversationInsightsData struct {
-	Intents         *conversationInsightBlock `json:"intents"`
-	Complexity      *conversationInsightBlock `json:"complexity"`
-	Categories      *conversationInsightBlock `json:"categories"`
-	GuidanceLevels  *conversationInsightBlock `json:"guidanceLevels"`
-	WorkTypes       *conversationInsightBlock `json:"workTypes"`
+	Intents        *conversationInsightBlock `json:"intents"`
+	Complexity     *conversationInsightBlock `json:"complexity"`
+	Categories     *conversationInsightBlock `json:"categories"`
+	GuidanceLevels *conversationInsightBlock `json:"guidanceLevels"`
+	WorkTypes      *conversationInsightBlock `json:"workTypes"`
 }
 
 type conversationInsightsParams struct {
@@ -166,8 +166,8 @@ func flattenConversationInsightBlock(
 			return nil
 		}
 		row := &models.CursorConversationInsight{
-			ConnectionId:     connectionId,
-			ScopeId:          scopeId,
+			ConnectionId: connectionId,
+			ScopeId:      scopeId,
 			RecordId: computeConversationInsightRecordId(
 				periodStart, periodEnd, spec.insightType, aggregationType,
 				dimensionValue, subcategoryGroup, metricDateKey,

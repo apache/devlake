@@ -25,19 +25,19 @@ import (
 
 func TestNormalizeUserSpendCents(t *testing.T) {
 	tests := []struct {
-		name            string
-		spendCents      float64
-		includedSpend   float64
-		overallSpend    float64
-		wantOnDemand    float64
-		wantIncluded    float64
+		name          string
+		spendCents    float64
+		includedSpend float64
+		overallSpend  float64
+		wantOnDemand  float64
+		wantIncluded  float64
 	}{
 		{
-			name:         "team legacy shape",
-			spendCents:   3224,
+			name:          "team legacy shape",
+			spendCents:    3224,
 			includedSpend: 1984,
-			wantOnDemand: 3224,
-			wantIncluded: 1984,
+			wantOnDemand:  3224,
+			wantIncluded:  1984,
 		},
 		{
 			name:         "enterprise overall only",
@@ -54,12 +54,12 @@ func TestNormalizeUserSpendCents(t *testing.T) {
 			wantIncluded: 1325.250333,
 		},
 		{
-			name:         "explicit included wins when both present",
-			spendCents:   100,
+			name:          "explicit included wins when both present",
+			spendCents:    100,
 			includedSpend: 50,
-			overallSpend: 200,
-			wantOnDemand: 100,
-			wantIncluded: 50,
+			overallSpend:  200,
+			wantOnDemand:  100,
+			wantIncluded:  50,
 		},
 		{
 			name:         "all zero",

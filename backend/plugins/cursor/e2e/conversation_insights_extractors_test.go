@@ -50,9 +50,9 @@ func TestCursorConversationInsightsExtractorsDataFlow(t *testing.T) {
 		},
 		Connection: &models.CursorConnection{
 			CursorConn: models.CursorConn{
-				RestConnection:            helper.RestConnection{Endpoint: models.DefaultEndpoint},
-				KeyTier:                   models.KeyTierEnterprise,
-				HasConversationInsights:   true,
+				RestConnection:          helper.RestConnection{Endpoint: models.DefaultEndpoint},
+				KeyTier:                 models.KeyTierEnterprise,
+				HasConversationInsights: true,
 			},
 		},
 	}

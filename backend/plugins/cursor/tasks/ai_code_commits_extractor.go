@@ -28,24 +28,24 @@ import (
 )
 
 type aiCodeCommitRecord struct {
-	CommitHash          string  `json:"commitHash"`
-	UserId              string  `json:"userId"`
-	UserEmail           string  `json:"userEmail"`
-	RepoName            string  `json:"repoName"`
-	BranchName          string  `json:"branchName"`
-	IsPrimaryBranch     *bool   `json:"isPrimaryBranch"`
-	CommitSource        string  `json:"commitSource"`
-	TotalLinesAdded     int     `json:"totalLinesAdded"`
-	TotalLinesDeleted   int     `json:"totalLinesDeleted"`
-	TabLinesAdded       int     `json:"tabLinesAdded"`
-	TabLinesDeleted     int     `json:"tabLinesDeleted"`
-	ComposerLinesAdded  int     `json:"composerLinesAdded"`
+	CommitHash           string `json:"commitHash"`
+	UserId               string `json:"userId"`
+	UserEmail            string `json:"userEmail"`
+	RepoName             string `json:"repoName"`
+	BranchName           string `json:"branchName"`
+	IsPrimaryBranch      *bool  `json:"isPrimaryBranch"`
+	CommitSource         string `json:"commitSource"`
+	TotalLinesAdded      int    `json:"totalLinesAdded"`
+	TotalLinesDeleted    int    `json:"totalLinesDeleted"`
+	TabLinesAdded        int    `json:"tabLinesAdded"`
+	TabLinesDeleted      int    `json:"tabLinesDeleted"`
+	ComposerLinesAdded   int    `json:"composerLinesAdded"`
 	ComposerLinesDeleted int    `json:"composerLinesDeleted"`
-	NonAiLinesAdded     *int    `json:"nonAiLinesAdded"`
-	NonAiLinesDeleted   *int    `json:"nonAiLinesDeleted"`
-	CommitTs            string  `json:"commitTs"`
-	CreatedAt           string  `json:"createdAt"`
-	Message             string  `json:"message"`
+	NonAiLinesAdded      *int   `json:"nonAiLinesAdded"`
+	NonAiLinesDeleted    *int   `json:"nonAiLinesDeleted"`
+	CommitTs             string `json:"commitTs"`
+	CreatedAt            string `json:"createdAt"`
+	Message              string `json:"message"`
 }
 
 // ExtractAiCodeCommits parses raw AI code commit records into tool-layer tables.
@@ -71,24 +71,24 @@ func ExtractAiCodeCommits(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 
 			commit := &models.CursorAiCodeCommit{
-				ConnectionId:        data.Options.ConnectionId,
-				ScopeId:             data.Options.ScopeId,
-				CommitHash:          commitHash,
-				UserId:              strings.TrimSpace(record.UserId),
-				UserEmail:           strings.TrimSpace(record.UserEmail),
-				RepoName:            strings.TrimSpace(record.RepoName),
-				BranchName:          strings.TrimSpace(record.BranchName),
-				IsPrimaryBranch:     record.IsPrimaryBranch,
-				CommitSource:        strings.TrimSpace(record.CommitSource),
-				TotalLinesAdded:     record.TotalLinesAdded,
-				TotalLinesDeleted:   record.TotalLinesDeleted,
-				TabLinesAdded:       record.TabLinesAdded,
-				TabLinesDeleted:     record.TabLinesDeleted,
-				ComposerLinesAdded:  record.ComposerLinesAdded,
+				ConnectionId:         data.Options.ConnectionId,
+				ScopeId:              data.Options.ScopeId,
+				CommitHash:           commitHash,
+				UserId:               strings.TrimSpace(record.UserId),
+				UserEmail:            strings.TrimSpace(record.UserEmail),
+				RepoName:             strings.TrimSpace(record.RepoName),
+				BranchName:           strings.TrimSpace(record.BranchName),
+				IsPrimaryBranch:      record.IsPrimaryBranch,
+				CommitSource:         strings.TrimSpace(record.CommitSource),
+				TotalLinesAdded:      record.TotalLinesAdded,
+				TotalLinesDeleted:    record.TotalLinesDeleted,
+				TabLinesAdded:        record.TabLinesAdded,
+				TabLinesDeleted:      record.TabLinesDeleted,
+				ComposerLinesAdded:   record.ComposerLinesAdded,
 				ComposerLinesDeleted: record.ComposerLinesDeleted,
-				NonAiLinesAdded:     record.NonAiLinesAdded,
-				NonAiLinesDeleted:   record.NonAiLinesDeleted,
-				Message:             strings.TrimSpace(record.Message),
+				NonAiLinesAdded:      record.NonAiLinesAdded,
+				NonAiLinesDeleted:    record.NonAiLinesDeleted,
+				Message:              strings.TrimSpace(record.Message),
 			}
 			if ts := parseOptionalISOTime(record.CommitTs); ts != nil {
 				commit.CommitTs = ts

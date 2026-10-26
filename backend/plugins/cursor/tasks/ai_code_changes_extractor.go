@@ -28,15 +28,15 @@ import (
 )
 
 type aiCodeChangeRecord struct {
-	ChangeId        string          `json:"changeId"`
-	UserId          string          `json:"userId"`
-	UserEmail       string          `json:"userEmail"`
-	Source          string          `json:"source"`
-	Model           string          `json:"model"`
-	TotalLinesAdded   int           `json:"totalLinesAdded"`
-	TotalLinesDeleted int           `json:"totalLinesDeleted"`
-	CreatedAt       string          `json:"createdAt"`
-	Metadata        json.RawMessage `json:"metadata"`
+	ChangeId          string          `json:"changeId"`
+	UserId            string          `json:"userId"`
+	UserEmail         string          `json:"userEmail"`
+	Source            string          `json:"source"`
+	Model             string          `json:"model"`
+	TotalLinesAdded   int             `json:"totalLinesAdded"`
+	TotalLinesDeleted int             `json:"totalLinesDeleted"`
+	CreatedAt         string          `json:"createdAt"`
+	Metadata          json.RawMessage `json:"metadata"`
 }
 
 // ExtractAiCodeChanges parses raw AI code change records into tool-layer tables.

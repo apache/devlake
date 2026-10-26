@@ -30,10 +30,10 @@ type CursorAiCodeChange struct {
 	ScopeId      string `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
 	ChangeId     string `gorm:"primaryKey;type:varchar(255)" json:"changeId"`
 
-	UserId          string     `gorm:"type:varchar(255);index" json:"userId"`
-	UserEmail       string     `gorm:"type:varchar(255);index" json:"userEmail"`
-	Source          string     `gorm:"type:varchar(20)" json:"source"`
-	Model           string     `gorm:"type:varchar(255)" json:"model"`
+	UserId            string     `gorm:"type:varchar(255);index" json:"userId"`
+	UserEmail         string     `gorm:"type:varchar(255);index" json:"userEmail"`
+	Source            string     `gorm:"type:varchar(20)" json:"source"`
+	Model             string     `gorm:"type:varchar(255)" json:"model"`
 	TotalLinesAdded   int        `json:"totalLinesAdded"`
 	TotalLinesDeleted int        `json:"totalLinesDeleted"`
 	IngestedAt        *time.Time `gorm:"column:ingested_at" json:"createdAt"`
