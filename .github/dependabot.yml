@@ -283,7 +283,7 @@ updates:
       time: "06:00"
       timezone: Etc/UTC
     cooldown:
-      default: 4
+      default-days: 4
     open-pull-requests-limit: 5
     commit-message:
       prefix: build(deps)
