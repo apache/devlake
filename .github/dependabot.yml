@@ -264,6 +264,17 @@ updates:
   # Dependabot never proposes a change of action *namespace*. Migrating to a
   # differently owned action stays a manual step because ASF infrastructure
   # maintains an allow-list of permitted actions.
+  #
+  # Dependabot knows nothing about that allow-list: it resolves the newest
+  # upstream tag and opens a PR whether or not ASF has reviewed the release
+  # yet. The allow-list is only updated when infra merges the matching
+  # Dependabot PR in apache/infrastructure-actions, so a bump proposed here
+  # before that review has landed cannot run and cannot be merged (PR #9116
+  # proposed docker/setup-qemu-action v4.3.0 on 2026-09-05, while the allow-list
+  # still stopped at v4.2.0). The cooldown below is the ASF-recommended way to
+  # let that review land first; `.github/workflows/asf-allowlist-check.yml`
+  # turns any remaining race into a visible failing check instead of a silent
+  # "Startup failure" at run time.
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -271,6 +282,8 @@ updates:
       day: monday
       time: "06:00"
       timezone: Etc/UTC
+    cooldown:
+      default: 4
     open-pull-requests-limit: 5
     commit-message:
       prefix: build(deps)
