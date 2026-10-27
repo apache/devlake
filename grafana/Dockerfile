@@ -37,8 +37,10 @@ ENV GF_SERVER_PROTOCOL=http
 ENV GF_SERVER_DOMAIN=localhost:3000
 ENV GF_SERVER_ROOT_URL=http://localhost:3000/grafana
 USER root
+# apk upgrade picks up Alpine security fixes that the base tag does not contain yet
 # grafana-piechart-panel removed: dashboards use the core "piechart" panel type
-RUN chmod +x /entrypoint.sh && \
+RUN apk upgrade --no-cache && \
+    chmod +x /entrypoint.sh && \
     chgrp -R 0 /etc/grafana /usr/share/grafana /var/lib/grafana && \
     chmod -R g=u /etc/grafana /usr/share/grafana /var/lib/grafana
 USER 101
