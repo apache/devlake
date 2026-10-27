@@ -38,6 +38,7 @@ import { JiraConfig } from './jira';
 import { KiroConfig } from './kiro';
 import { LinearConfig } from './linear';
 import { PagerDutyConfig } from './pagerduty';
+import { RedmineConfig } from './redmine';
 import { RootlyConfig } from './rootly';
 import { SonarQubeConfig } from './sonarqube';
 import { TAPDConfig } from './tapd';
@@ -72,6 +73,7 @@ export const pluginConfigs: IPluginConfig[] = [
   KiroConfig,
   LinearConfig,
   PagerDutyConfig,
+  RedmineConfig,
   RootlyConfig,
   SlackConfig,
   TempoConfig,

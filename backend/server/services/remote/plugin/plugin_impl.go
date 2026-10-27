@@ -48,13 +48,6 @@ type (
 		openApiSpec       string
 		connHelper        *api.ConnectionApiHelper
 	}
-	RemotePluginTaskData struct {
-		DbUrl       string                 `json:"db_url"`
-		Scope       interface{}            `json:"scope"`
-		Connection  interface{}            `json:"connection"`
-		ScopeConfig interface{}            `json:"scope_config"`
-		Options     map[string]interface{} `json:"options"`
-	}
 )
 
 func newPlugin(info *models.PluginInfo, invoker bridge.Invoker) (*remotePluginImpl, errors.Error) {
@@ -177,7 +170,7 @@ func (p *remotePluginImpl) PrepareTaskData(taskCtx plugin.TaskContext, options m
 		return nil, err
 	}
 
-	return RemotePluginTaskData{
+	return models.RemotePluginTaskData{
 		DbUrl:       dbUrl,
 		Scope:       scope,
 		Connection:  connection,

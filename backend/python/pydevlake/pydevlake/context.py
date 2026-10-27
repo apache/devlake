@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+from typing import Optional
 
 from sqlalchemy.engine import Engine
 
@@ -25,12 +27,14 @@ class Context:
                  connection: Connection,
                  scope: ToolScope,
                  scope_config: ScopeConfig,
-                 options: dict = None):
+                 options: dict = None,
+                 time_after: Optional[datetime.datetime] = None):
         self.engine = engine
         self.connection = connection
         self.scope = scope
         self.scope_config = scope_config
         self.options = options or {}
+        self.time_after = time_after
         self._engine = None
 
     @property

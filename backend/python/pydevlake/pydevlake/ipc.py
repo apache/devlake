@@ -24,6 +24,7 @@ from fire.decorators import SetParseFn
 from sqlmodel import create_engine
 from sqlalchemy.engine import Engine
 
+from pydevlake.collection_time import parse_time_after
 from pydevlake.context import Context
 from pydevlake.message import Message
 from pydevlake.model import SubtaskRun
@@ -122,7 +123,9 @@ class PluginCommands:
         scope_config_dict = data.get('scope_config') or {}
         scope_config = self._plugin.scope_config_type(**scope_config_dict)
         options = data.get('options', {})
-        return Context(create_db_engine(db_url), connection, scope, scope_config, options)
+        sync_policy = data.get('sync_policy') or {}
+        time_after = parse_time_after(sync_policy.get('timeAfter'))
+        return Context(create_db_engine(db_url), connection, scope, scope_config, options, time_after)
 
 def create_db_engine(db_url) -> Engine:
     # SQLAlchemy doesn't understand postgres:// scheme

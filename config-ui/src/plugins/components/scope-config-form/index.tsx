@@ -39,6 +39,7 @@ import { GhCopilotTransformation } from '@/plugins/register/gh-copilot';
 import { AsanaTransformation } from '@/plugins/register/asana';
 import { ClickUpTransformation } from '@/plugins/register/clickup';
 import { YoutrackTransformation } from '@/plugins/register/youtrack';
+import { RedmineTransformation } from '@/plugins/register/redmine';
 import { DOC_URL } from '@/release';
 import { operator } from '@/utils';
 
@@ -333,6 +334,14 @@ export const ScopeConfigForm = ({
                   entities={entities}
                   connectionId={connectionId}
                   scopeConfigId={scopeConfigId}
+                  transformation={transformation}
+                  setTransformation={setTransformation}
+                />
+              )}
+
+              {plugin === 'redmine' && (
+                <RedmineTransformation
+                  entities={entities}
                   transformation={transformation}
                   setTransformation={setTransformation}
                 />

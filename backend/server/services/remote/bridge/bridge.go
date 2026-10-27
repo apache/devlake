@@ -19,6 +19,7 @@ package bridge
 
 import (
 	"github.com/apache/devlake/core/errors"
+	coreModels "github.com/apache/devlake/core/models"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/server/services/remote/models"
 )
@@ -37,9 +38,23 @@ func NewBridge(invoker Invoker) *Bridge {
 	return &Bridge{invoker: invoker}
 }
 
+func enrichRemoteTaskData(ctx plugin.SubTaskContext) interface{} {
+	data := ctx.GetData()
+	taskData, ok := data.(models.RemotePluginTaskData)
+	if !ok {
+		return data
+	}
+	syncPolicy := ctx.TaskContext().SyncPolicy()
+	if syncPolicy == nil {
+		syncPolicy = &coreModels.SyncPolicy{}
+	}
+	models.ApplySyncPolicy(&taskData, syncPolicy)
+	return taskData
+}
+
 func (b *Bridge) RemoteSubtaskEntrypointHandler(subtaskMeta models.SubtaskMeta) plugin.SubTaskEntryPoint {
 	return func(ctx plugin.SubTaskContext) errors.Error {
-		args := []interface{}{ctx.GetData()}
+		args := []interface{}{enrichRemoteTaskData(ctx)}
 		for _, arg := range subtaskMeta.Arguments {
 			args = append(args, arg)
 		}

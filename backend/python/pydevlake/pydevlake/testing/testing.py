@@ -35,6 +35,8 @@ class ContextBuilder:
         self.connection = None
         self.scope = None
         self.scope_config = None
+        self.options = None
+        self.time_after = None
 
     def with_connection(self, id=1, name='test_connection', **kwargs):
         self.connection = self.plugin.connection_type(id=id, name=name, **kwargs)
@@ -50,16 +52,32 @@ class ContextBuilder:
         self.scope_config = self.plugin.scope_config_type(id=id, name=name, **kwargs)
         return self
 
+    def with_options(self, **kwargs):
+        self.options = kwargs
+        return self
+
+    def with_time_after(self, time_after):
+        self.time_after = time_after
+        return self
+
     def build(self):
-        return make_context(self.connection, self.scope, self.scope_config)
+        return make_context(
+            self.connection,
+            self.scope,
+            self.scope_config,
+            options=self.options,
+            time_after=self.time_after,
+        )
 
 
-def make_context(connection, scope, scope_config):
+def make_context(connection, scope, scope_config, options=None, time_after=None):
     return Context(
         engine=create_engine('sqlite:///:memory:'),
         scope=scope,
         connection=connection,
-        scope_config=scope_config
+        scope_config=scope_config,
+        options=options,
+        time_after=time_after,
     )
 
 
