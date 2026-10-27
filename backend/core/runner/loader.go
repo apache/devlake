@@ -91,7 +91,6 @@ func LoadGoPlugins(basicRes context.BasicRes) errors.Error {
 func LoadRemotePlugins(basicRes context.BasicRes) errors.Error {
 	remotePluginDir := basicRes.GetConfig("REMOTE_PLUGIN_DIR")
 	if remotePluginDir != "" {
-		basicRes.GetLogger().Warn(nil, "DEPRECATION WARNING: The Python plugin framework (PyDevLake) is deprecated and will be removed in 3 months. See https://github.com/apache/devlake/issues/9092 for the deprecation plan and migration guide. Please migrate Python plugins (e.g. azuredevops) to the Go-based equivalents (e.g. azuredevops_go).")
 		basicRes.GetLogger().Info("Loading remote plugins")
 		remote.Init(basicRes)
 		walkErr := filepath.WalkDir(remotePluginDir, func(path string, d fs.DirEntry, err error) error {

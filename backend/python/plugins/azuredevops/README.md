@@ -15,16 +15,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 # Azure Devops Python Plugin
-
-> **⚠️ DEPRECATED — Scheduled for removal in 3 months.**
-> This Python `azuredevops` plugin is deprecated in favor of the Go-based
-> [`azuredevops_go`](../../plugins/azuredevops_go) plugin, which has broader
-> feature coverage (including Azure DevOps Server / on-premises support, #9014).
->
-> Please migrate existing connections and scopes to `azuredevops_go`. A migration
-> guide will be published during the deprecation window — see
-> [#9092](https://github.com/apache/devlake/issues/9092) for the full plan and
-> timeline.
->
-> No new features or fixes (other than critical security fixes) will be accepted
-> on this plugin.

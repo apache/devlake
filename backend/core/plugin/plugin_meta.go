@@ -44,14 +44,6 @@ type PluginIcon interface {
 	SvgIcon() string
 }
 
-// PluginDeprecation is implemented by plugins that have been deprecated.
-// The DeprecationMessage should describe why the plugin is deprecated and
-// what users should migrate to. Returns an empty string for non-deprecated
-// plugins.
-type PluginDeprecation interface {
-	DeprecationMessage() string
-}
-
 // PluginSource abstracts data sources
 type PluginSource interface {
 	Connection() dal.Tabler

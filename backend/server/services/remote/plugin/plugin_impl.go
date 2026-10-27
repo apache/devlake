@@ -238,16 +238,4 @@ func (p *remotePluginImpl) MigrationScripts() []plugin.MigrationScript {
 	return append(p.migrationScripts, migrationscripts.All(p.name)...)
 }
 
-// DeprecationMessage implements plugin.PluginDeprecation. All remote (Python)
-// plugins are deprecated and scheduled for removal in 3 months per the
-// deprecation plan in issue #9092.
-func (p *remotePluginImpl) DeprecationMessage() string {
-	return fmt.Sprintf(
-		"This Python plugin (%s) is DEPRECATED and will be removed in 3 months. "+
-			"Please migrate to the Go-based equivalent. "+
-			"See https://github.com/apache/devlake/issues/9092 for the deprecation plan and migration guide.",
-		p.name,
-	)
-}
-
 var _ models.RemotePlugin = (*remotePluginImpl)(nil)

@@ -22,8 +22,6 @@ export interface IPluginConfig {
   icon: ({ color }: { color: string }) => React.ReactNode;
   sort: number;
   isBeta?: boolean;
-  isDeprecated?: boolean;
-  deprecationMessage?: string;
   connection: {
     docLink: string;
     initialValues?: Record<string, any>;

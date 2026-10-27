@@ -75,9 +75,8 @@ type PluginMetric struct {
 }
 
 type PluginMeta struct {
-	Plugin     string       `json:"plugin"`
-	Metric     PluginMetric `json:"metric"`
-	Deprecated bool         `json:"deprecated"`
+	Plugin string       `json:"plugin"`
+	Metric PluginMetric `json:"metric"`
 }
 
 type PluginMetas []PluginMeta
@@ -206,10 +205,6 @@ func GetPluginMetas(c *gin.Context) {
 	err := plugin.TraversalPlugin(func(name string, p plugin.PluginMeta) errors.Error {
 		pluginMeta := PluginMeta{
 			Plugin: name,
-		}
-
-		if dp, ok := p.(plugin.PluginDeprecation); ok {
-			pluginMeta.Deprecated = dp.DeprecationMessage() != ""
 		}
 
 		// if this plugin has the plugin task info

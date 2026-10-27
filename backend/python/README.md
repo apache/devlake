@@ -16,28 +16,6 @@ limitations under the License.
 -->
 # Pydevlake
 
-> **⚠️ DEPRECATED — Scheduled for removal.**
-> The Python plugin framework (PyDevLake) is deprecated and will be removed from
-> Apache DevLake in 3 months per the deprecation plan in
-> [#9092](https://github.com/apache/devlake/issues/9092).
->
-> Reasons:
-> - Only one plugin (`azuredevops`) ever shipped on this framework; the `dbt`
->   plugin was already removed (#8970).
-> - No feature/fix commits to Python plugins since Dec 2025; only dependency
->   refreshes and runtime bumps land.
-> - A fully-featured Go implementation, `azuredevops_go`, now supersedes the
->   Python `azuredevops` plugin (including on-premises support, #9014).
->
-> **What you should do:**
-> - New plugins: write them in **Go**. See `backend/plugins/` for 40+ reference
->   implementations.
-> - Existing `azuredevops` (Python) users: migrate to `azuredevops_go` (a
->   migration guide will be published during the deprecation window).
->
-> No new Python plugins will be accepted. Only critical security fixes will land
-> during the deprecation window.
-
 Pydevlake is a framework for writing plugins for [DevLake](https://devlake.apache.org/) in Python. The framework source code
 can be found in [here](./pydevlake).
 
