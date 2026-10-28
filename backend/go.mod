@@ -36,7 +36,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.1
 	github.com/swaggo/swag v1.16.6
 	github.com/tidwall/gjson v1.20.0
-	github.com/viant/afs v1.30.0
+	github.com/viant/afs v1.30.1
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	golang.org/x/mod v0.42.0
 	golang.org/x/oauth2 v0.37.0
