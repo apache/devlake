@@ -27,7 +27,7 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
       - uses: actions/checkout@v7
       - name: Set git config
