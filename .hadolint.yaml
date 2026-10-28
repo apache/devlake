@@ -1,0 +1,56 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+failure-threshold: warning
+
+trustedRegistries:
+  - docker.io
+  - mcr.microsoft.com
+  - golang
+  - node
+  - alpine
+  - grafana
+
+ignored:
+  # DL3003: Use WORKDIR to switch to a directory — baselined
+  - DL3003
+  # DL3007: Using latest is prone to errors — baselined for dev containers
+  - DL3007
+  # DL3008: Pin versions in apt-get — versions managed by base image
+  - DL3008
+  # DL3009: Delete apt-get lists — baselined
+  - DL3009
+  # DL3013: Pin pip versions — managed externally
+  - DL3013
+  # DL3015: Avoid additional packages without --no-install-recommends — baselined
+  - DL3015
+  # DL3018: Pin versions in apk — versions managed by base image
+  - DL3018
+  # DL3025: Use JSON notation for CMD/ENTRYPOINT — baselined
+  - DL3025
+  # DL3027: Do not use apt, use apt-get — baselined
+  - DL3027
+  # DL3029: Do not use --platform with FROM — intentional for multi-arch builds
+  - DL3029
+  # DL3042: Avoid pip cache directory — baselined
+  - DL3042
+  # DL3047: Avoid wget without progress bar — baselined
+  - DL3047
+  # DL3059: Multiple consecutive RUN — intentional for layer caching
+  - DL3059
+  # DL4001: Either use Wget or Curl — multiple download methods used
+  - DL4001
+  # DL4006: Set SHELL -o pipefail — baselined for existing Dockerfiles
+  - DL4006

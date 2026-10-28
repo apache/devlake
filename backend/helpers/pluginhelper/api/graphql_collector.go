@@ -20,6 +20,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -187,9 +188,11 @@ func (collector *GraphqlCollector) Execute() errors.Error {
 	collector.args.GraphqlClient.Wait()
 
 	if collector.HasError() {
+		for i, workerErr := range collector.workerErrors {
+			logger.Error(nil, "graphql collector worker error [%d/%d]: %s", i+1, len(collector.workerErrors), workerErr)
+		}
 		err = errors.Default.Combine(collector.workerErrors)
 		logger.Error(err, "ended Graphql collector execution with error")
-		logger.Error(collector.workerErrors[0], "the first error of them")
 		return err
 	} else {
 		logger.Info("ended api collection without error")
@@ -270,7 +273,9 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 			// direct error message for error combine
 			collector.checkError(err)
 		} else {
-			collector.checkError(errors.Default.Wrap(err, `graphql query failed`))
+			msg := formatGraphqlQueryFailure(err, variables)
+			logger.Error(nil, "%s", msg)
+			collector.checkError(errors.Default.New(msg))
 		}
 		return
 	}
@@ -279,11 +284,13 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 			hasNonIgnorableDataErrors := false
 			for _, dataError := range dataErrors {
 				if isIgnorableGraphqlQueryError(dataError) {
-					logger.Warn(nil, "Issue may have been transferred or deleted.")
+					logger.Warn(nil, "ignorable graphql data error (issue transferred or deleted): %s", formatGraphqlDataError(dataError, variables))
 					continue
 				}
 				hasNonIgnorableDataErrors = true
-				collector.checkError(errors.Default.Wrap(dataError, `graphql query got error`))
+				msg := formatGraphqlDataError(dataError, variables)
+				logger.Error(nil, "%s", msg)
+				collector.checkError(errors.Default.New(msg))
 			}
 			if hasNonIgnorableDataErrors {
 				return
@@ -350,6 +357,33 @@ func (collector *GraphqlCollector) HasError() bool {
 
 func isIgnorableGraphqlQueryError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "Could not resolve to an Issue")
+}
+
+func formatGraphqlQueryFailure(err error, variables map[string]interface{}) string {
+	return fmt.Sprintf("graphql query failed: %s%s", err.Error(), formatGraphqlVariables(variables))
+}
+
+func formatGraphqlDataError(err error, variables map[string]interface{}) string {
+	msg := err.Error()
+	if de, ok := err.(graphql.DataError); ok && len(de.Locations) > 0 {
+		locs := make([]string, 0, len(de.Locations))
+		for _, loc := range de.Locations {
+			locs = append(locs, fmt.Sprintf("line %d col %d", loc.Line, loc.Column))
+		}
+		msg = fmt.Sprintf("%s (%s)", msg, strings.Join(locs, ", "))
+	}
+	return fmt.Sprintf("graphql query got error: %s%s", msg, formatGraphqlVariables(variables))
+}
+
+func formatGraphqlVariables(variables map[string]interface{}) string {
+	if len(variables) == 0 {
+		return ""
+	}
+	varsJSON, err := json.Marshal(variables)
+	if err != nil {
+		return fmt.Sprintf(" variables=%v", variables)
+	}
+	return fmt.Sprintf(" variables=%s", varsJSON)
 }
 
 var _ plugin.SubTask = (*GraphqlCollector)(nil)

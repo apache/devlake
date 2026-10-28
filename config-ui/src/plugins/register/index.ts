@@ -18,6 +18,8 @@
 
 import { IPluginConfig } from '@/types';
 
+import { AgentReadyConfig } from './agentready';
+import { AisdlcConfig } from './aisdlc';
 import { ArgoCDConfig } from './argocd';
 import { AsanaConfig } from './asana';
 import { AzureConfig, AzureGoConfig } from './azure';
@@ -27,6 +29,7 @@ import { BitbucketServerConfig } from './bitbucket-server';
 import { CircleCIConfig } from './circleci';
 import { ClaudeCodeConfig } from './claude-code';
 import { ClickUpConfig } from './clickup';
+import { CodecovConfig } from './codecov';
 import { CursorConfig } from './cursor';
 import { GitHubConfig } from './github';
 import { GhCopilotConfig } from './gh-copilot';
@@ -48,10 +51,13 @@ import { ZenTaoConfig } from './zentao';
 import { OpsgenieConfig } from './opsgenie';
 import { TeambitionConfig } from './teambition';
 import { TestmoConfig } from './testmo';
+import { TestRegistryConfig } from './testregistry';
 import { SlackConfig } from './slack/config';
 import { TempoConfig } from './tempo';
 
 export const pluginConfigs: IPluginConfig[] = [
+  AgentReadyConfig,
+  AisdlcConfig,
   ArgoCDConfig,
   AsanaConfig,
   AzureConfig,
@@ -62,6 +68,7 @@ export const pluginConfigs: IPluginConfig[] = [
   CircleCIConfig,
   ClaudeCodeConfig,
   ClickUpConfig,
+  CodecovConfig,
   CursorConfig,
   GitHubConfig,
   GhCopilotConfig,
@@ -80,6 +87,7 @@ export const pluginConfigs: IPluginConfig[] = [
   SonarQubeConfig,
   TAPDConfig,
   TestmoConfig,
+  TestRegistryConfig,
   ZenTaoConfig,
   WebhookConfig,
   YoutrackConfig,

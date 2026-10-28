@@ -22,6 +22,9 @@ import (
 
 	"github.com/apache/devlake/helpers/unithelper"
 	ae "github.com/apache/devlake/plugins/ae/impl"
+	agentready "github.com/apache/devlake/plugins/agentready/impl"
+	aireview "github.com/apache/devlake/plugins/aireview/impl"
+	aisdlc "github.com/apache/devlake/plugins/aisdlc/impl"
 	argocd "github.com/apache/devlake/plugins/argocd/impl"
 	asana "github.com/apache/devlake/plugins/asana/impl"
 	azuredevops "github.com/apache/devlake/plugins/azuredevops_go/impl"
@@ -31,6 +34,7 @@ import (
 	circleci "github.com/apache/devlake/plugins/circleci/impl"
 	claudeCode "github.com/apache/devlake/plugins/claude_code/impl"
 	clickup "github.com/apache/devlake/plugins/clickup/impl"
+	codecov "github.com/apache/devlake/plugins/codecov/impl"
 	cursor "github.com/apache/devlake/plugins/cursor/impl"
 	customize "github.com/apache/devlake/plugins/customize/impl"
 	dora "github.com/apache/devlake/plugins/dora/impl"
@@ -47,6 +51,7 @@ import (
 	issueTrace "github.com/apache/devlake/plugins/issue_trace/impl"
 	jenkins "github.com/apache/devlake/plugins/jenkins/impl"
 	jira "github.com/apache/devlake/plugins/jira/impl"
+	jiraSnowflake "github.com/apache/devlake/plugins/jira_snowflake/impl"
 	kiro "github.com/apache/devlake/plugins/kiro/impl"
 	linear "github.com/apache/devlake/plugins/linear/impl"
 	linker "github.com/apache/devlake/plugins/linker/impl"
@@ -64,6 +69,7 @@ import (
 	teambition "github.com/apache/devlake/plugins/teambition/impl"
 	tempo "github.com/apache/devlake/plugins/tempo/impl"
 	testmo "github.com/apache/devlake/plugins/testmo/impl"
+	testregistry "github.com/apache/devlake/plugins/testregistry/impl"
 	trello "github.com/apache/devlake/plugins/trello/impl"
 	webhook "github.com/apache/devlake/plugins/webhook/impl"
 	youtrack "github.com/apache/devlake/plugins/youtrack/impl"
@@ -75,6 +81,9 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker := unithelper.NewTableInfoChecker(unithelper.TableInfoCheckerConfig{
 		ValidatePluginCount: true,
 	})
+	checker.FeedIn("agentready/models", agentready.AgentReady{}.GetTablesInfo)
+	checker.FeedIn("aireview/models", aireview.AiReview{}.GetTablesInfo)
+	checker.FeedIn("aisdlc/models", aisdlc.Aisdlc{}.GetTablesInfo)
 	checker.FeedIn("ae/models", ae.AE{}.GetTablesInfo)
 	checker.FeedIn("azuredevops_go/models", azuredevops.Azuredevops{}.GetTablesInfo)
 	checker.FeedIn("bamboo/models", bamboo.Bamboo{}.GetTablesInfo)
@@ -95,6 +104,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("incidentio/models", incidentio.Incidentio{}.GetTablesInfo)
 	checker.FeedIn("jenkins/models", jenkins.Jenkins{}.GetTablesInfo)
 	checker.FeedIn("jira/models", jira.Jira{}.GetTablesInfo)
+	checker.FeedIn("jira_snowflake/models", jiraSnowflake.JiraSnowflake{}.GetTablesInfo)
 	checker.FeedIn("linear/models", linear.Linear{}.GetTablesInfo)
 	checker.FeedIn("org", org.Org{}.GetTablesInfo)
 	checker.FeedIn("pagerduty/models", pagerduty.PagerDuty{}.GetTablesInfo)
@@ -108,6 +118,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("teambition/models", teambition.Teambition{}.GetTablesInfo)
 	checker.FeedIn("tempo/models", tempo.Tempo{}.GetTablesInfo)
 	checker.FeedIn("testmo/models", testmo.Testmo{}.GetTablesInfo)
+	checker.FeedIn("testregistry/models", testregistry.TestRegistry{}.GetTablesInfo)
 	checker.FeedIn("trello/models", trello.Trello{}.GetTablesInfo)
 	checker.FeedIn("webhook/models", webhook.Webhook{}.GetTablesInfo)
 	checker.FeedIn("youtrack/models", youtrack.Youtrack{}.GetTablesInfo)
@@ -116,6 +127,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("cursor/models", cursor.Cursor{}.GetTablesInfo)
 	checker.FeedIn("circleci/models", circleci.Circleci{}.GetTablesInfo)
 	checker.FeedIn("clickup/models", clickup.ClickUp{}.GetTablesInfo)
+	checker.FeedIn("codecov/models", codecov.Codecov{}.GetTablesInfo)
 	checker.FeedIn("opsgenie/models", opsgenie.Opsgenie{}.GetTablesInfo)
 	checker.FeedIn("linker/models", linker.Linker{}.GetTablesInfo)
 	checker.FeedIn("issue_trace/models", issueTrace.IssueTrace{}.GetTablesInfo)

@@ -105,7 +105,7 @@ func setDefaultValue(v *viper.Viper) {
 	v.SetDefault("REMOTE_PLUGIN_DIR", "python/plugins")
 	v.SetDefault("SWAGGER_DOCS_DIR", "resources/swagger")
 	v.SetDefault("RESUME_PIPELINES", true)
-	// v.SetDefault("CORS_ALLOW_ORIGIN", "*")
+	v.SetDefault("CORS_ALLOW_ORIGIN", "*")
 	v.SetDefault("CONSUME_PIPELINES", true)
 }
 

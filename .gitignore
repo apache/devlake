@@ -172,3 +172,21 @@ venv
 /backend/plugins/gitextractor/parser/demo_repo/
 
 __debug_bin*
+
+# AI assistant runtime data
+.claude-flow/
+.hive-mind/
+
+# Sensitive files
+cookies.txt
+custom-ca.crt
+
+# agentready assessment reports
+.agentready/
+
+# E2E coverage data
+e2e-coverage/
+e2e/coverage/
+e2e/playwright-report/
+e2e/test-results/
+backend/coverage.out

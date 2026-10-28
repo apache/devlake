@@ -1,0 +1,68 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: 80%
+        informational: true
+
+ignore:
+  - "grafana/**"
+  - "devops/**"
+  - "backend/mocks/**"
+  - "backend/test/**"
+  - "backend/python/test/**"
+  - "**/mock_*.go"
+  - "**/*_mock.go"
+  - "**/*_test.go"
+  - "**/*_test.py"
+  - ".github/**"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.toml"
+  - "**/*.sh"
+  - "**/*.md"
+
+flags:
+  unit-tests-go:
+    carryforward: true
+    paths:
+      - backend/plugins/aireview/
+      - backend/plugins/codecov/
+      - backend/plugins/testregistry/
+  unit-tests-python:
+    carryforward: true
+    paths:
+      - backend/python/
+  e2e-go:
+    carryforward: true
+    paths:
+      - backend/plugins/aireview/
+      - backend/plugins/codecov/
+      - backend/plugins/testregistry/
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  require_changes: true

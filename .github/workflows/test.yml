@@ -79,3 +79,51 @@ jobs:
         cp env.example .env
         cd backend
         make unit-test
+    - name: Custom plugins coverage
+      if: always()
+      run: |
+        cd backend
+        bash scripts/coverage-custom-plugins.sh
+    - name: Upload coverage artifacts
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: unit-coverage
+        if-no-files-found: warn
+        retention-days: 1
+        path: |
+          backend/coverage-custom-plugins.out
+          backend/python/coverage/
+
+  # Fork-only: upload from the Ubuntu runner so codecov-action has gpg.
+  upload-coverage:
+    needs: test
+    if: always() && needs.test.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        name: unit-coverage
+        path: backend
+        if-no-artifact-found: warn
+    - name: Upload Go coverage to Codecov
+      uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
+      with:
+        use_oidc: true
+        flags: unit-tests-go
+        files: backend/coverage-custom-plugins.out
+        fail_ci_if_error: false
+    - name: Upload Python coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
+      with:
+        use_oidc: true
+        flags: unit-tests-python
+        directory: backend/python/coverage
+        fail_ci_if_error: false

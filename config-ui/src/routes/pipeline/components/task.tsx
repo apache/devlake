@@ -92,6 +92,9 @@ export const PipelineTask = ({ task }: Props) => {
       case ['argocd'].includes(config.plugin):
         name = `${name}:${options.ApplicationName}`;
         break;
+      case ['codecov'].includes(config.plugin):
+        name = `${name}:${options.fullName}`;
+        break;
     }
 
     return [config.icon, name];

@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-07-25T01:55:16.703430",
+  "dry_run": false,
+  "run_id": "artifacts",
+  "timestamp": "2026-07-25T01:55:16.703430",
+  "strategies": [
+    {
+      "strat_id": "RHAISTRAT-2370",
+      "title": "Validated Kimi K3 Model for Red Hat AI and AI Hub",
+      "source_rfe": "RHAIRFE-2887",
+      "priority": "Major",
+      "status": "Draft",
+      "size": null,
+      "recommendation": "",
+      "needs_attention": false,
+      "scores": null,
+      "labels": [
+        "strat-creator-auto-created"
+      ]
+    },
+    {
+      "strat_id": "RHAISTRAT-2371",
+      "title": "Agentic SDLC: auto-create observability instrumentation tickets (metrics, traces, logs) for component RFE/STRATs",
+      "source_rfe": "RHAIRFE-2892",
+      "priority": "Major",
+      "status": "Refined",
+      "size": "M",
+      "recommendation": "approve",
+      "needs_attention": false,
+      "scores": {
+        "feasibility": 1,
+        "testability": 1,
+        "scope": 2,
+        "architecture": 2,
+        "total": 6
+      },
+      "labels": [
+        "strat-creator-auto-created",
+        "strat-creator-auto-refined",
+        "strat-creator-rubric-pass"
+      ]
+    }
+  ]
+}

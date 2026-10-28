@@ -1,0 +1,139 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_DEVLAKE",
+      "label": "DevLake",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "title": "Most Common Failures",
+      "type": "barchart",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  f.attribute_name,\n  COUNT(*) AS failure_count\nFROM _tool_agentready_findings f\nJOIN project_mapping pm ON f.repo_id = pm.row_id AND pm.`table` = 'repos'\nWHERE f.status = 'fail' AND pm.project_name in (${project})\nGROUP BY f.attribute_id, f.attribute_name\nORDER BY failure_count DESC\nLIMIT 15",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "title": "Tier Pass Rates Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  DATE(m.assessed_at) AS time,\n  AVG(m.tier1_pass_rate) AS 'Essential',\n  AVG(m.tier2_pass_rate) AS 'Critical',\n  AVG(m.tier3_pass_rate) AS 'Important',\n  AVG(m.tier4_pass_rate) AS 'Advanced'\nFROM _tool_agentready_metrics m\nJOIN project_mapping pm ON m.repo_id = pm.row_id AND pm.`table` = 'repos'\nWHERE pm.project_name in (${project}) AND $__timeFilter(m.assessed_at)\nGROUP BY DATE(m.assessed_at)\nORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5
+          }
+        }
+      }
+    },
+    {
+      "title": "Remediation Backlog",
+      "type": "table",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 10 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  f.attribute_name,\n  f.category,\n  f.tier,\n  f.default_weight,\n  COUNT(DISTINCT f.repo_id) AS affected_repos,\n  f.remediation_summary\nFROM _tool_agentready_findings f\nJOIN project_mapping pm ON f.repo_id = pm.row_id AND pm.`table` = 'repos'\nWHERE f.status = 'fail' AND pm.project_name in (${project})\nGROUP BY f.attribute_id, f.attribute_name, f.category, f.tier, f.default_weight, f.remediation_summary\nORDER BY f.tier ASC, f.default_weight DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "affected_repos" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 3 },
+                    { "color": "red", "value": 5 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["agentready", "devlake"],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_DEVLAKE",
+        "type": "datasource",
+        "query": "mysql"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": "${DS_DEVLAKE}",
+        "definition": "select distinct name from projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "select distinct name from projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "title": "AgentReady - Findings Analysis",
+  "uid": "agentready-findings-analysis"
+}

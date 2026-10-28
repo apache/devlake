@@ -1,0 +1,12 @@
+sha,message,author_name,author_email,authored_date
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,"Fix nil check
+
+Co-Authored-By: Cursor <cursoragent@cursor.com>",Alice,alice@example.com,2026-03-01T10:00:00.000+00:00
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,"Add tests
+
+Co-Authored-By: Claude <noreply@anthropic.com>",Bob,bob@example.com,2026-03-02T10:00:00.000+00:00
+cccccccccccccccccccccccccccccccccccccccc,"lint
+
+Co-Authored-By: Copilot <copilot@github.com>",Carol,carol@example.com,2026-03-03T10:00:00.000+00:00
+dddddddddddddddddddddddddddddddddddddddd,Document how we evaluated Claude vs Copilot for reviews,Dave,dave@example.com,2026-03-04T10:00:00.000+00:00
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee,Apply suggestions from code review,coderabbitai[bot],136622811+coderabbitai[bot]@users.noreply.github.com,2026-03-05T10:00:00.000+00:00

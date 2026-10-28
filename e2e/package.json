@@ -1,14 +1,17 @@
 {
   "name": "e2e",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Playwright e2e tests with coverage",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx playwright test basic-flow.spec.ts",
+    "test:all": "npx playwright test",
+    "test:coverage": "npx playwright test basic-flow.spec.ts",
+    "test:codecov": "npx playwright test codecov-flow.spec.ts --timeout=900000"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "type": "commonjs",
   "dependencies": {
     "@playwright/test": "^1.64.1"

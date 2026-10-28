@@ -29,6 +29,7 @@ import { ConnectionSecretKey } from './secret-key';
 interface Props {
   type: 'create' | 'update';
   name: string;
+  connectionId?: ID;
   fields: any[];
   initialValues: any;
   values: any;
@@ -37,7 +38,7 @@ interface Props {
   setErrors: (errors: any) => void;
 }
 
-export const Form = ({ type, name, fields, initialValues, values, errors, setValues, setErrors }: Props) => {
+export const Form = ({ type, name, connectionId, fields, initialValues, values, errors, setValues, setErrors }: Props) => {
   const onValues = (values: any) => setValues((prev: any) => ({ ...prev, ...values }));
   const onErrors = (values: any) => setErrors((prev: any) => ({ ...prev, ...values }));
 
@@ -57,6 +58,7 @@ export const Form = ({ type, name, fields, initialValues, values, errors, setVal
       if (typeof field === 'function') {
         return field({
           type,
+          connectionId,
           initialValues,
           values,
           setValues: onValues,

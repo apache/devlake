@@ -41,7 +41,16 @@ export interface IConnectionAPI {
   rateLimitPerHour?: number;
   organization?: string;
   organizationId?: string;
+  enterprise?: string;
+  service?: string;
   customHeaders?: ICustomHeader[];
+  ciTool?: string;
+  quayOrganization?: string;
+  githubOrganization?: string;
+  githubToken?: string;
+  project?: string;
+  junitRegex?: string;
+  gitlabConnectionId?: number;
 }
 
 export interface IConnectionTestResult {
@@ -101,5 +110,14 @@ export interface IConnection {
   rateLimitPerHour?: number;
   organization?: string;
   organizationId?: string;
+  enterprise?: string;
+  service?: string;
   customHeaders?: ICustomHeader[];
+  ciTool?: string;
+  quayOrganization?: string;
+  githubOrganization?: string;
+  githubToken?: string;
+  project?: string;
+  junitRegex?: string;
+  gitlabConnectionId?: number;
 }

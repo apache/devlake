@@ -27,6 +27,7 @@ import { PATHS } from '@/config';
 import { IProject } from '@/types';
 import { operator } from '@/utils';
 
+import { AiReviewScopeConfigModal } from './aireview-scope-config-modal';
 import * as S from './styled';
 
 const RegexPrIssueDefaultValue = '(?mi)(Closes)[\\s]*.*(((and )?#\\d+[ ]*)+)';
@@ -68,6 +69,11 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
     enable: false,
     subProjects: [emptySubProject],
   });
+  const [aiReview, setAiReview] = useState({
+    enable: false,
+    scopeConfigId: undefined as number | undefined,
+  });
+  const [aiReviewModalOpen, setAiReviewModalOpen] = useState(false);
   const [operating, setOperating] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -78,6 +84,7 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
     const linker = project.metrics.find((ms) => ms.pluginName === 'linker');
     const issueTrace = project.metrics.find((ms) => ms.pluginName === 'issue_trace');
     const monorepo = project.metrics.find((ms) => ms.pluginName === 'monorepo');
+    const aireview = project.metrics.find((ms) => ms.pluginName === 'aireview');
 
     setName(project.name);
     setDora({
@@ -102,6 +109,10 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
               deployJobPattern: sp.deployJobPattern ?? '',
             }))
           : [emptySubProject],
+    });
+    setAiReview({
+      enable: aireview?.enable ?? false,
+      scopeConfigId: aireview?.pluginOption?.scopeConfigId,
     });
   }, [project]);
 
@@ -166,6 +177,13 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
                   })),
               },
               enable: monorepo.enable,
+            },
+            {
+              pluginName: 'aireview',
+              pluginOption: {
+                scopeConfigId: aiReview.scopeConfigId,
+              },
+              enable: aiReview.enable,
             },
           ],
         }),
@@ -346,6 +364,23 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
               </S.SubProjectList>
             )}
           </Block>
+          <Block
+            title={
+              <Checkbox
+                checked={aiReview.enable}
+                onChange={(e) => setAiReview({ ...aiReview, enable: e.target.checked })}
+              >
+                Enable AI Review Analysis
+              </Checkbox>
+            }
+            description="Extract AI code review data (CodeRabbit, Qodo, Gemini, etc.) from pull request comments and calculate failure prediction metrics against CI test outcomes."
+          >
+            {aiReview.enable && (
+              <Button onClick={() => setAiReviewModalOpen(true)}>
+                {aiReview.scopeConfigId ? 'Edit Configuration' : 'Configure'}
+              </Button>
+            )}
+          </Block>
           <Block>
             <Button type="primary" loading={operating} disabled={!name || !!reservedSubProjectName} onClick={handleUpdate}>
               Save
@@ -358,6 +393,16 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
           </Button>
         </Flex>
       </Space>
+      {aiReviewModalOpen && (
+        <AiReviewScopeConfigModal
+          scopeConfigId={aiReview.scopeConfigId}
+          onCancel={() => setAiReviewModalOpen(false)}
+          onSave={(id) => {
+            setAiReview({ ...aiReview, scopeConfigId: id });
+            setAiReviewModalOpen(false);
+          }}
+        />
+      )}
       <Modal
         open={open}
         width={820}

@@ -118,9 +118,14 @@ func (p GitExtractor) PrepareTaskData(taskCtx plugin.TaskContext, options map[st
 	loadBool(&op.UseGoGit, "UseGoGit", false)
 	loadBool(&op.SkipCommitStat, "SKIP_COMMIT_STAT", false)
 	loadBool(&op.SkipCommitFiles, "SKIP_COMMIT_FILES", true)
+	if cfg.GetBool("FORCE_FULL_GIT_HISTORY") {
+		op.ForceFullClone = true
+	}
 	log.Info("UseGoGit: %v", *op.UseGoGit)
 	log.Info("SkipCommitStat: %v", *op.SkipCommitStat)
 	log.Info("SkipCommitFiles: %v", *op.SkipCommitFiles)
+	log.Info("NoShallowClone: %v", op.NoShallowClone)
+	log.Info("ForceFullClone: %v", op.ForceFullClone)
 
 	taskData := &parser.GitExtractorTaskData{
 		Options:   &op,

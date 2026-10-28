@@ -42,10 +42,11 @@ interface Props {
   title?: React.ReactNode;
   description?: React.ReactNode;
   required?: boolean;
+  error?: string;
   children?: React.ReactNode;
 }
 
-export const Block = ({ style, title, description, required, children }: Props) => {
+export const Block = ({ style, title, description, required, error, children }: Props) => {
   return (
     <Wrapper style={style}>
       {title && (
@@ -56,6 +57,7 @@ export const Block = ({ style, title, description, required, children }: Props) 
       )}
       {description && <p>{description}</p>}
       {children}
+      {error && <p style={{ color: '#ff4d4f', marginTop: 4 }}>{error}</p>}
     </Wrapper>
   );
 };

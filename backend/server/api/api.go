@@ -24,8 +24,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
-	// "github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -52,6 +53,23 @@ Alternatively, you may downgrade back to the previous DevLake version.
 const DB_MIGRATING = `Database migration is in progress. Please wait until it is completed.`
 
 var basicRes context.BasicRes
+
+// parseCORSAllowOrigins splits comma-separated origins so env vars like
+// "https://a.com,https://b.com" (often a single slice element from Viper) become multiple origins.
+func parseCORSAllowOrigins(origins []string) []string {
+	if len(origins) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(origins))
+	for _, s := range origins {
+		for _, part := range strings.Split(s, ",") {
+			if o := strings.TrimSpace(part); o != "" {
+				out = append(out, o)
+			}
+		}
+	}
+	return out
+}
 
 func Init() {
 	services.Init()
@@ -82,22 +100,16 @@ func CreateApiServer() *gin.Engine {
 	// Create router
 	router := gin.Default()
 
-	// Enable CORS
-	// cfg := basicRes.GetConfigReader()
-	// router.Use(cors.New(cors.Config{
-	// 	// Allow all origins
-	// 	AllowOrigins: cfg.GetStringSlice("CORS_ALLOW_ORIGIN"),
-	// 	// Allow common methods
-	// 	AllowMethods: []string{"PUT", "PATCH", "POST", "GET", "OPTIONS"},
-	// 	// Allow common headers
-	// 	AllowHeaders: []string{"Origin", "Content-Type"},
-	// 	// Expose these headers
-	// 	ExposeHeaders: []string{"Content-Length"},
-	// 	// Allow credentials
-	// 	AllowCredentials: false,
-	// 	// Cache for 2 hours
-	// 	MaxAge: 120 * time.Hour,
-	// }))
+	// Enable CORS (split comma-separated origins: env vars often come as one string)
+	cfg := basicRes.GetConfigReader()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     parseCORSAllowOrigins(cfg.GetStringSlice("CORS_ALLOW_ORIGIN")),
+		AllowMethods:     []string{"PUT", "PATCH", "POST", "GET", "OPTIONS", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           2 * time.Hour,
+	}))
 
 	// For both protected and unprotected routes
 	router.GET("/ping", ping.Get)

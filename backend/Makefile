@@ -120,7 +120,7 @@ clean:
 	@rm -rf bin
 
 build-server-image:
-	docker build -t $(IMAGE_REPO)/devlake:$(TAG) --build-arg TAG=$(TAG) --build-arg SHA=$(SHA) --file ./Dockerfile .
+	docker build -t $(IMAGE_REPO)/devlake:$(TAG) --build-arg TAG=$(TAG) --build-arg SHA=$(SHA) --file ./Containerfile .
 
 migration-script-lint:
 	go run core/migration/linter/main.go -- $$(find . -path '**/migrationscripts/**.go')

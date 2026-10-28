@@ -45,6 +45,7 @@ type GitExtractorOptions struct {
 	SkipCommitStat        *bool  `json:"skipCommitStat" mapstructure:"skipCommitStat" comment:"skip all commit stat including added/deleted lines and commit files as well"`
 	SkipCommitFiles       *bool  `json:"skipCommitFiles" mapstructure:"skipCommitFiles"`
 	NoShallowClone        bool   `json:"noShallowClone" mapstructure:"noShallowClone"`
+	ForceFullClone        bool   `json:"forceFullClone" mapstructure:"forceFullClone"`
 	ConnectionId          uint64 `json:"connectionId" mapstructure:"connectionId,omitempty"`
 	PluginName            string `json:"pluginName" mapstructure:"pluginName,omitempty"`
 	// Configured by upstream plugin (e.g., GitLab) to exclude file extensions from commit stats

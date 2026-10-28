@@ -19,10 +19,12 @@ package services
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
-	"golang.org/x/sync/errgroup"
+	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/exp/slices"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -31,6 +33,8 @@ import (
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 )
+
+const defaultSyncDays = 180
 
 type ProjectService interface {
 	RenameProject(db dal.Transaction, oldProjectName, newProjectName string) errors.Error
@@ -147,11 +151,17 @@ func CreateProject(projectInput *models.ApiInputProject) (*models.ApiOutputProje
 		ProjectName: project.Name,
 		Mode:        "NORMAL",
 		Enable:      true,
-		CronConfig:  "0 0 * * *",
+		CronConfig:  "0 0 * * 0-5",
 		IsManual:    false,
 		SyncPolicy: models.SyncPolicy{
 			TimeAfter: func() *time.Time {
-				t := time.Now().AddDate(0, -6, 0)
+				days := defaultSyncDays
+				if v := cfg.GetString("DEFAULT_SYNC_DAYS"); v != "" {
+					if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
+						days = parsed
+					}
+				}
+				t := time.Now().AddDate(0, 0, -days)
 				t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 				return &t
 			}(),
@@ -501,15 +511,13 @@ func makeProjectOutput(project *models.Project, withLastPipeline bool) (*models.
 	if err != nil {
 		return nil, errors.Default.Wrap(err, "failed to load project metrics")
 	}
-	// convert metric to api output
-	if len(projectMetrics) > 0 {
-		baseMetrics := make([]*models.BaseMetric, len(projectMetrics))
-		for i, projectMetric := range projectMetrics {
-			baseMetric := projectMetric.BaseMetric
-			baseMetrics[i] = &baseMetric
-		}
-		projectOutput.Metrics = baseMetrics
+	// convert metric to api output — always assign so JSON serializes as [] not null
+	baseMetrics := make([]*models.BaseMetric, 0, len(projectMetrics))
+	for _, projectMetric := range projectMetrics {
+		baseMetric := projectMetric.BaseMetric
+		baseMetrics = append(baseMetrics, &baseMetric)
 	}
+	projectOutput.Metrics = baseMetrics
 
 	// load blueprint
 	projectOutput.Blueprint, err = GetBlueprintByProjectName(projectOutput.Name)

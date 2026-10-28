@@ -1,0 +1,41 @@
+---
+description: Conventions for our team's owned plugins (aireview, codecov, testregistry) in this Apache DevLake fork
+globs: backend/plugins/{aireview,codecov,testregistry}/**
+alwaysApply: false
+---
+
+# Owned Plugin Development Rules
+
+This repo is a fork of Apache DevLake. Our team owns only three plugins:
+`aireview`, `codecov`, `testregistry`. Do NOT modify upstream code outside these directories.
+
+## Plugin Checklist (every change)
+
+- [ ] All models listed in `GetTablesInfo()` in `impl/impl.go`
+- [ ] New models have a migration script in `models/migrationscripts/` AND registered in `register.go:All()`
+- [ ] Migration filename: `YYYYMMDD_description.go`
+- [ ] Apache 2.0 license header on every new `.go` file
+- [ ] No cross-plugin imports (`plugins/X` must not import `plugins/Y`)
+- [ ] Secrets use `serializer:encdec` gorm tag, sanitized in API responses
+
+## Testing
+
+```bash
+cd backend
+go test ./plugins/<plugin>/... -v        # unit tests
+go vet ./plugins/<plugin>/...            # vet
+golangci-lint run ./plugins/<plugin>/... # lint
+```
+
+E2E tests (aireview only, needs MySQL with `lake_test`):
+```bash
+export E2E_DB_URL="mysql://merico:merico@localhost:3306/lake_test?charset=utf8mb4&parseTime=True"
+go test ./plugins/aireview/e2e/... -v
+```
+
+## Common Patterns
+
+- **Data-source plugin** (codecov, testregistry): Connection → Scope → ScopeConfig → Collector → Extractor → Converter
+- **Metric plugin** (aireview): No connection; uses domain-layer data from github/gitlab; configured via Projects
+- **Subtask ordering**: Defined by `SubTaskMetas()` in `impl/impl.go` — order matters
+- **New migration**: Create file, add struct with `Up()`, register in `All()`

@@ -25,7 +25,7 @@ body:
       value: >
         Please make sure what you are reporting is indeed a bug with reproducible steps, if you want to ask questions
         or share ideas, you can head to our
-        [Discussions](https://github.com/apache/incubator-devlake/discussions) tab, you can also
+        [Discussions](https://github.com/apache/devlake/discussions) tab, you can also
         [join our slack](https://join.slack.com/t/devlake-io/shared_invite/zt-18uayb6ut-cHOjiYcBwERQ8VVPZ9cQQw)
         and send your question to channel `#questions`
 
@@ -35,11 +35,11 @@ body:
     attributes:
       label: Search before asking
       description: >
-        Please make sure to search in the [issues](https://github.com/apache/incubator-devlake/issues?q=is%3Aissue)
+        Please make sure to search in the [issues](https://github.com/apache/devlake/issues?q=is%3Aissue)
         first to see whether the same issue was reported already.
       options:
         - label: >
-            I had searched in the [issues](https://github.com/apache/incubator-devlake/issues?q=is%3Aissue) and found
+            I had searched in the [issues](https://github.com/apache/devlake/issues?q=is%3Aissue) and found
             no similar issues.
           required: true
 
@@ -63,7 +63,7 @@ body:
     attributes:
       label: How to reproduce
       description: >
-        If you are not able to provide a reproducible case, please open a [Discussion](https://github.com/apache/incubator-devlake/discussions) instead.
+        If you are not able to provide a reproducible case, please open a [Discussion](https://github.com/apache/devlake/discussions) instead.
       placeholder: >
         Please provide detailed steps to reproduce the problem.
     validations:
@@ -105,4 +105,3 @@ body:
             I agree to follow this project's
             [Code of Conduct](https://www.apache.org/foundation/policies/conduct)
           required: true
-

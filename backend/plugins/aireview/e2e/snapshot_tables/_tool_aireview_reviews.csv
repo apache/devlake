@@ -1,0 +1,4 @@
+id,pull_request_id,repo_id,ai_tool,ai_tool_user,review_id,risk_level,risk_score,issues_found,suggestions_count,effort_complexity,effort_minutes,review_state,source_platform
+aireview:*,github:GithubPullRequest:1:1001,github:GithubRepo:1:100,coderabbit,coderabbitai,github:GithubPrComment:1:5001,low,20,0,2,simple,10,commented,github
+aireview:*,github:GithubPullRequest:1:1002,github:GithubRepo:1:100,coderabbit,coderabbitai,github:GithubPrComment:1:5003,high,80,2,1,,0,changes_requested,github
+aireview:*,github:GithubPullRequest:1:1003,github:GithubRepo:1:100,coderabbit,coderabbitai,github:GithubPrComment:1:5005,medium,50,0,2,moderate,25,commented,github

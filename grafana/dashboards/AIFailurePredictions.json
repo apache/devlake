@@ -1,0 +1,3404 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 44,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 300,
+      "panels": [],
+      "title": "Overview \u2014 Developer Interaction Signals",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total AI code review events logged in the selected repositories and time window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 301,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total AI Reviews",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Percentage of AI reviews that received at least one \ud83d\udc4d or \ud83d\udc4e reaction from a developer. Low values mean developers are reading but not responding \u2014 high values show active engagement.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 302,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(100.0 * SUM(CASE WHEN reactions_total_count > 0 THEN 1 ELSE 0 END) / COUNT(*), 2) AS value FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Developer Reaction Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Of all AI-reviewed PRs that were either merged or closed, what percentage made it through? Baseline for PRs without AI review: ~71.9%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "green",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 303,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN pr.status = 'MERGED' THEN pr.id END) / COUNT(DISTINCT pr.id), 1) AS value FROM pull_requests pr INNER JOIN ai_reviews ar ON ar.pull_request_id = pr.id WHERE pr.status IN ('MERGED', 'CLOSED') AND ar.repo_id IN (${repo_id:sqlstring}) AND ar.ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(ar.created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "AI-Reviewed PR Merge Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total \ud83d\udc4d reactions left by developers on AI review comments. A positive signal that developers found the feedback useful.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 304,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT SUM(reactions_thumbs_up) AS value FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "\ud83d\udc4d Developer Thumbs Up",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total \ud83d\udc4e reactions \u2014 developer signals that the AI review was unhelpful or wrong. Rising counts warrant a look at what the AI is flagging.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 305,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT SUM(reactions_thumbs_down) AS value FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "\ud83d\udc4e Developer Thumbs Down",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Number of distinct repositories covered by AI code review in the current filter selection.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 306,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT repo_id) AS value FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Repos with AI Review Coverage",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 314,
+      "panels": [],
+      "title": "Suggestion Acceptance — Are Developers Using AI Suggestions?",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Percentage of AI code suggestions that developers accepted and applied. Higher rates indicate the AI is producing actionable, high-quality suggestions.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "id": 311,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(100.0 * SUM(GREATEST(suggestions_accepted, suggestions_diff_accepted)) / NULLIF(SUM(suggestions_count), 0), 1) AS value FROM _tool_aireview_reviews WHERE repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring})\n  AND body NOT LIKE '%Review skipped%'\n  AND suggestions_count > 0\n  AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Suggestion Acceptance Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total number of AI suggestions that were accepted/applied by developers across all reviews.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 6,
+        "y": 5
+      },
+      "id": 312,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT SUM(GREATEST(suggestions_accepted, suggestions_diff_accepted)) AS value FROM _tool_aireview_reviews WHERE repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring})\n  AND body NOT LIKE '%Review skipped%'\n  AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Suggestions Accepted",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Suggestion acceptance rate broken down by AI tool. Shows which AI tools produce suggestions developers actually use.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 14,
+        "x": 10,
+        "y": 5
+      },
+      "id": 313,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ai_tool, ROUND(100.0 * SUM(GREATEST(suggestions_accepted, suggestions_diff_accepted)) / NULLIF(SUM(suggestions_count), 0), 1) AS acceptance_rate FROM _tool_aireview_reviews WHERE repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring})\n  AND body NOT LIKE '%Review skipped%'\n  AND suggestions_count > 0\n  AND $__timeFilter(created_date)\n  GROUP BY ai_tool\n  ORDER BY acceptance_rate DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Acceptance Rate by AI Tool",
+      "type": "barchart"
+    },
+    {
+      "id": 510,
+      "type": "row",
+      "title": "Diff-Based Suggestion Acceptance — Line-Level Code Matching",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "panels": []
+    },
+    {
+      "id": 511,
+      "type": "stat",
+      "title": "Diff-Based Acceptance Rate",
+      "description": "Percentage of AI suggestions where matching code was found in subsequent commits (line-level comparison)",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 11
+      },
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(100.0 * COUNT(CASE WHEN suggestion_diff_matched = 1 THEN 1 END) / NULLIF(COUNT(*), 0), 1) AS value\nFROM _tool_aireview_findings\nWHERE repo_id IN (${repo_id:sqlstring})\n  AND type = 'suggestion'\n  AND suggested_code != ''\n  AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 512,
+      "type": "stat",
+      "title": "Avg Lines Applied %",
+      "description": "Average percentage of non-trivial suggested lines found in commit diffs",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 6,
+        "y": 11
+      },
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "green",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(AVG(suggestion_match_score), 1) AS value\nFROM _tool_aireview_findings\nWHERE repo_id IN (${repo_id:sqlstring})\n  AND type = 'suggestion'\n  AND suggestion_diff_matched = 1\n  AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 513,
+      "type": "stat",
+      "title": "Suggestions 100% Applied",
+      "description": "Number of suggestions where all non-trivial lines were found in commits",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 10,
+        "y": 11
+      },
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM _tool_aireview_findings\nWHERE repo_id IN (${repo_id:sqlstring})\n  AND type = 'suggestion'\n  AND suggestion_diff_matched = 1\n  AND suggestion_match_score >= 99.9\n  AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 514,
+      "type": "barchart",
+      "title": "Suggestion Acceptance Distribution",
+      "description": "How much of each suggestion was applied (0%, 1-50%, 51-99%, 100%)",
+      "gridPos": {
+        "h": 4,
+        "w": 10,
+        "x": 14,
+        "y": 11
+      },
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT\n  bucket,\n  cnt AS count\nFROM (\n  SELECT 'Not matched' AS bucket, 0 AS sort_order, COUNT(*) AS cnt\n  FROM _tool_aireview_findings\n  WHERE repo_id IN (${repo_id:sqlstring}) AND type = 'suggestion' AND suggested_code != ''\n    AND suggestion_diff_matched = 0 AND $__timeFilter(created_date)\n  UNION ALL\n  SELECT '1-50% applied', 1, COUNT(*)\n  FROM _tool_aireview_findings\n  WHERE repo_id IN (${repo_id:sqlstring}) AND type = 'suggestion'\n    AND suggestion_diff_matched = 1 AND suggestion_match_score > 0 AND suggestion_match_score <= 50\n    AND $__timeFilter(created_date)\n  UNION ALL\n  SELECT '51-99% applied', 2, COUNT(*)\n  FROM _tool_aireview_findings\n  WHERE repo_id IN (${repo_id:sqlstring}) AND type = 'suggestion'\n    AND suggestion_diff_matched = 1 AND suggestion_match_score > 50 AND suggestion_match_score < 99.9\n    AND $__timeFilter(created_date)\n  UNION ALL\n  SELECT '100% applied', 3, COUNT(*)\n  FROM _tool_aireview_findings\n  WHERE repo_id IN (${repo_id:sqlstring}) AND type = 'suggestion'\n    AND suggestion_diff_matched = 1 AND suggestion_match_score >= 99.9\n    AND $__timeFilter(created_date)\n) t ORDER BY sort_order",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 515,
+      "type": "table",
+      "title": "Suggestion Details — Line-Level Matching",
+      "description": "Individual AI suggestions with acceptance percentage based on code diff comparison",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "datasource": "mysql",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pct_applied"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "suggestion_preview"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 300
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": true,
+          "reducer": [
+            "count"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT\n  f.matched_file_path AS file_path,\n  f.suggestion_match_method AS method,\n  ROUND(f.suggestion_match_score, 1) AS pct_applied,\n  f.suggestion_lines_matched AS lines_matched,\n  f.suggestion_lines_total AS lines_total,\n  LEFT(f.suggested_code, 120) AS suggestion_preview,\n  ar.ai_tool,\n  pr.pull_request_key AS pr_number\nFROM _tool_aireview_findings f\nJOIN _tool_aireview_reviews ar ON f.ai_review_id = ar.id\nLEFT JOIN pull_requests pr ON f.pull_request_id = pr.id\nWHERE f.repo_id IN (${repo_id:sqlstring})\n  AND f.type = 'suggestion'\n  AND f.suggestion_diff_matched = 1\n  AND $__timeFilter(f.created_date)\nORDER BY f.suggestion_match_score DESC",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 307,
+      "panels": [],
+      "title": "Risk Level & Tool Breakdown",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "How risky is the current mix of pull requests? High-risk PRs are more likely to have CI failures and lower merge rates.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      },
+      "id": 308,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT risk_level, COUNT(*) as count FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date) GROUP BY risk_level",
+          "refId": "A"
+        }
+      ],
+      "title": "Risk Level Distribution",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "risk_level",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "count",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Which AI tools are providing reviews in the selected repositories? Useful for checking tool adoption and mix.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      },
+      "id": 309,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ai_tool, COUNT(*) as count FROM ai_reviews WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring}) AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date) GROUP BY ai_tool",
+          "refId": "A"
+        }
+      ],
+      "title": "Reviews by AI Tool",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "ai_tool",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "count",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "AI reviews where CodeRabbit skipped the review due to label configuration (e.g. do-not-merge/work-in-progress). These PRs are excluded from all other panels on this dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 25
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Skipped %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "id": 310,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(*) AS `Skipped Reviews`,\n  ROUND(100.0 * COUNT(*) / NULLIF((SELECT COUNT(*) FROM _tool_aireview_reviews ar2\n    JOIN project_mapping pm2 ON ar2.repo_id = pm2.row_id AND pm2.`table` = 'repos'\n    WHERE pm2.project_name = '${project}'\n      AND ar2.repo_id IN (${repo_id:sqlstring})\n      AND ar2.ai_tool IN (${ai_tool:sqlstring})\n      AND $__timeFilter(ar2.created_date)), 0), 1) AS `Skipped %`\nFROM _tool_aireview_reviews ar\nJOIN project_mapping pm ON ar.repo_id = pm.row_id AND pm.`table` = 'repos'\nWHERE pm.project_name = '${project}'\n  AND ar.repo_id IN (${repo_id:sqlstring})\n  AND ar.ai_tool IN (${ai_tool:sqlstring})\n  AND ar.body LIKE '%Review skipped%'\n  AND $__timeFilter(ar.created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Skipped AI Reviews",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 400,
+      "panels": [],
+      "title": "Review Iterations \u2014 How Often Did Developers Push Back?",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distinct PRs that received at least one AI review in the selected time range. Each PR may have multiple review rounds \u2014 use this as the true denominator, not Total AI Reviews.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 33
+      },
+      "id": 409,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT pull_request_id) AS value\nFROM ai_reviews\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)",
+          "refId": "A"
+        }
+      ],
+      "title": "Total PRs with AI Review",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "PRs where the developer made no additional commit after the initial AI review \u2014 the AI reviewed once and was never re-triggered. This does not mean the review was ignored; the developer may have merged, fixed locally, or addressed issues without pushing again.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 33
+      },
+      "id": 408,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM (\n  SELECT pull_request_id\n  FROM ai_reviews\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n    AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)\n  GROUP BY pull_request_id\n  HAVING COUNT(*) = 1\n) t",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs with No AI Review Rounds",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "A PR with more than one AI review means the developer pushed new commits after the first review \u2014 the AI re-reviewed each time. This is the strongest proxy we have for developer engagement driven by AI feedback.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 10,
+        "y": 33
+      },
+      "id": 401,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value\nFROM (\n  SELECT pull_request_id\n  FROM ai_reviews\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n    AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)\n  GROUP BY pull_request_id\n  HAVING COUNT(*) > 1\n) t",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs with Multiple AI Review Rounds",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Average number of AI review rounds on PRs that went through more than one round. Each round represents a developer push followed by a new AI review.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 15,
+        "y": 33
+      },
+      "id": 402,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(AVG(review_count), 1) AS value\nFROM (\n  SELECT pull_request_id, COUNT(*) AS review_count\n  FROM ai_reviews\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n    AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)\n  GROUP BY pull_request_id\n  HAVING COUNT(*) > 1\n) t",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Rounds per Iterated PR",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Human reviews (APPROVED or CHANGES_REQUESTED) submitted after the first AI review on the same PR. This is a proxy for AI-triggered developer engagement \u2014 the human may have reviewed in response to the AI's feedback. Correlation only, not causation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 33
+      },
+      "id": 403,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value\nFROM _tool_github_pull_request_reviews hrv\nJOIN (\n  SELECT\n    CAST(SUBSTRING_INDEX(ar.pull_request_id, ':', -1) AS UNSIGNED) AS pr_numeric_id,\n    MIN(ar.created_date) AS first_ai_review\n  FROM ai_reviews ar\n  WHERE ar.project_name = '${project}' AND ar.repo_id IN (${repo_id:sqlstring})\n    AND ar.ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(ar.created_date)\n  GROUP BY ar.pull_request_id\n) ai ON hrv.pull_request_id = ai.pr_numeric_id\nWHERE hrv.github_submit_at > ai.first_ai_review\n  AND hrv.author_username NOT LIKE '%[bot]%'\n  AND hrv.author_username NOT IN ('coderabbitai', 'qodo-merge-pro')\n  AND hrv.state IN ('APPROVED', 'CHANGES_REQUESTED')",
+          "refId": "A"
+        }
+      ],
+      "title": "Human Reviews After AI Review (proxy)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "\"1 round (no re-review)\" = the PR triggered exactly one AI review and was not reviewed again. This is the large majority \u2014 the developer may have merged, fixed without pushing again, or ignored the review. These PRs have no iteration signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 405,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CASE\n    WHEN review_count = 1 THEN '1 round'\n    WHEN review_count BETWEEN 2 AND 3 THEN '2\u20133 rounds'\n    WHEN review_count BETWEEN 4 AND 5 THEN '4\u20135 rounds'\n    WHEN review_count BETWEEN 6 AND 10 THEN '6\u201310 rounds'\n    ELSE '11+ rounds'\n  END AS `Review Rounds`,\n  COUNT(*) AS `PRs`\nFROM (\n  SELECT pull_request_id, COUNT(*) AS review_count\n  FROM ai_reviews\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n    AND ai_tool IN (${ai_tool:sqlstring}) AND $__timeFilter(created_date)\n  GROUP BY pull_request_id\n) t\nGROUP BY `Review Rounds`\nORDER BY MIN(review_count)",
+          "refId": "A"
+        }
+      ],
+      "title": "Distribution of AI Review Rounds per PR",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "id": 200,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 201,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "## How Well Does AI Predict CI Failures?\n\nThis dashboard answers a simple question: **when the AI code reviewer says a pull request is risky, does CI actually fail?** And the reverse \u2014 when the AI says everything looks fine, does CI agree?\n\nWe look at PRs that have both an AI review and OCP CI test results. Flaky tests (tests that fail randomly regardless of the code change) are excluded so we only count real failures.\n\n**What we're aiming for:**\n- The AI should correctly warn about at least **60% of PRs that will fail CI** \u2014 and rank failing PRs higher than passing ones 80% of the time\n- Both scores are currently shown as 0\u20131 (green = on target, red = needs improvement)\n\nUse the **Repository** and **AI Tool** dropdowns above to filter to a specific codebase or tool.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.6.2",
+      "title": "",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 202,
+      "panels": [],
+      "title": "AI Warnings vs What Actually Happened",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "The AI flagged this PR as risky (at the selected warning threshold) and CI tests confirmed a failure. A true positive \u2014 the AI was right.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 52
+      },
+      "id": 203,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n  AND risk_score >= ${warning_threshold}\n  AND had_ci_failure = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Warned \u2192 CI Failed \u2713 (TP)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "The AI flagged this PR as risky but CI tests passed. A false alarm \u2014 the AI was too cautious.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 52
+      },
+      "id": 204,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n  AND risk_score >= ${warning_threshold}\n  AND had_ci_failure = 0",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Warned \u2192 CI Passed \u2014 False Alarm (FP)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "The AI gave this PR a clean bill of health, but CI tests failed. A missed failure \u2014 the AI was too lenient.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 10,
+        "y": 52
+      },
+      "id": 205,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n  AND risk_score < ${warning_threshold}\n  AND had_ci_failure = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Missed \u2192 CI Failed \u2717 (FN)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "The AI flagged this PR as safe and CI tests passed. A true negative \u2014 everything agreed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 15,
+        "y": 52
+      },
+      "id": 206,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n  AND risk_score < ${warning_threshold}\n  AND had_ci_failure = 0",
+          "refId": "A"
+        }
+      ],
+      "title": "AI OK \u2192 CI Passed \u2713 (TN)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 210,
+      "panels": [],
+      "title": "How Good Are the AI Predictions?",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: Precision = TP / (TP + FP)\n\nOf every PR the AI flagged as risky, how many actually had CI failures? High precision means warnings are trustworthy \u2014 developers don't waste time on false alarms.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 40
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 57
+      },
+      "id": 211,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "noValue": "n/a \u2014 AI made no warnings in this period",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH counts AS (\n  SELECT\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS fp\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n)\nSELECT ROUND(tp * 100.0 / NULLIF(tp + fp, 0), 1) AS value FROM counts",
+          "refId": "A"
+        }
+      ],
+      "title": "When AI Warns \u2014 How Often Is It Right?",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: Recall = TP / (TP + FN)\n\nOf every PR that actually broke CI, how many did the AI flag in advance? High recall means fewer failures slip through undetected.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 40
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 6,
+        "y": 57
+      },
+      "id": 212,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "noValue": "n/a \u2014 no CI failures matched in this period",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH counts AS (\n  SELECT\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS fn\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n)\nSELECT ROUND(tp * 100.0 / NULLIF(tp + fn, 0), 1) AS value FROM counts",
+          "refId": "A"
+        }
+      ],
+      "title": "How Many Real Failures Did AI Catch?",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: F1 = 2\u00b7TP / (2\u00b7TP + FP + FN)\n\nThe harmonic mean of Precision and Recall \u2014 balances both in a single number. Useful when you care equally about false alarms and missed failures. 1.0 = perfect, 0.0 = completely wrong.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 40
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 57
+      },
+      "id": 213,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "noValue": "n/a \u2014 no warnings or failures in this period",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH counts AS (\n  SELECT\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS fn\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n)\nSELECT ROUND(2 * tp * 100.0 / NULLIF(2 * tp + fp + fn, 0), 1) AS value FROM counts",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Prediction Balance (F1)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: Specificity = TN / (TN + FP)\n\nOf every PR that CI confirmed was safe, how many did the AI correctly leave alone? High specificity means developers working on low-risk PRs aren't being bothered with unnecessary warnings.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 40
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 18,
+        "y": 57
+      },
+      "id": 214,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "noValue": "n/a \u2014 no AI-reviewed PRs with CI results in this period",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH counts AS (\n  SELECT\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS tn,\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS fp\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n)\nSELECT ROUND(tn * 100.0 / NULLIF(tn + fp, 0), 1) AS value FROM counts",
+          "refId": "A"
+        }
+      ],
+      "title": "How Often Does AI Correctly Clear Safe PRs?",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 220,
+      "panels": [],
+      "title": "Overall Prediction Quality \u2014 Single Scores That Don't Depend on Any Threshold",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: PR-AUC = area under the Precision-Recall curve across all risk thresholds\n\nSummarises how well the AI balances catching real failures vs avoiding false alarms \u2014 across all three risk levels at once. 1.0 = perfect, 0.5 = no better than random. Target: \u2265 0.6.\n\nUnlike a single threshold metric, this score doesn't change when you adjust the warning threshold above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 0.4
+              },
+              {
+                "color": "yellow",
+                "value": 0.6
+              },
+              {
+                "color": "green",
+                "value": 0.75
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 65
+      },
+      "id": 221,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "noValue": "n/a \u2014 need both AI warnings and CI failures to compute",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH pr_data AS (\n  SELECT risk_score AS max_risk_score, had_ci_failure AS ci_failed\n  FROM ai_failure_predictions\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n),\nthresholds AS (SELECT 0 AS t UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 50 UNION ALL SELECT 80 UNION ALL SELECT 100),\ncurve AS (\n  SELECT th.t AS threshold,\n    SUM(CASE WHEN pd.max_risk_score >= th.t AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN pd.max_risk_score >= th.t AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN pd.max_risk_score <  th.t AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS fn,\n    SUM(CASE WHEN pd.max_risk_score <  th.t AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS tn\n  FROM thresholds th CROSS JOIN pr_data pd GROUP BY th.t\n),\npr_points AS (\n  SELECT threshold,\n    COALESCE(tp * 1.0 / NULLIF(tp + fp, 0), 1.0) AS prec,\n    COALESCE(tp * 1.0 / NULLIF(tp + fn, 0), 0.0) AS rec\n  FROM curve\n),\nlag_points AS (\n  SELECT threshold, prec, rec,\n    LAG(prec) OVER (ORDER BY threshold ASC) AS prev_prec,\n    LAG(rec)  OVER (ORDER BY threshold ASC) AS prev_rec\n  FROM pr_points\n)\nSELECT ROUND(SUM(CASE WHEN prev_rec IS NOT NULL AND prev_rec > rec\n  THEN (prev_rec - rec) * (prec + prev_prec) / 2 ELSE 0 END), 3) AS value\nFROM lag_points",
+          "refId": "A"
+        }
+      ],
+      "title": "Warning Quality Score (target: 0.6+)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: ROC-AUC = area under the ROC curve (TPR vs FPR) across all risk thresholds\n\nMeasures how well the AI separates failing PRs from safe ones regardless of where you draw the line. 1.0 = perfect separation, 0.5 = random. Target: \u2265 0.8.\n\nUnlike a single threshold metric, this score doesn't change when you adjust the warning threshold above.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "green",
+                "value": 0.8
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 65
+      },
+      "id": 222,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "noValue": "n/a \u2014 need both AI warnings and CI failures to compute",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH pr_data AS (\n  SELECT risk_score AS max_risk_score, had_ci_failure AS ci_failed\n  FROM ai_failure_predictions\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n),\nthresholds AS (SELECT 0 AS t UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 50 UNION ALL SELECT 80 UNION ALL SELECT 100),\ncurve AS (\n  SELECT th.t AS threshold,\n    SUM(CASE WHEN pd.max_risk_score >= th.t AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN pd.max_risk_score >= th.t AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN pd.max_risk_score <  th.t AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS fn,\n    SUM(CASE WHEN pd.max_risk_score <  th.t AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS tn\n  FROM thresholds th CROSS JOIN pr_data pd GROUP BY th.t\n),\nroc_points AS (\n  SELECT threshold,\n    COALESCE(fp * 1.0 / NULLIF(fp + tn, 0), 0.0) AS fpr,\n    COALESCE(tp * 1.0 / NULLIF(tp + fn, 0), 0.0) AS tpr\n  FROM curve\n),\nlag_points AS (\n  SELECT threshold, fpr, tpr,\n    LAG(fpr) OVER (ORDER BY threshold DESC) AS prev_fpr,\n    LAG(tpr) OVER (ORDER BY threshold DESC) AS prev_tpr\n  FROM roc_points\n)\nSELECT ROUND(SUM(CASE WHEN prev_fpr IS NOT NULL AND fpr > prev_fpr\n  THEN (fpr - prev_fpr) * (tpr + prev_tpr) / 2 ELSE 0 END), 3) AS value\nFROM lag_points",
+          "refId": "A"
+        }
+      ],
+      "title": "Risk Ranking Quality (target: 0.8+)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Formula: False Positive Rate (FPR) = FP / (FP + TN)\n\nOf all PRs that CI confirmed safe, what percentage did the AI flag as risky anyway? Lower is better \u2014 high values mean developers are distracted by warnings that don't matter.\n\n\u26a0\ufe0f Interpret with caution: this metric is sensitive to the warning threshold selected above and to the CI failure rate in the data. With only a few days of CI data where ~80% of matched PRs had failures, the denominator (FP + TN) is very small, making this number volatile. It will stabilise as more CI data accumulates.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "orange",
+                "value": 35
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 65
+      },
+      "id": 223,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "noValue": "n/a \u2014 no AI-reviewed PRs with CI results in this period",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH counts AS (\n  SELECT\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS tn\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n)\nSELECT ROUND(fp * 100.0 / NULLIF(fp + tn, 0), 1) AS value FROM counts",
+          "refId": "A"
+        }
+      ],
+      "title": "How Often Does AI Cry Wolf?",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "id": 240,
+      "panels": [],
+      "title": "Prediction Quality Split by Repository",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Prediction quality metrics broken down by repository. Only repos where AI reviews and CI data overlap are shown. Repos with no matching CI data are excluded.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Precision %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 30
+                    },
+                    {
+                      "color": "green",
+                      "value": 60
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Recall %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 30
+                    },
+                    {
+                      "color": "green",
+                      "value": 60
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "F1 %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 30
+                    },
+                    {
+                      "color": "green",
+                      "value": 60
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 241,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "PRs with CI"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH counts AS (\n  SELECT\n    repo_id,\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN risk_score >= ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 1 THEN 1 ELSE 0 END) AS fn,\n    SUM(CASE WHEN risk_score < ${warning_threshold} AND had_ci_failure = 0 THEN 1 ELSE 0 END) AS tn\n  FROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n  GROUP BY repo_id\n)\nSELECT\n  COALESCE(r.name, c.repo_id) AS Repository,\n  c.tp + c.fp + c.fn + c.tn AS `PRs with CI`,\n  c.tp AS `AI Warned \u2192 Failed (TP)`,\n  c.fp AS `AI Warned \u2192 Passed (FP)`,\n  c.fn AS `AI Missed \u2192 Failed (FN)`,\n  c.tn AS `AI OK \u2192 Passed (TN)`,\n  ROUND(100.0 * c.tp / NULLIF(c.tp + c.fp, 0), 1) AS `Precision %`,\n  ROUND(100.0 * c.tp / NULLIF(c.tp + c.fn, 0), 1) AS `Recall %`,\n  ROUND(100.0 * 2 * c.tp / NULLIF(2 * c.tp + c.fp + c.fn, 0), 1) AS `F1 %`\nFROM counts c\nLEFT JOIN repos r ON c.repo_id = r.id\nHAVING c.tp + c.fp + c.fn + c.tn > 0\nORDER BY `PRs with CI` DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Per-Repository Breakdown: AI Warnings vs CI Failures",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 82
+      },
+      "id": 230,
+      "panels": [],
+      "title": "What If We Used a Different Risk Level as the Warning Threshold?",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 83
+      },
+      "id": 231,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Right now, the AI flags a PR as risky when its risk score is 70 or above. But what if we raised or lowered that bar?\n\n- **Lower threshold (e.g. 30)**: AI warns more often \u2192 catches more real failures, but also more false alarms\n- **Higher threshold (e.g. 80)**: AI warns less often \u2192 fewer false alarms, but more failures slip through\n\nThe table below shows what the numbers would look like at every possible setting. Look at the **F1 %** column to find the threshold that gives the best overall balance for your team. The quality scores at the top of this page summarise the whole table as a single number.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.6.6",
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Each row shows what happens if you flag PRs as risky at a different sensitivity level. 'High only' is the most conservative \u2014 fewer warnings but more precise. 'Any risk (Low+)' catches the most failures but generates more false alarms. Use the F1 % column to find the best overall balance.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "threshold"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Warning Sensitivity (0=warn all, 100=warn none)"
+              },
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "precision_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "When AI Warns \u2014 Right? %"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "orange",
+                      "value": 40
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "recall_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Failures Caught %"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "orange",
+                      "value": 40
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "f1_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Overall Balance %"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "orange",
+                      "value": 40
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "specificity_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Safe PRs Correctly Cleared %"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fpr_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "False Alarm Rate %"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green"
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 20
+                    },
+                    {
+                      "color": "red",
+                      "value": 40
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "TP"
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FP"
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fn"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN"
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tn"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "TN"
+              },
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 87
+      },
+      "id": 232,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Warning Sensitivity (0=warn all, 100=warn none)"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.6",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "WITH pr_data AS (\n  SELECT risk_score AS max_risk_score, had_ci_failure AS ci_failed\n  FROM ai_failure_predictions\n  WHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND prediction_outcome != ''\n  AND ci_failure_source = '${ci_failure_source}'\n  AND $__timeFilter(flagged_at)\n),\nlevels AS (\n  SELECT 'High only'        AS label, 80 AS min_score, 1 AS sort_order UNION ALL\n  SELECT 'Medium or higher',           50,              2               UNION ALL\n  SELECT 'Any risk (Low+)',            10,              3\n),\ncurve AS (\n  SELECT l.label, l.sort_order,\n    SUM(CASE WHEN pd.max_risk_score >= l.min_score AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS tp,\n    SUM(CASE WHEN pd.max_risk_score >= l.min_score AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS fp,\n    SUM(CASE WHEN pd.max_risk_score <  l.min_score AND pd.ci_failed = 1 THEN 1 ELSE 0 END) AS fn,\n    SUM(CASE WHEN pd.max_risk_score <  l.min_score AND pd.ci_failed = 0 THEN 1 ELSE 0 END) AS tn\n  FROM levels l CROSS JOIN pr_data pd\n  GROUP BY l.label, l.sort_order, l.min_score\n)\nSELECT\n  label                                                                         AS `Flag as Risky When`,\n  tp                                                                            AS `AI Warned \u2192 Failed (TP)`,\n  fp                                                                            AS `AI Warned \u2192 Passed (FP)`,\n  fn                                                                            AS `AI Missed \u2192 Failed (FN)`,\n  tn                                                                            AS `AI OK \u2192 Passed (TN)`,\n  ROUND(tp * 100.0 / NULLIF(tp + fp, 0), 1)                                    AS `Precision %`,\n  ROUND(tp * 100.0 / NULLIF(tp + fn, 0), 1)                                    AS `Recall %`,\n  ROUND(2 * tp * 100.0 / NULLIF(2 * tp + fp + fn, 0), 1)                      AS `F1 %`,\n  ROUND(tn * 100.0 / NULLIF(tn + fp, 0), 1)                                    AS `Specificity %`\nFROM curve\nORDER BY sort_order",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Performance at Different Sensitivity Levels",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 101
+      },
+      "id": 500,
+      "title": "PR Drill-down \u2014 Individual Pull Requests",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "AI-reviewed PRs that had no matching CI pipeline data and cannot be classified as TP/FP/FN/TN.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 52
+      },
+      "id": 501,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM ai_failure_predictions\nWHERE project_name = '${project}' AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND $__timeFilter(flagged_at)\n  AND prediction_outcome = 'NO_CI'",
+          "refId": "A"
+        }
+      ],
+      "title": "PRs with No CI Data (?)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Click a row to open the PR in GitHub. Use the Outcome filter above to focus on TP / FP / FN / TN / NO_CI. NO_CI rows are always shown regardless of the CI Source filter.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "URL"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 400
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open PR",
+                    "url": "${__data.fields.URL}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR #"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Risk Score"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 50
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Outcome"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 75
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "TP": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "TP"
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "FP": {
+                        "color": "orange",
+                        "index": 1,
+                        "text": "FP"
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "FN": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "FN"
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "TN": {
+                        "color": "blue",
+                        "index": 3,
+                        "text": "TN"
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "NO_CI": {
+                        "color": "purple",
+                        "index": 4,
+                        "text": "NO_CI"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Flagged"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CI Failed"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CI Source"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reviewed At"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Size"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 106
+      },
+      "id": 502,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Reviewed At"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.2",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT\n  pull_request_key AS `PR #`,\n  pr_title AS `Title`,\n  repo_name AS `Repository`,\n  pr_author AS `Author`,\n  MAX(risk_score) AS `Risk Score`,\n  CASE WHEN MAX(was_flagged_risky) THEN 'Yes' ELSE 'No' END AS `AI Flagged`,\n  CASE WHEN MAX(had_ci_failure) THEN 'Yes' ELSE 'No' END AS `CI Failed`,\n  CASE\n    WHEN MAX(was_flagged_risky) = 1 AND MAX(had_ci_failure) = 1 THEN 'TP'\n    WHEN MAX(was_flagged_risky) = 1 AND MAX(had_ci_failure) = 0 AND ci_failure_source != 'none' THEN 'FP'\n    WHEN MAX(was_flagged_risky) = 0 AND MAX(had_ci_failure) = 1 THEN 'FN'\n    WHEN MAX(was_flagged_risky) = 0 AND MAX(had_ci_failure) = 0 AND ci_failure_source != 'none' THEN 'TN'\n    ELSE 'NO_CI'\n  END AS `Outcome`,\n  ci_failure_source AS `CI Source`,\n  GROUP_CONCAT(DISTINCT ai_tool ORDER BY ai_tool SEPARATOR ', ') AS `AI Tools`,\n  MAX(flagged_at) AS `Reviewed At`,\n  CONCAT(MAX(additions), '+/', MAX(deletions), '-') AS `Size`,\n  pr_url AS `URL`\nFROM ai_failure_predictions\nWHERE project_name = '${project}'\n  AND repo_id IN (${repo_id:sqlstring})\n  AND ai_tool IN (${ai_tool:sqlstring})\n  AND $__timeFilter(flagged_at)\n  AND (ci_failure_source = '${ci_failure_source}' OR prediction_outcome = 'NO_CI')\nGROUP BY pull_request_id, pull_request_key, repo_name, pr_title, pr_author, pr_url, ci_failure_source\nHAVING '${outcome_filter}' = 'All'\n  OR (CASE\n    WHEN MAX(was_flagged_risky) = 1 AND MAX(had_ci_failure) = 1 THEN 'TP'\n    WHEN MAX(was_flagged_risky) = 1 AND MAX(had_ci_failure) = 0 AND ci_failure_source != 'none' THEN 'FP'\n    WHEN MAX(was_flagged_risky) = 0 AND MAX(had_ci_failure) = 1 THEN 'FN'\n    WHEN MAX(was_flagged_risky) = 0 AND MAX(had_ci_failure) = 0 AND ci_failure_source != 'none' THEN 'TN'\n    ELSE 'NO_CI'\n  END) = '${outcome_filter}'\nORDER BY `Reviewed At` DESC\nLIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "Pull Requests \u2014 Drill-down (filter by Outcome, Repo, AI Tool, Time)",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [
+    "ai",
+    "code-review",
+    "aireview",
+    "pr-auc",
+    "prediction",
+    "dprod-1142"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT project_name FROM ai_failure_predictions ORDER BY project_name",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Project",
+        "multi": false,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT project_name FROM ai_failure_predictions ORDER BY project_name",
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT r.name AS __text, ar.repo_id AS __value FROM ai_reviews ar JOIN repos r ON ar.repo_id = r.id WHERE ar.project_name = '${project}' GROUP BY ar.repo_id, r.name ORDER BY r.name",
+        "includeAll": true,
+        "label": "Repository",
+        "multi": true,
+        "name": "repo_id",
+        "options": [],
+        "query": "SELECT r.name AS __text, ar.repo_id AS __value FROM ai_reviews ar JOIN repos r ON ar.repo_id = r.id WHERE ar.project_name = '${project}' GROUP BY ar.repo_id, r.name ORDER BY r.name",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT ai_tool FROM ai_reviews WHERE project_name = '${project}' ORDER BY ai_tool",
+        "includeAll": true,
+        "label": "AI Tool",
+        "multi": true,
+        "name": "ai_tool",
+        "options": [],
+        "query": "SELECT DISTINCT ai_tool FROM ai_reviews WHERE project_name = '${project}' ORDER BY ai_tool",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "50",
+          "value": "50"
+        },
+        "includeAll": false,
+        "label": "AI Warning Threshold",
+        "name": "warning_threshold",
+        "options": [
+          {
+            "selected": false,
+            "text": "High only",
+            "value": "80"
+          },
+          {
+            "selected": true,
+            "text": "Medium+",
+            "value": "50"
+          },
+          {
+            "selected": false,
+            "text": "Low+",
+            "value": "10"
+          }
+        ],
+        "query": "High only : 80,Medium+ : 50,Low+ : 10",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Test Cases (test_cases)",
+          "value": "test_cases"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "CI Failure Source",
+        "name": "ci_failure_source",
+        "options": [
+          {
+            "selected": true,
+            "text": "Test Cases (test_cases)",
+            "value": "test_cases"
+          },
+          {
+            "selected": false,
+            "text": "Test Runs (job_result)",
+            "value": "job_result"
+          }
+        ],
+        "query": "test_cases,job_result",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "All"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Outcome",
+        "multi": false,
+        "name": "outcome_filter",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "All"
+          },
+          {
+            "selected": false,
+            "text": "TP \u2014 AI warned, CI failed",
+            "value": "TP"
+          },
+          {
+            "selected": false,
+            "text": "FP \u2014 AI warned, CI passed",
+            "value": "FP"
+          },
+          {
+            "selected": false,
+            "text": "FN \u2014 AI missed, CI failed",
+            "value": "FN"
+          },
+          {
+            "selected": false,
+            "text": "TN \u2014 AI ok, CI passed",
+            "value": "TN"
+          },
+          {
+            "selected": false,
+            "text": "NO_CI \u2014 no CI data",
+            "value": "NO_CI"
+          }
+        ],
+        "query": "All,TP,FP,FN,TN,NO_CI",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "How Well Does AI Predict CI Failures?",
+  "uid": "ai-fpa-interactions",
+  "version": 1
+}

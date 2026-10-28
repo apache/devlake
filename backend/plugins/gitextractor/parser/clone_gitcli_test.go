@@ -184,3 +184,80 @@ func TestNewestShallowCommitTimeIgnoresMissingCommits(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, newest.IsZero())
 }
+
+func TestChooseCloneStrategy(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name           string
+		since          *time.Time
+		forceFullClone bool
+		noShallowClone bool
+		want           cloneStrategy
+	}{
+		{
+			name:           "full sync (since=nil)",
+			since:          nil,
+			forceFullClone: false,
+			noShallowClone: false,
+			want:           strategyFull,
+		},
+		{
+			name:           "full sync takes precedence over noShallowClone",
+			since:          nil,
+			forceFullClone: false,
+			noShallowClone: true,
+			want:           strategyFull,
+		},
+		{
+			name:           "forceFullClone overrides incremental to full",
+			since:          &now,
+			forceFullClone: true,
+			noShallowClone: false,
+			want:           strategyFull,
+		},
+		{
+			name:           "forceFullClone takes precedence over noShallowClone",
+			since:          &now,
+			forceFullClone: true,
+			noShallowClone: true,
+			want:           strategyFull,
+		},
+		{
+			name:           "forceFullClone with nil since is still full",
+			since:          nil,
+			forceFullClone: true,
+			noShallowClone: false,
+			want:           strategyFull,
+		},
+		{
+			name:           "forceFullClone with nil since takes precedence over noShallowClone",
+			since:          nil,
+			forceFullClone: true,
+			noShallowClone: true,
+			want:           strategyFull,
+		},
+		{
+			name:           "noShallowClone on incremental uses doubleClone",
+			since:          &now,
+			forceFullClone: false,
+			noShallowClone: true,
+			want:           strategyDoubleClone,
+		},
+		{
+			name:           "default incremental uses shallow",
+			since:          &now,
+			forceFullClone: false,
+			noShallowClone: false,
+			want:           strategyShallow,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := chooseCloneStrategy(tt.since, tt.forceFullClone, tt.noShallowClone)
+			if got != tt.want {
+				t.Errorf("chooseCloneStrategy() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}

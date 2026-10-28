@@ -50,6 +50,11 @@ if [ -n "$DEVLAKE_DEBUG" ]; then
     GCFLAGS=all=-N\ -l
 fi
 
+COVER_FLAGS=""
+if [ -n "$DEVLAKE_COVER" ]; then
+    COVER_FLAGS="-cover -covermode=atomic -coverpkg=github.com/apache/devlake/..."
+fi
+
 if [ -z "$DEVLAKE_PLUGINS" ]; then
     echo "Building all plugins"
     # schema_e2e is not a plugin, it only holds the cross-plugin schema-drift e2e test
@@ -84,7 +89,7 @@ echo "Plugin build parallelism: $PARALLELISM"
 for PLUG in $PLUGINS; do
     NAME=$(basename $PLUG)
     echo "Building plugin $NAME to bin/plugins/$NAME/$NAME.so with args: $*  --gcflags="$GCFLAGS""
-    go build -buildmode=plugin --gcflags="$GCFLAGS" -o $PLUGIN_OUTPUT_DIR/$NAME/$NAME.so $PLUG/*.go &
+    go build $COVER_FLAGS -buildmode=plugin --gcflags="$GCFLAGS" -o $PLUGIN_OUTPUT_DIR/$NAME/$NAME.so $PLUG/*.go &
     PIDS="$PIDS $!"
     # avoid too many processes causing signal killed
     COUNT=$(echo "$PIDS" | wc -w)

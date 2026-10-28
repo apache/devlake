@@ -1,0 +1,68 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# UBI 9-based DevLake config-ui image (parity with Dockerfile).
+
+# Pin to multi-arch manifest digest (not :latest) for reproducible builds.
+FROM registry.access.redhat.com/ubi9/nodejs-18@sha256:ffbad8210aee178157e7621b5fa43fb85f1ac205246b0d2606bea778549da8c1 AS builder
+
+USER 0
+WORKDIR /opt/app-root/src
+
+COPY . .
+
+# Use committed Yarn Berry binary (.yarn/releases/yarn-3.4.1.cjs via yarnPath)
+RUN node .yarn/releases/yarn-3.4.1.cjs install && \
+    node .yarn/releases/yarn-3.4.1.cjs build
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:57c8151c51445a07e503dab9dc9211dc3cdeac9d45ed81a10954b7d770659b3b
+
+USER 0
+
+RUN microdnf -y update && \
+    microdnf -y install \
+        nginx \
+        httpd-tools \
+        iproute \
+        gettext \
+        shadow-utils \
+        findutils \
+        tar \
+        coreutils-single && \
+    microdnf clean all && \
+    rm -rf /var/cache/yum /var/cache/dnf
+
+# Unprivileged nginx: drop user directive, write pid under /tmp,
+# and remove the packaged server block that binds privileged port 80.
+RUN sed -i '/^user /d' /etc/nginx/nginx.conf && \
+    sed -i 's|pid\s\+/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf && \
+    sed -i 's|pid\s\+/var/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf && \
+    awk 'BEGIN{skip=0} /^[[:space:]]*server[[:space:]]*\{/{if(!done++){skip=1}} skip{if(/\{/) depth++; if(/\}/){depth--; if(depth==0){skip=0; next}} next} {print}' \
+        /etc/nginx/nginx.conf > /tmp/nginx.conf && \
+    mv /tmp/nginx.conf /etc/nginx/nginx.conf && \
+    rm -f /etc/nginx/conf.d/default.conf
+
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf.tpl
+COPY --from=builder /opt/app-root/src/dist/ /usr/share/nginx/html/
+COPY --from=builder /opt/app-root/src/nginx.sh /usr/bin/nginx.sh
+RUN chmod +x /usr/bin/nginx.sh && \
+    mkdir -p /var/log/nginx /var/lib/nginx/tmp /run && \
+    chgrp -R 0 /etc/nginx /var/log/nginx /var/lib/nginx /usr/share/nginx /run /tmp && \
+    chmod -R g=u /etc/nginx /var/log/nginx /var/lib/nginx /usr/share/nginx /run /tmp
+
+EXPOSE 4000 4443
+
+USER 101
+CMD ["/usr/bin/nginx.sh"]

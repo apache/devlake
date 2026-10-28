@@ -1,0 +1,1060 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": ["openshift", "ci", "prow", "testing"],
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "OpenShift CI",
+  "uid": "openshift-ci-dashboard",
+  "version": 1,
+  "weekStart": "",
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT scope_id AS __text, scope_id AS __value FROM ci_test_jobs ORDER BY scope_id",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Repository",
+        "multi": true,
+        "name": "repository",
+        "options": [],
+        "query": "SELECT DISTINCT scope_id AS __text, scope_id AS __value FROM ci_test_jobs ORDER BY scope_id",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT trigger_type AS __text, trigger_type AS __value FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) ORDER BY trigger_type",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Trigger Type",
+        "multi": true,
+        "name": "trigger_type",
+        "options": [],
+        "query": "SELECT DISTINCT trigger_type AS __text, trigger_type AS __value FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) ORDER BY trigger_type",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT job_name AS __text, job_name AS __value FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) ORDER BY job_name",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job Name",
+        "multi": true,
+        "name": "job_name",
+        "options": [],
+        "query": "SELECT DISTINCT job_name AS __text, job_name AS __value FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) ORDER BY job_name",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "Total Jobs",
+      "id": 1,
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as total_jobs FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "Job Pass Rate",
+      "id": 2,
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "yellow", "value": 75 },
+              { "color": "green", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as pass_rate FROM ci_test_jobs WHERE scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "Total Test Cases",
+      "id": 3,
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as total_tests FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "Test Pass Rate",
+      "id": 4,
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "yellow", "value": 75 },
+              { "color": "green", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(SUM(CASE WHEN tc.status = 'passed' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 1) as pass_rate FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status IN ('passed', 'failed') AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "Failed Tests",
+      "id": 5,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as failed_tests FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status = 'failed' AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "stat",
+      "title": "JUnit Coverage",
+      "id": 6,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 25 },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 75 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT ROUND(COUNT(DISTINCT s.job_id) * 100.0 / NULLIF(COUNT(DISTINCT j.job_id), 0), 1) as junit_coverage FROM ci_test_jobs j LEFT JOIN ci_test_suites s ON j.connection_id = s.connection_id AND j.job_id = s.job_id WHERE j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at)",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "Job Results Over Time",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "timeseries",
+      "title": "Job Results Timeline",
+      "id": 7,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Jobs",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "SUCCESS" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "FAILURE" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ABORTED" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT DATE(finished_at) as time, result, COUNT(*) as count FROM ci_test_jobs WHERE finished_at IS NOT NULL AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY DATE(finished_at), result ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        { "id": "prepareTimeSeries", "options": { "format": "multi" } }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "timeseries",
+      "title": "Job Pass Rate Trend",
+      "id": 8,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Pass Rate %",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "calcs": ["mean"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "rawSql": "SELECT DATE(finished_at) as time, ROUND(SUM(CASE WHEN result = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as pass_rate FROM ci_test_jobs WHERE finished_at IS NOT NULL AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY DATE(finished_at) ORDER BY time",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "title": "Test Failures Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "table",
+      "title": "Top Failing Tests",
+      "id": 9,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "fail_rate" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "gauge" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 25 },
+                    { "color": "orange", "value": 50 },
+                    { "color": "red", "value": 75 }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "test_name" },
+            "properties": [
+              { "id": "custom.width", "value": 350 },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "fail_count" }]
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT tc.name as test_name, SUM(CASE WHEN tc.status = 'failed' THEN 1 ELSE 0 END) as fail_count, SUM(CASE WHEN tc.status = 'passed' THEN 1 ELSE 0 END) as pass_count, ROUND(SUM(CASE WHEN tc.status = 'failed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as fail_rate, COUNT(DISTINCT j.scope_id) as repos_affected FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND tc.status IN ('passed', 'failed') AND $__timeFilter(j.finished_at) GROUP BY tc.name HAVING fail_count > 0 ORDER BY fail_count DESC LIMIT 50",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "timeseries",
+      "title": "Test Failure Trend",
+      "id": 10,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Failed Tests",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT DATE(j.finished_at) as time, j.scope_id as repository, COUNT(*) as failed_count FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status = 'failed' AND j.finished_at IS NOT NULL AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at) GROUP BY DATE(j.finished_at), j.scope_id ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        { "id": "prepareTimeSeries", "options": { "format": "multi" } }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 103,
+      "title": "Flaky Test Detection",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "table",
+      "title": "Flaky Tests",
+      "description": "Tests that have both passed and failed, sorted by inconsistency ratio",
+      "id": 11,
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 24 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "flakiness" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "gauge" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 20 },
+                    { "color": "orange", "value": 40 },
+                    { "color": "red", "value": 60 }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "test_name" },
+            "properties": [
+              { "id": "custom.width", "value": 400 },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "flakiness" }]
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT tc.name as test_name, COUNT(*) as total_runs, SUM(CASE WHEN tc.status = 'passed' THEN 1 ELSE 0 END) as passes, SUM(CASE WHEN tc.status = 'failed' THEN 1 ELSE 0 END) as failures, ROUND(2.0 * LEAST(SUM(CASE WHEN tc.status = 'passed' THEN 1 ELSE 0 END), SUM(CASE WHEN tc.status = 'failed' THEN 1 ELSE 0 END)) * 100.0 / COUNT(*), 1) as flakiness FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status IN ('passed', 'failed') AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at) GROUP BY tc.name HAVING passes > 0 AND failures > 0 ORDER BY flakiness DESC LIMIT 50",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "piechart",
+      "title": "Failure by Trigger Type",
+      "id": 12,
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 24 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "pull_request" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "periodic" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "purple", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "push" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT j.trigger_type, COUNT(*) as count FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status = 'failed' AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at) GROUP BY j.trigger_type",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              { "fieldName": "trigger_type", "handlerKey": "field.name" },
+              { "fieldName": "count", "handlerKey": "field.value" }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 104,
+      "title": "PR Correlation - Failure Impact",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "table",
+      "title": "PRs with Most Failures",
+      "id": 13,
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 33 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "fail_rate" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "gauge" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 25 },
+                    { "color": "orange", "value": 50 },
+                    { "color": "red", "value": 75 }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "prow_link" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [{ "targetBlank": true, "title": "Open in Prow", "url": "${__value.text}" }]
+              },
+              { "id": "custom.width", "value": 80 },
+              { "id": "displayName", "value": "Prow" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "failed_jobs" }]
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT pull_request_number as pr_number, pull_request_author as author, scope_id as repository, COUNT(*) as total_jobs, SUM(CASE WHEN result = 'FAILURE' THEN 1 ELSE 0 END) as failed_jobs, ROUND(SUM(CASE WHEN result = 'FAILURE' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as fail_rate, MIN(view_url) as prow_link FROM ci_test_jobs WHERE pull_request_number IS NOT NULL AND pull_request_number > 0 AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY pull_request_number, pull_request_author, scope_id HAVING failed_jobs > 0 ORDER BY failed_jobs DESC LIMIT 50",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "barchart",
+      "title": "PR Failure Rate by Author",
+      "description": "Authors with highest failure rates (min 3 PRs)",
+      "id": 14,
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 33 },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-RdYlGr",
+            "seriesBy": "last"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Failure Rate %",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT pull_request_author as author, ROUND(SUM(CASE WHEN result = 'FAILURE' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as fail_rate FROM ci_test_jobs WHERE pull_request_number IS NOT NULL AND pull_request_number > 0 AND pull_request_author IS NOT NULL AND pull_request_author != '' AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY pull_request_author HAVING COUNT(DISTINCT pull_request_number) >= 3 ORDER BY fail_rate DESC LIMIT 15",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "id": 105,
+      "title": "Job Duration & Performance",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "barchart",
+      "title": "Job Duration Distribution",
+      "id": 15,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 42 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Job Count",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT duration_bucket, job_count FROM (SELECT CASE WHEN duration_sec < 300 THEN '< 5 min' WHEN duration_sec < 600 THEN '5-10 min' WHEN duration_sec < 1800 THEN '10-30 min' WHEN duration_sec < 3600 THEN '30-60 min' WHEN duration_sec < 7200 THEN '1-2 hours' ELSE '> 2 hours' END as duration_bucket, CASE WHEN duration_sec < 300 THEN 1 WHEN duration_sec < 600 THEN 2 WHEN duration_sec < 1800 THEN 3 WHEN duration_sec < 3600 THEN 4 WHEN duration_sec < 7200 THEN 5 ELSE 6 END as sort_order, COUNT(*) as job_count FROM ci_test_jobs WHERE duration_sec IS NOT NULL AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY duration_bucket, sort_order ORDER BY sort_order) t ORDER BY t.sort_order",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "type": "table",
+      "title": "Slowest Failing Jobs",
+      "id": 16,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 42 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "avg_duration_min" },
+            "properties": [
+              { "id": "displayName", "value": "Avg Duration (min)" },
+              { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "gauge" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 30 },
+                    { "color": "orange", "value": 60 },
+                    { "color": "red", "value": 120 }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "job_name" },
+            "properties": [
+              { "id": "custom.width", "value": 350 },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Avg Duration (min)" }]
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT job_name, ROUND(AVG(duration_sec) / 60, 1) as avg_duration_min, SUM(CASE WHEN result = 'FAILURE' THEN 1 ELSE 0 END) as failure_count, COUNT(*) as total_runs FROM ci_test_jobs WHERE duration_sec IS NOT NULL AND scope_id IN (${repository:sqlstring}) AND trigger_type IN (${trigger_type:sqlstring}) AND job_name IN (${job_name:sqlstring}) AND $__timeFilter(finished_at) GROUP BY job_name HAVING failure_count > 0 ORDER BY avg_duration_min DESC LIMIT 20",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 },
+      "id": 106,
+      "title": "Detailed Failed Test Cases",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "type": "table",
+      "title": "Failed Test Details",
+      "id": 17,
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 51 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "test_name" },
+            "properties": [
+              { "id": "custom.width", "value": 300 },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "failure_message" },
+            "properties": [
+              { "id": "custom.width", "value": 350 },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "prow_link" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [{ "targetBlank": true, "title": "View in Prow", "url": "${__value.text}" }]
+              },
+              { "id": "custom.width", "value": 80 },
+              { "id": "displayName", "value": "Prow" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "commit_sha" },
+            "properties": [{ "id": "custom.width", "value": 100 }]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "md",
+        "footer": { "countRows": true, "fields": "", "reducer": ["count"], "show": true },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "finished_at" }]
+      },
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawSql": "SELECT tc.name as test_name, j.job_name, j.pull_request_number as pr_number, j.pull_request_author as author, LEFT(j.commit_sha, 8) as commit_sha, DATE_FORMAT(j.finished_at, '%Y-%m-%d %H:%i') as finished_at, j.scope_id as repository, LEFT(tc.failure_message, 200) as failure_message, j.view_url as prow_link FROM ci_test_cases tc JOIN ci_test_jobs j ON tc.connection_id = j.connection_id AND tc.job_id = j.job_id WHERE tc.status = 'failed' AND j.scope_id IN (${repository:sqlstring}) AND j.trigger_type IN (${trigger_type:sqlstring}) AND j.job_name IN (${job_name:sqlstring}) AND $__timeFilter(j.finished_at) ORDER BY j.finished_at DESC LIMIT 200",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

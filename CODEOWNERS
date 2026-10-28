@@ -1,0 +1,11 @@
+# CODEOWNERS
+# See: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default — covers everything not matched by a more specific rule below
+* @konflux-ci/konflux-devprod-team
+
+# Agent restraints — always require human review.
+CODEOWNERS @konflux-ci/konflux-devprod-team
+AGENTS.md @konflux-ci/konflux-devprod-team
+CLAUDE.md @konflux-ci/konflux-devprod-team
+.github/workflows/ @konflux-ci/konflux-devprod-team

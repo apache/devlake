@@ -1,0 +1,14 @@
+# Custom CA certificates override for internal services (e.g., CEE GitLab)
+#
+# Usage:
+#   1. Set CA_CERT_FILE in .env to your CA bundle path
+#   2. Run: podman compose -f docker-compose-dev.yml -f docker-compose-custom-ca.yml up -d
+#
+services:
+  devlake:
+    env_file:
+      - ./.env
+    volumes:
+      - ${CA_CERT_FILE}:/etc/ssl/certs/ca-certificates.crt:ro
+    environment:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt

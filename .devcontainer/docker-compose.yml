@@ -37,6 +37,7 @@ services:
       MYSQL_PASSWORD: merico
       TZ: UTC
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-log-bin
+      --sql-mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
     networks:
       - default
   grafana:
@@ -48,6 +49,9 @@ services:
     environment:
       GF_SERVER_ROOT_URL: "http://localhost:4000/grafana"
       GF_USERS_DEFAULT_THEME: "light"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
       MYSQL_URL: mysql:3306
       MYSQL_DATABASE: lake
       MYSQL_USER: merico

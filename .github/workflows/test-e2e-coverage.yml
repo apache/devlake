@@ -1,0 +1,163 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: test-e2e-coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e-coverage:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      id-token: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6
+
+    - name: Create .env file
+      run: |
+        cp env.example .env
+        sed -i 's|127.0.0.1:3306|mysql:3306|g' .env
+
+    - name: Start services with coverage
+      run: |
+        docker compose -f docker-compose-dev.yml -f docker-compose-e2e-coverage.yml up -d --build
+
+    - name: Wait for API to be ready
+      run: |
+        echo "Waiting for DevLake API..."
+        for i in $(seq 1 120); do
+          if curl -s http://localhost:8080/ping > /dev/null 2>&1; then
+            echo "API ready after $((i*2))s"
+            break
+          fi
+          sleep 2
+        done
+        curl -sf http://localhost:8080/ping || (echo "API failed to start"; docker compose -f docker-compose-dev.yml -f docker-compose-e2e-coverage.yml logs devlake mysql; exit 1)
+
+    - name: Trigger and wait for DB migration
+      run: |
+        curl -s http://localhost:8080/proceed-db-migration || true
+        echo "Waiting for migration to complete..."
+        migration_done=false
+        for i in $(seq 1 60); do
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/blueprints)
+          if [ "$code" = "200" ]; then
+            echo "Migration complete after $((i*10))s"
+            migration_done=true
+            break
+          fi
+          sleep 10
+        done
+        if [ "$migration_done" != "true" ]; then
+          echo "Migration did not complete (last HTTP $code)"
+          docker compose -f docker-compose-dev.yml -f docker-compose-e2e-coverage.yml logs devlake
+          exit 1
+        fi
+
+    - name: Set up Node.js
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38  # v6
+      with:
+        node-version: '18'
+
+    - name: Wait for Config-UI to be ready
+      run: |
+        echo "Waiting for Config-UI..."
+        for i in $(seq 1 60); do
+          if curl -s http://localhost:4000 > /dev/null 2>&1; then
+            echo "Config-UI ready after $((i*2))s"
+            break
+          fi
+          sleep 2
+        done
+        curl -sf http://localhost:4000 || (echo "Config-UI failed to start"; docker compose -f docker-compose-dev.yml -f docker-compose-e2e-coverage.yml logs config-ui; exit 1)
+
+    - name: Install e2e dependencies
+      run: |
+        cd e2e
+        npm ci
+        npx playwright install chromium --with-deps
+
+    - name: Run basic-flow Playwright e2e tests
+      run: |
+        cd e2e
+        npx playwright test basic-flow.spec.ts
+
+    - name: Verify Codecov e2e prerequisites
+      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        if [ -z "$CODECOV_TOKEN" ]; then
+          echo "::error::CODECOV_TOKEN GitHub Actions secret is required for codecov e2e tests"
+          exit 1
+        fi
+
+    - name: Run codecov-flow Playwright e2e tests
+      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        CODECOV_ORG: konflux-ci
+        CODECOV_SERVICE: github
+        CODECOV_ENDPOINT: https://api.codecov.io
+        CODECOV_REPO: konflux-ci/coverport
+      run: |
+        cd e2e
+        npx playwright test codecov-flow.spec.ts
+
+    - name: Collect Go e2e coverage via coverport
+      if: always()
+      run: |
+        mkdir -p e2e-coverage/raw
+        echo "Fetching coverage from coverport server..."
+        RESP=$(curl -sf http://localhost:9095/coverage) || { echo "::warning::Coverage endpoint unreachable"; exit 0; }
+
+        echo "$RESP" | jq -r '.meta_filename' > /tmp/meta_name
+        echo "$RESP" | jq -r '.meta_data' | base64 -d > "e2e-coverage/raw/$(cat /tmp/meta_name)"
+        echo "$RESP" | jq -r '.counters_filename' > /tmp/counter_name
+        echo "$RESP" | jq -r '.counters_data' | base64 -d > "e2e-coverage/raw/$(cat /tmp/counter_name)"
+
+        echo "Raw coverage files:"
+        ls -la e2e-coverage/raw/
+
+        go tool covdata textfmt -i=./e2e-coverage/raw -o=./e2e-coverage/go-coverage.out
+        echo "Go e2e coverage generated:"
+        go tool cover -func=./e2e-coverage/go-coverage.out | tail -1
+
+    - name: Upload Go e2e coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac  # v5
+      with:
+        use_oidc: true
+        flags: e2e-go
+        files: e2e-coverage/go-coverage.out
+        fail_ci_if_error: false
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      with:
+        name: playwright-report
+        path: e2e/playwright-report/
+
+    - name: Stop all services
+      if: always()
+      run: docker compose -f docker-compose-dev.yml -f docker-compose-e2e-coverage.yml down

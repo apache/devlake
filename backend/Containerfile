@@ -1,0 +1,227 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# UBI 9-based DevLake backend image (parity with Dockerfile.konflux).
+
+ARG GO_VERSION=1.27.3
+ARG TINI_VERSION=v0.19.0
+
+# Pin to multi-arch manifest digest (not :latest) for reproducible builds.
+FROM registry.access.redhat.com/ubi9/ubi@sha256:9d99826a5299a54fa92e9b47d74e6cd72efb04cb57eb8fe748ed93e08ebb6184 AS builder
+
+# Do not default TARGETARCH/BUILDARCH — a default shadows BuildKit's auto values
+# (e.g. CI on ubuntu-24.04-arm would download amd64 Go and hit Exec format error).
+ARG BUILDARCH
+ARG TARGETARCH
+ARG GOPROXY=
+ARG HTTP_PROXY=
+ARG HTTPS_PROXY=
+ARG GO_VERSION=1.27.3
+# SHA-256 from https://go.dev/dl/?mode=json&include=all (go1.27.3 linux archives)
+ARG GO_SHA256_AMD64=65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40
+ARG GO_SHA256_ARM64=a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49
+
+ENV GOPROXY=${GOPROXY} \
+    HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    GOPATH=/go \
+    PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+RUN dnf -y update && \
+    dnf -y install \
+        gcc \
+        gcc-c++ \
+        make \
+        cmake \
+        binutils \
+        pkgconfig \
+        openssl-devel \
+        zlib-devel \
+        wget \
+        tar \
+        gzip \
+        git \
+        perl \
+        diffutils \
+        findutils \
+        which && \
+    dnf clean all
+
+# Go toolchain must match the builder machine (BUILDARCH), not the target.
+RUN case "${BUILDARCH}" in \
+        amd64) GO_SHA256="${GO_SHA256_AMD64}" ;; \
+        arm64) GO_SHA256="${GO_SHA256_ARM64}" ;; \
+        *) echo "unsupported BUILDARCH=${BUILDARCH}"; exit 1 ;; \
+    esac && \
+    curl -fsSL -o /tmp/go.tar.gz "https://go.dev/dl/go${GO_VERSION}.linux-${BUILDARCH}.tar.gz" && \
+    echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c - && \
+    tar -C /usr/local -xzf /tmp/go.tar.gz && \
+    rm -f /tmp/go.tar.gz
+
+RUN go install github.com/vektra/mockery/v3@v3.8.1 && \
+    go install github.com/swaggo/swag/cmd/swag@v1.16.6
+
+# libssh2-devel is not in UBI; build from source for libgit2 SSH support
+ARG LIBSSH2_VERSION=1.11.0
+RUN mkdir -p /tmp/build && cd /tmp/build && \
+    wget "https://github.com/libssh2/libssh2/releases/download/libssh2-${LIBSSH2_VERSION}/libssh2-${LIBSSH2_VERSION}.tar.gz" -O - | tar -xz && \
+    cd "libssh2-${LIBSSH2_VERSION}" && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCRYPTO_BACKEND=OpenSSL \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/deps/target \
+        -DCMAKE_INSTALL_LIBDIR=lib && \
+    make -j"$(nproc)" install && \
+    cd / && rm -rf /tmp/build
+
+# Build libgit2 against native UBI libraries (same version as Dockerfile.konflux)
+RUN mkdir -p /tmp/build && cd /tmp/build && \
+    wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.2.tar.gz -O - | tar -xz && \
+    cd libgit2-1.3.2 && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DBUILD_SHARED_LIBS=ON \
+        -DUSE_SSH=ON \
+        -DCMAKE_PREFIX_PATH=/usr/local/deps/target \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/deps/target \
+        -DCMAKE_INSTALL_LIBDIR=lib && \
+    make -j"$(nproc)" install && \
+    cd / && rm -rf /tmp/build
+
+FROM builder AS build
+
+WORKDIR /app
+COPY . /app
+ENV GOBIN=/app/bin
+
+ARG TARGETARCH
+ARG TAG=
+ARG SHA=
+ARG GO_PLUGINS=
+ARG DEVLAKE_COVER=
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    export PKG_CONFIG_PATH=/usr/local/deps/target/lib/pkgconfig && \
+    export LD_LIBRARY_PATH=/usr/local/deps/target/lib && \
+    export CGO_ENABLED=1 && \
+    export CGO_LDFLAGS="-L/usr/local/deps/target/lib -Wl,-rpath,/usr/local/deps/target/lib" && \
+    export GOARCH="${TARGETARCH}" && \
+    export GOMAXPROCS=4 && \
+    export DEVLAKE_COVER="$DEVLAKE_COVER" && \
+    DEVLAKE_PLUGINS="$GO_PLUGINS" make all
+
+# remove symlink in lib, we will recreate in final image
+RUN cd /usr/local/deps/target/lib && \
+    for file in *.so* ; do \
+        if [ -L "$file" ] ; then \
+            unlink "$file" ; \
+        fi \
+    done
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:57c8151c51445a07e503dab9dc9211dc3cdeac9d45ed81a10954b7d770659b3b AS base
+
+ARG TARGETARCH
+ARG TINI_VERSION=v0.19.0
+# SHA-256 from https://github.com/krallin/tini/releases/tag/v0.19.0 (*.sha256sum)
+ARG TINI_SHA256_AMD64=93dcc18adc78c65a028a84799ecf8ad40c936fdfc5f2a57b1acda5a8117fa82c
+ARG TINI_SHA256_ARM64=07952557df20bfd2a95f9bef198b445e006171969499a1d361bd9e6f8e5e0e81
+
+# ubi-minimal ships curl-minimal (conflicts with curl). Prefer it.
+RUN microdnf -y update && \
+    microdnf -y install \
+        python3 \
+        python3-pip \
+        python3-devel \
+        gcc \
+        gcc-c++ \
+        make \
+        tar \
+        gzip \
+        pkgconf-pkg-config \
+        ca-certificates \
+        openssl \
+        zlib \
+        libffi-devel \
+        mariadb-connector-c-devel \
+        libpq-devel \
+        git \
+        openssh-clients \
+        shadow-utils \
+        findutils \
+        which && \
+    microdnf clean all && \
+    rm -rf /var/cache/yum /var/cache/dnf
+
+# tini is not in UBI repos; install static binary with checksum verification
+RUN case "${TARGETARCH}" in \
+        amd64) TINI_SHA256="${TINI_SHA256_AMD64}" ;; \
+        arm64) TINI_SHA256="${TINI_SHA256_ARM64}" ;; \
+        *) echo "unsupported TARGETARCH=${TARGETARCH}"; exit 1 ;; \
+    esac && \
+    curl -fsSL -o /usr/bin/tini \
+        "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH}" && \
+    echo "${TINI_SHA256}  /usr/bin/tini" | sha256sum -c - && \
+    chmod +x /usr/bin/tini
+
+EXPOSE 8080
+
+RUN useradd -ms /bin/bash -d /app devlake -u 1010 && \
+    chown -R devlake:devlake /etc/pki/ca-trust
+
+USER devlake
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN mkdir logs
+VOLUME /app/logs
+
+COPY --chown=devlake:devlake python/ /app/python/
+RUN python3 -m pip install --no-cache --upgrade pip setuptools && \
+    python3 -m pip install --no-cache -r python/requirements.txt && \
+    python3 -m pip install --upgrade pip
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/app/.local/bin sh
+ENV PATH="/app/.local/bin:${PATH}"
+
+RUN /app/python/build.sh
+
+FROM base AS devlake-base
+ARG DEBUG=
+
+ENV LD_LIBRARY_PATH=/app/libs
+RUN mkdir -p /app/libs
+COPY --from=build /usr/local/deps/target/lib/*.so* /app/libs
+COPY --from=build /go/bin /usr/bin
+USER root
+RUN echo "/app/libs" > /etc/ld.so.conf.d/devlake-libs.conf && ldconfig
+USER devlake
+
+COPY --from=build /app/bin /app/bin
+COPY --from=build /app/resources /app/resources
+
+USER root
+COPY --from=quay.io/konflux-ci/oras:latest /usr/bin/oras /usr/local/bin/oras
+RUN chmod +x /usr/local/bin/oras && \
+    chgrp -R 0 /app && \
+    chmod -R g=u /app
+USER devlake
+
+ENV PATH="/app/bin:${PATH}"
+ENV DEBUG="$DEBUG"
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["lake"]

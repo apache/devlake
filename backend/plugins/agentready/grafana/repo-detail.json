@@ -1,0 +1,233 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_DEVLAKE",
+      "label": "DevLake",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "title": "Current Score",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT overall_score AS 'Score'\nFROM _tool_agentready_assessments\nWHERE repo_id = '${repo_id}' AND id != ''\nORDER BY assessed_at DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 40 },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      }
+    },
+    {
+      "title": "Certification Level",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT certification_level AS 'Level'\nFROM _tool_agentready_assessments\nWHERE repo_id = '${repo_id}' AND id != ''\nORDER BY assessed_at DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "/^Level$/"
+        },
+        "textMode": "value",
+        "colorMode": "background"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "Platinum": { "color": "#E5E4E2", "text": "Platinum" },
+                "Gold": { "color": "#FFD700", "text": "Gold" },
+                "Silver": { "color": "#C0C0C0", "text": "Silver" },
+                "Bronze": { "color": "#CD7F32", "text": "Bronze" },
+                "Needs Improvement": { "color": "#FF4444", "text": "Needs Improvement" },
+                "None": { "color": "#808080", "text": "None" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Assessment Metadata",
+      "type": "table",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  repo_name AS 'Repository',\n  attributes_assessed AS 'Assessed',\n  attributes_total AS 'Total',\n  branch AS 'Branch',\n  ROUND(duration_seconds, 1) AS 'Duration (s)'\nFROM _tool_agentready_assessments\nWHERE repo_id = '${repo_id}' AND id != ''\nORDER BY assessed_at DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Score History",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT assessed_at AS time, overall_score AS 'Score'\nFROM _tool_agentready_assessments\nWHERE repo_id = '${repo_id}' AND id != '' AND $__timeFilter(assessed_at)\nORDER BY assessed_at",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 5,
+            "showPoints": "always"
+          }
+        }
+      }
+    },
+    {
+      "title": "Findings by Tier",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  CASE tier WHEN 1 THEN 'Essential' WHEN 2 THEN 'Critical' WHEN 3 THEN 'Important' WHEN 4 THEN 'Advanced' END AS tier_name,\n  SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END) AS 'Pass',\n  SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END) AS 'Fail'\nFROM _tool_agentready_findings f\nJOIN _tool_agentready_assessments a ON f.assessment_id = a.id\nWHERE a.repo_id = '${repo_id}'\n  AND a.assessed_at = (SELECT MAX(assessed_at) FROM _tool_agentready_assessments WHERE repo_id = '${repo_id}' AND id != '')\nGROUP BY tier\nORDER BY tier",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "stacking": { "mode": "normal" },
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Pass" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Fail" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      }
+    },
+    {
+      "title": "Finding Details",
+      "type": "table",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 12 },
+      "datasource": "${DS_DEVLAKE}",
+      "targets": [
+        {
+          "rawSql": "SELECT\n  f.attribute_name,\n  f.category,\n  f.tier,\n  f.status,\n  f.score,\n  f.measured_value,\n  f.remediation_summary\nFROM _tool_agentready_findings f\nJOIN _tool_agentready_assessments a ON f.assessment_id = a.id\nWHERE a.repo_id = '${repo_id}'\n  AND a.assessed_at = (SELECT MAX(assessed_at) FROM _tool_agentready_assessments WHERE repo_id = '${repo_id}' AND id != '')\nORDER BY f.tier, f.status DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "status" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "pass": { "color": "green", "text": "PASS" } } },
+                  { "type": "value", "options": { "fail": { "color": "red", "text": "FAIL" } } }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["agentready", "devlake"],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_DEVLAKE",
+        "type": "datasource",
+        "query": "mysql"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": "${DS_DEVLAKE}",
+        "definition": "select distinct name from projects",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "select distinct name from projects",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "name": "repo_id",
+        "type": "query",
+        "datasource": "${DS_DEVLAKE}",
+        "query": "SELECT COALESCE(a.repo_name, a.repo_id) AS __text, a.repo_id AS __value FROM _tool_agentready_assessments a JOIN project_mapping pm ON a.repo_id = pm.row_id AND pm.`table` = 'repos' WHERE a.id != '' AND pm.project_name in (${project}) GROUP BY a.repo_id, a.repo_name ORDER BY a.repo_name",
+        "refresh": 1,
+        "sort": 0
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "title": "AgentReady - Repository Detail",
+  "uid": "agentready-repo-detail"
+}

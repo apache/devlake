@@ -19,6 +19,8 @@ package tasks
 
 import (
 	"reflect"
+	"regexp"
+	"strings"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -29,6 +31,39 @@ import (
 	"github.com/apache/devlake/helpers/pluginhelper/api"
 	gitlabModels "github.com/apache/devlake/plugins/gitlab/models"
 )
+
+// gitlabBotTokenPattern matches GitLab project/group access token usernames,
+// e.g. "project_78877_bot_ec63972b..." or "group_80889_bot_73ed0037...".
+var gitlabBotTokenPattern = regexp.MustCompile(`^(project|group)_[0-9]+_bot`)
+
+// isGitlabBotAccount reports whether a GitLab account identifies a bot.
+// GitLab accounts have no API-reported type field, so detection relies on
+// username conventions (access token prefixes, -bot/-robot suffixes) and
+// the account's display name containing "Service Account".
+func isGitlabBotAccount(username string, fullName string) bool {
+	lowerUsername := strings.ToLower(username)
+	if gitlabBotTokenPattern.MatchString(lowerUsername) {
+		return true
+	}
+	if strings.HasSuffix(lowerUsername, "-bot") || strings.HasSuffix(lowerUsername, "-robot") {
+		return true
+	}
+	return strings.Contains(strings.ToLower(fullName), "service account")
+}
+
+// buildGitlabDomainAccount converts a tool-layer GitlabAccount row into a
+// domain Account, flagging bot identities via isGitlabBotAccount.
+func buildGitlabDomainAccount(id string, gitlabAccount *gitlabModels.GitlabAccount) *crossdomain.Account {
+	return &crossdomain.Account{
+		DomainEntity: domainlayer.DomainEntity{Id: id},
+		UserName:     gitlabAccount.Username,
+		FullName:     gitlabAccount.Name,
+		Email:        gitlabAccount.Email,
+		AvatarUrl:    gitlabAccount.AvatarUrl,
+		CreatedDate:  gitlabAccount.CreatedUserAt,
+		IsBot:        isGitlabBotAccount(gitlabAccount.Username, gitlabAccount.Name),
+	}
+}
 
 func init() {
 	RegisterSubtaskMeta(&ConvertAccountsMeta)
@@ -67,14 +102,7 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
 			GitlabAccount := inputRow.(*gitlabModels.GitlabAccount)
-			domainUser := &crossdomain.Account{
-				DomainEntity: domainlayer.DomainEntity{Id: accountIdGen.Generate(data.Options.ConnectionId, GitlabAccount.GitlabId)},
-				UserName:     GitlabAccount.Username,
-				FullName:     GitlabAccount.Name,
-				Email:        GitlabAccount.Email,
-				AvatarUrl:    GitlabAccount.AvatarUrl,
-				CreatedDate:  GitlabAccount.CreatedUserAt,
-			}
+			domainUser := buildGitlabDomainAccount(accountIdGen.Generate(data.Options.ConnectionId, GitlabAccount.GitlabId), GitlabAccount)
 
 			return []interface{}{
 				domainUser,

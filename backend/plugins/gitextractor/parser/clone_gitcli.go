@@ -50,6 +50,7 @@ type CloneRepoConfig struct {
 	SkipCommitStat  *bool
 	SkipCommitFiles *bool
 	NoShallowClone  bool
+	ForceFullClone  bool
 }
 
 type GitcliCloner struct {
@@ -76,6 +77,7 @@ func NewGitcliCloner(ctx plugin.SubTaskContext, localDir string) (*GitcliCloner,
 			SkipCommitStat:  taskData.Options.SkipCommitStat,
 			SkipCommitFiles: taskData.Options.SkipCommitFiles,
 			NoShallowClone:  taskData.Options.NoShallowClone,
+			ForceFullClone:  taskData.Options.ForceFullClone,
 		},
 	}))
 
@@ -191,25 +193,45 @@ func (g *GitcliCloner) IsIncremental() bool {
 	return false
 }
 
+type cloneStrategy int
+
+const (
+	strategyFull        cloneStrategy = iota
+	strategyDoubleClone               // full clone to temp dir, shallow from local (for remotes without --shallow-since)
+	strategyShallow
+)
+
+func chooseCloneStrategy(since *time.Time, forceFullClone, noShallowClone bool) cloneStrategy {
+	if since == nil || forceFullClone {
+		return strategyFull
+	}
+	if noShallowClone {
+		return strategyDoubleClone
+	}
+	return strategyShallow
+}
+
 func (g *GitcliCloner) CloneRepo() errors.Error {
-	if g.since == nil {
-		// full sync
+	strategy := chooseCloneStrategy(g.since, g.taskData.Options.ForceFullClone, g.taskData.Options.NoShallowClone)
+	switch strategy {
+	case strategyFull:
 		if err := g.fullClone(); err != nil {
 			return err
 		}
-	} else {
-		if g.taskData.Options.NoShallowClone {
-			// data source does not support shallow clone
-			//   1. perform a full clone to accommodate
-			//   2. perform a local shallow clone to reduce the libgit2 memory usage
-			if err := g.doubleClone(); err != nil {
-				return err
-			}
-		} else {
-			// data source support shallow clone
-			if err := g.shallowClone(); err != nil {
-				return err
-			}
+		if g.since != nil {
+			g.success = true
+		}
+	case strategyDoubleClone:
+		if err := g.doubleClone(); err != nil {
+			return err
+		}
+		if err := g.deepen(); err != nil {
+			return err
+		}
+		g.success = true
+	case strategyShallow:
+		if err := g.shallowClone(); err != nil {
+			return err
 		}
 		if err := g.deepen(); err != nil {
 			return err
@@ -351,16 +373,14 @@ func (g *GitcliCloner) doubleClone() errors.Error {
 		return errors.Convert(e)
 	}
 	defer os.RemoveAll(intermediaryDir) // CWE-459: ensure cleanup on all exit paths
-	// step 1: full clone into a intermediary dir
 	backup := g.localDir
 	g.localDir = intermediaryDir
 	if err := g.fullClone(); err != nil {
 		return err
 	}
 	g.localDir = backup
-	// step 2: perform shallow clone against the intermediary dir
 	backup = g.remoteUrl
-	g.remoteUrl = fmt.Sprintf("file://%s", intermediaryDir) // the file:// prefix is required for shallow clone to work
+	g.remoteUrl = fmt.Sprintf("file://%s", intermediaryDir)
 	if err := g.shallowClone(); err != nil {
 		return err
 	}

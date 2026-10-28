@@ -1,0 +1,15 @@
+[github_app]
+pr_commands = [
+    "/agentic_describe",
+    "/agentic_review"
+]
+handle_push_trigger = true
+push_commands = [
+    "/agentic_review"
+]
+
+[review_agent]
+comments_location_policy = "both"
+inline_comments_severity_threshold = 3
+issues_user_guidelines = ""
+compliance_user_guidelines = ""

@@ -122,6 +122,8 @@ func (p Jira) SubTaskMetas() []plugin.SubTaskMeta {
 		tasks.CollectIssuesMeta,
 		tasks.ExtractIssuesMeta,
 
+		tasks.CollectParentIssuesMeta,
+
 		tasks.ConvertIssueLabelsMeta,
 
 		tasks.CollectIssueCommentsMeta,
@@ -144,6 +146,7 @@ func (p Jira) SubTaskMetas() []plugin.SubTaskMeta {
 
 		tasks.CollectEpicsMeta,
 		tasks.ExtractEpicsMeta,
+		tasks.CleanupStaleBoardIssuesMeta,
 
 		tasks.CollectAccountsMeta,
 

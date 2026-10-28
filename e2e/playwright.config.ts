@@ -29,7 +29,10 @@ export default defineConfig({
     screenshot: 'on',
     trace: 'on-first-retry',
   },
-  reporter: [['html', { open: 'never' }], ['list']],
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+  ],
   projects: [
     {
       name: 'chromium',

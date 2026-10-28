@@ -37,6 +37,7 @@ import { CircleCITransformation } from '@/plugins/register/circleci';
 import { ArgoCDTransformation } from '@/plugins/register/argocd';
 import { GhCopilotTransformation } from '@/plugins/register/gh-copilot';
 import { AsanaTransformation } from '@/plugins/register/asana';
+import { AisdlcTransformation } from '@/plugins/register/aisdlc';
 import { ClickUpTransformation } from '@/plugins/register/clickup';
 import { YoutrackTransformation } from '@/plugins/register/youtrack';
 import { RedmineTransformation } from '@/plugins/register/redmine';
@@ -316,6 +317,15 @@ export const ScopeConfigForm = ({
                   connectionId={connectionId}
                   transformation={transformation}
                   setTransformation={setTransformation}
+                />
+              )}
+
+              {plugin === 'aisdlc' && (
+                <AisdlcTransformation
+                  entities={entities}
+                  transformation={transformation}
+                  setTransformation={setTransformation}
+                  setHasError={setHasError}
                 />
               )}
 

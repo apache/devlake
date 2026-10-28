@@ -22,9 +22,14 @@ echo build-server.sh VERSION: $VERSION
 ROOT_DIR=$(dirname $(dirname "$0"))
 VERSION=${VERSION:-$(git describe --tags --always --dirty || true)}
 EXTRA=""
+COVER_FLAGS=""
 
 if [ -n "$DEVLAKE_DEBUG" ]; then
     EXTRA="-gcflags='all=-N -l'"
 fi
 
-go build $EXTRA -ldflags "-X 'github.com/apache/devlake/core/version.Version=$VERSION'" -o $ROOT_DIR/bin/lake $ROOT_DIR/server/
+if [ -n "$DEVLAKE_COVER" ]; then
+    COVER_FLAGS="-cover -covermode=atomic -tags=coverage -coverpkg=github.com/apache/devlake/..."
+fi
+
+go build $COVER_FLAGS $EXTRA -ldflags "-X 'github.com/apache/devlake/core/version.Version=$VERSION'" -o $ROOT_DIR/bin/lake $ROOT_DIR/server/

@@ -147,8 +147,6 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 					orgStr = orgStr[:255]
 				}
 			}
-			isBot := githubUser.Type == "Bot" || strings.HasSuffix(githubUser.Login, "[bot]")
-
 			domainUser := &crossdomain.Account{
 				DomainEntity: domainlayer.DomainEntity{Id: accountIdGen.Generate(data.Options.ConnectionId, githubUser.Id)},
 				Email:        githubUser.Email,
@@ -156,7 +154,7 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 				UserName:     githubUser.Login,
 				AvatarUrl:    githubUser.AvatarUrl,
 				Organization: orgStr,
-				IsBot:        isBot,
+				IsBot:        isBotAccount(githubUser.Login, githubUser.Type),
 			}
 			return []interface{}{
 				domainUser,
@@ -168,4 +166,24 @@ func ConvertAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
+}
+
+// isBotAccount reports whether a GitHub account identifies a bot, based on
+// the API-reported account type or well-known login conventions ([bot]
+// suffix for GitHub Apps, -bot/-robot suffixes, or exact logins
+// copilot/dependabot/github-actions/codecov-commenter).
+func isBotAccount(login string, accountType string) bool {
+	if accountType == "Bot" {
+		return true
+	}
+	lowerLogin := strings.ToLower(login)
+	if strings.HasSuffix(lowerLogin, "[bot]") ||
+		strings.HasSuffix(lowerLogin, "-bot") ||
+		strings.HasSuffix(lowerLogin, "-robot") {
+		return true
+	}
+	return lowerLogin == "copilot" ||
+		lowerLogin == "dependabot" ||
+		lowerLogin == "github-actions" ||
+		lowerLogin == "codecov-commenter"
 }

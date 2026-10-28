@@ -59,7 +59,15 @@ export const test = (
       | 'adminApiKey'
       | 'organization'
       | 'organizationId'
+      | 'service'
       | 'customHeaders'
+      | 'ciTool'
+      | 'quayOrganization'
+      | 'githubOrganization'
+      | 'githubToken'
+      | 'project'
+      | 'junitRegex'
+      | 'gitlabConnectionId'
     >
   >,
 ): Promise<IConnectionTestResult> =>
@@ -85,6 +93,14 @@ export const testOld = (
     | 'adminApiKey'
     | 'organization'
     | 'organizationId'
+    | 'service'
     | 'customHeaders'
+    | 'ciTool'
+    | 'quayOrganization'
+    | 'githubOrganization'
+    | 'githubToken'
+    | 'project'
+    | 'junitRegex'
+    | 'gitlabConnectionId'
   >,
 ): Promise<IConnectionOldTestResult> => request(`/plugins/${plugin}/test`, { method: 'post', data: payload });

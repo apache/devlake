@@ -32,6 +32,7 @@ services:
       TZ: UTC
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
       --skip-log-bin
+      --sql-mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
 
   grafana:
     image: ${DEVLAKE_IMAGE_REGISTRY:-devlake.docker.scarf.sh}/apache/devlake-dashboard:latest
@@ -45,6 +46,9 @@ services:
     environment:
       GF_SERVER_ROOT_URL: "${GRAFANA_ROOT_URL:-http://localhost:4001/grafana}"
       GF_USERS_DEFAULT_THEME: "light"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
       DATABASE_TYPE: "${GRAFANA_DATABASE_TYPE:-mysql}"
       DATABASE_HOST: "${GRAFANA_DATABASE_HOST:-mysql}"
       DATABASE_PORT: "${GRAFANA_DATABASE_PORT:-3306}"
@@ -62,10 +66,10 @@ services:
       - mysql
 
   devlake:
-    image: devlake-local:latest
+    image: localhost/devlake-backend:local
     build:
       context: backend
-      dockerfile: Dockerfile.local
+      dockerfile: Containerfile
       args:
         HTTPS_PROXY: "${HTTPS_PROXY}"
         GOPROXY: "${GOPROXY}"
@@ -87,9 +91,10 @@ services:
       - mysql
 
   config-ui:
-    image: ${DEVLAKE_IMAGE_REGISTRY:-devlake.docker.scarf.sh}/apache/devlake-config-ui:latest
+    image: localhost/devlake-frontend:local
     build:
       context: "config-ui"
+      dockerfile: Containerfile
     ports:
       - 4001:4000
     env_file:

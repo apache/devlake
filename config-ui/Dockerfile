@@ -23,6 +23,9 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
+# DEPRECATED: Prefer config-ui/Containerfile (UBI 9) for local compose and Konflux builds.
+# This Debian Dockerfile is retained for upstream compatibility and will be removed later.
+
 FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
 
 WORKDIR /home/node/code

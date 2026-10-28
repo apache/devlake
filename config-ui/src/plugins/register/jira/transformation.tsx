@@ -171,8 +171,8 @@ const renderCollapseItems = ({
       children: (
         <Form labelCol={{ span: 5 }}>
           <p>
-            Tell DevLake what types of Jira issues you are using as features, bugs and incidents, and what field as
-            `Epic Link` or `Story Points`.
+            Tell DevLake what types of Jira issues you are using as features, bugs and incidents, and what fields to use
+            for `Story Points` and `Epic Link` (parent link).
           </p>
           <p>
             DevLake defines three standard types of issues: FEATURE, BUG and INCIDENT. Standardize your Jira issue types
@@ -281,6 +281,32 @@ const renderCollapseItems = ({
                 onChangeTransformation({
                   ...transformation,
                   extraJql: e.target.value,
+                })
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label={
+              <>
+                <span>Epic Link</span>
+                <HelpTooltip content="Choose the issue field you are using as `Epic Link` or `Parent Link`. This is used to link issues to their parent epic/feature. For Red Hat Jira, this is typically 'Parent Link' (customfield_12313140)." />
+              </>
+            }
+          >
+            <Select
+              showSearch
+              allowClear
+              placeholder="Select epic link field"
+              options={fields.map((it) => ({ label: it.name, value: it.id }))}
+              optionFilterProp="children"
+              filterOption={(input: string, option?: { label: string; value: string }) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              value={transformation.epicKeyField}
+              onChange={(value) =>
+                onChangeTransformation({
+                  ...transformation,
+                  epicKeyField: value,
                 })
               }
             />

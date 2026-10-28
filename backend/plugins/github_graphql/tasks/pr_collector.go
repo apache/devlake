@@ -109,9 +109,26 @@ type ReviewRequestNode struct {
 	RequestedReviewer RequestedReviewer `graphql:"requestedReviewer"`
 }
 
+// RequestedReviewer represents the GitHub RequestedReviewer union type.
+// In GitHub's schema, RequestedReviewer = User | Team | Mannequin (no Bot).
 type RequestedReviewer struct {
 	User User `graphql:"... on User"`
 	Team Team `graphql:"... on Team"`
+}
+
+// GetId returns the database ID from the User fragment.
+func (r *RequestedReviewer) GetId() int {
+	return r.User.Id
+}
+
+// GetLogin returns the login from the User fragment.
+func (r *RequestedReviewer) GetLogin() string {
+	return r.User.Login
+}
+
+// GetName returns the name from the User fragment.
+func (r *RequestedReviewer) GetName() string {
+	return r.User.Name
 }
 
 type User struct {
@@ -201,6 +218,7 @@ func CollectPrs(taskCtx plugin.SubTaskContext) errors.Error {
 				"owner":      graphql.String(ownerName[0]),
 				"name":       graphql.String(ownerName[1]),
 			}
+
 			return query, variables, nil
 		},
 		GetPageInfo: func(iQuery interface{}, args *api.GraphqlCollectorArgs) (*api.GraphqlQueryPageInfo, error) {

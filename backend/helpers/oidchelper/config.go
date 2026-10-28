@@ -93,11 +93,11 @@ func (c *Config) ProviderNames() []string {
 }
 
 // LoadConfig reads auth env vars via Viper and validates required fields.
-// AUTH_ENABLED defaults to false unless it is explicitly set to true.
+// AUTH_ENABLED defaults to true unless it is explicitly set to false.
 func LoadConfig(basicRes context.BasicRes) (*Config, error) {
 	cfg := basicRes.GetConfigReader()
 
-	authEnabled := false
+	authEnabled := true
 	if cfg.IsSet("AUTH_ENABLED") {
 		authEnabled = cfg.GetBool("AUTH_ENABLED")
 	}

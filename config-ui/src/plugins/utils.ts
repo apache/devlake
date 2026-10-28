@@ -43,6 +43,8 @@ export const getPluginScopeId = (plugin: string, scope: any) => {
       return `${scope.planKey}`;
     case 'argocd':
       return `${scope.name}`;
+    case 'codecov':
+      return `${scope.codecovId}`;
     case 'asana':
       return `${scope.gid}`;
     case 'linear':

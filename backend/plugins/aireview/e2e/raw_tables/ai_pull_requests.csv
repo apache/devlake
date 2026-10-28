@@ -1,0 +1,3 @@
+id,base_repo_id,status,merge_commit_sha,title,url,author_name,pull_request_key,created_date
+github:GithubPullRequest:1:9001,github:GithubRepo:1:200,MERGED,,Claude commit PR,https://github.com/myorg/myrepo/pull/901,Bob,901,2026-03-02T09:00:00.000+00:00
+github:GithubPullRequest:1:9002,github:GithubRepo:1:200,MERGED,cccccccccccccccccccccccccccccccccccccccc,Copilot merge PR,https://github.com/myorg/myrepo/pull/902,Carol,902,2026-03-03T09:00:00.000+00:00

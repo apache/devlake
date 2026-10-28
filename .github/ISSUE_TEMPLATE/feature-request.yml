@@ -17,7 +17,7 @@
 name: Feature Request
 description: Suggest an idea for this project
 title: "[Feature][Module Name] Feature title"
-labels: [ "type/feature-request"]
+labels: ["type/feature-request"]
 body:
   - type: markdown
     attributes:
@@ -28,11 +28,11 @@ body:
     attributes:
       label: Search before asking
       description: >
-        Please make sure to search in the [issues](https://github.com/apache/incubator-devlake/issues?q=is%3Aissue) first
+        Please make sure to search in the [issues](https://github.com/apache/devlake/issues?q=is%3Aissue) first
         to see whether the same feature was requested already.
       options:
         - label: >
-            I had searched in the [issues](https://github.com/apache/incubator-devlake/issues?q=is%3Aissue) and found no
+            I had searched in the [issues](https://github.com/apache/devlake/issues?q=is%3Aissue) and found no
             similar feature requirement.
           required: true
 

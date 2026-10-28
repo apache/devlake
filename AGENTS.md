@@ -16,117 +16,50 @@ limitations under the License.
 -->
 # Apache DevLake - AI Coding Agent Instructions
 
-## Project Overview
-Apache DevLake is a dev data platform that ingests data from DevOps tools (GitHub, GitLab, Jira, Jenkins, etc.), transforms it into standardized domain models, and enables metrics/dashboards via Grafana.
+Apache DevLake ingests data from DevOps tools (GitHub, GitLab, Jira, Jenkins, etc.), transforms it into standardized domain models, and enables metrics/dashboards via Grafana.
 
 ## Architecture
 
-### Three-Layer Data Model
-1. **Raw Layer** (`_raw_*` tables): JSON data collected from APIs, stored for replay/debugging
-2. **Tool Layer** (`_tool_*` tables): Plugin-specific models extracted from raw data
-3. **Domain Layer** (standardized tables): Normalized models in [backend/core/models/domainlayer/](backend/core/models/domainlayer/) - CODE, TICKET, CICD, CODEREVIEW, CODEQUALITY, CROSS
+Three-layer data model: **Raw** (`_raw_*`) → **Tool** (`_tool_*`) → **Domain** (standardized tables in `backend/core/models/domainlayer/`).
 
-### Key Components
-- **backend/**: Go server + plugins (main codebase)
-- **backend/python/**: Python plugin framework via RPC
-- **config-ui/**: React frontend (TypeScript, Vite, Ant Design)
-- **grafana/**: Dashboard definitions
+Key components: `backend/` (Go server + plugins), `config-ui/` (React frontend), `grafana/` (dashboards).
 
-## Plugin Development (Go)
+## Owned Plugins
 
-### Plugin Structure
-Each plugin in `backend/plugins/<name>/` follows this layout:
-```
-api/         # REST endpoints (connections, scopes, scope-configs)
-impl/        # Plugin implementation (implements core interfaces)
-models/      # Tool layer models + migrationscripts/
-tasks/       # Collectors, Extractors, Converters
-e2e/         # Integration tests with CSV fixtures
-```
+This is a fork of Apache DevLake. An **owned plugin** is identified by having an
+`AGENTS.md` file in its directory (`backend/plugins/<name>/AGENTS.md`).
+Read the plugin's `AGENTS.md` before making changes.
 
-### Required Interfaces
-See [backend/plugins/gitlab/impl/impl.go](backend/plugins/gitlab/impl/impl.go) for reference:
-- `PluginMeta`: Name, Description, RootPkgPath
-- `PluginTask`: SubTaskMetas(), PrepareTaskData()
-- `PluginModel`: GetTablesInfo() - **must list all models or CI fails**
-- `PluginMigration`: MigrationScripts() for DB schema evolution
-- `PluginSource`: Connection(), Scope(), ScopeConfig()
+To add a new owned plugin, create `backend/plugins/<name>/AGENTS.md` with
+build/test commands, layout, and conventions for that plugin.
 
-### Subtask Pattern (Collector → Extractor → Converter)
-```go
-// 1. Register subtask in tasks/register.go via init()
-func init() {
-    RegisterSubtaskMeta(&CollectIssuesMeta)
-}
+## Upstream Divergence
 
-// 2. Define dependencies for execution order
-var CollectIssuesMeta = plugin.SubTaskMeta{
-    Name:         "Collect Issues",
-    Dependencies: []*plugin.SubTaskMeta{}, // or reference other metas
-}
-```
+This fork occasionally modifies files from upstream Apache DevLake. All such
+modifications are tracked in [`docs/upstream-diffs.md`](docs/upstream-diffs.md).
 
-### API Collectors
-- Use `helper.NewStatefulApiCollector` for incremental collection with time-based bookmarking
-- See [backend/plugins/gitlab/tasks/issue_collector.go](backend/plugins/gitlab/tasks/issue_collector.go)
+**Before modifying any file outside an owned plugin directory:**
 
-### Migration Scripts
-- Located in `models/migrationscripts/`
-- Register all scripts in `register.go`'s `All()` function
-- Version format: `YYYYMMDD_description.go`
+1. Check `docs/upstream-diffs.md` — if the file is listed, follow the noted constraints.
+2. If introducing a new divergence, add an entry to `docs/upstream-diffs.md` with:
+   files changed, reason, upstream status, upstream PR link, owner, and rebase notes.
+3. Use `Upstream-Status:` trailer in commit messages for upstream-divergent changes.
 
-## Build & Development Commands
+## Quick Reference
 
 ```bash
-# From repo root
-make dep              # Install Go + Python dependencies
 make build            # Build plugins + server
-make dev              # Build + run server
-make godev            # Go-only dev (no Python plugins)
-make unit-test        # Run all unit tests
-make e2e-test         # Run E2E tests
-
-# From backend/
-make swag             # Regenerate Swagger docs (required after API changes)
-make lint             # Run golangci-lint
+make dev              # Build + run
+make unit-test        # Unit tests
+make lint             # golangci-lint (from backend/)
 ```
 
-### Running Locally
-```bash
-docker-compose -f docker-compose-dev.yml up mysql grafana  # Start deps
-make dev                                                     # Run server on :8080
-cd config-ui && yarn && yarn start                          # UI on :4000
-```
-
-## Testing
-
-### Unit Tests
-Place `*_test.go` files alongside source. Use mocks from `backend/mocks/`.
-
-### E2E Tests for Plugins
-Use CSV fixtures in `e2e/` directory. See [backend/test/helper/](backend/test/helper/) for the Go test client that can spin up an in-memory DevLake instance.
-
-### Integration Testing
-```go
-helper.ConnectLocalServer(t, &helper.LocalClientConfig{
-    ServerPort:   8080,
-    DbURL:        "mysql://merico:merico@127.0.0.1:3306/lake",
-    CreateServer: true,
-    Plugins:      []plugin.PluginMeta{gitlab.Gitlab{}},
-})
-```
-
-## Python Plugins
-Located in `backend/python/plugins/`. Use Poetry for dependencies. See [backend/python/README.md](backend/python/README.md).
-
-## Code Conventions
-- Tool model table names: `_tool_<plugin>_<entity>` (e.g., `_tool_gitlab_issues`)
-- Domain model IDs: Use `didgen.NewDomainIdGenerator` for consistent cross-plugin IDs
-- All plugins must be independent - no cross-plugin imports
-- Apache 2.0 license header required on all source files
+For local environment setup (podman, MySQL, service URLs): see [docs/local-dev.md](docs/local-dev.md).
 
 ## Common Pitfalls
+
 - Forgetting to add models to `GetTablesInfo()` fails `plugins/table_info_test.go`
-- Migration scripts must be added to `All()` in `register.go`
-- API changes require running `make swag` to update Swagger docs
-- Python plugins require `libgit2` for gitextractor functionality
+- Migration scripts must be added to `All()` in `migrationscripts/register.go`
+- API changes require `make swag` to update Swagger docs
+- No cross-plugin imports (`plugins/X` must not import `plugins/Y`)
+- Apache 2.0 license header required on all new `.go` files

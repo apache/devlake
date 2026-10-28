@@ -155,5 +155,8 @@ func All() []plugin.MigrationScript {
 		new(backfillSubProjectFromMonorepo),
 		new(addBlueprintIdIndexToPipelines),
 		new(expandDomainTextColumns),
+		new(addAiReviewDomainTables),
+		new(fixAiReviewDomainColumns),
+		new(addAiCommitsDomain),
 	}
 }

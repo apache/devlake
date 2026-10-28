@@ -63,7 +63,17 @@ const buildUpdateTestPayload = (connection: any, values: any, customHeaders: ICu
   companyId: isEqual(connection?.companyId, values.companyId) ? undefined : values.companyId,
   organization: isEqual(connection?.organization, values.organization) ? undefined : values.organization,
   enterprise: isEqual(connection?.enterprise, values.enterprise) ? undefined : values.enterprise,
+  service: isEqual(connection?.service, values.service) ? undefined : values.service,
   customHeaders: isEqual(connection?.customHeaders, customHeaders) ? undefined : customHeaders,
+  ciTool: isEqual(connection?.ciTool, values.ciTool) ? undefined : values.ciTool,
+  quayOrganization: isEqual(connection?.quayOrganization, values.quayOrganization) ? undefined : values.quayOrganization,
+  githubOrganization: isEqual(connection?.githubOrganization, values.githubOrganization) ? undefined : values.githubOrganization,
+  githubToken: isEqual(connection?.githubToken, values.githubToken) ? undefined : values.githubToken,
+  project: isEqual(connection?.project, values.project) ? undefined : values.project,
+  junitRegex: isEqual(connection?.junitRegex, values.junitRegex) ? undefined : values.junitRegex,
+  gitlabConnectionId: isEqual(connection?.gitlabConnectionId, values.gitlabConnectionId)
+    ? undefined
+    : values.gitlabConnectionId,
 });
 
 const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: ICustomHeader[] | undefined) =>
@@ -93,7 +103,15 @@ const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: 
     'companyId',
     'organization',
     'enterprise',
+    'service',
     'customHeaders',
+    'ciTool',
+    'quayOrganization',
+    'githubOrganization',
+    'githubToken',
+    'project',
+    'junitRegex',
+    'gitlabConnectionId',
   ]);
 
 interface Props {
@@ -186,6 +204,7 @@ export const ConnectionForm = ({ plugin, connectionId, onSuccess }: Props) => {
       <Form
         type={type}
         name={name}
+        connectionId={connectionId}
         fields={fields}
         initialValues={connection ? { ...initialValues, ...connection } : initialValues}
         values={values}

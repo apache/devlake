@@ -1,0 +1,812 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# Jenkins Failure Analysis Dashboard\n\n- **Purpose**: Deep dive into build failures with direct links to console logs and stage-level analysis\n- **Features**: Failure trends, MTTR, stage failure patterns, console log access\n- **Data Source**: Jenkins builds collected via DevLake",
+        "mode": "markdown"
+      },
+      "pluginVersion": "9.5.15",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total number of jobs (showing latest build per job)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(*) as 'Total Builds'\nFROM _tool_jenkins_builds b\nINNER JOIN (\n  SELECT job_name, MAX(start_time) as max_time\n  FROM _tool_jenkins_builds\n  WHERE job_name IN (${job_id:sqlstring})\n  GROUP BY job_name\n) latest ON b.job_name = latest.job_name AND b.start_time = latest.max_time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "start_time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "\ud83d\udcca Total Builds",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Number of Jobs passed in latest run = SUCCESS or UNSTABLE (UNSTABLE counted as success)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 101,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(*) as 'Successful Builds'\nFROM _tool_jenkins_builds b\nINNER JOIN (\n  SELECT job_name, MAX(start_time) as max_time\n  FROM _tool_jenkins_builds\n  WHERE job_name IN (${job_id:sqlstring})\n  GROUP BY job_name\n) latest ON b.job_name = latest.job_name AND b.start_time = latest.max_time\nWHERE b.result IN ('SUCCESS', 'UNSTABLE')",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "start_time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "\u2705 Successful Builds[Latest Runs]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Number of Jobs failed in latest run = FAILURE status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 102,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(*) as 'Failed Builds'\nFROM _tool_jenkins_builds b\nINNER JOIN (\n  SELECT job_name, MAX(start_time) as max_time\n  FROM _tool_jenkins_builds\n  WHERE job_name IN (${job_id:sqlstring})\n  GROUP BY job_name\n) latest ON b.job_name = latest.job_name AND b.start_time = latest.max_time\nWHERE b.result = 'FAILURE'",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "start_time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "\u274c Failed Builds[Latest Runs]",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Percentage of jobs with latest build = SUCCESS or UNSTABLE",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 103,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  ROUND(SUM(CASE WHEN b.result IN ('SUCCESS', 'UNSTABLE') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as 'Success Rate'\nFROM _tool_jenkins_builds b\nINNER JOIN (\n  SELECT job_name, MAX(start_time) as max_time\n  FROM _tool_jenkins_builds\n  WHERE job_name IN (${job_id:sqlstring})\n  GROUP BY job_name\n) latest ON b.job_name = latest.job_name AND b.start_time = latest.max_time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "start_time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "\ud83d\udcc8 Build Success Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Most recent build for each selected job",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "console_url"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open Console",
+                    "url": "${__value.text}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 2,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT b.job_name as 'Job Name', b.number as 'Build #', b.result as 'Result', DATE_FORMAT(b.start_time, '%Y-%m-%d %H:%i') as 'Started', ROUND(b.duration/1000/60, 1) as 'Duration (min)', CONCAT(c.endpoint, '/job/', b.job_name, '/', b.number, '/console') as console_url FROM _tool_jenkins_builds b INNER JOIN _tool_jenkins_connections c ON b.connection_id = c.id INNER JOIN ( SELECT job_name, MAX(start_time) as max_time FROM _tool_jenkins_builds WHERE job_name IN (${job_id:sqlstring}) GROUP BY job_name ) latest ON b.job_name = latest.job_name AND b.start_time = latest.max_time ORDER BY b.start_time DESC",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "duration_sec"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_tool_jenkins_builds",
+          "timeColumn": "start_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Build Results - From latest Job executions",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Most frequently failing stages across latest builds only",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 3,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH latest_builds AS (\n  SELECT job_name, MAX(start_time) as max_time\n  FROM _tool_jenkins_builds\n  WHERE job_name IN (${job_id:sqlstring})\n  GROUP BY job_name\n),\nlatest_failed_builds AS (\n  SELECT b.*\n  FROM _tool_jenkins_builds b\n  INNER JOIN latest_builds lb ON b.job_name = lb.job_name AND b.start_time = lb.max_time\n  WHERE b.result = 'FAILURE'\n)\nSELECT \n  s.name as 'Stage Name',\n  COUNT(*) as 'Failure Count'\nFROM _tool_jenkins_stages s\nINNER JOIN latest_failed_builds b ON s.build_name = b.full_name\nWHERE s.status = 'FAILED'\nGROUP BY s.name\nORDER BY COUNT(*) DESC\nLIMIT 15",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_tool_jenkins_stages",
+          "timeColumn": "start_time_millis",
+          "timeColumnType": "bigint",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Top Failing Stages",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Failure rate trend over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  DATE(start_time) as time,\n  job_name as metric,\n  (SUM(CASE WHEN result='FAILURE' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as value\nFROM _tool_jenkins_builds\nWHERE $__timeFilter(start_time)\n  AND job_name in (${job_id:sqlstring})\nGROUP BY DATE(start_time), job_name\nORDER BY time",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "id"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_tool_jenkins_builds",
+          "timeColumn": "start_time",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Daily Failure Rate (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Failed stages only from jobs where the latest build is FAILURE",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {     
+            "matcher": { 
+              "id": "byName",
+              "options": "Failed Stage Log"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open Console",
+                    "url": "${__value.text}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          }
+        ] 
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 5,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "WITH latest_builds AS ( SELECT job_name, MAX(start_time) as max_time FROM _tool_jenkins_builds WHERE job_name IN (${job_id:sqlstring}) GROUP BY job_name ), latest_failed_builds AS ( SELECT b.* FROM _tool_jenkins_builds b INNER JOIN latest_builds lb ON b.job_name = lb.job_name AND b.start_time = lb.max_time WHERE b.result = 'FAILURE' ), numbered_stages AS ( SELECT b.job_name, b.number, b.connection_id, b.start_time, b.full_name, s.name AS stage_name, s.status AS stage_status, s.duration_millis, s.start_time_millis, LPAD(ROW_NUMBER() OVER (PARTITION BY b.full_name ORDER BY s.start_time_millis) - 1, 2, '0') AS stage_num FROM latest_failed_builds b INNER JOIN _tool_jenkins_stages s ON b.full_name = s.build_name ) SELECT ns.job_name AS 'Job', ns.stage_name AS 'Failed Stage', ROUND(ns.duration_millis/1000/60, 1) AS 'Stage Duration (min)', DATE_FORMAT(FROM_UNIXTIME(ns.start_time_millis/1000), '%Y-%m-%d %H:%i') AS 'Failed At', CONCAT(c.endpoint, '/job/', ns.job_name, '/', ns.number, '/artifact/.sh/', ns.stage_num, '-', ns.stage_name, '.log') AS 'Failed Stage Log' FROM numbered_stages ns INNER JOIN _tool_jenkins_connections c ON ns.connection_id = c.id WHERE ns.stage_status = 'FAILED' ORDER BY ns.start_time DESC, ns.start_time_millis ASC LIMIT 50",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "name"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "_tool_jenkins_stages",
+          "timeColumn": "start_time_millis",
+          "timeColumnType": "bigint",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Failed builds detailed analysis",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "Jenkins",
+    "CI/CD",
+    "Failures"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT job_name FROM _tool_jenkins_builds",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job",
+        "multi": true,
+        "name": "job_id",
+        "options": [],
+        "query": "SELECT DISTINCT job_name FROM _tool_jenkins_builds",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Jenkins Enhanced - Failure Analysis",
+  "uid": "jenkins-enhanced",
+  "version": 1,
+  "weekStart": ""
+}
