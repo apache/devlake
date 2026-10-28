@@ -18,18 +18,14 @@ limitations under the License.
 
 Golang builder image for DevLake. Used by GitHub workflows.
 
-https://hub.docker.com/r/mericodev/lake-builder
-
-## Manual Release
-
-```shell
-export VERSION=0.0.11
-docker build -t mericodev/lake-builder:$VERSION .
-docker push mericodev/lake-builder:$VERSION
-```
+Published as `apache/devlake:lake-builder-v#.#.#`
+(https://hub.docker.com/r/apache/devlake/tags?name=lake-builder).
+Earlier versions (up to v0.0.15) were published as `mericodev/lake-builder`.
 
 ## Tagged Release
-1. Create a tag matching the pattern `builder-v#.#.#`, e.g. `builder-v0.0.11`. Determine the previous tag first so you version
-it correctly. Example command: `git tag builder-v0.0.11`
-2. Push the tag to origin. Example command: `git push origin --tag builder-v0.0.11`
-3. Done! This will trigger a GitHub workflow that will push this image to the Docker registry.
+1. Create a tag matching the pattern `builder-v#.#.#`, e.g. `builder-v0.0.16`. Determine the previous tag first so you version
+it correctly. Example command: `git tag builder-v0.0.16`
+2. Push the tag to origin. Example command: `git push origin builder-v0.0.16`
+3. The `Build-BuilderImage-Push-Docker` workflow (`.github/workflows/build-builder.yml`) builds this directory and pushes
+`apache/devlake:lake-builder-v0.0.16`.
+4. Point the `container:` lines in `.github/workflows/` to the new tag in a follow-up PR.
