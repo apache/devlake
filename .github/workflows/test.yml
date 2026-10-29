@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
