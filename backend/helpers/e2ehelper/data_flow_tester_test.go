@@ -126,10 +126,14 @@ func TestGetTableMetaData(t *testing.T) {
 		fields, err := dal.GetPrimarykeyColumnNames(dataflowTester.Dal, &TestModel{})
 		assert.Equal(t, err, nil)
 		assert.Equal(t, 3, len(fields))
+		// GetPrimarykeyColumnNames qualifies each column with the table name, so
+		// the result can be used as-is in join conditions whose column names
+		// collide with reserved identifiers. Callers that want the bare column
+		// name strip the prefix themselves.
 		for _, e := range []string{
-			"connection_id",
-			"issue_id",
-			"label_name",
+			"_tool_test_model.connection_id",
+			"_tool_test_model.issue_id",
+			"_tool_test_model.label_name",
 		} {
 			assert.Contains(t, fields, e)
 		}
