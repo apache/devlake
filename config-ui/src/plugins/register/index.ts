@@ -31,6 +31,7 @@ import { CursorConfig } from './cursor';
 import { GitHubConfig } from './github';
 import { GhCopilotConfig } from './gh-copilot';
 import { GitLabConfig } from './gitlab';
+import { GlpiConfig } from './glpi';
 import { GrafanaIrmConfig } from './grafana_irm';
 import { IncidentioConfig } from './incidentio';
 import { JenkinsConfig } from './jenkins';
@@ -66,6 +67,7 @@ export const pluginConfigs: IPluginConfig[] = [
   GitHubConfig,
   GhCopilotConfig,
   GitLabConfig,
+  GlpiConfig,
   GrafanaIrmConfig,
   IncidentioConfig,
   JenkinsConfig,

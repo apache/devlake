@@ -22,6 +22,8 @@ from pydevlake.subtasks import Collector, Extractor, Convertor, SubstreamCollect
 from pydevlake.model import RawModel, ToolModel, ToolScope, DomainModel, DomainType
 from pydevlake.extractor import autoextract
 
+_raw_model_classes: dict[str, type] = {}
+
 
 class Stream:
     def __init__(self, plugin_name: str):
@@ -58,26 +60,38 @@ class Stream:
         pass
 
     def raw_model(self, session) -> Type[RawModel]:
+        model = self._get_raw_model_class()
+        table = RawModel.metadata.tables[self.raw_model_table]
+        table.create(session.get_bind(), checkfirst=True)
+        return model
+
+    def _get_raw_model_class(self) -> Type[RawModel]:
         if self._raw_model is not None:
             return self._raw_model
 
         table_name = self.raw_model_table
+        cached = _raw_model_classes.get(table_name)
+        if cached is not None:
+            self._raw_model = cached
+            return cached
 
-        # Look for existing raw model
         for mapper in RawModel._sa_registry.mappers:
             model = mapper.class_
-            if model.__tablename__ == table_name:
+            if getattr(model, '__tablename__', None) == table_name:
+                _raw_model_classes[table_name] = model
                 self._raw_model = model
-                return self._raw_model
+                return model
 
-        # Create raw model
+        table_args = {'extend_existing': True} if table_name in RawModel.metadata.tables else None
+
         class StreamRawModel(RawModel, table=True):
             __tablename__ = table_name
+            if table_args is not None:
+                __table_args__ = table_args
 
+        _raw_model_classes[table_name] = StreamRawModel
         self._raw_model = StreamRawModel
-        table = RawModel.metadata.tables[table_name]
-        table.create(session.get_bind(), checkfirst=True)
-        return self._raw_model
+        return StreamRawModel
 
     @property
     def raw_model_table(self):
