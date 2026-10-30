@@ -33,6 +33,8 @@ export interface IPluginConfig {
   };
   dataScope: {
     localSearch?: boolean;
+    /** Shows an "All" toggle to (de)select every item of the filtered remote search result. */
+    searchSelectAll?: boolean;
     searchPlaceholder?: string;
     title?: string;
     millerColumn?: {

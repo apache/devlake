@@ -25,6 +25,19 @@ export const ColumnTitle = styled.div`
   font-weight: 600;
 `;
 
+// Mirrors the item row of miller-columns-select so the "ALL" toggle looks like the first list entry.
+export const SelectAllItem = styled.div<{ $disabled?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+
+  &:hover {
+    background-color: #f5f5f7;
+  }
+`;
+
 export const JobLoad = styled.div`
   display: flex;
   align-items: center;

@@ -16,9 +16,9 @@
  *
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { SearchOutlined } from '@ant-design/icons';
-import { Space, Tag, Input, message } from 'antd';
+import { Space, Tag, Input, Checkbox, Spin, message } from 'antd';
 import type { McsID, McsItem, McsColumn } from 'miller-columns-select';
 import MillerColumnsSelect from 'miller-columns-select';
 import { useDebounce } from 'ahooks';
@@ -31,6 +31,7 @@ import { getPluginScopeName } from '@/plugins';
 
 import * as T from './types';
 import * as S from './styled';
+import { fetchAllSearchResults, getSelectAllState, toggleAllFiltered } from './select-all';
 
 interface Props {
   mode: 'single' | 'multiple';
@@ -155,7 +156,7 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
         loading: false,
         items: [...allItems, ...newItems],
         // Accumulate results across pages so previous pages remain visible
-        currentItems: s.page === 1 ? newItems : [...s.currentItems, ...newItems],
+        currentItems: s.page === 1 ? newItems : uniqBy([...s.currentItems, ...newItems], 'id'),
         total,
         hasMore,
       }));
@@ -167,6 +168,112 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
   useEffect(() => {
     searchItems();
   }, [searchDebounce, search.page]);
+
+  // ---- "ALL" toggle for the filtered search result (opt-in via config.searchSelectAll) ----
+  // It is rendered as the first entry of the result list (like `showSelectAll` of miller-columns-select).
+  // The built-in `showSelectAll` can't be used here: it only covers the already loaded page(s) and
+  // replaces the whole selection, while this toggle loads every page of the search result and keeps
+  // the selection outside of the filter.
+  const showSelectAll = !!config.searchSelectAll && mode === 'multiple' && !!searchDebounce;
+  const disabledIds = useMemo(() => (disabledScope ?? []).map((it) => it.id), [disabledScope]);
+  const [fullResult, setFullResult] = useState<{ query: string; items: McsItem<T.ResItem>[] } | null>(null);
+  const [selectAllLoading, setSelectAllLoading] = useState(false);
+  const latestQueryRef = useRef(searchDebounce);
+  latestQueryRef.current = searchDebounce;
+
+  // A new search invalidates a previously loaded complete result.
+  useEffect(() => {
+    setFullResult(null);
+  }, [searchDebounce]);
+
+  // The complete filtered list is known if it was fully fetched or no further pages exist.
+  const knownFilteredItems = useMemo(() => {
+    if (fullResult && fullResult.query === searchDebounce) return fullResult.items;
+    if (!search.loading && !search.hasMore) return search.currentItems;
+    return null;
+  }, [fullResult, searchDebounce, search.loading, search.hasMore, search.currentItems]);
+
+  // Number of matches: reported by the backend (`count`) or – once fully loaded – the list length.
+  const matchCount = search.total > 0 ? search.total : knownFilteredItems?.length;
+
+  const selectAllState = useMemo(() => {
+    const state = getSelectAllState(selectedScope, knownFilteredItems ?? search.currentItems, disabledIds);
+    // Without the complete list we can never claim that "all" are selected.
+    return state === 'all' && !knownFilteredItems ? 'some' : state;
+  }, [selectedScope, knownFilteredItems, search.currentItems, disabledIds]);
+
+  const selectAllDisabled = selectAllLoading || search.loading || knownFilteredItems?.length === 0;
+
+  const handleToggleAll = async () => {
+    if (selectAllDisabled) return;
+
+    let filtered = knownFilteredItems;
+
+    if (!filtered) {
+      const query = searchDebounce;
+      let complete = true;
+      setSelectAllLoading(true);
+      try {
+        const res = await fetchAllSearchResults((page, pageSize) =>
+          API.scope.searchRemote(plugin, connectionId, { search: query, page, pageSize }),
+        );
+        complete = res.complete;
+        filtered = res.items.map((it) => ({
+          ...it,
+          title: getPluginScopeName(plugin, it) || it.fullName || it.name,
+        })) as McsItem<T.ResItem>[];
+      } catch (err: any) {
+        message.error(err?.response?.data?.message ?? 'Failed to load all search results.');
+        return;
+      } finally {
+        setSelectAllLoading(false);
+      }
+
+      // The user changed the search while we were loading – discard the stale result.
+      if (latestQueryRef.current !== query) return;
+
+      const loaded = filtered;
+      if (complete) {
+        setFullResult({ query, items: loaded });
+      } else {
+        message.warning(
+          `Only the first ${loaded.length} matches could be loaded. Please refine the search to select the rest.`,
+        );
+      }
+      setSearch((s) => ({
+        ...s,
+        items: uniqBy([...s.items, ...loaded], 'id'),
+        currentItems: uniqBy([...s.currentItems, ...loaded], 'id'),
+        hasMore: !complete,
+      }));
+    }
+
+    onChange(toggleAllFiltered(selectedScope, filtered, disabledIds));
+  };
+
+  const renderSelectAll = () =>
+    showSelectAll &&
+    search.currentItems.length > 0 && (
+      <S.SelectAllItem
+        data-testid="search-select-all"
+        $disabled={selectAllDisabled}
+        onClick={(e) => {
+          // the checkbox handles its own clicks
+          if ((e.target as HTMLElement).closest('.ant-checkbox-wrapper')) return;
+          handleToggleAll();
+        }}
+      >
+        <Checkbox
+          checked={selectAllState === 'all'}
+          indeterminate={selectAllState === 'some'}
+          disabled={selectAllDisabled}
+          onChange={handleToggleAll}
+        >
+          {matchCount !== undefined ? `ALL (${matchCount})` : 'ALL'}
+        </Checkbox>
+        {selectAllLoading && <Spin size="small" />}
+      </S.SelectAllItem>
+    );
 
   return (
     <>
@@ -216,7 +323,7 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
             }
             renderLoading={() => <Loading size={20} style={{ padding: '4px 12px' }} />}
             renderError={() => <span style={{ color: 'red' }}>Something Error</span>}
-            disabledIds={(disabledScope ?? []).map((it) => it.id)}
+            disabledIds={disabledIds}
             selectedIds={selectedScope.map((it) => it.id)}
             onSelectItemIds={(selectedIds: ID[]) => onChange(allItems.filter((it) => selectedIds.includes(it.id)))}
           />
@@ -233,8 +340,9 @@ export const SearchRemote = ({ mode, plugin, connectionId, config, disabledScope
                 setSearch((s) => ({ ...s, loading: true, page: s.page + 1 }));
               }
             }}
+            renderTitle={renderSelectAll}
             renderLoading={() => <Loading size={20} style={{ padding: '4px 12px' }} />}
-            disabledIds={(disabledScope ?? []).map((it) => it.id)}
+            disabledIds={disabledIds}
             selectedIds={selectedScope.map((it) => it.id)}
             onSelectItemIds={(selectedIds: ID[]) => onChange(allItems.filter((it) => selectedIds.includes(it.id)))}
           />

@@ -73,5 +73,6 @@ export const SonarQubeConfig: IPluginConfig = {
   },
   dataScope: {
     title: 'Repositories',
+    searchSelectAll: true,
   },
 };
