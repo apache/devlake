@@ -17,9 +17,14 @@ limitations under the License.
 
 //go:build devlake_external_plugins
 
-// Package all is empty when plugins are loaded from shared objects at runtime.
+// Package all is empty in a core-only build.
 //
-// Build with -tags devlake_external_plugins (and leave PLUGIN_DIR pointing at
-// the output of scripts/build-plugins.sh) to ship a plugin-free core binary and
-// load plugins as .so files instead.
+// A core-only binary compiles in the framework and the API but no plugin, which
+// is useful for a minimal image: every plugin is then sideloaded as a shared
+// object from PLUGIN_DIR. The default build links the official plugins in and
+// still accepts extra .so files from PLUGIN_DIR on top.
+//
+// A sideloaded plugin must be built with the same Go toolchain, build flags and
+// dependency versions as the binary loading it, so build it in the matching
+// builder image rather than on the host.
 package all

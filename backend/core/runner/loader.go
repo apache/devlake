@@ -54,48 +54,66 @@ func LoadGoPlugins(basicRes context.BasicRes) errors.Error {
 	if pluginsDir == "" {
 		return nil
 	}
-	// A single-binary deployment has no plugin directory at all: the plugins are
-	// already registered by the generated plugins/all package.
+	// The official binary already has every official plugin compiled in, so a
+	// missing directory simply means "nothing to sideload".
 	if _, statErr := os.Stat(pluginsDir); os.IsNotExist(statErr) {
-		basicRes.GetLogger().Info("plugin directory %s does not exist, skipping shared-object plugins", pluginsDir)
+		basicRes.GetLogger().Info("plugin directory %s does not exist, no plugins to sideload", pluginsDir)
 		return nil
 	}
+
 	var wg sync.WaitGroup
 	walkErr := filepath.WalkDir(pluginsDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		fileName := d.Name()
-		if strings.HasSuffix(fileName, ".so") && fileName != ".so" {
-			pluginName := fileName[0 : len(d.Name())-3]
-			plug, loadErr := goplugin.Open(path)
-			if loadErr != nil {
-				return loadErr
-			}
-			symPluginEntry, pluginEntryError := plug.Lookup("PluginEntry")
-			if pluginEntryError != nil {
-				return pluginEntryError
-			}
-			pluginMeta, ok := symPluginEntry.(plugin.PluginMeta)
-			if !ok {
-				return errors.Default.New(fmt.Sprintf("%s PluginEntry must implement PluginMeta interface", pluginName))
-			}
-			wg.Add(1)
-			go func(pluginName string, pluginMeta plugin.PluginMeta) {
-				defer func() {
-					wg.Done()
-				}()
-				err = plugin.RegisterPlugin(pluginName, pluginMeta)
-				if err != nil {
-					panic(err)
-				}
-				basicRes.GetLogger().Info(`plugin loaded %s`, pluginName)
-			}(pluginName, pluginMeta)
+		if !strings.HasSuffix(fileName, ".so") || fileName == ".so" {
+			return nil
 		}
+
+		pluginName := strings.TrimSuffix(fileName, ".so")
+		pluginMeta, loadErr := openGoPlugin(path)
+		if loadErr != nil {
+			// Sideloaded plugins are third-party code built outside this repo. One
+			// incompatible or broken file must not keep the server from starting,
+			// so it is skipped loudly instead. The usual cause is a toolchain or
+			// dependency mismatch with the binary that is loading it.
+			basicRes.GetLogger().Error(loadErr, "skipping plugin %s from %s", pluginName, path)
+			return nil
+		}
+		if _, err := plugin.GetPlugin(pluginName); err == nil {
+			basicRes.GetLogger().Warn(nil, "plugin %s is already registered, the shared object %s takes precedence", pluginName, path)
+		}
+
+		wg.Add(1)
+		go func(name string, meta plugin.PluginMeta) {
+			defer wg.Done()
+			if err := plugin.RegisterPlugin(name, meta); err != nil {
+				panic(err)
+			}
+			basicRes.GetLogger().Info("plugin loaded %s", name)
+		}(pluginName, pluginMeta)
 		return nil
 	})
 	wg.Wait()
 	return errors.Convert(walkErr)
+}
+
+// openGoPlugin opens a shared object and reads its exported entry point.
+func openGoPlugin(path string) (plugin.PluginMeta, error) {
+	plug, err := goplugin.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	symPluginEntry, err := plug.Lookup("PluginEntry")
+	if err != nil {
+		return nil, err
+	}
+	pluginMeta, ok := symPluginEntry.(plugin.PluginMeta)
+	if !ok {
+		return nil, fmt.Errorf("%s: PluginEntry must implement plugin.PluginMeta", filepath.Base(path))
+	}
+	return pluginMeta, nil
 }
 
 func LoadRemotePlugins(basicRes context.BasicRes) errors.Error {

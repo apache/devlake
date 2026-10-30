@@ -21,9 +21,8 @@ import (
 	"github.com/apache/devlake/core/config"
 	"github.com/apache/devlake/core/plugin"
 	_ "github.com/apache/devlake/core/version"
-	// Linking the generated registry compiles every plugin into this binary and
-	// registers it at startup. Build with -tags devlake_external_plugins to
-	// leave the registry empty and load plugins from PLUGIN_DIR instead.
+	// Compile the official plugins into this binary and register them at startup.
+	// Extra plugins can still be sideloaded from PLUGIN_DIR as shared objects.
 	_ "github.com/apache/devlake/plugins/all"
 	"github.com/apache/devlake/server/api"
 )
