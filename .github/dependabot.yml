@@ -121,6 +121,7 @@ updates:
       - /backend/python/pydevlake
       - /backend/python/plugins/azuredevops
       - /backend/python/plugins/redmine
+      - /backend/python/plugins/zephyr
       - /backend/python/test/fakeplugin
       - /grafana/scripts
     schedule:

@@ -45,7 +45,7 @@ jobs:
           MYSQL_USER: merico
           MYSQL_PASSWORD: merico
           MYSQL_ROOT_PASSWORD: root
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -89,7 +89,7 @@ jobs:
           POSTGRES_DB: lake
           POSTGRES_USER: merico
           POSTGRES_PASSWORD: merico
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

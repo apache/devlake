@@ -1,0 +1,22 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="#7497F7">
+  <path fill-rule="evenodd" d="M1.83 4.45Q1.83 1.95 4.33 1.95L95.67 1.95Q98.17 1.95 98.17 4.45L98.17 95.55Q98.17 98.05 95.67 98.05L4.33 98.05Q1.83 98.05 1.83 95.55ZM6.86 9.48Q6.86 6.98 9.36 6.98L90.64 6.98Q93.14 6.98 93.14 9.48L93.14 90.52Q93.14 93.02 90.64 93.02L9.36 93.02Q6.86 93.02 6.86 90.52Z"/>
+  <path d="M82.61 20.25Q82.61 20.25 80.43 22.31Q78.26 24.37 74.37 26.09Q70.48 27.80 56.86 29.86Q43.25 31.92 38.90 33.64Q34.55 35.35 31.12 38.10Q27.69 40.85 25.51 43.59Q23.34 46.34 22.08 49.08Q20.82 51.83 20.94 51.83Q21.05 51.83 24.14 49.43Q27.23 47.03 31.01 45.65Q34.78 44.28 47.03 42.56Q59.27 40.85 64.30 39.13Q69.34 37.41 73.23 34.32Q77.12 31.24 79.86 25.74Q82.61 20.25 82.61 20.25Z"/>
+  <path d="M71.40 42.22Q71.40 42.22 69.34 43.59Q67.28 44.97 63.04 46.34Q58.81 47.71 44.39 49.77Q29.98 51.83 26.54 54.23Q23.11 56.64 21.62 60.07Q20.14 63.50 20.37 63.50Q20.59 63.50 25.06 62.13Q29.52 60.76 40.62 60.41Q51.72 60.07 54.46 59.38Q57.21 58.70 59.50 57.67Q61.78 56.64 64.76 53.89Q67.73 51.14 69.57 46.68Q71.40 42.22 71.40 42.22Z"/>
+  <path d="M54.69 65.79Q54.69 65.79 39.59 66.82Q24.49 67.85 23.23 68.88Q21.97 69.91 22.31 70.59Q22.65 71.28 24.49 73.00Q26.32 74.71 28.72 75.74Q31.12 76.77 34.10 76.77Q37.07 76.77 41.88 74.71Q46.68 72.65 50.69 69.22Q54.69 65.79 54.69 65.79Z"/>
+</svg>
