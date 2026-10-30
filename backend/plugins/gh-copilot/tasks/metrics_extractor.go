@@ -39,6 +39,7 @@ type copilotSeatResponse struct {
 	LastActivityEditor      string          `json:"last_activity_editor"`
 	Assignee                copilotAssignee `json:"assignee"`
 	AssigningTeam           *copilotTeam    `json:"assigning_team"`
+	Organization            *copilotOrgRef  `json:"organization"`
 }
 
 type copilotAssignee struct {
@@ -47,6 +48,11 @@ type copilotAssignee struct {
 	Type  string `json:"type"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type copilotOrgRef struct {
+	Login string `json:"login"`
+	Id    int64  `json:"id"`
 }
 
 type copilotTeam struct {
