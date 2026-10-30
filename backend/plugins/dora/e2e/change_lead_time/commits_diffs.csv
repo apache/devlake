@@ -5,3 +5,5 @@ commit2,commit6,pr_merge_commit3
 commit7,commit8,pr_merge_commit4
 ,commit11,pr_merge_commit5
 ,commit1,pr_merge_commit0
+direct_commit1,commit18,pr_merge_commit8
+commit13,commit19,pr_merge_commit8

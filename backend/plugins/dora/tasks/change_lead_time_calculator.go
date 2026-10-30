@@ -192,11 +192,13 @@ func computeTimeSpan(start, end *time.Time) *int64 {
 	return &minutes
 }
 
-// deploymentCommitWithMergeSha is a helper struct to capture both the deployment commit
-// and the associated merge_sha from the commits_diffs join query.
-type deploymentCommitWithMergeSha struct {
-	devops.CicdDeploymentCommit
-	MergeSha string `gorm:"column:merge_sha"`
+// diffDeployment holds the columns of a diff-based deployment match that the
+// lead time conversion reads: the deployment commit id, its finish date, and
+// the merge commit found in its commits_diffs range.
+type diffDeployment struct {
+	Id           string
+	FinishedDate *time.Time
+	MergeSha     string `gorm:"column:merge_sha"`
 }
 
 // batchFetchFirstCommits retrieves the first commit for all pull requests in the given project.
@@ -289,7 +291,8 @@ func batchFetchFirstReviews(projectName string, db dal.Dal) (map[string]*code.Pu
 }
 
 // batchFetchDeployments retrieves deployment commits for all merge commits in the given project.
-// Returns a map indexed by merge commit SHA for O(1) lookup performance.
+// Returns a map indexed by merge commit SHA for O(1) lookup performance. The map values carry
+// only the deployment commit Id and FinishedDate, the two fields the lead time conversion reads.
 //
 // Uses a two-phase strategy to avoid the "first deployment over-mapping" problem:
 //
@@ -303,7 +306,7 @@ func batchFetchDeployments(projectName string, db dal.Dal) (map[string]*devops.C
 	var directResults []*devops.CicdDeploymentCommit
 	err := db.All(
 		&directResults,
-		dal.Select("dc.*"),
+		dal.Select("dc.id, dc.finished_date, dc.commit_sha"),
 		dal.From("cicd_deployment_commits dc"),
 		dal.Join("LEFT JOIN project_mapping pm ON pm.table = 'cicd_scopes' AND pm.row_id = dc.cicd_scope_id"),
 		dal.Where("dc.environment = 'PRODUCTION'"), // TODO: remove when multi-environment is supported
@@ -319,10 +322,8 @@ func batchFetchDeployments(projectName string, db dal.Dal) (map[string]*devops.C
 			deploymentMap[dc.CommitSha] = &deploymentCopy
 		}
 	}
-	var diffResults []*deploymentCommitWithMergeSha
-	err = db.All(
-		&diffResults,
-		dal.Select("dc.*, cd.commit_sha as merge_sha"),
+	cursor, err := db.Cursor(
+		dal.Select("dc.id, dc.finished_date, cd.commit_sha as merge_sha"),
 		dal.From("cicd_deployment_commits dc"),
 		dal.Join("LEFT JOIN cicd_deployment_commits p ON dc.prev_success_deployment_commit_id = p.id"),
 		dal.Join("INNER JOIN commits_diffs cd ON cd.new_commit_sha = dc.commit_sha AND cd.old_commit_sha = COALESCE(p.commit_sha, '')"),
@@ -335,11 +336,24 @@ func batchFetchDeployments(projectName string, db dal.Dal) (map[string]*devops.C
 	if err != nil {
 		return nil, errors.Default.Wrap(err, "failed to batch fetch diff-based deployments")
 	}
-	for _, result := range diffResults {
-		if _, exists := deploymentMap[result.MergeSha]; !exists {
-			deploymentCopy := result.CicdDeploymentCommit
-			deploymentMap[result.MergeSha] = &deploymentCopy
+	defer cursor.Close()
+	// Rows are ordered by merge sha, then by deployment start, so the first row
+	// seen for a merge sha is its earliest deployment. Streaming keeps memory
+	// proportional to the distinct merge shas instead of the join size.
+	for cursor.Next() {
+		row := &diffDeployment{}
+		if err := db.Fetch(cursor, row); err != nil {
+			return nil, errors.Default.Wrap(err, "failed to read diff-based deployment")
 		}
+		if _, exists := deploymentMap[row.MergeSha]; !exists {
+			deployment := &devops.CicdDeploymentCommit{}
+			deployment.Id = row.Id
+			deployment.FinishedDate = row.FinishedDate
+			deploymentMap[row.MergeSha] = deployment
+		}
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, errors.Default.Wrap(err, "failed to read diff-based deployments")
 	}
 	return deploymentMap, nil
 }
