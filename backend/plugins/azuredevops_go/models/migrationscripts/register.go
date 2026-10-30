@@ -29,5 +29,6 @@ func All() []plugin.MigrationScript {
 		new(addEndpointToAzuredevops),
 		new(addUsernameToAzuredevops),
 		new(addRunNameToAzuredevopsBuild),
+		new(addAzuredevopsBoardsAndTests),
 	}
 }

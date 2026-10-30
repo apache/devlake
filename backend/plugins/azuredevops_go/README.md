@@ -26,5 +26,11 @@ The plugin is able to coexist with the Python version as both implementations co
 - Code
 - Graph (collectAccounts task)
 - Release
+- Work Items, to collect Azure Boards work items, iterations, comments, and changelogs
+- Test Management, to collect test plans, test cases, test runs, and test results
+
+Selecting a repository with work item or test entities collects that repository's project once. Further repositories of the same project in a blueprint do not collect the project again, and the work items and tests are stored on one board. Repository scope names stay the repository name. A project with no enabled repository lists one scope named after the project with a "(project)" suffix, and that scope collects its work items and tests.
+
+Work items are stored in the ticket domain. The board is named after the project, uses the project URL, and has type Scrum. Custom fields are stored under both the Azure reference name and the display name. Test plans, cases, and executions are stored in the QA domain, including each test case's creation time and creator. The scope config can map work item types and states, and can turn comment and changelog collection on.
 
 Access to Service Connections has been removed as they usually contain sensitive security information.
