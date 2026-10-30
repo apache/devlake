@@ -54,13 +54,19 @@ dep: go-dep python-dep
 swag: mock
 	scripts/swag.sh
 
+# Regenerate plugins/all, the package that links the Go plugins into the server
+# binary. Run it after adding, removing or renaming a plugin; CI checks that the
+# checked-in file matches the tree.
+plugins-registry:
+	go run ./tools/pluginsgen
+
 build-plugin:
 	scripts/build-plugins.sh
 
 build-plugin-debug:
 	DEVLAKE_DEBUG=1 scripts/build-plugins.sh
 
-build-server: swag
+build-server: plugins-registry swag
 	VERSION=$(VERSION) scripts/build-server.sh
 
 build-python: #don't mix this with the other build commands

@@ -20,6 +20,7 @@ package runner
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	goplugin "plugin"
 	"strings"
@@ -50,6 +51,15 @@ func LoadPlugins(basicRes context.BasicRes) errors.Error {
 
 func LoadGoPlugins(basicRes context.BasicRes) errors.Error {
 	pluginsDir := basicRes.GetConfig("PLUGIN_DIR")
+	if pluginsDir == "" {
+		return nil
+	}
+	// A single-binary deployment has no plugin directory at all: the plugins are
+	// already registered by the generated plugins/all package.
+	if _, statErr := os.Stat(pluginsDir); os.IsNotExist(statErr) {
+		basicRes.GetLogger().Info("plugin directory %s does not exist, skipping shared-object plugins", pluginsDir)
+		return nil
+	}
 	var wg sync.WaitGroup
 	walkErr := filepath.WalkDir(pluginsDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {

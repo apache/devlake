@@ -71,6 +71,9 @@ swag:
 build-plugin:
 	make build-plugin -C backend
 
+plugins-registry:
+	make plugins-registry -C backend
+
 build-server:
 	make build-server -C backend
 

@@ -43,6 +43,27 @@ func RegisterPlugin(name string, plugin PluginMeta) errors.Error {
 	return nil
 }
 
+// MustRegister registers p under the name it reports, panicking if the plugin
+// cannot be identified.
+//
+// The generated plugins/all package calls it for every plugin that is compiled
+// into the binary, which makes the plugin set a build-time decision. Registering
+// a name twice overwrites the previous entry, so a plugin that is both compiled
+// in and loaded from a shared object keeps working: the loader registers the
+// same value again.
+func MustRegister(p PluginMeta) {
+	if p == nil {
+		panic("plugin: MustRegister called with a nil plugin")
+	}
+	name := p.Name()
+	if name == "" {
+		panic("plugin: MustRegister called with an empty plugin name")
+	}
+	if err := RegisterPlugin(name, p); err != nil {
+		panic(err)
+	}
+}
+
 func GetPlugin(name string) (PluginMeta, errors.Error) {
 	if plugins == nil {
 		return nil, errors.Default.New("RegisterPlugin have never been called.")
