@@ -19,7 +19,10 @@ package qa
 
 import (
 	"github.com/apache/devlake/core/models/domainlayer"
+	plugin "github.com/apache/devlake/core/plugin"
 )
+
+var _ plugin.Scope = (*QaProject)(nil)
 
 // QaProject represents a QA project in the domain layer
 type QaProject struct {
@@ -29,4 +32,12 @@ type QaProject struct {
 
 func (QaProject) TableName() string {
 	return "qa_projects"
+}
+
+func (r *QaProject) ScopeId() string {
+	return r.Id
+}
+
+func (r *QaProject) ScopeName() string {
+	return r.Name
 }
