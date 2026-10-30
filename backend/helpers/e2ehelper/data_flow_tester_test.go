@@ -19,10 +19,9 @@ package e2ehelper
 
 import (
 	"github.com/apache/devlake/core/dal"
+	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models/common"
 	plugin "github.com/apache/devlake/core/plugin"
-	gitlabModels "github.com/apache/devlake/plugins/gitlab/models"
-	"github.com/apache/devlake/plugins/gitlab/tasks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,29 +38,48 @@ func (t TestModel) TableName() string {
 	return "_tool_test_model"
 }
 
+type TestOptions struct {
+	ProjectId int
+}
+
+type TestTaskData struct {
+	Options *TestOptions
+}
+
+// testExtractIssuesMeta stands in for a real plugin's subtask so this example
+// stays self-contained: helpers must not import a concrete plugin.
+var testExtractIssuesMeta = plugin.SubTaskMeta{
+	Name: "extractIssues",
+	EntryPoint: func(taskCtx plugin.SubTaskContext) errors.Error {
+		return nil
+	},
+}
+
 func ExampleDataFlowTester() {
 	var t *testing.T // stub
 
-	var gitlab plugin.PluginMeta
-	dataflowTester := NewDataFlowTester(t, "gitlab", gitlab)
+	var pluginMeta plugin.PluginMeta
+	dataflowTester := NewDataFlowTester(t, "test_plugin", pluginMeta)
 
-	taskData := &tasks.GitlabTaskData{
-		Options: &tasks.GitlabOptions{
+	taskData := &TestTaskData{
+		Options: &TestOptions{
 			ProjectId: 666888,
 		},
 	}
 
 	// import raw data table
-	dataflowTester.ImportCsvIntoRawTable("./tables/_raw_gitlab_api_issues.csv", "_raw_gitlab_api_issues")
+	dataflowTester.ImportCsvIntoRawTable("./tables/_raw_test_plugin_api_issues.csv", "_raw_test_plugin_api_issues")
 
 	// verify extraction
-	dataflowTester.FlushTabler(gitlabModels.GitlabProject{})
-	dataflowTester.Subtask(tasks.ExtractApiIssuesMeta, taskData)
+	dataflowTester.FlushTabler(&TestModel{})
+	dataflowTester.Subtask(testExtractIssuesMeta, taskData)
 	dataflowTester.VerifyTable(
-		gitlabModels.GitlabIssue{},
-		"tables/_tool_gitlab_issues.csv",
+		&TestModel{},
+		"tables/_tool_test_model.csv",
 		[]string{
-			"gitlab_id",
+			"connection_id",
+			"issue_id",
+			"label_name",
 			"_raw_data_params",
 			"_raw_data_table",
 			"_raw_data_id",
@@ -108,10 +126,14 @@ func TestGetTableMetaData(t *testing.T) {
 		fields, err := dal.GetPrimarykeyColumnNames(dataflowTester.Dal, &TestModel{})
 		assert.Equal(t, err, nil)
 		assert.Equal(t, 3, len(fields))
+		// GetPrimarykeyColumnNames qualifies each column with the table name, so
+		// the result can be used as-is in join conditions whose column names
+		// collide with reserved identifiers. Callers that want the bare column
+		// name strip the prefix themselves.
 		for _, e := range []string{
-			"connection_id",
-			"issue_id",
-			"label_name",
+			"_tool_test_model.connection_id",
+			"_tool_test_model.issue_id",
+			"_tool_test_model.label_name",
 		} {
 			assert.Contains(t, fields, e)
 		}
