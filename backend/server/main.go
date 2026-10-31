@@ -21,6 +21,9 @@ import (
 	"github.com/apache/devlake/core/config"
 	"github.com/apache/devlake/core/plugin"
 	_ "github.com/apache/devlake/core/version"
+	// Compile the official plugins into this binary and register them at startup.
+	// Extra plugins can still be sideloaded from PLUGIN_DIR as shared objects.
+	_ "github.com/apache/devlake/plugins/all"
 	"github.com/apache/devlake/server/api"
 )
 

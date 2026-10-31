@@ -56,6 +56,11 @@ jobs:
         cd backend
         go mod tidy
         git diff --exit-code -- go.mod go.sum
+    - name: Check plugins/all is up to date
+      run: |
+        cd backend
+        go run ./tools/pluginsgen
+        git diff --exit-code -- plugins/all
     - name: Install mockery 3.8.1
       run: backend/scripts/install-mockery.sh
     - name: Build Python

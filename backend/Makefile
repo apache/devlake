@@ -54,27 +54,42 @@ dep: go-dep python-dep
 swag: mock
 	scripts/swag.sh
 
+# Regenerate plugins/all, the package that links the Go plugins into the server
+# binary. Run it after adding, removing or renaming a plugin; CI checks that the
+# checked-in file matches the tree.
+#
+# GOOS/GOARCH are cleared because `backend/Dockerfile` exports them to
+# cross-compile the server: `go run` would otherwise build the generator for the
+# target platform and fail with "exec format error" on the build host. Same
+# reason as MOCKERY above.
+plugins-registry:
+	GOOS= GOARCH= CGO_ENABLED=0 go run ./tools/pluginsgen
+
 build-plugin:
 	scripts/build-plugins.sh
 
 build-plugin-debug:
 	DEVLAKE_DEBUG=1 scripts/build-plugins.sh
 
-build-server: swag
+build-server: plugins-registry swag
 	VERSION=$(VERSION) scripts/build-server.sh
 
 build-python: #don't mix this with the other build commands
 	scripts/build-python.sh
 
-build: build-plugin build-server
+# `build` produces the only artifact the release ships: one binary with the
+# framework, the API and every plugin in the generated registry compiled in.
+# Use build-plugin when you want shared objects instead, either to sideload
+# them into an existing binary or to ship a core-only server.
+build: build-server
 
 run:
 	go run server/main.go
 
-dev: build-plugin build-python run
+dev: build-python run
 
 godev:
-	DISABLED_REMOTE_PLUGINS=true make build-plugin run
+	DISABLED_REMOTE_PLUGINS=true make run
 
 debug: build-plugin-debug
 	dlv debug server/main.go
