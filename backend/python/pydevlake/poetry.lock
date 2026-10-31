@@ -396,14 +396,14 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 
 [[package]]
 name = "jsonpointer"
-version = "3.5"
+version = "3.6"
 description = "Identify specific nodes in a JSON document (RFC 6901) "
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "jsonpointer-3.5-py3-none-any.whl", hash = "sha256:8728c42f6bc07b1436af31600267bdbb1495ac5a61f31d9583ff319ecf7da09c"},
-    {file = "jsonpointer-3.5.tar.gz", hash = "sha256:81f28618a019cf1b011a6cf757439737972de1ccbeca2e1f86dfb4d661800792"},
+    {file = "jsonpointer-3.6-py3-none-any.whl", hash = "sha256:a45c858f8a9e171f6b3790ed9446c9382782f6c4cb4589176813c5a553f4cfcd"},
+    {file = "jsonpointer-3.6.tar.gz", hash = "sha256:82e839a3ba3a9e2b54394fda8b3d276c2459d80408d06ef9a6fbc369d7544ffc"},
 ]
 
 [[package]]
