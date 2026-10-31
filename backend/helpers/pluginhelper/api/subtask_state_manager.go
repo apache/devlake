@@ -160,9 +160,6 @@ func bootstrapStateFromCollectorStateIfNeeded(db dal.Dal, preState *models.Subta
 		return nil, errors.Default.Wrap(err, "failed to load collector state for subtask bootstrap")
 	}
 
-	if collectorState.LatestSuccessStart != nil {
-		preState.PrevStartedAt = collectorState.LatestSuccessStart
-	}
 	if preState.TimeAfter == nil && collectorState.TimeAfter != nil {
 		preState.TimeAfter = collectorState.TimeAfter
 	}
