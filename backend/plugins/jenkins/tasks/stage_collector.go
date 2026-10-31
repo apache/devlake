@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"time"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -31,6 +32,16 @@ import (
 )
 
 const RAW_STAGE_TABLE = "jenkins_api_stages"
+
+// FinishedSince selects the builds (aliased tjb) that finished at or after since.
+// Builds are stored only once they have a result, so a build that started before
+// the last collection and finished after it (e.g. one waiting days on an input step)
+// appears in _tool_jenkins_builds only now; filtering on start_time would skip its
+// stages forever. timestamp and duration are both in milliseconds, so the sum is
+// plain arithmetic on every supported database.
+func FinishedSince(since time.Time) dal.Clause {
+	return dal.Where(`tjb.timestamp + tjb.duration >= ?`, since.UnixMilli())
+}
 
 var CollectApiStagesMeta = plugin.SubTaskMeta{
 	Name:             "collectApiStages",
@@ -79,7 +90,7 @@ func collectSingleBuildApiStages(taskCtx plugin.SubTaskContext) errors.Error {
 			data.Options.ConnectionId, data.Options.JobPath, data.Options.JobName, "WorkflowRun"),
 	}
 	if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
-		clauses = append(clauses, dal.Where(`tjb.start_time >= ?`, apiCollector.GetSince()))
+		clauses = append(clauses, FinishedSince(*apiCollector.GetSince()))
 	}
 	cursor, err := db.Cursor(clauses...)
 	if err != nil {
@@ -146,7 +157,7 @@ func collectMultiBranchBuildApiStages(taskCtx plugin.SubTaskContext) errors.Erro
 			data.Options.ConnectionId, fmt.Sprintf("%s%%", data.Options.JobFullName), "WorkflowRun"),
 	}
 	if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
-		clauses = append(clauses, dal.Where(`tjb.start_time >= ?`, apiCollector.GetSince()))
+		clauses = append(clauses, FinishedSince(*apiCollector.GetSince()))
 	}
 	cursor, err := db.Cursor(clauses...)
 	if err != nil {
