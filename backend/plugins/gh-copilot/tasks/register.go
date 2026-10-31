@@ -28,6 +28,9 @@ func GetSubTaskMetas() []plugin.SubTaskMeta {
 		CollectEnterpriseMetricsMeta,
 		CollectUserMetricsMeta,
 		CollectUserTeamsMeta,
+		CollectEnterpriseMetrics28DayMeta,
+		CollectOrgMetrics28DayMeta,
+		CollectUserMetrics28DayMeta,
 		CollectAiCreditUsageMeta,
 		// Extractors
 		ExtractSeatsMeta,
@@ -35,6 +38,9 @@ func GetSubTaskMetas() []plugin.SubTaskMeta {
 		ExtractEnterpriseMetricsMeta,
 		ExtractUserMetricsMeta,
 		ExtractUserTeamsMeta,
+		ExtractEnterpriseMetrics28DayMeta,
+		ExtractOrgMetrics28DayMeta,
+		ExtractUserMetrics28DayMeta,
 		ExtractAiCreditUsageMeta,
 	}
 }
