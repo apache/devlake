@@ -86,3 +86,89 @@ var ExtractDailyUsageMeta = plugin.SubTaskMeta{
 	Description:      "Extract per-user per-day adoption metrics into tool-layer tables",
 	Dependencies:     []*plugin.SubTaskMeta{&CollectDailyUsageMeta},
 }
+
+var CollectAiCodeCommitsMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeCommits",
+	EntryPoint:       CollectAiCodeCommits,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect per-commit AI line attribution from the Cursor Enterprise API (skipped for non-enterprise keys)",
+}
+
+var ExtractAiCodeCommitsMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeCommits",
+	EntryPoint:       ExtractAiCodeCommits,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract per-commit AI line attribution into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeCommitsMeta},
+}
+
+var CollectAiCodeCommitDetailsMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeCommitDetails",
+	EntryPoint:       CollectAiCodeCommitDetails,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect commit-detail blame and conversation metadata from the Cursor Enterprise API (skipped when commit-details is inaccessible)",
+	Dependencies:     []*plugin.SubTaskMeta{&ExtractAiCodeCommitsMeta},
+}
+
+var ExtractAiCodeCommitDetailsMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeCommitDetails",
+	EntryPoint:       ExtractAiCodeCommitDetails,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract commit-detail blame and conversations into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeCommitDetailsMeta},
+}
+
+var CollectAiCodeChangesMeta = plugin.SubTaskMeta{
+	Name:             "collectAiCodeChanges",
+	EntryPoint:       CollectAiCodeChanges,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect granular accepted AI changes from the Cursor Enterprise API (skipped for non-enterprise keys)",
+}
+
+var ExtractAiCodeChangesMeta = plugin.SubTaskMeta{
+	Name:             "extractAiCodeChanges",
+	EntryPoint:       ExtractAiCodeChanges,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract granular accepted AI changes into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectAiCodeChangesMeta},
+}
+
+var CollectBugbotReviewsMeta = plugin.SubTaskMeta{
+	Name:             "collectBugbotReviews",
+	EntryPoint:       CollectBugbotReviews,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect BugBot review analytics from the Cursor Analytics API (skipped when bugbot-reviews is inaccessible)",
+}
+
+var ExtractBugbotReviewsMeta = plugin.SubTaskMeta{
+	Name:             "extractBugbotReviews",
+	EntryPoint:       ExtractBugbotReviews,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract BugBot reviews and findings into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectBugbotReviewsMeta},
+}
+
+var CollectConversationInsightsMeta = plugin.SubTaskMeta{
+	Name:             "collectConversationInsights",
+	EntryPoint:       CollectConversationInsights,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Collect Conversation Insights from the Cursor Analytics API (skipped for non-enterprise keys or when insights are disabled)",
+}
+
+var ExtractConversationInsightsMeta = plugin.SubTaskMeta{
+	Name:             "extractConversationInsights",
+	EntryPoint:       ExtractConversationInsights,
+	EnabledByDefault: true,
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CROSS},
+	Description:      "Extract Conversation Insights into tool-layer tables",
+	Dependencies:     []*plugin.SubTaskMeta{&CollectConversationInsightsMeta},
+}

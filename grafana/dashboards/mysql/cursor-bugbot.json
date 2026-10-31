@@ -1,0 +1,895 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "mysql",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- **Use case:** Automated PR review analytics from Cursor BugBot (`GET /analytics/team/bugbot-reviews`).\n- **Data source:** Cursor plugin \u2014 requires `hasBugbotReviews` on the connection.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for usage and cost; [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise) for AI code tracking and conversation insights.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Completed BugBot reviews in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Reviews\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Reviews",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Bugs BugBot reported across reviews in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(bugs_found) AS \"Bugs\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Bugs",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of bugs marked resolved vs bugs with a resolution status",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(CASE WHEN f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0\n  / NULLIF(SUM(CASE WHEN f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0) AS \"Resolution Rate\"\nFROM _tool_cursor_bugbot_reviews r\nJOIN _tool_cursor_bugbot_findings f\n  ON r.connection_id = f.connection_id\n  AND r.scope_id = f.scope_id\n  AND r.request_id = f.request_id\nWHERE $__timeFilter(r.timestamp)\n  AND r.connection_id = ${connection_id}\n  AND r.scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Resolution Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Sum of review cost (cost_cents / 100) in the selected time range",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(COALESCE(cost_cents, 0)) / 100 AS \"Cost\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Review Cost",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 100,
+      "title": "Review Trends",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Completed BugBot reviews per day",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 321,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  COALESCE(NULLIF(publication_status, ''), 'unknown') AS metric,\n  COUNT(*) AS value\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY DATE(timestamp), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "BugBot Reviews Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Total BugBot review cost (cost_cents / 100) over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4
+          },
+          "unit": "currencyUSD",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 322,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(timestamp) AS time,\n  SUM(COALESCE(cost_cents, 0)) / 100 AS \"Review Cost\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY DATE(timestamp)\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "BugBot Cost Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of bugs marked resolved within each severity for the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "High"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Medium"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Low"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 323,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  'Severity' AS metric,\n  ROUND(SUM(CASE WHEN f.severity = 'high' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0\n    / NULLIF(SUM(CASE WHEN f.severity = 'high' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS high,\n  ROUND(SUM(CASE WHEN f.severity = 'medium' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0\n    / NULLIF(SUM(CASE WHEN f.severity = 'medium' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS medium,\n  ROUND(SUM(CASE WHEN f.severity = 'low' AND f.resolution_status = 'resolved' THEN 1 ELSE 0 END) * 100.0\n    / NULLIF(SUM(CASE WHEN f.severity = 'low' AND f.resolution_status IN ('resolved', 'unresolved') THEN 1 ELSE 0 END), 0), 1) AS low\nFROM _tool_cursor_bugbot_reviews r\nJOIN _tool_cursor_bugbot_findings f\n  ON r.connection_id = f.connection_id\n  AND r.scope_id = f.scope_id\n  AND r.request_id = f.request_id\nWHERE $__timeFilter(r.timestamp)\n  AND r.connection_id = ${connection_id}\n  AND r.scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Bug Resolution by Severity",
+      "type": "barchart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Bug counts by severity over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 324,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(r.timestamp) AS time,\n  COALESCE(NULLIF(f.severity, ''), 'unknown') AS metric,\n  COUNT(*) AS value\nFROM _tool_cursor_bugbot_reviews r\nJOIN _tool_cursor_bugbot_findings f\n  ON r.connection_id = f.connection_id\n  AND r.scope_id = f.scope_id\n  AND r.request_id = f.request_id\nWHERE $__timeFilter(r.timestamp)\n  AND r.connection_id = ${connection_id}\n  AND r.scope_id = '${scope_id}'\nGROUP BY DATE(r.timestamp), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Bug Severity Over Time",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Repositories ranked by bugs BugBot reported. PRs is the number of distinct pull requests. Bugs per PR is total bugs divided by that count.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 360
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reviews"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PRs"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bugs"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bugs per PR"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cost ($)"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 325,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT repo AS \"Repo\",\n  COUNT(*) AS \"Reviews\",\n  COUNT(DISTINCT pr_number) AS \"PRs\",\n  SUM(bugs_found) AS \"Bugs\",\n  ROUND(SUM(bugs_found) / NULLIF(COUNT(DISTINCT pr_number), 0), 2) AS \"Bugs per PR\",\n  ROUND(SUM(COALESCE(cost_cents, 0)) / 100, 2) AS \"Cost ($)\"\nFROM _tool_cursor_bugbot_reviews\nWHERE $__timeFilter(timestamp)\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\n  AND repo != ''\nGROUP BY repo\nORDER BY SUM(bugs_found) DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Repos by Bugs",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "id": 104,
+      "title": "Diagnostics",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": "mysql",
+          "description": "Row counts and latest timestamps for BugBot tool tables",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "table_name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.minWidth",
+                    "value": 280
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "row_count"
+                },
+                "properties": [
+                  {
+                    "id": "custom.align",
+                    "value": "right"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 110
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "latest"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 190
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 35
+          },
+          "id": 40,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": "mysql",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT '_tool_cursor_bugbot_reviews' AS table_name, COUNT(*) AS row_count, MAX(timestamp) AS latest\nFROM _tool_cursor_bugbot_reviews\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_bugbot_findings', COUNT(*), NULL\nFROM _tool_cursor_bugbot_findings\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+              "refId": "A"
+            }
+          ],
+          "title": "Data Volume",
+          "type": "table"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "cursor",
+    "devlake",
+    "ai",
+    "bugbot"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "2",
+          "value": "2"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "team",
+          "value": "team"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE connection_id = ${connection_id} ORDER BY id",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE connection_id = ${connection_id} ORDER BY id",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Cursor BugBot Review Analytics",
+  "uid": "cursor_bugbot",
+  "version": 1,
+  "weekStart": ""
+}
