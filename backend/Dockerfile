@@ -168,18 +168,22 @@ ARG DEBUG=
 ENV LD_LIBRARY_PATH=/app/libs
 RUN mkdir -p /app/libs
 COPY --from=build /usr/local/deps/target/lib/*.so* /app/libs
-COPY --from=build /go/bin /usr/bin
 RUN ldconfig -vn /app/libs
 
 # apps
-COPY --from=build /app/bin /app/bin
+# The single binary already contains every plugin; the .so files that
+# `make build-plugin` produces stay in the builder stage and are never copied.
+COPY --from=build /app/bin/lake /app/bin/lake
 COPY --from=build /app/resources /app/resources
 
 ENV PATH="/app/bin:${PATH}"
 ENV DEBUG="$DEBUG"
 
 USER root
-RUN chgrp -R 0 /app && \
+# Empty mount point for sideloaded plugins: dropping a .so here registers it on
+# top of the compiled-in set at startup; see PLUGIN_DIR.
+RUN mkdir -p /app/bin/plugins && \
+    chgrp -R 0 /app && \
     chmod -R g=u /app
 USER devlake
 

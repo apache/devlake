@@ -77,7 +77,7 @@ plugins-registry:
 build-server:
 	make build-server -C backend
 
-build: build-plugin build-server
+build: build-server
 
 all: build
 
