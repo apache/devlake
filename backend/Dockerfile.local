@@ -72,15 +72,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
     make swag
 
-# Build plugins (parallel, with persistent Go build cache)
+# Build the server. `build` is `build-server`: the framework, the API and every
+# plugin in the generated registry link into this one binary. No .so files are
+# produced for the release image.
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
-    make build-plugin
-
-# Build server
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/go/pkg/mod \
-    VERSION=${TAG}@${SHA} make build-server
+    VERSION=${TAG}@${SHA} make build
 
 FROM debian:bookworm-slim
 
@@ -102,7 +99,10 @@ RUN ldconfig
 
 WORKDIR /app
 
-COPY --from=builder /app/bin ./bin
+COPY --from=builder /app/bin/lake ./bin/lake
+
+# Empty mount point for sideloaded plugins
+RUN mkdir -p bin/plugins
 
 # Create empty python plugins dir to avoid startup error
 RUN mkdir -p python/plugins
