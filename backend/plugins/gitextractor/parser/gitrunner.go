@@ -18,7 +18,6 @@ limitations under the License.
 package parser
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -141,15 +140,4 @@ func splitLines(out []byte) []string {
 		return nil
 	}
 	return strings.Split(text, "\n")
-}
-
-func scanLines(reader io.Reader, fn func(line string) error) error {
-	scanner := bufio.NewScanner(reader)
-	scanner.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
-	for scanner.Scan() {
-		if err := fn(scanner.Text()); err != nil {
-			return err
-		}
-	}
-	return scanner.Err()
 }
