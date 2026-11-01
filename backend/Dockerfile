@@ -97,11 +97,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
         ln -s /usr/local/deps/aarch64 /usr/local/deps/target && \
         export CC=aarch64-linux-gnu-gcc && \
-        export GOARCH=arm64 ; \
+        export GOARCH=arm64 && \
+        export CGO_LDFLAGS="-Wl,-rpath-link,/rootfs-arm64/usr/lib/aarch64-linux-gnu -Wl,-rpath-link,/rootfs-arm64/lib/aarch64-linux-gnu" ; \
     else \
         ln -s /usr/local/deps/x86_64 /usr/local/deps/target && \
         export CC=x86_64-linux-gnu-gcc && \
-        export GOARCH=amd64 ; \
+        export GOARCH=amd64 && \
+        export CGO_LDFLAGS="-Wl,-rpath-link,/rootfs-amd64/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/rootfs-amd64/lib/x86_64-linux-gnu" ; \
     fi && \
     export PKG_CONFIG_PATH=/usr/local/deps/target/lib/pkgconfig && \
     export CGO_ENABLED=1 &&\
