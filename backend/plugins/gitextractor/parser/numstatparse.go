@@ -117,7 +117,7 @@ func parseNumstatEntry(entry string) (commitFileStat, error) {
 }
 
 // parseNumstatCount parses a numstat count. Binary files are reported as "-"
-// and count as zero changed lines, just like libgit2 reports them.
+// and count as zero changed lines.
 func parseNumstatCount(value string) (int, error) {
 	if value == "-" {
 		return 0, nil

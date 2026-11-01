@@ -20,7 +20,6 @@ package impl
 import (
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -116,12 +115,8 @@ func (p GitExtractor) PrepareTaskData(taskCtx plugin.TaskContext, options map[st
 		}
 		*optValue = &defValue
 	}
-	loadBool(&op.UseGoGit, "UseGoGit", false)
 	loadBool(&op.SkipCommitStat, "SKIP_COMMIT_STAT", false)
 	loadBool(&op.SkipCommitFiles, "SKIP_COMMIT_FILES", true)
-	op.UseGitCli = op.UseGitCli || strings.EqualFold(cfg.GetString("GIT_EXTRACTOR_COLLECTOR"), "gitcli")
-	log.Info("UseGoGit: %v", *op.UseGoGit)
-	log.Info("UseGitCli: %v", op.UseGitCli)
 	log.Info("SkipCommitStat: %v", *op.SkipCommitStat)
 	log.Info("SkipCommitFiles: %v", *op.SkipCommitFiles)
 

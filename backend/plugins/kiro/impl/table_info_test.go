@@ -24,10 +24,9 @@ import (
 )
 
 // The repo-wide plugins/table_info_test.go performs this same check for every
-// plugin, but building that package requires gitextractor and therefore a
-// specific libgit2. Running it here as well keeps the feedback local: a model
-// added without registering it in GetTablesInfo fails immediately rather than
-// only in CI.
+// plugin. Running it here as well keeps the feedback local: a model added
+// without registering it in GetTablesInfo fails immediately rather than only
+// in CI.
 func TestKiroTableInfo(t *testing.T) {
 	checker := unithelper.NewTableInfoChecker(unithelper.TableInfoCheckerConfig{})
 	checker.FeedIn("../models", Kiro{}.GetTablesInfo)

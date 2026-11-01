@@ -16,7 +16,7 @@ limitations under the License.
 -->
 # Python prerequisites for `make e2e-test`
 
-`make e2e-test` also requires a test database and, for some service tests, `libgit2`. See
+`make e2e-test` also requires a test database and `git` for the service tests. See
 [`backend/test/Readme.md`](../test/Readme.md) for the full local E2E test flow.
 
 For the Python plugin tests to run properly, the following steps must be taken:

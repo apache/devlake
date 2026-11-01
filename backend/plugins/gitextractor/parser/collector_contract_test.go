@@ -19,6 +19,8 @@ package parser
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -33,93 +35,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// collectorCase describes one RepoCollector implementation under test.
-//
-// The assertions in this file describe the collector contract that a
-// replacement implementation must satisfy. The deviations block records where
-// an existing implementation is known to violate that contract; they are
-// documented instead of being silently tolerated so that a replacement cannot
-// inherit them.
-type collectorCase struct {
-	name string
-	open func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector
+// These tests describe the collector contract: what the git command line
+// collector writes for a known repository. The fixtures are built with the git
+// CLI itself, so the tests do not depend on any git library.
 
-	deviations collectorDeviations
-}
-
-type collectorDeviations struct {
-	// storesOnlyLastComponent reports that only the component of the last file
-	// of each commit is stored.
-	storesOnlyLastComponent bool
-	// countTagsIgnoresContext reports that CountTags ignores a cancelled context.
-	countTagsIgnoresContext bool
-	// collectsShallowBoundary reports that the shallow boundary commit is
-	// collected with a full-tree diff instead of being skipped.
-	collectsShallowBoundary bool
-	// failsOnDeletedFiles reports that CollectDiffLine fails when the history
-	// contains a deleted file.
-	failsOnDeletedFiles bool
-	// skipsLineChanges reports that CollectDiffLine does not store
-	// CommitLineChange rows.
-	skipsLineChanges bool
-	// failsOnEmptyRepo reports that the Count* helpers fail on a repository
-	// without commits.
-	failsOnEmptyRepo bool
-	// omitsZeroLineFiles reports that changed files without line changes
-	// (binary files, empty files) are not stored.
-	omitsZeroLineFiles bool
-}
-
-func collectorCases() []collectorCase {
-	return []collectorCase{
-		{
-			name: "gitcli",
-			open: func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
-				t.Helper()
-				collector, err := NewGitcliRepoCollector(localDir, repoId, store, unithelper.DummyLogger())
-				require.Nil(t, err)
-				return collector
-			},
-		},
-		{
-			name: "libgit2",
-			open: func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
-				t.Helper()
-				collector, err := NewLibgit2RepoCollector(localDir, repoId, store, unithelper.DummyLogger())
-				require.Nil(t, err)
-				return collector
-			},
-			deviations: collectorDeviations{
-				storesOnlyLastComponent: true,
-				countTagsIgnoresContext: true,
-				collectsShallowBoundary: true,
-			},
-		},
-		{
-			name: "gogit",
-			open: func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
-				t.Helper()
-				collector, err := NewGogitRepoCollector(localDir, repoId, store, unithelper.DummyLogger())
-				require.Nil(t, err)
-				return collector
-			},
-			deviations: collectorDeviations{
-				failsOnDeletedFiles: true,
-				skipsLineChanges:    true,
-				failsOnEmptyRepo:    true,
-				omitsZeroLineFiles:  true,
-			},
-		},
-	}
-}
-
-func forEachCollector(t *testing.T, fn func(t *testing.T, c collectorCase)) {
+func newTestCollector(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
 	t.Helper()
-	for _, c := range collectorCases() {
-		t.Run(c.name, func(t *testing.T) {
-			fn(t, c)
-		})
-	}
+	collector, err := NewGitcliRepoCollector(localDir, repoId, store, unithelper.DummyLogger())
+	require.Nil(t, err)
+	return collector
+}
+
+func forEachCollector(t *testing.T, fn func(t *testing.T)) {
+	t.Helper()
+	t.Run("gitcli", fn)
 }
 
 // recordStore is a models.Store that records everything the collectors write.
@@ -275,9 +204,9 @@ func parentShas(parents []*code.CommitParent, commitSha string) []string {
 func TestCollectorCountsAndRefs(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 		commits, err := collector.CountCommits(context.Background())
@@ -329,9 +258,9 @@ func TestCollectorCommits(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 	repoId := "test-repo"
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, repoId, store)
+		collector := newTestCollector(t, repo.Dir, repoId, store)
 		ctx := newCollectorContext(t, defaultOptions(repoId), nil)
 
 		require.NoError(t, collector.CollectCommits(ctx))
@@ -392,20 +321,7 @@ func TestCollectorCommits(t *testing.T) {
 			repo.C5: {"feature.txt": {1, 0}},
 		}
 		for sha, want := range expectedFiles {
-			if !c.deviations.omitsZeroLineFiles {
-				assert.Equal(t, want, files[sha], sha)
-				continue
-			}
-			for path, stat := range want {
-				if stat != [2]int{0, 0} {
-					assert.Equal(t, stat, files[sha][path], "%s %s", sha, path)
-				}
-			}
-			for path, stat := range files[sha] {
-				if stat != [2]int{0, 0} {
-					assert.Contains(t, want, path, "%s %s", sha, path)
-				}
-			}
+			assert.Equal(t, want, files[sha], sha)
 		}
 
 		assert.Equal(t, 4, commits[repo.C1].Additions)
@@ -421,11 +337,9 @@ func TestCollectorCommits(t *testing.T) {
 		for _, file := range store.commitFiles {
 			assert.Equal(t, genCommitFileId(file.CommitSha, file.FilePath), file.Id)
 		}
-		if !c.deviations.storesOnlyLastComponent {
-			components := componentsById(store.components)
-			for _, file := range store.commitFiles {
-				assert.Equal(t, "Default", components[file.Id], file.FilePath)
-			}
+		components := componentsById(store.components)
+		for _, file := range store.commitFiles {
+			assert.Equal(t, "Default", components[file.Id], file.FilePath)
 		}
 	})
 }
@@ -433,9 +347,9 @@ func TestCollectorCommits(t *testing.T) {
 func TestCollectorUsesConfiguredComponents(t *testing.T) {
 	repo := buildLinearRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), []code.Component{
 			{RepoId: "test-repo", Name: "docs", PathRegex: `^c\.txt$`},
 		})
@@ -446,18 +360,16 @@ func TestCollectorUsesConfiguredComponents(t *testing.T) {
 		files := filesByCommit(store.commitFiles)[repo.C4]
 		require.Contains(t, files, "c.txt")
 		assert.Equal(t, "docs", components[genCommitFileId(repo.C4, "c.txt")])
-		if !c.deviations.storesOnlyLastComponent {
-			assert.Equal(t, "Default", components[genCommitFileId(repo.C4, "b.txt")])
-		}
+		assert.Equal(t, "Default", components[genCommitFileId(repo.C4, "b.txt")])
 	})
 }
 
 func TestCollectorSkipCommitStat(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		opts := defaultOptions("test-repo")
 		opts.SkipCommitStat = boolPtr(true)
 		opts.SkipCommitFiles = boolPtr(true)
@@ -478,9 +390,9 @@ func TestCollectorSkipCommitStat(t *testing.T) {
 func TestCollectorSkipCommitFiles(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		opts := defaultOptions("test-repo")
 		opts.SkipCommitFiles = boolPtr(true)
 		ctx := newCollectorContext(t, opts, nil)
@@ -498,9 +410,9 @@ func TestCollectorSkipCommitFiles(t *testing.T) {
 func TestCollectorExcludeFileExtensions(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		opts := defaultOptions("test-repo")
 		opts.ExcludeFileExtensions = []string{".DAT"}
 		ctx := newCollectorContext(t, opts, nil)
@@ -529,12 +441,9 @@ func TestCollectorSkipsShallowBoundaryCommit(t *testing.T) {
 
 	dir := f.shallowBareClone()
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
-		if c.deviations.collectsShallowBoundary {
-			t.Skip("known deviation: the shallow boundary is collected with a full-tree diff")
-		}
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, dir, "test-repo", store)
+		collector := newTestCollector(t, dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 		// The tip is a shallow boundary: its parent is not in the object
@@ -546,15 +455,42 @@ func TestCollectorSkipsShallowBoundaryCommit(t *testing.T) {
 	})
 }
 
+func TestCollectorSkipsShallowBoundaryEvenWhenItsParentExists(t *testing.T) {
+	f := newGitFixture(t)
+	f.writeFile("a.txt", "l1\n")
+	c1 := f.commit(testTimeC1, "c1")
+	f.writeFile("a.txt", "l1\nl2\n")
+	c2 := f.commit(testTimeC2, "c2")
+	// keep the parent reachable through another branch
+	f.git("branch", "old", c1)
+
+	dir := f.bareClone()
+	// Mark the tip as a shallow boundary although its parent object is still
+	// in the object database. git then renders the tip as a root commit, so
+	// the collector must skip it based on the shallow file, not on the parent
+	// being missing.
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "shallow"), []byte(c2+"\n"), 0o644))
+
+	forEachCollector(t, func(t *testing.T) {
+		store := &recordStore{}
+		collector := newTestCollector(t, dir, "test-repo", store)
+		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
+
+		require.NoError(t, collector.CollectCommits(ctx))
+
+		commits := commitsBySha(store.commits)
+		assert.NotContains(t, commits, c2, "the shallow boundary must not be collected")
+		require.Contains(t, commits, c1)
+		assert.Equal(t, 1, commits[c1].Additions)
+	})
+}
+
 func TestCollectorEmptyRepo(t *testing.T) {
 	dir := newGitFixture(t).bareClone()
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
-		if c.deviations.failsOnEmptyRepo {
-			t.Skip("known deviation: the Count* helpers need at least one commit")
-		}
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, dir, "test-repo", store)
+		collector := newTestCollector(t, dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 		commits, err := collector.CountCommits(context.Background())
@@ -578,39 +514,24 @@ func TestCollectorEmptyRepo(t *testing.T) {
 func TestCollectorHonoursCancelledContext(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
 		_, err := collector.CountCommits(ctx)
 		assert.ErrorIs(t, err, context.Canceled)
-		if !c.deviations.countTagsIgnoresContext {
-			_, err = collector.CountTags(ctx)
-			assert.ErrorIs(t, err, context.Canceled)
-		}
+		_, err = collector.CountTags(ctx)
+		assert.ErrorIs(t, err, context.Canceled)
 		_, err = collector.CountBranches(ctx)
 		assert.ErrorIs(t, err, context.Canceled)
 	})
 }
 
 func TestCollectorRejectsNonRepo(t *testing.T) {
-	dir := t.TempDir()
-	for _, c := range collectorCases() {
-		t.Run(c.name, func(t *testing.T) {
-			var err error
-			switch c.name {
-			case "gitcli":
-				_, err = NewGitcliRepoCollector(dir, "test-repo", nil, unithelper.DummyLogger())
-			case "libgit2":
-				_, err = NewLibgit2RepoCollector(dir, "test-repo", nil, unithelper.DummyLogger())
-			case "gogit":
-				_, err = NewGogitRepoCollector(dir, "test-repo", nil, unithelper.DummyLogger())
-			}
-			assert.Error(t, err, "%s should reject a non-repository", c.name)
-		})
-	}
+	_, err := NewGitcliRepoCollector(t.TempDir(), "test-repo", nil, unithelper.DummyLogger())
+	assert.Error(t, err, "the collector should reject a non-repository")
 }
 
 func TestCollectorCountsWhenHeadIsNotDefault(t *testing.T) {
@@ -623,9 +544,9 @@ func TestCollectorCountsWhenHeadIsNotDefault(t *testing.T) {
 	require.NotEqual(t, c1, c2)
 	dir := f.bareClone()
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, dir, "test-repo", store)
+		collector := newTestCollector(t, dir, "test-repo", store)
 
 		// HEAD points at feature, which is not counted but is the default ref.
 		branches, err := collector.CountBranches(context.Background())
@@ -648,12 +569,9 @@ func TestCollectorDiffLineSnapshot(t *testing.T) {
 	repo := buildLinearRepo(t)
 	expected := blameAtHEAD(t, repo.Dir)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
-		if c.deviations.failsOnDeletedFiles {
-			t.Skip("known deviation: CollectDiffLine fails on a deleted file")
-		}
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 		require.NoError(t, collector.CollectDiffLine(ctx))
@@ -672,21 +590,16 @@ func TestCollectorDiffLineSnapshot(t *testing.T) {
 			assert.Equal(t, lines, got[file], file)
 		}
 
-		if c.deviations.skipsLineChanges {
-			assert.Empty(t, store.lineChanges)
-		}
+		assert.NotEmpty(t, store.lineChanges)
 	})
 }
 
 func TestCollectorCollectAllAndClose(t *testing.T) {
 	repo := buildCanonicalRepo(t)
 
-	forEachCollector(t, func(t *testing.T, c collectorCase) {
-		if c.deviations.failsOnDeletedFiles {
-			t.Skip("known deviation: CollectDiffLine fails on a deleted file")
-		}
+	forEachCollector(t, func(t *testing.T) {
 		store := &recordStore{}
-		collector := c.open(t, repo.Dir, "test-repo", store)
+		collector := newTestCollector(t, repo.Dir, "test-repo", store)
 		ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 		cleanedUp := false
@@ -698,11 +611,7 @@ func TestCollectorCollectAllAndClose(t *testing.T) {
 		assert.Len(t, store.refs, 4)
 		assert.NotEmpty(t, store.commitFiles)
 		assert.NotEmpty(t, store.snapshots)
-		if c.deviations.skipsLineChanges {
-			assert.Empty(t, store.lineChanges)
-		} else {
-			assert.NotEmpty(t, store.lineChanges)
-		}
+		assert.NotEmpty(t, store.lineChanges)
 
 		require.NoError(t, collector.Close(context.Background()))
 		assert.True(t, store.closed)
@@ -710,12 +619,11 @@ func TestCollectorCollectAllAndClose(t *testing.T) {
 	})
 }
 
-func TestLibgit2CollectorCommitLineChanges(t *testing.T) {
+func TestCollectorCommitLineChanges(t *testing.T) {
 	repo := buildLinearRepo(t)
 
 	store := &recordStore{}
-	collector, err := NewLibgit2RepoCollector(repo.Dir, "test-repo", store, unithelper.DummyLogger())
-	require.Nil(t, err)
+	collector := newTestCollector(t, repo.Dir, "test-repo", store)
 	ctx := newCollectorContext(t, defaultOptions("test-repo"), nil)
 
 	require.NoError(t, collector.CollectDiffLine(ctx))

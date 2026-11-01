@@ -47,8 +47,6 @@ jobs:
       uses: actions/checkout@v7
     - name: Set git config
       run: git config --global --add safe.directory $(pwd)
-    - name: Install libgit2 1.5 for git2go v34
-      run: backend/scripts/install-libgit2.sh
     - name: Install Go 1.27.3
       run: backend/scripts/install-go.sh
     - name: Check go.mod is tidy without generated mocks

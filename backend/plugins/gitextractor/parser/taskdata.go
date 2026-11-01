@@ -41,7 +41,6 @@ type GitExtractorOptions struct {
 	PrivateKey            string `json:"privateKey" mapstructure:"privateKey"`
 	Passphrase            string `json:"passphrase" mapstructure:"passphrase"`
 	Proxy                 string `json:"proxy" mapstructure:"proxy"`
-	UseGoGit              *bool  `json:"useGoGit" mapstructure:"useGoGit"`
 	SkipCommitStat        *bool  `json:"skipCommitStat" mapstructure:"skipCommitStat" comment:"skip all commit stat including added/deleted lines and commit files as well"`
 	SkipCommitFiles       *bool  `json:"skipCommitFiles" mapstructure:"skipCommitFiles"`
 	NoShallowClone        bool   `json:"noShallowClone" mapstructure:"noShallowClone"`
@@ -49,8 +48,4 @@ type GitExtractorOptions struct {
 	PluginName            string `json:"pluginName" mapstructure:"pluginName,omitempty"`
 	// Configured by upstream plugin (e.g., GitLab) to exclude file extensions from commit stats
 	ExcludeFileExtensions []string `json:"excludeFileExtensions" mapstructure:"excludeFileExtensions"`
-	// UseGitCli selects the git command line collector. It is a temporary
-	// migration switch and will be removed once the library based collectors
-	// are gone.
-	UseGitCli bool `json:"useGitCli,omitempty" mapstructure:"useGitCli"`
 }

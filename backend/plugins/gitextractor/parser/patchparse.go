@@ -203,8 +203,8 @@ func parseHunkRange(value string) (int, error) {
 
 func (p *patchParser) endFile() {
 	if p.current != nil {
-		// libgit2 reports the same path on both sides for additions and
-		// deletions, so mirror that here.
+		// Report the same path on both sides for additions and deletions, so the
+		// commit file and line change rows always name the file.
 		if p.current.OldPath == "" {
 			p.current.OldPath = p.current.NewPath
 		}

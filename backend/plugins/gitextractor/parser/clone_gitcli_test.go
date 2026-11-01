@@ -127,7 +127,7 @@ func TestIncrementalCloneKeepsCommitsBehindMergeBoundary(t *testing.T) {
 }
 
 // git fetch may start `git maintenance run --auto` / `git gc --auto` in the
-// background. That repacks the repo while libgit2 is already reading it, so
+// background. That repacks the repo while the collector is reading it, so
 // temporary pack files (.tmp-<pid>-pack-*.idx) vanish under its feet and the
 // collection fails with "could not find ... to open".
 func TestCloneDoesNotStartAutoMaintenance(t *testing.T) {

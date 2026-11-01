@@ -16,8 +16,9 @@ limitations under the License.
 -->
 Please see details in the [Apache DevLake website](https://devlake.apache.org/docs/Plugins/gitextractor)
 
+The plugin reads repositories with the `git` command line, so `git` (2.31 or
+newer) must be installed where the server runs. No libgit2 or cgo is required.
 
-Build with local compiled v1.5.0 libgit2
 ```
-CGO_LDFLAGS="-L/usr/local/lib -lgit2" CGO_CFLAGS="-I/usr/local/include" go build ./plugins/gitextractor/... 2>&1 | tail -5
+go build ./plugins/gitextractor/...
 ```

@@ -31,21 +31,7 @@ ARG HTTPS_PROXY=
 
 RUN apt-get update && apt-get install -y \
     gcc \
-    binutils \
-    libfindbin-libs-perl \
-    cmake \
-    libssh2-1-dev \
-    libssl-dev \
-    zlib1g-dev
-
-# Install libgit2 for native platform only
-RUN mkdir -p /tmp/build && cd /tmp/build && \
-    wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.5.0.tar.gz -O - | tar -xz && \
-    cd libgit2-1.5.0 && \
-    mkdir build && cd build && \
-    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make -j$(nproc) install && \
-    ldconfig
+    ca-certificates
 
 RUN go install github.com/vektra/mockery/v3@v3.8.1
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
@@ -82,20 +68,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
-    libssh2-1 \
-    libssl3 \
     ca-certificates \
-    # gitextractor shells out to the git CLI unless
-    # USE_GO_GIT_IN_GIT_EXTRACTOR is set, so the binary must be present or every
-    # clone fails with "git: executable file not found in $PATH".
+    # gitextractor shells out to the git CLI, so the binary must be present or
+    # every clone fails with "git: executable file not found in $PATH".
     # debian:bookworm-slim does not ship it; the official image inherits it from
     # its python base.
     git \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy libgit2
-COPY --from=builder /usr/local/lib/libgit2.so* /usr/local/lib/
-RUN ldconfig
 
 WORKDIR /app
 

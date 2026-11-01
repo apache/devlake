@@ -34,7 +34,7 @@ parent 2222222222222222222222222222222222222222
 author Jane Doe <jane@example.com> 1704067200 +0800
 committer DevLake Test <test@devlake.apache.org> 1704070800 -0530
 gpgsig -----BEGIN PGP SIGNATURE-----
- 
+ fakesignature-line
  fakesignature
  -----END PGP SIGNATURE-----
 

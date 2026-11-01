@@ -20,9 +20,12 @@ package parser
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -39,7 +42,7 @@ import (
 
 // minGitVersion is the first release with --diff-merges=first-parent, which is
 // required to diff merge commits against their first parent only.
-const minGitVersion = 2*10000 + 31
+const minGitVersion = 2*10000 + 31*100
 
 // commitBatchSize bounds how many commits are fetched and diffed at a time so
 // that a repository with a long history does not need to be held in memory.
@@ -47,8 +50,9 @@ const commitBatchSize = 1024
 
 var _ RepoCollector = (*GitcliRepoCollector)(nil)
 
-// GitcliRepoCollector collects git data with the git command line, so the
-// server no longer needs libgit2 or a pure Go git implementation.
+// GitcliRepoCollector collects git data with the git command line. It replaces
+// the previous libgit2 and go-git implementations, so the server no longer
+// needs a git library or cgo.
 type GitcliRepoCollector struct {
 	id      string
 	logger  log.Logger
@@ -494,7 +498,7 @@ type snapshotChanges struct {
 	added   []patchLine
 }
 
-// applySnapshotChanges mirrors the line bookkeeping of the libgit2 collector:
+// applySnapshotChanges applies the changes of one file to the line snapshot:
 // deletions remove the old line numbers and additions insert the commit sha at
 // the new line numbers.
 func applySnapshotChanges(snapshot map[string]*models.FileBlame, filePath, commitSha string, changes *snapshotChanges) {
@@ -588,7 +592,7 @@ func (r *GitcliRepoCollector) shallowCommits(ctx context.Context) (map[string]st
 	if err != nil {
 		return shallow, err
 	}
-	content, err := os.ReadFile(strings.TrimSpace(string(out)))
+	content, err := os.ReadFile(resolveRepoPath(r.git.dir, strings.TrimSpace(string(out))))
 	if os.IsNotExist(err) {
 		return shallow, nil
 	}
@@ -601,6 +605,16 @@ func (r *GitcliRepoCollector) shallowCommits(ctx context.Context) (map[string]st
 		}
 	}
 	return shallow, nil
+}
+
+// resolveRepoPath turns a git path that is relative to the repository into an
+// absolute one. `git rev-parse --git-path` returns paths relative to the
+// repository root, but the collector's working directory is not the repository.
+func resolveRepoPath(repoDir, gitPath string) string {
+	if filepath.IsAbs(gitPath) {
+		return gitPath
+	}
+	return filepath.Join(repoDir, gitPath)
 }
 
 type tagRef struct {
@@ -682,6 +696,15 @@ func sortedComponentNames(componentMap map[string]*regexp.Regexp) []string {
 	}
 	sort.Strings(names)
 	return names
+}
+
+// genCommitFileId builds the commit file primary key. With some long paths the
+// varchar(255) columns were not enough for both the id and the file path, so
+// the path is compressed with sha256.
+func genCommitFileId(commitSha, filePath string) string {
+	shaFilePath := sha256.New()
+	shaFilePath.Write([]byte(filePath))
+	return commitSha + ":" + hex.EncodeToString(shaFilePath.Sum(nil))
 }
 
 func normalizeExtensions(extensions []string) map[string]struct{} {

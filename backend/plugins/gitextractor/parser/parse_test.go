@@ -157,7 +157,7 @@ func TestParsePatchStream(t *testing.T) {
 	// binary file: both paths are known, but there are no line changes
 	assert.Equal(t, patchFile{OldPath: "bin.dat", NewPath: "bin.dat"}, c2.Files[1])
 
-	// deleted file: libgit2 reports the path on both sides
+	// deleted file: the path is reported on both sides
 	assert.Equal(t, patchFile{
 		OldPath: "empty.txt",
 		NewPath: "empty.txt",
@@ -211,15 +211,19 @@ func TestParseGitVersion(t *testing.T) {
 	for _, tc := range []struct {
 		output string
 		want   int
+		ok     bool
 	}{
-		{"git version 2.43.0\n", 2*10000 + 43*100},
-		{"git version 2.31.0", 2*10000 + 31*100},
-		{"git version 2.39.2.windows.1", 2*10000 + 39*100 + 2},
-		{"git version 2.56.0", 2*10000 + 56*100},
+		{"git version 2.43.0\n", 2*10000 + 43*100, true},
+		{"git version 2.31.0", 2*10000 + 31*100, true},
+		{"git version 2.39.2.windows.1", 2*10000 + 39*100 + 2, true},
+		{"git version 2.56.0", 2*10000 + 56*100, true},
+		{"git version 2.30.2", 2*10000 + 30*100 + 2, false},
+		{"git version 1.9.0", 1*10000 + 9*100, false},
 	} {
 		got, err := parseGitVersion(tc.output)
 		if assert.NoError(t, err, tc.output) {
 			assert.Equal(t, tc.want, got, tc.output)
+			assert.Equal(t, tc.ok, got >= minGitVersion, tc.output)
 		}
 	}
 
@@ -240,4 +244,10 @@ func TestUnquoteGitPath(t *testing.T) {
 	} {
 		assert.Equal(t, tc.want, unquoteGitPath(tc.in), tc.in)
 	}
+}
+
+func TestResolveRepoPath(t *testing.T) {
+	assert.Equal(t, "/repo/.git/shallow", resolveRepoPath("/repo", ".git/shallow"))
+	assert.Equal(t, "/repo/shallow", resolveRepoPath("/repo", "shallow"))
+	assert.Equal(t, "/abs/shallow", resolveRepoPath("/repo", "/abs/shallow"))
 }

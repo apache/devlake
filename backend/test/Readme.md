@@ -32,15 +32,8 @@ go run ./test/init.go
 make e2e-test
 ```
 
-The service E2E tests compile the `gitextractor` plugin, which links against `libgit2`. If `libgit2` is installed in
-a non-standard location, expose it through `pkg-config` and add an rpath so the test binary can load the dynamic
-library at runtime:
-
-```bash
-export PKG_CONFIG_PATH=/path/to/libgit2/build
-export CGO_LDFLAGS='-L/path/to/libgit2/build -Wl,-rpath,/path/to/libgit2/build'
-make e2e-test
-```
+The service E2E tests run the `gitextractor` plugin, which reads repositories
+with the `git` command line. Make sure `git` (2.31 or newer) is installed.
 
 ### Planning-failure database regression test
 
