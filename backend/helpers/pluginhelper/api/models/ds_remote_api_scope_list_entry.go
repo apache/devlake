@@ -30,4 +30,6 @@ type DsRemoteApiScopeListEntry[S plugin.ToolLayerScope] struct {
 
 type DsRemoteApiScopeList[S plugin.ToolLayerScope] struct {
 	Children []DsRemoteApiScopeListEntry[S] `json:"children"`
+	// Count is the total number of matching scopes (search only, omitted if the plugin doesn't know it)
+	Count *int `json:"count,omitempty"`
 }

@@ -57,5 +57,5 @@ func Init(br context.BasicRes, p plugin.PluginMeta) {
 		models.SonarqubeProject,
 		SonarqubeRemotePagination,
 	](raProxy, listSonarqubeRemoteScopes)
-	raScopeSearch = api.NewDsRemoteApiScopeSearchHelper[models.SonarqubeConnection, models.SonarqubeProject](raProxy, searchSonarqubeRemoteProjects)
+	raScopeSearch = api.NewDsRemoteApiScopeSearchHelperWithCount[models.SonarqubeConnection, models.SonarqubeProject](raProxy, searchSonarqubeRemoteProjects)
 }

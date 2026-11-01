@@ -51,6 +51,7 @@ func querySonarqubeProjects(
 ) (
 	children []dsmodels.DsRemoteApiScopeListEntry[models.SonarqubeProject],
 	nextPage *SonarqubeRemotePagination,
+	total int,
 	err errors.Error,
 ) {
 	if page.PageSize == 0 {
@@ -98,6 +99,7 @@ func querySonarqubeProjects(
 		})
 	}
 
+	total = resBody.Paging.Total
 	if resBody.Paging.Total > resBody.Paging.PageIndex*resBody.Paging.PageSize {
 		nextPage = &SonarqubeRemotePagination{
 			Page:     resBody.Paging.PageIndex + 1,
@@ -118,7 +120,8 @@ func listSonarqubeRemoteScopes(
 	nextPage *SonarqubeRemotePagination,
 	err errors.Error,
 ) {
-	return querySonarqubeProjects(apiClient, "", page)
+	children, nextPage, _, err = querySonarqubeProjects(apiClient, "", page)
+	return
 }
 
 // RemoteScopes list all available scopes on the remote server
@@ -142,6 +145,7 @@ func searchSonarqubeRemoteProjects(
 	params *dsmodels.DsRemoteApiScopeSearchParams,
 ) (
 	children []dsmodels.DsRemoteApiScopeListEntry[models.SonarqubeProject],
+	total int,
 	err errors.Error,
 ) {
 	if params.Page == 0 {
@@ -151,7 +155,7 @@ func searchSonarqubeRemoteProjects(
 		Page:     params.Page,
 		PageSize: params.PageSize,
 	}
-	children, _, err = querySonarqubeProjects(apiClient, params.Search, page)
+	children, _, total, err = querySonarqubeProjects(apiClient, params.Search, page)
 	return
 }
 
