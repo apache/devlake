@@ -337,10 +337,9 @@ func TestCollectorCommits(t *testing.T) {
 		for _, file := range store.commitFiles {
 			assert.Equal(t, genCommitFileId(file.CommitSha, file.FilePath), file.Id)
 		}
-		components := componentsById(store.components)
-		for _, file := range store.commitFiles {
-			assert.Equal(t, "Default", components[file.Id], file.FilePath)
-		}
+		// This repository has no components configured, so every file would
+		// only get a meaningless "Default" component row.
+		assert.Empty(t, store.components)
 	})
 }
 

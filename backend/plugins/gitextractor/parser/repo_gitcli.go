@@ -230,9 +230,12 @@ func (r *GitcliRepoCollector) CollectCommits(subtaskCtx plugin.SubTaskContext) (
 	if err != nil {
 		return err
 	}
-	componentMap, err := r.componentMap(subtaskCtx)
-	if err != nil {
-		return err
+	var componentMap map[string]*regexp.Regexp
+	if !*taskOpts.SkipCommitFiles {
+		componentMap, err = r.componentMap(subtaskCtx)
+		if err != nil {
+			return err
+		}
 	}
 	excluded := normalizeExtensions(taskOpts.ExcludeFileExtensions)
 
@@ -344,6 +347,9 @@ func (r *GitcliRepoCollector) storeParentCommits(commit *parsedCommit, present m
 	return r.store.CommitParents(parents)
 }
 
+// storeCommitFile stores one changed file of a commit. Component rows are only
+// written when the repository has components configured: without them every row
+// would be "Default" for every changed file, which is pure write amplification.
 func (r *GitcliRepoCollector) storeCommitFile(commitSha string, file commitFileStat, componentMap map[string]*regexp.Regexp) errors.Error {
 	commitFile := &code.CommitFile{
 		CommitSha: commitSha,
@@ -353,18 +359,20 @@ func (r *GitcliRepoCollector) storeCommitFile(commitSha string, file commitFileS
 	}
 	commitFile.Id = genCommitFileId(commitFile.CommitSha, commitFile.FilePath)
 
-	componentName := "Default"
-	for _, name := range sortedComponentNames(componentMap) {
-		if componentMap[name].MatchString(commitFile.FilePath) {
-			componentName = name
-			break
+	if len(componentMap) > 0 {
+		componentName := "Default"
+		for _, name := range sortedComponentNames(componentMap) {
+			if componentMap[name].MatchString(commitFile.FilePath) {
+				componentName = name
+				break
+			}
 		}
-	}
-	if err := r.store.CommitFileComponents(&code.CommitFileComponent{
-		CommitFileId:  commitFile.Id,
-		ComponentName: componentName,
-	}); err != nil {
-		return err
+		if err := r.store.CommitFileComponents(&code.CommitFileComponent{
+			CommitFileId:  commitFile.Id,
+			ComponentName: componentName,
+		}); err != nil {
+			return err
+		}
 	}
 	return r.store.CommitFiles(commitFile)
 }
