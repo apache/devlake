@@ -36,6 +36,7 @@ func main() {
 	// pkPass := cmd.Flags().StringP("privateKeyPassPhrase", "P", "", "passphrase for private key")
 	proxy := cmd.Flags().StringP("proxy", "x", "", "proxy")
 	useGoGit := cmd.Flags().BoolP("useGoGit", "g", false, "use go-git instead of libgit2")
+	useGitCli := cmd.Flags().BoolP("useGitCli", "", false, "use the git command line collector")
 	skipCommitStat := cmd.Flags().BoolP("skipCommitStat", "S", false, "")
 	skipCommitFiles := cmd.Flags().BoolP("skipCommitFiles", "F", true, "")
 	noShallowClone := cmd.Flags().BoolP("noShallowClone", "A", false, "")
@@ -53,6 +54,7 @@ func main() {
 			// "passphrase"
 			"proxy":           *proxy,
 			"useGoGit":        *useGoGit,
+			"useGitCli":       *useGitCli,
 			"skipCommitStat":  skipCommitStat,
 			"skipCommitFiles": skipCommitFiles,
 			"noShallowClone":  noShallowClone,

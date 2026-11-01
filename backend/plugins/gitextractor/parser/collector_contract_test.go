@@ -73,6 +73,15 @@ type collectorDeviations struct {
 func collectorCases() []collectorCase {
 	return []collectorCase{
 		{
+			name: "gitcli",
+			open: func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
+				t.Helper()
+				collector, err := NewGitcliRepoCollector(localDir, repoId, store, unithelper.DummyLogger())
+				require.Nil(t, err)
+				return collector
+			},
+		},
+		{
 			name: "libgit2",
 			open: func(t *testing.T, localDir, repoId string, store models.Store) RepoCollector {
 				t.Helper()
@@ -592,6 +601,8 @@ func TestCollectorRejectsNonRepo(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			var err error
 			switch c.name {
+			case "gitcli":
+				_, err = NewGitcliRepoCollector(dir, "test-repo", nil, unithelper.DummyLogger())
 			case "libgit2":
 				_, err = NewLibgit2RepoCollector(dir, "test-repo", nil, unithelper.DummyLogger())
 			case "gogit":

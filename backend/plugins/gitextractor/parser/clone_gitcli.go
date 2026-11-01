@@ -47,6 +47,7 @@ const maxExtraDeepenRounds = 10
 // the subtask should run in Full Sync mode whenever the configuration is changed
 type CloneRepoConfig struct {
 	UseGoGit        *bool
+	UseGitCli       bool
 	SkipCommitStat  *bool
 	SkipCommitFiles *bool
 	NoShallowClone  bool
@@ -73,6 +74,7 @@ func NewGitcliCloner(ctx plugin.SubTaskContext, localDir string) (*GitcliCloner,
 		Params:         taskData.Options.GitExtractorApiParams,
 		SubtaskConfig: CloneRepoConfig{
 			UseGoGit:        taskData.Options.UseGoGit,
+			UseGitCli:       taskData.Options.UseGitCli,
 			SkipCommitStat:  taskData.Options.SkipCommitStat,
 			SkipCommitFiles: taskData.Options.SkipCommitFiles,
 			NoShallowClone:  taskData.Options.NoShallowClone,

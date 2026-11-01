@@ -49,4 +49,8 @@ type GitExtractorOptions struct {
 	PluginName            string `json:"pluginName" mapstructure:"pluginName,omitempty"`
 	// Configured by upstream plugin (e.g., GitLab) to exclude file extensions from commit stats
 	ExcludeFileExtensions []string `json:"excludeFileExtensions" mapstructure:"excludeFileExtensions"`
+	// UseGitCli selects the git command line collector. It is a temporary
+	// migration switch and will be removed once the library based collectors
+	// are gone.
+	UseGitCli bool `json:"useGitCli,omitempty" mapstructure:"useGitCli"`
 }
