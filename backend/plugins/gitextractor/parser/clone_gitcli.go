@@ -46,7 +46,6 @@ const maxExtraDeepenRounds = 10
 // CloneRepoConfig is the configuration for the CloneRepo method
 // the subtask should run in Full Sync mode whenever the configuration is changed
 type CloneRepoConfig struct {
-	UseGoGit        *bool
 	SkipCommitStat  *bool
 	SkipCommitFiles *bool
 	NoShallowClone  bool
@@ -72,7 +71,6 @@ func NewGitcliCloner(ctx plugin.SubTaskContext, localDir string) (*GitcliCloner,
 		SubTaskContext: ctx,
 		Params:         taskData.Options.GitExtractorApiParams,
 		SubtaskConfig: CloneRepoConfig{
-			UseGoGit:        taskData.Options.UseGoGit,
 			SkipCommitStat:  taskData.Options.SkipCommitStat,
 			SkipCommitFiles: taskData.Options.SkipCommitFiles,
 			NoShallowClone:  taskData.Options.NoShallowClone,
@@ -95,7 +93,7 @@ func NewGitcliCloner(ctx plugin.SubTaskContext, localDir string) (*GitcliCloner,
 func (g *GitcliCloner) prepareSync() errors.Error {
 	taskData := g.taskData
 	// Disable automatic (detached) gc/maintenance after clone/fetch. Otherwise git may
-	// repack the repo in the background while libgit2 is already reading it, which
+	// repack the repo in the background while the collector is reading it, which
 	// makes temporary pack files (.tmp-<pid>-pack-*.idx) vanish and the collection fail.
 	g.globalConfigArgs = append(g.globalConfigArgs,
 		"-c", "gc.auto=0",
@@ -201,7 +199,7 @@ func (g *GitcliCloner) CloneRepo() errors.Error {
 		if g.taskData.Options.NoShallowClone {
 			// data source does not support shallow clone
 			//   1. perform a full clone to accommodate
-			//   2. perform a local shallow clone to reduce the libgit2 memory usage
+			//   2. perform a local shallow clone so the collector reads a smaller repo
 			if err := g.doubleClone(); err != nil {
 				return err
 			}

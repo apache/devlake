@@ -14,50 +14,13 @@
 # limitations under the License.
 #
 
-# Debian 11 (bullseye) reached the end of its LTS period on 2026-08-31 and its
-# security suite is no longer served, so `apt upgrade` fails there. All stages
-# use Debian 12 (bookworm), matching the runtime image in backend/Dockerfile.
-FROM --platform=linux/amd64 debian:bookworm AS debian-amd64
-RUN apt-get -y update && apt -y upgrade &&\
-    apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
-
-# This stage only cross-builds libgit2, it does not need a Go toolchain.
-FROM --platform=linux/amd64 debian:bookworm AS builder
-
-# Base dependencies
-RUN apt-get -y update && apt -y upgrade &&\
-    apt-get install -y ca-certificates wget gcc binutils libfindbin-libs-perl cmake libssh2-1-dev libssl-dev zlib1g-dev \
-    gcc-x86-64-linux-gnu binutils-x86-64-linux-gnu
-
-COPY --from=debian-amd64 /usr/include /rootfs-amd64/usr/include
-COPY --from=debian-amd64 /usr/lib/x86_64-linux-gnu /rootfs-amd64/usr/lib/x86_64-linux-gnu
-COPY --from=debian-amd64 /lib/x86_64-linux-gnu /rootfs-amd64/lib/x86_64-linux-gnu
-
-## Build libs/headers needed for gitextractor plugin
-RUN \
-    mkdir -p /tmp/build/x86_64 && cd /tmp/build/x86_64 && \
-    wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.5.0.tar.gz -O - | tar -xz && \
-    cd libgit2-1.5.0 && \
-    mkdir build && cd build && \
-    cmake .. -DCMAKE_C_COMPILER=x86_64-linux-gnu-gcc -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DCMAKE_SYSROOT=/rootfs-amd64 -DCMAKE_INSTALL_PREFIX=/usr/local/deps/x86_64 &&\
-    make -j install &&\
-    mkdir -p /tmp/deps &&\
-    cp *libgit2* /tmp/deps/ &&\
-    cp -r ../include /tmp/deps/include
-
 # Same Python line as the runtime image in backend/Dockerfile.
 FROM python:3.11-slim-bookworm
 
 RUN apt -y update && apt -y upgrade && apt -y install tzdata make tar curl gcc g++ pkg-config git \
-    libssh2-1 zlib1g libffi-dev  \
+    zlib1g libffi-dev  \
     default-libmysqlclient-dev \
     libpq-dev
-
-# Install Libs/Headers from previous stage
-COPY --from=builder /tmp/deps/*.so* /usr/lib/
-COPY --from=builder /tmp/deps/*.pc /usr/lib/x86_64-linux-gnu/pkgconfig/
-COPY --from=builder /tmp/deps/include/ /usr/include/
-ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
 
 # Install Golang
 # The previous installer was fetched from `git.io`, which GitHub shut down in

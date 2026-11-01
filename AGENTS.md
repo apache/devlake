@@ -129,4 +129,4 @@ Located in `backend/python/plugins/`. Use Poetry for dependencies. See [backend/
 - Forgetting to add models to `GetTablesInfo()` fails `plugins/table_info_test.go`
 - Migration scripts must be added to `All()` in `register.go`
 - API changes require running `make swag` to update Swagger docs
-- Python plugins require `libgit2` for gitextractor functionality
+- `gitextractor` shells out to the `git` CLI; no git library or cgo is required

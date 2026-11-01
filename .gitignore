@@ -147,7 +147,6 @@ NOTES.md
 main
 vendor
 bin
-libgit2
 .air.toml
 
 # Playwright CLI snapshots/logs (local dev)
