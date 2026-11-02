@@ -37,7 +37,7 @@ RUN curl --fail --location --retry 3 "https://go.dev/dl/go${GO_VERSION}.linux-am
 
 # Install Golang Tools (versions match backend/Dockerfile and backend/Makefile)
 RUN export GOPATH=/go &&  \
-    go install github.com/vektra/mockery/v3@v3.8.1 &&  \
+    go install github.com/vektra/mockery/v3@v3.9.0 &&  \
     go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 # Golang Env

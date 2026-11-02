@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     ca-certificates
 
-RUN go install github.com/vektra/mockery/v3@v3.8.1
+RUN go install github.com/vektra/mockery/v3@v3.9.0
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 WORKDIR /app

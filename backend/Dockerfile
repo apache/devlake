@@ -34,7 +34,7 @@ ARG HTTPS_PROXY=
 RUN apt-get update
 RUN apt-get install -y ca-certificates git
 
-RUN go install github.com/vektra/mockery/v3@v3.8.1
+RUN go install github.com/vektra/mockery/v3@v3.9.0
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 

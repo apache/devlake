@@ -22,7 +22,7 @@ TAG ?= $(shell if [ -d .git ]; then git tag --points-at HEAD; else echo "local_b
 IMAGE_REPO ?= "apache"
 VERSION = $(TAG)@$(SHA)
 PYTHON_DIR ?= "./python"
-MOCKERY_VERSION ?= v3.8.1
+MOCKERY_VERSION ?= v3.9.0
 # Always resolve mockery through the module cache instead of relying on whatever
 # `mockery` happens to be on the PATH: the CI builder image ships mockery v2,
 # which cannot read the v3 YAML configuration.
@@ -37,7 +37,7 @@ all: build
 go-dep:
 	go install github.com/vektra/mockery/v3@$(MOCKERY_VERSION)
 	go install github.com/swaggo/swag/cmd/swag@v1.16.6
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 
 go-dev-tools:
 	# go install github.com/atombender/go-jsonschema/cmd/gojsonschema@latest
