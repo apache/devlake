@@ -59,7 +59,7 @@ jobs:
         cd backend
         go run ./tools/pluginsgen
         git diff --exit-code -- plugins/all
-    - name: Install mockery 3.8.1
+    - name: Install mockery 3.9.0
       run: backend/scripts/install-mockery.sh
     - name: Build Python
       run: |
