@@ -29,7 +29,8 @@ type widenCursorAiCodeConversationId struct{}
 
 // Cursor commit-detail groups can carry conversation ids longer than 64
 // characters (observed 91, including a tool-call id with an embedded newline).
-// conversation_id is the primary key on conversations, so the alter keeps NOT NULL.
+// conversation_id is part of the conversations primary key (NOT NULL on both dialects).
+// ModifyColumnType only emits TYPE on Postgres, so do not pass NOT NULL in columnType.
 // On range annotations it is a nullable secondary index, so nullability stays open.
 func (*widenCursorAiCodeConversationId) Up(basicRes context.BasicRes) errors.Error {
 	db := basicRes.GetDal()
@@ -37,7 +38,7 @@ func (*widenCursorAiCodeConversationId) Up(basicRes context.BasicRes) errors.Err
 		tableName  string
 		columnType string
 	}{
-		{"_tool_cursor_ai_code_conversations", "varchar(255) NOT NULL"},
+		{"_tool_cursor_ai_code_conversations", "varchar(255)"},
 		{"_tool_cursor_ai_code_range_annotations", "varchar(255)"},
 	}
 	for _, column := range columns {

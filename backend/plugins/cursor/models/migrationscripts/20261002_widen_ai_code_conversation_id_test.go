@@ -59,7 +59,7 @@ func TestWidenCursorAiCodeConversationId(t *testing.T) {
 	}
 
 	want := []cursorConversationIdColumnCall{
-		{"_tool_cursor_ai_code_conversations", "conversation_id", "varchar(255) NOT NULL"},
+		{"_tool_cursor_ai_code_conversations", "conversation_id", "varchar(255)"},
 		{"_tool_cursor_ai_code_range_annotations", "conversation_id", "varchar(255)"},
 	}
 	if len(database.calls) != len(want) {
