@@ -64,21 +64,8 @@ func CollectTeams(taskCtx plugin.SubTaskContext) errors.Error {
 		ApiClient:   data.ApiClient,
 		UrlTemplate: "teams",
 		PageSize:    50,
-		GetTotalPages: func(res *http.Response, args *api.ApiCollectorArgs) (int, errors.Error) {
-			var response struct {
-				Metadata struct {
-					Count  int `json:"count"`
-					Limit  int `json:"limit"`
-					Total  int `json:"total"`
-					Offset int `json:"offset"`
-				} `json:"metadata"`
-			}
-			if err := api.UnmarshalResponse(res, &response); err != nil {
-				return 0, err
-			}
-			totalPages := (response.Metadata.Total + args.PageSize - 1) / args.PageSize
-			return totalPages, nil
-		},
+		// No GetTotalPages: Tempo v4 pagination metadata (PageableMetadata)
+		// has no total, so pages are fetched until one comes back short.
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			pager := reqData.Pager

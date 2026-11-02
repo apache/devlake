@@ -58,12 +58,14 @@ func listTempoRemoteTeams(
 		return nil, nil, errors.Default.Wrap(err, "failed to get teams from Tempo API")
 	}
 
+	// Tempo v4 PageableMetadata has count/limit/offset/next/previous but no
+	// total: "next" links the next page and is absent on the last one.
 	var response struct {
 		Metadata struct {
-			Count  int `json:"count"`
-			Limit  int `json:"limit"`
-			Offset int `json:"offset"`
-			Total  int `json:"total"`
+			Count  int    `json:"count"`
+			Limit  int    `json:"limit"`
+			Offset int    `json:"offset"`
+			Next   string `json:"next"`
 		} `json:"metadata"`
 		Results []models.TempoTeamResponse `json:"results"`
 	}
@@ -83,7 +85,7 @@ func listTempoRemoteTeams(
 		})
 	}
 
-	if page.Offset+page.Limit < response.Metadata.Total {
+	if response.Metadata.Next != "" {
 		nextPage = &TempoRemotePagination{
 			Limit:  page.Limit,
 			Offset: page.Offset + page.Limit,
