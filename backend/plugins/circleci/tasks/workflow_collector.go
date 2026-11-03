@@ -42,6 +42,21 @@ var CollectWorkflowsMeta = plugin.SubTaskMeta{
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_CICD},
 }
 
+// UnfinishedWorkflowsInputClauses returns the DAL clauses that select the workflows that
+// are still in a non-terminal status and therefore need their details recollected by the
+// CollectWorkflows "unfinished details" collector. Only workflows created at or after
+// createdAfter are selected (#9304).
+func UnfinishedWorkflowsInputClauses(connectionId uint64, projectSlug string, createdAfter time.Time) []dal.Clause {
+	return []dal.Clause{
+		dal.Select("id"),
+		dal.From(&models.CircleciWorkflow{}),
+		dal.Where(
+			"connection_id = ? AND project_slug = ? AND status IN ('running', 'on_hold', 'failing') AND created_date >= ?",
+			connectionId, projectSlug, createdAfter,
+		),
+	}
+}
+
 func CollectWorkflows(taskCtx plugin.SubTaskContext) errors.Error {
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_WORKFLOW_TABLE)
 	logger := taskCtx.GetLogger()
@@ -93,12 +108,7 @@ func CollectWorkflows(taskCtx plugin.SubTaskContext) errors.Error {
 				AfterResponse: ignoreDeletedOrBrokenBuilds,
 			},
 			BuildInputIterator: func() (api.Iterator, errors.Error) {
-				clauses := []dal.Clause{
-					dal.Select("id"),
-					dal.From(&models.CircleciWorkflow{}),
-					dal.Where("connection_id = ? AND project_slug = ? AND status IN ('running', 'on_hold', 'failing')", data.Options.ConnectionId, data.Options.ProjectSlug),
-				}
-
+				clauses := UnfinishedWorkflowsInputClauses(data.Options.ConnectionId, data.Options.ProjectSlug, UnfinishedDetailsCreatedAfter(time.Now()))
 				db := taskCtx.GetDal()
 				cursor, err := db.Cursor(clauses...)
 				if err != nil {

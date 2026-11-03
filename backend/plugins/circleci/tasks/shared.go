@@ -31,6 +31,17 @@ import (
 	"github.com/apache/devlake/plugins/circleci/models"
 )
 
+// UnfinishedDetailsLookback limits how far back the "unfinished details" collectors look.
+// A workflow with an approval job that is never approved stays on_hold forever; without
+// a limit it would be collected again on every run (#9304).
+const UnfinishedDetailsLookback = 30 * 24 * time.Hour
+
+// UnfinishedDetailsCreatedAfter returns the earliest created date of a workflow that the
+// "unfinished details" collectors still collect again.
+func UnfinishedDetailsCreatedAfter(now time.Time) time.Time {
+	return now.Add(-UnfinishedDetailsLookback)
+}
+
 var accountIdGen *didgen.DomainIdGenerator
 var projectIdGen *didgen.DomainIdGenerator
 var pipelineIdGen *didgen.DomainIdGenerator

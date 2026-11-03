@@ -43,14 +43,16 @@ var CollectJobsMeta = plugin.SubTaskMeta{
 
 // UnfinishedJobsInputClauses returns the DAL clauses that select the workflows whose
 // jobs are still in a non-terminal status and therefore need their job details
-// recollected by the CollectJobs "unfinished details" collector.
-func UnfinishedJobsInputClauses(connectionId uint64, projectSlug string) []dal.Clause {
+// recollected by the CollectJobs "unfinished details" collector. Only workflows created
+// at or after createdAfter are selected (#9304); jobs have no created date of their own.
+func UnfinishedJobsInputClauses(connectionId uint64, projectSlug string, createdAfter time.Time) []dal.Clause {
 	return []dal.Clause{
-		dal.Select("DISTINCT workflow_id AS id"), // #8907: alias to id so {{ .Input.Id }} resolves when scanned into CircleciJob
-		dal.From(&models.CircleciJob{}),
+		dal.Select("DISTINCT j.workflow_id AS id"), // #8907: alias to id so {{ .Input.Id }} resolves when scanned into CircleciJob
+		dal.From("_tool_circleci_jobs j"),
+		dal.Join("JOIN _tool_circleci_workflows w ON w.connection_id = j.connection_id AND w.id = j.workflow_id"),
 		dal.Where(
-			"connection_id = ? AND project_slug = ? AND status IN ('running', 'not_running', 'queued', 'on_hold')",
-			connectionId, projectSlug,
+			"j.connection_id = ? AND j.project_slug = ? AND j.status IN ('running', 'not_running', 'queued', 'on_hold') AND w.created_date >= ?",
+			connectionId, projectSlug, createdAfter,
 		),
 	}
 }
@@ -111,7 +113,8 @@ func CollectJobs(taskCtx plugin.SubTaskContext) errors.Error {
 			},
 			BuildInputIterator: func() (api.Iterator, errors.Error) {
 				db := taskCtx.GetDal()
-				cursor, err := db.Cursor(UnfinishedJobsInputClauses(data.Options.ConnectionId, data.Options.ProjectSlug)...)
+				clauses := UnfinishedJobsInputClauses(data.Options.ConnectionId, data.Options.ProjectSlug, UnfinishedDetailsCreatedAfter(time.Now()))
+				cursor, err := db.Cursor(clauses...)
 				if err != nil {
 					return nil, err
 				}
