@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -203,13 +204,25 @@ func convertGithubIssue(issue *IssuesResponse, connectionId uint64, repositoryId
 		githubIssue.AuthorName = issue.User.Login
 	}
 	if issue.ClosedAt != nil {
-		temp := uint(issue.ClosedAt.ToTime().Sub(issue.GithubCreatedAt.ToTime()).Minutes())
-		githubIssue.LeadTimeMinutes = &temp
+		githubIssue.LeadTimeMinutes = IssueLeadTimeMinutes(issue.GithubCreatedAt.ToTime(), issue.ClosedAt.ToTime())
 	}
 	if issue.Milestone != nil {
 		githubIssue.MilestoneId = issue.Milestone.Id
 	}
 	return githubIssue, nil
+}
+
+// IssueLeadTimeMinutes returns the minutes from creation to close.
+// GitHub can report a close time before the creation time, for example for an
+// issue that was closed and then transferred from another repository. A negative
+// duration cast to uint wraps to a huge value that the domain issues table rejects,
+// which fails the whole Convert Issues subtask, so leave lead time unset instead.
+func IssueLeadTimeMinutes(createdAt, closedAt time.Time) *uint {
+	if closedAt.Before(createdAt) {
+		return nil
+	}
+	minutes := uint(closedAt.Sub(createdAt).Minutes())
+	return &minutes
 }
 
 func convertGithubLabels(issueRegexes *IssueRegexes, issue *IssuesResponse, githubIssue *models.GithubIssue) ([]interface{}, errors.Error) {
