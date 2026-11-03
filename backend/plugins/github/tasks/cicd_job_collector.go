@@ -95,7 +95,7 @@ func CollectJobs(taskCtx plugin.SubTaskContext) errors.Error {
 			Table: RAW_JOB_TABLE,
 		},
 		ApiClient:   data.ApiClient,
-		PageSize:    100,
+		PageSize:    PAGE_SIZE,
 		Input:       iterator,
 		UrlTemplate: "repos/{{ .Params.Name }}/actions/runs/{{ .Input.ID }}/jobs",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
