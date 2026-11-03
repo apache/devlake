@@ -348,8 +348,16 @@ func (collector *GraphqlCollector) HasError() bool {
 	return len(collector.workerErrors) > 0
 }
 
+// isIgnorableGraphqlQueryError reports whether err means the queried issue no
+// longer exists upstream, so its children can be skipped. GitHub and Linear
+// word this differently.
 func isIgnorableGraphqlQueryError(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "Could not resolve to an Issue")
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "Could not resolve to an Issue") ||
+		strings.Contains(msg, "Entity not found: Issue")
 }
 
 var _ plugin.SubTask = (*GraphqlCollector)(nil)
