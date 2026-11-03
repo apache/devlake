@@ -20,6 +20,7 @@ package tasks
 import (
 	"encoding/json"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -40,6 +41,12 @@ var ExtractIncidentTypesMeta = plugin.SubTaskMeta{
 
 func ExtractIncidentTypes(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*DatadogTaskData)
+	// The extractor deletes and re-inserts the scope rows, so read the
+	// scope config each type is bound to before the first row is replaced.
+	scopeConfigIds, err := loadScopeConfigIds(taskCtx.GetDal(), data.Options.ConnectionId)
+	if err != nil {
+		return err
+	}
 	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
 		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
 			Ctx:     taskCtx,
@@ -59,19 +66,36 @@ func ExtractIncidentTypes(taskCtx plugin.SubTaskContext) errors.Error {
 			if data.Options.IncidentTypeId != "" && rawType.Id != data.Options.IncidentTypeId {
 				return nil, nil
 			}
-			incidentType := &models.IncidentType{
-				Id:          rawType.Id,
-				Name:        rawType.Attributes.Name,
-				Prefix:      derefString(rawType.Attributes.Prefix),
-				IsDefault:   derefBool(rawType.Attributes.IsDefault),
-				CreatedDate: rawType.Attributes.CreatedAt,
-			}
-			incidentType.ConnectionId = data.Options.ConnectionId
-			return []interface{}{incidentType}, nil
+			return []interface{}{newIncidentType(rawType, data.Options.ConnectionId, scopeConfigIds)}, nil
 		},
 	})
 	if err != nil {
 		return err
 	}
 	return extractor.Execute()
+}
+
+func loadScopeConfigIds(db dal.Dal, connectionId uint64) (map[string]uint64, errors.Error) {
+	var existing []models.IncidentType
+	if err := db.All(&existing, dal.Where("connection_id = ?", connectionId)); err != nil {
+		return nil, err
+	}
+	ids := make(map[string]uint64, len(existing))
+	for _, t := range existing {
+		ids[t.Id] = t.ScopeConfigId
+	}
+	return ids, nil
+}
+
+func newIncidentType(rawType *raw.IncidentType, connectionId uint64, scopeConfigIds map[string]uint64) *models.IncidentType {
+	incidentType := &models.IncidentType{
+		Id:          rawType.Id,
+		Name:        rawType.Attributes.Name,
+		Prefix:      derefString(rawType.Attributes.Prefix),
+		IsDefault:   derefBool(rawType.Attributes.IsDefault),
+		CreatedDate: rawType.Attributes.CreatedAt,
+	}
+	incidentType.ConnectionId = connectionId
+	incidentType.ScopeConfigId = scopeConfigIds[rawType.Id]
+	return incidentType
 }
