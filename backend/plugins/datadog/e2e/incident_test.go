@@ -87,6 +87,8 @@ func TestIncidentDataFlow(t *testing.T) {
 
 	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.FlushTabler(&ticket.IssueLabel{})
+	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.Subtask(tasks.ConvertIncidentsMeta, taskData)
 	dataflowTester.VerifyTableWithOptions(
 		ticket.Issue{},
@@ -100,6 +102,20 @@ func TestIncidentDataFlow(t *testing.T) {
 		ticket.BoardIssue{},
 		e2ehelper.TableOptions{
 			CSVRelPath:  "./snapshot_tables/board_issues.csv",
+			IgnoreTypes: []any{common.NoPKModel{}},
+		},
+	)
+	dataflowTester.VerifyTableWithOptions(
+		ticket.IssueLabel{},
+		e2ehelper.TableOptions{
+			CSVRelPath:  "./snapshot_tables/issue_labels.csv",
+			IgnoreTypes: []any{common.NoPKModel{}},
+		},
+	)
+	dataflowTester.VerifyTableWithOptions(
+		ticket.IssueAssignee{},
+		e2ehelper.TableOptions{
+			CSVRelPath:  "./snapshot_tables/issue_assignees.csv",
 			IgnoreTypes: []any{common.NoPKModel{}},
 		},
 	)

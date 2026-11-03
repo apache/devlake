@@ -18,6 +18,7 @@ limitations under the License.
 package tasks
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -57,6 +58,10 @@ const resolvedIncident = `{
 			"root_cause": {"type": "textbox", "value": null},
 			"teams": {"type": "autocomplete", "value": null}
 		}
+	},
+	"relationships": {
+		"commander_user": {"data": {"id": "user-1", "type": "users",
+			"attributes": {"name": "Ada Lovelace", "email": "ada@example.com", "handle": "ada@example.com"}}}
 	}
 }`
 
@@ -100,6 +105,19 @@ func TestExtractIncident_HappyPath(t *testing.T) {
 	assert.Contains(t, incident.CustomFields, "detection_method")
 	// No scope config, so nothing is mapped onto Component.
 	assert.Equal(t, "", incident.Component)
+	assert.Equal(t, "user-1", incident.CommanderUserId)
+	assert.Equal(t, "Ada Lovelace", incident.CommanderName)
+}
+
+func TestExtractIncident_CommanderNameFallsBackToEmail(t *testing.T) {
+	payload := strings.Replace(resolvedIncident, `"name": "Ada Lovelace", `, `"name": "", `, 1)
+	results, err := extractIncident([]byte(payload), newTestTaskData())
+	require.NoError(t, err)
+	require.Len(t, results, 1)
+
+	incident := results[0].(*models.Incident)
+	assert.Equal(t, "user-1", incident.CommanderUserId)
+	assert.Equal(t, "ada@example.com", incident.CommanderName)
 }
 
 func TestExtractIncident_MapsCustomFieldsPerScopeConfig(t *testing.T) {

@@ -27,6 +27,7 @@ import (
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
+	"github.com/apache/devlake/plugins/datadog/models/raw"
 )
 
 const RAW_INCIDENTS_TABLE = "datadog_incidents"
@@ -98,15 +99,19 @@ func buildIncidentsQuery(pageSize int, offset int) url.Values {
 	query := url.Values{}
 	query.Set("page[size]", fmt.Sprintf("%d", pageSize))
 	query.Set("page[offset]", fmt.Sprintf("%d", offset))
+	query.Set("include", "users")
 	return query
 }
 
 // parseIncidentsPage unwraps the JSON:API envelope and reports where the
-// next page starts, as Datadog itself declares it.
+// next page starts, as Datadog itself declares it. Each raw row is one
+// incident, so the commander's attributes are copied from the page's
+// `included` users into the incident before it is stored.
 func parseIncidentsPage(res *http.Response) ([]json.RawMessage, *int, errors.Error) {
 	var body struct {
-		Data []json.RawMessage `json:"data"`
-		Meta *struct {
+		Data     []json.RawMessage `json:"data"`
+		Included []raw.User        `json:"included"`
+		Meta     *struct {
 			Pagination *struct {
 				Offset     int  `json:"offset"`
 				Size       int  `json:"size"`
@@ -117,10 +122,57 @@ func parseIncidentsPage(res *http.Response) ([]json.RawMessage, *int, errors.Err
 	if err := api.UnmarshalResponse(res, &body); err != nil {
 		return nil, nil, err
 	}
-	if body.Meta != nil && body.Meta.Pagination != nil {
-		return body.Data, body.Meta.Pagination.NextOffset, nil
+	data, err := attachCommanders(body.Data, body.Included)
+	if err != nil {
+		return nil, nil, err
 	}
-	return body.Data, nil, nil
+	if body.Meta != nil && body.Meta.Pagination != nil {
+		return data, body.Meta.Pagination.NextOffset, nil
+	}
+	return data, nil, nil
+}
+
+func attachCommanders(incidents []json.RawMessage, included []raw.User) ([]json.RawMessage, errors.Error) {
+	users := make(map[string]*raw.UserAttributes, len(included))
+	for _, user := range included {
+		if user.Type == "users" && user.Attributes != nil {
+			users[user.Id] = user.Attributes
+		}
+	}
+	if len(users) == 0 {
+		return incidents, nil
+	}
+	for i, incident := range incidents {
+		// Decode generically so every field Datadog sent is stored as is.
+		var doc map[string]json.RawMessage
+		if err := json.Unmarshal(incident, &doc); err != nil {
+			return nil, errors.Convert(err)
+		}
+		var relationships map[string]json.RawMessage
+		if err := json.Unmarshal(doc["relationships"], &relationships); err != nil || relationships == nil {
+			continue
+		}
+		var commander raw.UserRelationship
+		if err := json.Unmarshal(relationships["commander_user"], &commander); err != nil || commander.Data == nil {
+			continue
+		}
+		attributes, ok := users[commander.Data.Id]
+		if !ok {
+			continue
+		}
+		commander.Data.Attributes = attributes
+		var err error
+		if relationships["commander_user"], err = json.Marshal(commander); err != nil {
+			return nil, errors.Convert(err)
+		}
+		if doc["relationships"], err = json.Marshal(relationships); err != nil {
+			return nil, errors.Convert(err)
+		}
+		if incidents[i], err = json.Marshal(doc); err != nil {
+			return nil, errors.Convert(err)
+		}
+	}
+	return incidents, nil
 }
 
 // nextOffsetFrom decides whether to ask for another page. The last page

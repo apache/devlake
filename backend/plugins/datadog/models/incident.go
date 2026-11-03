@@ -36,6 +36,9 @@ type Incident struct {
 	State     string
 	Severity  string
 	Component string
+	// The commander owns the incident, so it is the issue's assignee.
+	CommanderUserId string `gorm:"type:varchar(255)"`
+	CommanderName   string `gorm:"type:varchar(255)"`
 	// CustomFields keeps Datadog's `fields` object verbatim, so a scope
 	// config change can remap severity or component without re-collecting.
 	CustomFields     string `gorm:"type:text"`

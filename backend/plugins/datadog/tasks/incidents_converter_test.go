@@ -130,6 +130,53 @@ func TestIssueKeyFor(t *testing.T) {
 	assert.Equal(t, "OUTAGE-22", issueKeyFor(&models.Incident{PublicId: 22}, "OUTAGE"))
 }
 
+func TestIncidentLabels(t *testing.T) {
+	fields := `{
+		"detection_method": {"type": "dropdown", "value": "monitor"},
+		"services": {"type": "autocomplete", "value": ["headless", "backend"]},
+		"teams": {"type": "autocomplete", "value": null},
+		"impact": {"type": "multiselect", "value": ["customers"]},
+		"severity": {"type": "dropdown", "value": "SEV-3"},
+		"state": {"type": "dropdown", "value": "resolved"},
+		"state_category": {"type": "dropdown", "value": "resolved"},
+		"slug": {"type": "textbox", "value": "IR-22"},
+		"summary": {"type": "textbox", "value": "free text"}
+	}`
+
+	labels := incidentLabels(fields)
+	// Select-type fields become field:value labels; free text and the
+	// fields already mapped onto the issue itself do not.
+	assert.Equal(t, []string{
+		"detection_method:monitor",
+		"impact:customers",
+		"services:backend",
+		"services:headless",
+	}, labels)
+
+	assert.Empty(t, incidentLabels(""))
+	assert.Empty(t, incidentLabels("not json"))
+}
+
+func TestIncidentChildren(t *testing.T) {
+	incident := &models.Incident{
+		CommanderUserId: "user-1",
+		CommanderName:   "Ada Lovelace",
+		CustomFields:    `{"services": {"type": "autocomplete", "value": ["headless"]}}`,
+	}
+
+	children := incidentChildren("datadog:Incident:1:inc-1", incident)
+	require.Len(t, children, 2)
+	assert.Equal(t, &ticket.IssueLabel{IssueId: "datadog:Incident:1:inc-1", LabelName: "services:headless"}, children[0])
+	assert.Equal(t, &ticket.IssueAssignee{
+		IssueId:      "datadog:Incident:1:inc-1",
+		AssigneeId:   "user-1",
+		AssigneeName: "Ada Lovelace",
+	}, children[1])
+
+	// No commander, no assignee row.
+	assert.Empty(t, incidentChildren("id", &models.Incident{}))
+}
+
 func TestNextOffsetFrom(t *testing.T) {
 	next := 2
 	offset, more := nextOffsetFrom(0, &next)

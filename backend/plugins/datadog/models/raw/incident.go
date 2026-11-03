@@ -26,9 +26,33 @@ import (
 // arrives as {id, type, attributes}.
 
 type Incident struct {
-	Id         string              `json:"id"`
-	Type       string              `json:"type"`
-	Attributes *IncidentAttributes `json:"attributes"`
+	Id            string                 `json:"id"`
+	Type          string                 `json:"type"`
+	Attributes    *IncidentAttributes    `json:"attributes"`
+	Relationships *IncidentRelationships `json:"relationships"`
+}
+
+type IncidentRelationships struct {
+	CommanderUser UserRelationship `json:"commander_user"`
+}
+
+type UserRelationship struct {
+	Data *User `json:"data"`
+}
+
+// User is a relationship target. The API sends only id and type there;
+// the collector copies the attributes over from the page's `included`
+// users, so the extractor needs no second request per incident.
+type User struct {
+	Id         string          `json:"id"`
+	Type       string          `json:"type"`
+	Attributes *UserAttributes `json:"attributes,omitempty"`
+}
+
+type UserAttributes struct {
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Handle string `json:"handle"`
 }
 
 type IncidentAttributes struct {

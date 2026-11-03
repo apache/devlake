@@ -18,8 +18,10 @@ limitations under the License.
 package tasks
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"time"
 
 	"github.com/apache/devlake/core/dal"
@@ -30,6 +32,7 @@ import (
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/datadog/models"
+	"github.com/apache/devlake/plugins/datadog/models/raw"
 )
 
 // defaultIncidentPrefix is what Datadog names incidents of a type that
@@ -107,21 +110,71 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 				LeadTimeMinutes: leadTime,
 				Severity:        incident.Severity,
 				Component:       incident.Component,
+				AssigneeId:      incident.CommanderUserId,
+				AssigneeName:    incident.CommanderName,
 			}
 
-			return []interface{}{
+			result := []interface{}{
 				domainIssue,
 				&ticket.BoardIssue{
 					BoardId: boardId,
 					IssueId: domainIssueId,
 				},
-			}, nil
+			}
+			return append(result, incidentChildren(domainIssueId, incident)...), nil
 		},
 	})
 	if err != nil {
 		return err
 	}
 	return converter.Execute()
+}
+
+// incidentChildren returns the labels and the assignee of one incident.
+func incidentChildren(domainIssueId string, incident *models.Incident) []interface{} {
+	var children []interface{}
+	for _, label := range incidentLabels(incident.CustomFields) {
+		children = append(children, &ticket.IssueLabel{IssueId: domainIssueId, LabelName: label})
+	}
+	if incident.CommanderUserId != "" {
+		children = append(children, &ticket.IssueAssignee{
+			IssueId:      domainIssueId,
+			AssigneeId:   incident.CommanderUserId,
+			AssigneeName: incident.CommanderName,
+		})
+	}
+	return children
+}
+
+// labelFieldTypes are the custom-field types that hold a value from a
+// fixed list, which is what a label is. Textbox fields hold free text.
+var labelFieldTypes = map[string]bool{"dropdown": true, "multiselect": true, "autocomplete": true}
+
+// Datadog mirrors these into `fields` too, but they already have their own
+// columns on the issue.
+var nativeFields = map[string]bool{"severity": true, "state": true, "state_category": true}
+
+// incidentLabels turns the select-type custom fields into field:value
+// labels, sorted so the output is stable across runs.
+func incidentLabels(customFields string) []string {
+	if customFields == "" {
+		return nil
+	}
+	var fields map[string]raw.FieldAttributes
+	if err := json.Unmarshal([]byte(customFields), &fields); err != nil {
+		return nil
+	}
+	var labels []string
+	for name, field := range fields {
+		if nativeFields[name] || !labelFieldTypes[field.Type] {
+			continue
+		}
+		for _, value := range field.Values() {
+			labels = append(labels, name+":"+value)
+		}
+	}
+	sort.Strings(labels)
+	return labels
 }
 
 // Datadog's incident states are a small fixed set. An unknown value falls

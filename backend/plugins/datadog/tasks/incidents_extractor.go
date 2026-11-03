@@ -108,6 +108,19 @@ func extractIncident(rawData []byte, data *DatadogTaskData) ([]interface{}, erro
 		TimeToResolve:          attributes.TimeToResolve,
 	}
 
+	if rawIncident.Relationships != nil {
+		if commander := rawIncident.Relationships.CommanderUser.Data; commander != nil {
+			incident.CommanderUserId = commander.Id
+			if commander.Attributes != nil {
+				// Service accounts and invited users can have no name.
+				incident.CommanderName = commander.Attributes.Name
+				if incident.CommanderName == "" {
+					incident.CommanderName = commander.Attributes.Email
+				}
+			}
+		}
+	}
+
 	if len(attributes.Fields) > 0 {
 		encoded, err := errors.Convert01(json.Marshal(attributes.Fields))
 		if err != nil {
