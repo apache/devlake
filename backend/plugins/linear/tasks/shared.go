@@ -22,8 +22,27 @@ import (
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/linear/models"
 )
+
+// An issue deleted in Linear returns an empty `issue` object with no page
+// info. The collector skips that error, so treat the issue as its own last
+// page instead of failing on the missing page info.
+func pageInfoOrLast(pageInfo *helper.GraphqlQueryPageInfo) *helper.GraphqlQueryPageInfo {
+	if pageInfo == nil {
+		return &helper.GraphqlQueryPageInfo{HasNextPage: false}
+	}
+	return pageInfo
+}
+
+func commentsPageInfo(query *GraphqlQueryCommentWrapper) *helper.GraphqlQueryPageInfo {
+	return pageInfoOrLast(query.Issue.Comments.PageInfo)
+}
+
+func historyPageInfo(query *GraphqlQueryHistoryWrapper) *helper.GraphqlQueryPageInfo {
+	return pageInfoOrLast(query.Issue.History.PageInfo)
+}
 
 // issuesToCollectChildrenClauses builds the cursor clauses that drive per-issue
 // child collection (comments, history). When `since` is non-nil (an incremental
