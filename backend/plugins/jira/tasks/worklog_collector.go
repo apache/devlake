@@ -19,6 +19,7 @@ package tasks
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -85,12 +86,7 @@ func CollectWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		UrlTemplate:   "api/2/issue/{{ .Input.IssueId }}/worklog",
 		PageSize:      50,
 		GetTotalPages: GetTotalPagesFromResponse,
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			// According to the following resources, the worklogs API returns all worklogs without pagination
-			// https://community.atlassian.com/t5/Jira-questions/Worklog-Pagination/qaq-p/117614
-			// https://community.atlassian.com/t5/Jira-questions/Worklog-Pagination-JIRA-REST-API/qaq-p/2173832
-			return nil, nil
-		},
+		Query:         buildWorklogQuery,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var data struct {
 				Worklogs []json.RawMessage `json:"worklogs"`
@@ -109,4 +105,13 @@ func CollectWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return apiCollector.Execute()
+}
+
+// buildWorklogQuery sets the page offset and size. GetTotalPagesFromResponse makes the collector
+// request one URL per page, so without startAt every page would return the first worklogs again.
+func buildWorklogQuery(reqData *api.RequestData) (url.Values, errors.Error) {
+	query := url.Values{}
+	query.Set("startAt", fmt.Sprintf("%v", reqData.Pager.Skip))
+	query.Set("maxResults", fmt.Sprintf("%v", reqData.Pager.Size))
+	return query, nil
 }
