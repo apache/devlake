@@ -30,6 +30,38 @@ import (
 // --- User report JSONL structures (one line per user) ---
 
 type userDailyReport struct {
+	ReportStartDay                string `json:"report_start_day"`
+	ReportEndDay                  string `json:"report_end_day"`
+	Day                           string `json:"day"`
+	OrganizationId                string `json:"organization_id"`
+	EnterpriseId                  string `json:"enterprise_id"`
+	UserId                        int64  `json:"user_id"`
+	UserLogin                     string `json:"user_login"`
+	UserInitiatedInteractionCount int    `json:"user_initiated_interaction_count"`
+	CodeGenerationActivityCount   int    `json:"code_generation_activity_count"`
+	CodeAcceptanceActivityCount   int    `json:"code_acceptance_activity_count"`
+	LocSuggestedToAddSum          int    `json:"loc_suggested_to_add_sum"`
+	LocSuggestedToDeleteSum       int    `json:"loc_suggested_to_delete_sum"`
+	LocAddedSum                   int    `json:"loc_added_sum"`
+	LocDeletedSum                 int    `json:"loc_deleted_sum"`
+	UsedAgent                     bool   `json:"used_agent"`
+	UsedChat                      bool   `json:"used_chat"`
+	UsedCli                       bool   `json:"used_cli"`
+	UsedCopilotCodeReviewActive   bool   `json:"used_copilot_code_review_active"`
+	UsedCopilotCodeReviewPassive  bool   `json:"used_copilot_code_review_passive"`
+	// UsedCopilotCodingAgent / UsedCopilotCloudAgent — added in API 2026-03-10.
+	// GitHub's docs use "coding agent" and "cloud agent" somewhat
+	// interchangeably for the same async PR-authoring surface; both fields
+	// are collected in case they're ever populated independently.
+	UsedCopilotCodingAgent  bool                   `json:"used_copilot_coding_agent"`
+	UsedCopilotCloudAgent   bool                   `json:"used_copilot_cloud_agent"`
+	AiAdoptionPhase         *aiAdoptionPhase       `json:"ai_adoption_phase"`
+	TotalsByIde             []userTotalsByIde      `json:"totals_by_ide"`
+	TotalsByFeature         []totalsByFeature      `json:"totals_by_feature"`
+	TotalsByLanguageFeature []totalsByLangFeature  `json:"totals_by_language_feature"`
+	TotalsByLanguageModel   []totalsByLangModel    `json:"totals_by_language_model"`
+	TotalsByModelFeature    []totalsByModelFeature `json:"totals_by_model_feature"`
+	TotalsByCli             *totalsByCli           `json:"totals_by_cli"`
 	ReportStartDay                string                 `json:"report_start_day"`
 	ReportEndDay                  string                 `json:"report_end_day"`
 	Day                           string                 `json:"day"`
@@ -57,6 +89,14 @@ type userDailyReport struct {
 	TotalsByModelFeature          []totalsByModelFeature `json:"totals_by_model_feature"`
 	TotalsByCli                   *totalsByCli           `json:"totals_by_cli"`
 }
+
+// aiAdoptionPhase is the per-user cohort classification (phase 0-3), added
+// 2026-05-29. version starts at 1 and increments if GitHub changes the
+// classification logic, so historical rows stay interpretable.
+type aiAdoptionPhase struct {
+	Phase   int `json:"phase"`
+	Version int `json:"version"`
+ }
 
 type userTotalsByIde struct {
 	totalsByIde
@@ -124,6 +164,8 @@ func ExtractUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				UsedCli:                      u.UsedCli,
 				UsedCopilotCodeReviewActive:  u.UsedCopilotCodeReviewActive,
 				UsedCopilotCodeReviewPassive: u.UsedCopilotCodeReviewPassive,
+				UsedCopilotCodingAgent:       u.UsedCopilotCodingAgent,
+				UsedCopilotCloudAgent:        u.UsedCopilotCloudAgent,
 				AiCreditsUsed:                u.AiCreditsUsed,
 				CopilotActivityMetrics: models.CopilotActivityMetrics{
 					UserInitiatedInteractionCount: u.UserInitiatedInteractionCount,
@@ -135,15 +177,21 @@ func ExtractUserMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					LocDeletedSum:                 u.LocDeletedSum,
 				},
 			}
+			if u.AiAdoptionPhase != nil {
+				userMetrics.AiAdoptionPhase = u.AiAdoptionPhase.Phase
+				userMetrics.AiAdoptionPhaseVersion = u.AiAdoptionPhase.Version
+			}
 			if u.TotalsByCli != nil {
 				userMetrics.CopilotCliMetrics = models.CopilotCliMetrics{
-					CliSessionCount: u.TotalsByCli.SessionCount,
-					CliRequestCount: u.TotalsByCli.RequestCount,
-					CliPromptCount:  u.TotalsByCli.PromptCount,
+					CliSessionCount:     u.TotalsByCli.SessionCount,
+					CliRequestCount:     u.TotalsByCli.RequestCount,
+					CliPromptCount:      u.TotalsByCli.PromptCount,
+					CliLastKnownVersion: u.TotalsByCli.LastKnownCliVersion,
 				}
 				if u.TotalsByCli.TokenUsage != nil {
 					userMetrics.CopilotCliMetrics.CliOutputTokenSum = u.TotalsByCli.TokenUsage.OutputTokensSum
 					userMetrics.CopilotCliMetrics.CliPromptTokenSum = u.TotalsByCli.TokenUsage.PromptTokensSum
+					userMetrics.CopilotCliMetrics.CliAvgTokensPerRequest = u.TotalsByCli.TokenUsage.AvgTokensPerRequest
 				}
 			}
 			results = append(results, userMetrics)
