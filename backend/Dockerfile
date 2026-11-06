@@ -80,29 +80,39 @@ RUN apt-get update && \
 
 EXPOSE 8080
 
-RUN useradd -ms /bin/bash -d /app devlake -u 1010
+RUN useradd -ms /bin/bash -d /app devlake -u 1010 -G 0
 RUN chown -R devlake:devlake /etc/ssl/certs
 USER devlake
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN mkdir logs
+RUN mkdir logs && chgrp 0 logs && chmod g=u logs
 VOLUME /app/logs
 
+# Ownership for arbitrary-UID runtimes (OpenShift runs containers with a random
+# UID and GID 0) is applied in the same RUN that creates each path. Doing it
+# there costs nothing: the layer was being written anyway. A recursive
+# `chgrp -R 0 /app && chmod -R g=u /app` at the end of the image instead
+# rewrites every file that earlier layers created, so Docker stores a second
+# copy of the whole tree - around 190 MB on the published image.
+#
+# The devlake user is added to group 0 so it is allowed to chgrp the files it
+# owns; its primary group stays devlake, so the runtime GID does not change.
+
 # Setup Python
-COPY --chown=devlake:devlake python/ /app/python/
+COPY --chown=devlake:0 python/ /app/python/
 RUN python3 -m pip install --no-cache --upgrade pip setuptools && \
     python3 -m pip install --no-cache -r python/requirements.txt && \
-    python3 -m pip install --upgrade pip
-
-# Setup Python package manager
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/app/.local/bin sh
+    python3 -m pip install --upgrade pip && \
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/app/.local/bin sh && \
+    chgrp -R 0 /app/.local && chmod -R g=u /app/.local
 ENV PATH="/app/.local/bin:${PATH}"
 
 # Build Python plugins, make sure the scripts has execute permission
 # RUN find /app/python/ -name "*.sh" | xargs -I{} chmod +x {}
-RUN /app/python/build.sh
+RUN /app/python/build.sh && \
+    chgrp -R 0 /app/python && chmod -R g=u /app/python
 
 FROM base as devlake-base
 ARG DEBUG=
@@ -110,8 +120,11 @@ ARG DEBUG=
 # apps
 # The single binary already contains every plugin; the .so files that
 # `make build-plugin` produces stay in the builder stage and are never copied.
-COPY --from=build /app/bin/lake /app/bin/lake
-COPY --from=build /app/resources /app/resources
+# The binary and resources are read-only at runtime, so root:0 with the modes
+# they already have (755 for the binary, 644 for the swagger docs) is enough for
+# a random UID in group 0. No recursive chmod afterwards.
+COPY --from=build --chown=0:0 /app/bin/lake /app/bin/lake
+COPY --from=build --chown=0:0 /app/resources /app/resources
 
 ENV PATH="/app/bin:${PATH}"
 ENV DEBUG="$DEBUG"
@@ -119,9 +132,7 @@ ENV DEBUG="$DEBUG"
 USER root
 # Empty mount point for sideloaded plugins: dropping a .so here registers it on
 # top of the compiled-in set at startup; see PLUGIN_DIR.
-RUN mkdir -p /app/bin/plugins && \
-    chgrp -R 0 /app && \
-    chmod -R g=u /app
+RUN mkdir -p -m 0775 /app/bin/plugins
 USER devlake
 
 #add tini, prevent zombie process
