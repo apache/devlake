@@ -18,7 +18,30 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor BugBot Review Analytics",
+      "type": "link",
+      "url": "/d/cursor_bugbot"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -85,168 +108,6 @@
         }
       ],
       "title": "Charged Amount (Selected Period)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Current billing cycle on-demand spend from /teams/spend",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 5
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(spend_cents), 0) / 100 AS \"On-Demand Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
-          "refId": "A"
-        }
-      ],
-      "title": "On-Demand Spend (Current Cycle)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Current billing cycle included (non-on-demand) spend from /teams/spend",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 5
-      },
-      "id": 301,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(included_spend_cents), 0) / 100 AS \"Included Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
-          "refId": "A"
-        }
-      ],
-      "title": "Included Spend (Current Cycle)",
-      "type": "stat"
-    },
-    {
-      "datasource": "mysql",
-      "description": "Difference between total cycle spend (on-demand + included) from /teams/spend and sum of chargedCents for events since billing_cycle_start. Positive means spend exceeds collected events (backfill may be incomplete).",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "decimals": 2
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 5
-      },
-      "id": 302,
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": "mysql",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT (\n  COALESCE((SELECT SUM(spend_cents + included_spend_cents) FROM _tool_cursor_user_spend\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'), 0)\n  - COALESCE((SELECT SUM(charged_cents) FROM _tool_cursor_usage_events\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n      AND event_time >= (SELECT MIN(billing_cycle_start) FROM _tool_cursor_user_spend\n        WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}')), 0)\n) / 100 AS \"Reconciliation Delta\"",
-          "refId": "A"
-        }
-      ],
-      "title": "Reconciliation Delta",
       "type": "stat"
     },
     {
@@ -409,6 +270,168 @@
         }
       ],
       "title": "Inactive Users (Last 7 Days)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Current billing cycle on-demand spend from /teams/spend",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(spend_cents), 0) / 100 AS \"On-Demand Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "On-Demand Spend (Current Cycle)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Current billing cycle included (non-on-demand) spend from /teams/spend",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "id": 301,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(included_spend_cents), 0) / 100 AS \"Included Spend\"\nFROM _tool_cursor_user_spend\nWHERE connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Included Spend (Current Cycle)",
+      "type": "stat"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Difference between total cycle spend (on-demand + included) from /teams/spend and sum of chargedCents for events since billing_cycle_start. Positive means spend exceeds collected events (backfill may be incomplete).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 302,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT (\n  COALESCE((SELECT SUM(spend_cents + included_spend_cents) FROM _tool_cursor_user_spend\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'), 0)\n  - COALESCE((SELECT SUM(charged_cents) FROM _tool_cursor_usage_events\n    WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\n      AND event_time >= (SELECT MIN(billing_cycle_start) FROM _tool_cursor_user_spend\n        WHERE connection_id = ${connection_id} AND scope_id = '${scope_id}')), 0)\n) / 100 AS \"Reconciliation Delta\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Reconciliation Delta",
       "type": "stat"
     },
     {
@@ -853,9 +876,11 @@
       },
       "id": 22,
       "options": {
-        "orientation": "horizontal",
         "displayMode": "basic",
-        "showUnfilled": false,
+        "minVizHeight": 16,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -863,6 +888,8 @@
           "fields": "",
           "values": true
         },
+        "showUnfilled": false,
+        "sizing": "auto",
         "text": {}
       },
       "pluginVersion": "11.0.0",
@@ -881,16 +908,8 @@
         {
           "id": "rowsToFields",
           "options": {
-            "mappings": [
-              {
-                "fieldName": "Kind",
-                "handlerKey": "field.name"
-              },
-              {
-                "fieldName": "Charged",
-                "handlerKey": "field.value"
-              }
-            ]
+            "labelField": "Kind",
+            "valueField": "Charged"
           }
         }
       ]
@@ -1013,7 +1032,7 @@
     },
     {
       "datasource": "mysql",
-      "description": "Daily usage-event volume by channel from POST /teams/filtered-usage-events. Admin API does not populate hostingType in collected data (Apr–Jul 2026: 0/105k raw events). Mapping: is_headless=1 → Cloud Agent (~1%); empty hosting_type + not headless → IDE; hosting_type=cli → CLI when present. CLI and authoritative IDE/CLI/Cloud commit activity on the Cursor native dashboard use Enterprise GET /analytics/ai-code/commits (commitSource) — not collected.",
+      "description": "Daily usage-event volume by channel from POST /teams/filtered-usage-events. Admin API does not populate hostingType in collected data (Apr\u2013Jul 2026: 0/105k raw events). Mapping: is_headless=1 \u2192 Cloud Agent (~1%); empty hosting_type + not headless \u2192 IDE; hosting_type=cli \u2192 CLI when present. CLI and authoritative IDE/CLI/Cloud commit activity on the Cursor native dashboard use Enterprise GET /analytics/ai-code/commits (commitSource) \u2014 not collected.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1244,12 +1263,34 @@
       "type": "timeseries"
     },
     {
+      "datasource": "mysql",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 330,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "**Enterprise-only metrics** (AI code tracking, repo/PR attribution, conversation insights) are on [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise?${__url_time_range}). Requires an enterprise API key.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "",
+      "type": "text"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 47
       },
       "id": 104,
       "title": "Diagnostics",
@@ -1257,7 +1298,7 @@
       "panels": [
         {
           "datasource": "mysql",
-          "description": "Row counts and latest timestamps per _tool_cursor_* table for pipeline health monitoring",
+          "description": "Row counts and latest timestamps per Cursor Admin API tool table",
           "fieldConfig": {
             "defaults": {},
             "overrides": []
@@ -1266,7 +1307,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 45
+            "y": 48
           },
           "id": 40,
           "options": {
@@ -1304,8 +1345,8 @@
       {
         "current": {
           "selected": false,
-          "text": "1",
-          "value": "1"
+          "text": "2",
+          "value": "2"
         },
         "datasource": "mysql",
         "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id",
@@ -1349,6 +1390,6 @@
   "timezone": "utc",
   "title": "Cursor Usage & Cost",
   "uid": "cursor_usage",
-  "version": 14,
+  "version": 17,
   "weekStart": ""
 }

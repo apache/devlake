@@ -82,12 +82,14 @@ func utcDate(t time.Time) time.Time {
 // computeUsageDateRange returns the [start, until] date range for incremental collection.
 // The Anthropic Analytics API only serves data from 2026-01-01 onwards and requires
 // dates to be at least three days old, so the current day and previous two days are skipped.
+// since is the start time of the last successful run, so collection resumes from the last
+// day that run collected.
 func computeUsageDateRange(now time.Time, since *time.Time) (start, until time.Time) {
 	apiFloor := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	until = utcDate(now).AddDate(0, 0, -claudeCodeAvailabilityLagDays)
 	start = until.AddDate(0, 0, -(claudeCodeInitialBackfillDays - 1))
 	if since != nil {
-		start = utcDate(*since).AddDate(0, 0, 1)
+		start = utcDate(*since).AddDate(0, 0, -claudeCodeAvailabilityLagDays)
 		minStart := until.AddDate(0, 0, -(claudeCodeInitialBackfillDays - 1))
 		if start.Before(minStart) {
 			start = minStart
@@ -95,6 +97,9 @@ func computeUsageDateRange(now time.Time, since *time.Time) (start, until time.T
 	}
 	if start.Before(apiFloor) {
 		start = apiFloor
+	}
+	if start.After(until) {
+		start = until
 	}
 	return start, until
 }

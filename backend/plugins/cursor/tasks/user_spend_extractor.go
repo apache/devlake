@@ -34,9 +34,33 @@ type spendMemberRecord struct {
 	Role                     string  `json:"role"`
 	SpendCents               float64 `json:"spendCents"`
 	IncludedSpendCents       float64 `json:"includedSpendCents"`
+	OverallSpendCents        float64 `json:"overallSpendCents"`
 	FastPremiumRequests      int     `json:"fastPremiumRequests"`
 	MonthlyLimitDollars      float64 `json:"monthlyLimitDollars"`
 	HardLimitOverrideDollars float64 `json:"hardLimitOverrideDollars"`
+}
+
+// normalizeUserSpendCents maps Cursor /teams/spend fields to on-demand and included
+// amounts. Team plans return spendCents + includedSpendCents; Enterprise and newer
+// tiered plans often omit includedSpendCents and expose overallSpendCents instead.
+func normalizeUserSpendCents(spendCents, includedSpendCents, overallSpendCents float64) (onDemand, included float64) {
+	onDemand = spendCents
+	included = includedSpendCents
+
+	if overallSpendCents <= 0 {
+		return onDemand, included
+	}
+
+	derivedIncluded := overallSpendCents - spendCents
+	if derivedIncluded < 0 {
+		derivedIncluded = 0
+	}
+
+	if includedSpendCents > 0 {
+		return onDemand, includedSpendCents
+	}
+
+	return onDemand, derivedIncluded
 }
 
 // ExtractUserSpend parses raw spend records into tool-layer tables.
@@ -71,6 +95,12 @@ func ExtractUserSpend(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, nil
 			}
 
+			onDemandCents, includedCents := normalizeUserSpendCents(
+				record.SpendCents,
+				record.IncludedSpendCents,
+				record.OverallSpendCents,
+			)
+
 			spend := &models.CursorUserSpend{
 				ConnectionId:             data.Options.ConnectionId,
 				ScopeId:                  data.Options.ScopeId,
@@ -80,8 +110,8 @@ func ExtractUserSpend(taskCtx plugin.SubTaskContext) errors.Error {
 				Email:                    strings.TrimSpace(record.Email),
 				Name:                     strings.TrimSpace(record.Name),
 				Role:                     strings.TrimSpace(record.Role),
-				SpendCents:               record.SpendCents,
-				IncludedSpendCents:       record.IncludedSpendCents,
+				SpendCents:               onDemandCents,
+				IncludedSpendCents:       includedCents,
 				FastPremiumRequests:      record.FastPremiumRequests,
 				MonthlyLimitDollars:      record.MonthlyLimitDollars,
 				HardLimitOverrideDollars: record.HardLimitOverrideDollars,

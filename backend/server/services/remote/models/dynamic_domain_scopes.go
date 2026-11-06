@@ -25,6 +25,7 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/code"
 	"github.com/apache/devlake/core/models/domainlayer/codequality"
 	"github.com/apache/devlake/core/models/domainlayer/devops"
+	"github.com/apache/devlake/core/models/domainlayer/qa"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
 )
@@ -39,6 +40,8 @@ func newScopeByTypeName(typeName string) (plugin.Scope, errors.Error) {
 		return &devops.CicdScope{}, nil
 	case "Board":
 		return &ticket.Board{}, nil
+	case "QaProject":
+		return &qa.QaProject{}, nil
 	default:
 		return nil, errors.BadInput.New(fmt.Sprintf("Unknown scope type %s", typeName))
 	}

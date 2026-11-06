@@ -49,22 +49,29 @@ func TestConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, 
 
 // TestExistingConnection validates a stored Cursor connection with optional overrides.
 func TestExistingConnection(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
-	connection := &models.CursorConnection{}
-	if err := connectionHelper.First(connection, input.Params); err != nil {
+	stored := &models.CursorConnection{}
+	if err := connectionHelper.First(stored, input.Params); err != nil {
 		return nil, plugin.WrapTestConnectionErrResp(basicRes, errors.BadInput.Wrap(err, "find connection from db"))
 	}
-	if err := (&models.CursorConnection{}).MergeFromRequest(connection, input.Body); err != nil {
+	connection := *stored
+	if err := (&models.CursorConnection{}).MergeFromRequest(&connection, input.Body); err != nil {
 		return nil, plugin.WrapTestConnectionErrResp(basicRes, errors.Convert(err))
 	}
 
 	connection.Normalize()
-	if err := validateConnection(connection); err != nil {
+	if err := validateConnection(&connection); err != nil {
 		return nil, plugin.WrapTestConnectionErrResp(basicRes, err)
 	}
 
-	result, err := service.TestConnection(gocontext.Background(), basicRes, connection)
+	result, err := service.TestConnection(gocontext.Background(), basicRes, &connection)
 	if err != nil {
 		return nil, plugin.WrapTestConnectionErrResp(basicRes, err)
+	}
+	if result != nil && result.KeyTier != "" {
+		service.ApplyTestResultToConnection(stored, result)
+		if err := connectionHelper.SaveWithCreateOrUpdate(stored); err != nil {
+			return nil, plugin.WrapTestConnectionErrResp(basicRes, err)
+		}
 	}
 	return &plugin.ApiResourceOutput{Body: result, Status: http.StatusOK}, nil
 }

@@ -36,21 +36,23 @@ var ExtractJobsMeta = plugin.SubTaskMeta{
 }
 
 func ExtractJobs(taskCtx plugin.SubTaskContext) errors.Error {
-	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_JOB_TABLE)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: *rawDataSubTaskArgs,
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
+	data := taskCtx.GetData().(*CircleciTaskData)
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[models.CircleciJob]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_JOB_TABLE,
+			Params: models.CircleciApiParams{
+				ConnectionId: data.Options.ConnectionId,
+				ProjectSlug:  data.Options.ProjectSlug,
+			},
+		},
+		Extract: func(userRes *models.CircleciJob, row *api.RawData) ([]any, errors.Error) {
 			input := &models.CircleciWorkflow{}
 			err := errors.Convert(json.Unmarshal(row.Input, input))
 			if err != nil {
 				return nil, err
 			}
-			userRes := models.CircleciJob{}
-			err = errors.Convert(json.Unmarshal(row.Data, &userRes))
-			if err != nil {
-				return nil, err
-			}
-			toolL := userRes
+			toolL := *userRes
 			toolL.ConnectionId = data.Options.ConnectionId
 			toolL.ProjectSlug = data.Options.ProjectSlug
 			toolL.WorkflowId = input.Id
@@ -60,7 +62,7 @@ func ExtractJobs(taskCtx plugin.SubTaskContext) errors.Error {
 				stopTime := userRes.StoppedAt.ToTime()
 				toolL.DurationSec = float64(stopTime.Sub(startTime).Milliseconds() / 1e3)
 			}
-			return []interface{}{
+			return []any{
 				&toolL,
 			}, nil
 		},

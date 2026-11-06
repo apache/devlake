@@ -58,9 +58,6 @@ updates:
       # The Go toolchain directive is coupled to the CI bootstrap version and
       # to the golang base images; it is raised deliberately, never by a bot.
       - dependency-name: go
-      # git2go is ABI-coupled to the libgit2 version installed in the builder
-      # image. A mismatch fails at link time, so this is always manual.
-      - dependency-name: github.com/libgit2/git2go/*
       # swag v2 is still a release candidate and requires regenerating every
       # swagger annotation. Tracked as an externally gated upgrade.
       - dependency-name: github.com/swaggo/swag
@@ -122,6 +119,7 @@ updates:
       - /backend/python/plugins/azuredevops
       - /backend/python/plugins/glpi
       - /backend/python/plugins/redmine
+      - /backend/python/plugins/zephyr
       - /backend/python/test/fakeplugin
       - /grafana/scripts
     schedule:

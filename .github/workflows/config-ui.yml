@@ -21,13 +21,14 @@ on:
     branches: [ main ]
     paths:
       - 'config-ui/**'
+      - '.github/workflows/config-ui.yml'
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
     - name: Set up Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '24'
         cache: 'yarn'

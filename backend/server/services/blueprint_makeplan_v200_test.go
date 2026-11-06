@@ -27,7 +27,6 @@ import (
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
 	mockplugin "github.com/apache/devlake/mocks/core/plugin"
-	"github.com/apache/devlake/plugins/org/tasks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -71,9 +70,17 @@ func TestMakePlanV200(t *testing.T) {
 
 	// mock org plugin
 	org := new(mockplugin.CompositeProjectMapper)
+	// The org plugin normally builds a tasks.ProjectMapping here. This test
+	// mocks the plugin, so the value only has to round-trip through the plan:
+	// keep it local rather than importing plugins/org/tasks, which would make
+	// the framework depend on a plugin.
+	projectMapping := map[string]interface{}{
+		"projectName": projectName,
+		"scopes":      []interface{}{},
+	}
 	orgPlan := coreModels.PipelinePlan{
 		{
-			{Plugin: "org", Subtasks: []string{"setProjectMapping"}, Options: map[string]interface{}{"projectMappings": []interface{}{tasks.NewProjectMapping(projectName, githubOutputScopes)}}},
+			{Plugin: "org", Subtasks: []string{"setProjectMapping"}, Options: map[string]interface{}{"projectMappings": []interface{}{projectMapping}}},
 		},
 	}
 	org.On("MapProject", projectName, githubOutputScopes).Return(orgPlan, nil)

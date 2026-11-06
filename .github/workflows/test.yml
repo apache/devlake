@@ -41,14 +41,12 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
     - name: Set git config
       run: git config --global --add safe.directory $(pwd)
-    - name: Install libgit2 1.5 for git2go v34
-      run: backend/scripts/install-libgit2.sh
     - name: Install Go 1.27.3
       run: backend/scripts/install-go.sh
     - name: Check go.mod is tidy without generated mocks
@@ -56,7 +54,12 @@ jobs:
         cd backend
         go mod tidy
         git diff --exit-code -- go.mod go.sum
-    - name: Install mockery 3.8.1
+    - name: Check plugins/all is up to date
+      run: |
+        cd backend
+        go run ./tools/pluginsgen
+        git diff --exit-code -- plugins/all
+    - name: Install mockery 3.9.0
       run: backend/scripts/install-mockery.sh
     - name: Build Python
       run: |

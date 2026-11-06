@@ -46,6 +46,7 @@ import { TAPDConfig } from './tapd';
 import { WebhookConfig } from './webhook';
 import { YoutrackConfig } from './youtrack';
 import { ZenTaoConfig } from './zentao';
+import { ZephyrConfig } from './zephyr';
 import { OpsgenieConfig } from './opsgenie';
 import { TeambitionConfig } from './teambition';
 import { TestmoConfig } from './testmo';
@@ -83,6 +84,7 @@ export const pluginConfigs: IPluginConfig[] = [
   TAPDConfig,
   TestmoConfig,
   ZenTaoConfig,
+  ZephyrConfig,
   WebhookConfig,
   YoutrackConfig,
   OpsgenieConfig,

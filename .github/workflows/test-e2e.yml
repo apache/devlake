@@ -45,13 +45,11 @@ jobs:
           MYSQL_USER: merico
           MYSQL_PASSWORD: merico
           MYSQL_ROOT_PASSWORD: root
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
       - run: git config --global --add safe.directory $(pwd)
-      - name: Install libgit2 1.5 for git2go v34
-        run: backend/scripts/install-libgit2.sh
       - name: Install Go 1.27.3
         run: backend/scripts/install-go.sh
       - name: Build Python
@@ -89,13 +87,11 @@ jobs:
           POSTGRES_DB: lake
           POSTGRES_USER: merico
           POSTGRES_PASSWORD: merico
-    container: mericodev/lake-builder:latest
+    container: apache/devlake:lake-builder-v0.0.16
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
       - run: git config --global --add safe.directory $(pwd)
-      - name: Install libgit2 1.5 for git2go v34
-        run: backend/scripts/install-libgit2.sh
       - name: Install Go 1.27.3
         run: backend/scripts/install-go.sh
       - name: Build Python

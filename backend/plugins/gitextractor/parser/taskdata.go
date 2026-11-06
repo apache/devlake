@@ -41,7 +41,6 @@ type GitExtractorOptions struct {
 	PrivateKey            string `json:"privateKey" mapstructure:"privateKey"`
 	Passphrase            string `json:"passphrase" mapstructure:"passphrase"`
 	Proxy                 string `json:"proxy" mapstructure:"proxy"`
-	UseGoGit              *bool  `json:"useGoGit" mapstructure:"useGoGit"`
 	SkipCommitStat        *bool  `json:"skipCommitStat" mapstructure:"skipCommitStat" comment:"skip all commit stat including added/deleted lines and commit files as well"`
 	SkipCommitFiles       *bool  `json:"skipCommitFiles" mapstructure:"skipCommitFiles"`
 	NoShallowClone        bool   `json:"noShallowClone" mapstructure:"noShallowClone"`

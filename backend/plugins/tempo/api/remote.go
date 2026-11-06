@@ -58,12 +58,14 @@ func listTempoRemoteTeams(
 		return nil, nil, errors.Default.Wrap(err, "failed to get teams from Tempo API")
 	}
 
+	// Tempo v4 PageableMetadata has count/limit/offset/next/previous but no
+	// total: "next" links the next page and is absent on the last one.
 	var response struct {
 		Metadata struct {
-			Count  int `json:"count"`
-			Limit  int `json:"limit"`
-			Offset int `json:"offset"`
-			Total  int `json:"total"`
+			Count  int    `json:"count"`
+			Limit  int    `json:"limit"`
+			Offset int    `json:"offset"`
+			Next   string `json:"next"`
 		} `json:"metadata"`
 		Results []models.TempoTeamResponse `json:"results"`
 	}
@@ -83,7 +85,7 @@ func listTempoRemoteTeams(
 		})
 	}
 
-	if page.Offset+page.Limit < response.Metadata.Total {
+	if response.Metadata.Next != "" {
 		nextPage = &TempoRemotePagination{
 			Limit:  page.Limit,
 			Offset: page.Offset + page.Limit,
@@ -91,6 +93,42 @@ func listTempoRemoteTeams(
 	}
 
 	return children, nextPage, nil
+}
+
+// listAllTempoTeams fetches every page of GET /4/teams. Tempo v4 pagination
+// metadata has no total: "next" links the next page and is absent on the last.
+func listAllTempoTeams(apiClient plugin.ApiClient, query url.Values) ([]models.TempoTeamResponse, errors.Error) {
+	const pageSize = 50
+	var teams []models.TempoTeamResponse
+	for offset := 0; ; offset += pageSize {
+		pageQuery := url.Values{}
+		for key, values := range query {
+			pageQuery[key] = values
+		}
+		pageQuery.Set("offset", strconv.Itoa(offset))
+		pageQuery.Set("limit", strconv.Itoa(pageSize))
+
+		res, err := apiClient.Get("teams", pageQuery, nil)
+		if err != nil {
+			return nil, errors.Default.Wrap(err, "failed to get teams from Tempo API")
+		}
+
+		var response struct {
+			Metadata struct {
+				Next string `json:"next"`
+			} `json:"metadata"`
+			Results []models.TempoTeamResponse `json:"results"`
+		}
+		err = api.UnmarshalResponse(res, &response)
+		if err != nil {
+			return nil, errors.Default.Wrap(err, "failed to unmarshal teams response")
+		}
+
+		teams = append(teams, response.Results...)
+		if response.Metadata.Next == "" || len(response.Results) == 0 {
+			return teams, nil
+		}
+	}
 }
 
 // RemoteScopes list all available scopes on the remote server
@@ -123,26 +161,14 @@ func searchTempoRemoteTeams(
 		}
 	}
 
-	res, err := apiClient.Get("teams", queryParams, nil)
+	// all matching teams, not just the first page of the API: the result is
+	// filtered and paged below
+	teams, err := listAllTempoTeams(apiClient, queryParams)
 	if err != nil {
-		return nil, errors.Default.Wrap(err, "failed to get teams from Tempo API")
+		return nil, err
 	}
 
-	var response struct {
-		Metadata struct {
-			Count  int `json:"count"`
-			Limit  int `json:"limit"`
-			Offset int `json:"offset"`
-			Total  int `json:"total"`
-		} `json:"metadata"`
-		Results []models.TempoTeamResponse `json:"results"`
-	}
-	err = api.UnmarshalResponse(res, &response)
-	if err != nil {
-		return nil, errors.Default.Wrap(err, "failed to unmarshal teams response")
-	}
-
-	for _, team := range response.Results {
+	for _, team := range teams {
 		if params.Search == "" || strings.Contains(strings.ToLower(team.Name), strings.ToLower(params.Search)) {
 			children = append(children, dsmodels.DsRemoteApiScopeListEntry[models.TempoTeam]{
 				Type:     api.RAS_ENTRY_TYPE_SCOPE,

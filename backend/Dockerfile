@@ -23,14 +23,6 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
-FROM --platform=linux/amd64 debian:bookworm as debian-amd64
-RUN apt-get update
-RUN apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
-
-FROM --platform=linux/arm64 debian:bookworm as debian-arm64
-RUN apt-get update
-RUN apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
-
 FROM --platform=$BUILDPLATFORM golang:1.27-bookworm as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
@@ -40,46 +32,10 @@ ARG HTTP_PROXY=
 ARG HTTPS_PROXY=
 
 RUN apt-get update
-RUN apt-get install -y gcc binutils libfindbin-libs-perl cmake libssh2-1-dev libssl-dev zlib1g-dev
+RUN apt-get install -y ca-certificates git
 
-RUN if [ "$(arch)" != "aarch64" ] ; then \
-        apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu ; \
-    fi
-RUN if [ "$(arch)" != "x86_64" ] ; then \
-        apt-get install -y gcc-x86-64-linux-gnu binutils-x86-64-linux-gnu ; \
-    fi
-
-RUN go install github.com/vektra/mockery/v3@v3.8.1
+RUN go install github.com/vektra/mockery/v3@v3.9.0
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
-
-COPY --from=debian-amd64 /usr/include /rootfs-amd64/usr/include
-COPY --from=debian-amd64 /usr/lib/x86_64-linux-gnu /rootfs-amd64/usr/lib/x86_64-linux-gnu
-COPY --from=debian-amd64 /lib/x86_64-linux-gnu /rootfs-amd64/lib/x86_64-linux-gnu
-
-COPY --from=debian-arm64 /usr/include /rootfs-arm64/usr/include
-COPY --from=debian-arm64 /usr/lib/aarch64-linux-gnu /rootfs-arm64/usr/lib/aarch64-linux-gnu
-COPY --from=debian-arm64 /lib/aarch64-linux-gnu /rootfs-arm64/lib/aarch64-linux-gnu
-
-
-# set -e: otherwise a build failure for one arch is silently skipped and the
-# other arch's libgit2 is never installed under /usr/local/deps.
-RUN set -e; \
-    for arch in aarch64 x86_64 ; do \
-        mkdir -p /tmp/build/${arch} && cd /tmp/build/${arch} && \
-        wget https://github.com/libgit2/libgit2/archive/refs/tags/v1.5.0.tar.gz -O - | tar -xz && \
-        cd libgit2-1.5.0 && \
-        mkdir build && cd build && \
-        if [ "$arch" = "aarch64" ] ; then \
-            cmake .. -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-                -DBUILD_SHARED_LIBS=ON -DUSE_BUNDLED_ZLIB=ON -DCMAKE_SYSROOT=/rootfs-arm64 \
-                -DCMAKE_INSTALL_PREFIX=/usr/local/deps/${arch} ; \
-        elif [ "$arch" = "x86_64" ] ; then \
-            cmake .. -DCMAKE_C_COMPILER=x86_64-linux-gnu-gcc \
-                -DBUILD_SHARED_LIBS=ON -DUSE_BUNDLED_ZLIB=ON -DCMAKE_SYSROOT=/rootfs-amd64 \
-                -DCMAKE_INSTALL_PREFIX=/usr/local/deps/${arch} ; \
-        fi && \
-        make -j install ; \
-    done
 
 
 FROM builder as build
@@ -95,25 +51,12 @@ ARG GO_PLUGINS=
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
-        ln -s /usr/local/deps/aarch64 /usr/local/deps/target && \
-        export CC=aarch64-linux-gnu-gcc && \
         export GOARCH=arm64 ; \
     else \
-        ln -s /usr/local/deps/x86_64 /usr/local/deps/target && \
-        export CC=x86_64-linux-gnu-gcc && \
         export GOARCH=amd64 ; \
     fi && \
-    export PKG_CONFIG_PATH=/usr/local/deps/target/lib/pkgconfig && \
-    export CGO_ENABLED=1 &&\
+    export CGO_ENABLED=0 && \
     DEVLAKE_PLUGINS="$GO_PLUGINS" make all
-
-# remove symlink in lib, we will recreate in final image
-RUN cd /usr/local/deps/target/lib && \
-    for file in *.so* ; do \
-        if [ -L $file ] ; then \
-            unlink $file ; \
-        fi \
-    done
 
 
 FROM python:3.11-slim-bookworm as base
@@ -121,7 +64,7 @@ FROM python:3.11-slim-bookworm as base
 # apt-get upgrade picks up Debian security fixes that the base tag does not contain yet
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y python3-dev python3-pip tar pkg-config curl libssh2-1 zlib1g libffi-dev default-libmysqlclient-dev libpq-dev tini git openssh-client corkscrew && \
+    apt-get install -y python3-dev python3-pip tar pkg-config curl zlib1g libffi-dev default-libmysqlclient-dev libpq-dev tini git openssh-client corkscrew && \
     apt-get clean && \
     rm -fr /usr/share/doc/* \
            /usr/share/info/* \
@@ -164,22 +107,20 @@ RUN /app/python/build.sh
 FROM base as devlake-base
 ARG DEBUG=
 
-# libraries
-ENV LD_LIBRARY_PATH=/app/libs
-RUN mkdir -p /app/libs
-COPY --from=build /usr/local/deps/target/lib/*.so* /app/libs
-COPY --from=build /go/bin /usr/bin
-RUN ldconfig -vn /app/libs
-
 # apps
-COPY --from=build /app/bin /app/bin
+# The single binary already contains every plugin; the .so files that
+# `make build-plugin` produces stay in the builder stage and are never copied.
+COPY --from=build /app/bin/lake /app/bin/lake
 COPY --from=build /app/resources /app/resources
 
 ENV PATH="/app/bin:${PATH}"
 ENV DEBUG="$DEBUG"
 
 USER root
-RUN chgrp -R 0 /app && \
+# Empty mount point for sideloaded plugins: dropping a .so here registers it on
+# top of the compiled-in set at startup; see PLUGIN_DIR.
+RUN mkdir -p /app/bin/plugins && \
+    chgrp -R 0 /app && \
     chmod -R g=u /app
 USER devlake
 

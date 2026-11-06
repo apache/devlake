@@ -26,6 +26,8 @@ import (
 
 func TestIsIgnorableGraphqlQueryError(t *testing.T) {
 	assert.True(t, isIgnorableGraphqlQueryError(errors.New("Could not resolve to an Issue with the number of 17.")))
+	assert.True(t, isIgnorableGraphqlQueryError(errors.New("Entity not found: Issue")))
+	assert.False(t, isIgnorableGraphqlQueryError(errors.New("Entity not found: Team")))
 	assert.False(t, isIgnorableGraphqlQueryError(errors.New("some other graphql error")))
 	assert.False(t, isIgnorableGraphqlQueryError(nil))
 }

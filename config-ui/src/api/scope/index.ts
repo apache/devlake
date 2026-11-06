@@ -91,7 +91,7 @@ export const searchRemote = (
   plugin: string,
   connectionId: ID,
   data: SearchRemoteQuery,
-): Promise<{ children: RemoteScope[]; count: number }> =>
+): Promise<{ children: RemoteScope[]; count?: number }> =>
   request(`/plugins/${plugin}/connections/${connectionId}/search-remote-scopes`, {
     method: 'get',
     data,

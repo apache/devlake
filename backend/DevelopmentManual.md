@@ -161,7 +161,7 @@ func TestDevlakeServer(t *testing.T) {
 		Plugins: []plugin.PluginMeta{ // list of plugins to make available to the server. Just create an empty instance of your intended plugin structs (conventionally declared in their respective `impl.go`)
 			github.Github{},
 			githubGraphql.GithubGraphql{},
-			gitextractor.GitExtractor{}, // this requires that your host machine has libgit2 installed, otherwise you'll get compilation errors
+			gitextractor.GitExtractor{},
 			gitlab.Gitlab(""),
 			jenkins.Jenkins{},
 			webhook.Webhook{},

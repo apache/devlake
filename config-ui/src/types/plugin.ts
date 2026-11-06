@@ -16,6 +16,10 @@
  *
  */
 
+import { IConnection } from './connection';
+
+export type IConnectionMetaVariant = 'list' | 'detail';
+
 export interface IPluginConfig {
   plugin: string;
   name: string;
@@ -30,9 +34,15 @@ export interface IPluginConfig {
     // the plugin's test API (e.g. the authenticated login, soft warnings)
     // instead of the generic toast
     showTestResultMessage?: boolean;
+    formatTestMessage?: (result: any) => string;
+    onTestSuccess?: (result: any, ctx: { setValues: (patch: Record<string, any>) => void }) => void;
+    renderTestSummary?: (result: any) => React.ReactNode;
+    renderConnectionMeta?: (connection: IConnection, variant: IConnectionMetaVariant) => React.ReactNode;
   };
   dataScope: {
     localSearch?: boolean;
+    /** Shows an "All" toggle to (de)select every item of the filtered remote search result. */
+    searchSelectAll?: boolean;
     searchPlaceholder?: string;
     title?: string;
     millerColumn?: {

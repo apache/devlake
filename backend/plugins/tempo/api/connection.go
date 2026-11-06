@@ -190,15 +190,9 @@ func GetTeams(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors
 	}
 
 	// Get teams from Tempo API
-	res, err := apiClient.Get("teams", nil, nil)
+	teams, err := listAllTempoTeams(apiClient, nil)
 	if err != nil {
-		return nil, errors.Default.Wrap(err, "failed to get teams from Tempo API")
-	}
-
-	var teams []models.TempoTeamResponse
-	err = api.UnmarshalResponse(res, &teams)
-	if err != nil {
-		return nil, errors.Default.Wrap(err, "failed to unmarshal teams response")
+		return nil, err
 	}
 
 	// Convert to tool layer models

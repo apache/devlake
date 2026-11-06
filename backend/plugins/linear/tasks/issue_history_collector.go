@@ -115,8 +115,7 @@ func CollectIssueHistory(taskCtx plugin.SubTaskContext) errors.Error {
 			return query, variables, nil
 		},
 		GetPageInfo: func(iQuery interface{}, args *helper.GraphqlCollectorArgs) (*helper.GraphqlQueryPageInfo, error) {
-			query := iQuery.(*GraphqlQueryHistoryWrapper)
-			return query.Issue.History.PageInfo, nil
+			return historyPageInfo(iQuery.(*GraphqlQueryHistoryWrapper)), nil
 		},
 		ResponseParser: func(queryWrapper interface{}) (messages []json.RawMessage, err errors.Error) {
 			query := queryWrapper.(*GraphqlQueryHistoryWrapper)

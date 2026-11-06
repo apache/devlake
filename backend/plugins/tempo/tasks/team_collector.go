@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -42,58 +41,18 @@ var CollectTeamsMeta = plugin.SubTaskMeta{
 func CollectTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*TempoTaskData)
 
-	apiCollector, err := api.NewStatefulApiCollector(api.RawDataSubTaskArgs{
-		Ctx: taskCtx,
-		Params: models.TempoApiParams{
-			ConnectionId: data.Options.ConnectionId,
-		},
-		Table: RAW_TEAM_TABLE,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = apiCollector.InitCollector(api.ApiCollectorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			Params: models.TempoApiParams{
-				ConnectionId: data.Options.ConnectionId,
-			},
-			Table: RAW_TEAM_TABLE,
-		},
-		ApiClient:   data.ApiClient,
-		UrlTemplate: "teams",
-		PageSize:    50,
-		GetTotalPages: func(res *http.Response, args *api.ApiCollectorArgs) (int, errors.Error) {
-			var response struct {
-				Metadata struct {
-					Count  int `json:"count"`
-					Limit  int `json:"limit"`
-					Total  int `json:"total"`
-					Offset int `json:"offset"`
-				} `json:"metadata"`
-			}
-			if err := api.UnmarshalResponse(res, &response); err != nil {
-				return 0, err
-			}
-			totalPages := (response.Metadata.Total + args.PageSize - 1) / args.PageSize
-			return totalPages, nil
-		},
+	// Not a stateful (incremental) collector: GET /4/teams has no
+	// "updatedFrom" filter, so an incremental run would append the same
+	// teams to the raw table again instead of refreshing them.
+	apiCollector, err := api.NewApiCollector(api.ApiCollectorArgs{
+		RawDataSubTaskArgs: teamRawDataSubTaskArgs(taskCtx, data.Options),
+		ApiClient:          data.ApiClient,
+		UrlTemplate:        "teams",
+		PageSize:           50,
+		// No GetTotalPages: Tempo v4 pagination metadata (PageableMetadata)
+		// has no total, so pages are fetched until one comes back short.
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			query := url.Values{}
-			pager := reqData.Pager
-			if pager == nil {
-				pager = &api.Pager{Page: 1, Skip: 0, Size: 50}
-			}
-			query.Set("offset", strconv.Itoa(pager.Skip))
-			query.Set("limit", strconv.Itoa(pager.Size))
-
-			if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
-				since := apiCollector.GetSince()
-				query.Set("updatedFrom", since.Format(time.RFC3339))
-			}
-
-			return query, nil
+			return buildTeamQuery(data.Options, reqData.Pager), nil
 		},
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var response struct {
@@ -112,4 +71,33 @@ func CollectTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return apiCollector.Execute()
+}
+
+// teamRawDataSubTaskArgs scopes the raw team data and the extracted teams per
+// team, like the scope itself (TempoTeam.ScopeParams). The extracted rows are
+// the team scopes: with connection-wide params, extracting one team scope
+// deleted and re-created every team scope of the connection.
+func teamRawDataSubTaskArgs(taskCtx plugin.SubTaskContext, opts *TempoOptions) api.RawDataSubTaskArgs {
+	return api.RawDataSubTaskArgs{
+		Ctx: taskCtx,
+		Params: models.TempoApiParams{
+			ConnectionId: opts.ConnectionId,
+			TeamId:       opts.TeamId,
+		},
+		Table: RAW_TEAM_TABLE,
+	}
+}
+
+func buildTeamQuery(opts *TempoOptions, pager *api.Pager) url.Values {
+	if pager == nil {
+		pager = &api.Pager{Page: 1, Skip: 0, Size: 50}
+	}
+	query := url.Values{}
+	query.Set("offset", strconv.Itoa(pager.Skip))
+	query.Set("limit", strconv.Itoa(pager.Size))
+	if opts.TeamId != 0 {
+		// only the team of this scope, not every team of the Tempo instance
+		query.Set("teamIds", strconv.FormatInt(opts.TeamId, 10))
+	}
+	return query
 }

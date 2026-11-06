@@ -27,9 +27,14 @@ import (
 type DsSearchRemoteScopes[C plugin.ToolLayerApiConnection, S plugin.ToolLayerScope] func(
 	apiClient plugin.ApiClient, params *models.DsRemoteApiScopeSearchParams) (children []models.DsRemoteApiScopeListEntry[S], err errors.Error)
 
+// DsSearchRemoteScopesWithCount is like DsSearchRemoteScopes but additionally returns the total
+// number of matching scopes reported by the remote server. A negative total means "unknown".
+type DsSearchRemoteScopesWithCount[C plugin.ToolLayerApiConnection, S plugin.ToolLayerScope] func(
+	apiClient plugin.ApiClient, params *models.DsRemoteApiScopeSearchParams) (children []models.DsRemoteApiScopeListEntry[S], total int, err errors.Error)
+
 type DsRemoteApiScopeSearchHelper[C plugin.ToolLayerApiConnection, S plugin.ToolLayerScope] struct {
 	*DsRemoteApiProxyHelper[C]
-	searchRemoteScopes DsSearchRemoteScopes[C, S]
+	searchRemoteScopes DsSearchRemoteScopesWithCount[C, S]
 }
 
 func NewDsRemoteApiScopeSearchHelper[
@@ -38,6 +43,25 @@ func NewDsRemoteApiScopeSearchHelper[
 ](
 	rap *DsRemoteApiProxyHelper[C],
 	searchRemoteScopes DsSearchRemoteScopes[C, S],
+) *DsRemoteApiScopeSearchHelper[C, S] {
+	var withCount DsSearchRemoteScopesWithCount[C, S]
+	if searchRemoteScopes != nil {
+		withCount = func(apiClient plugin.ApiClient, params *models.DsRemoteApiScopeSearchParams) ([]models.DsRemoteApiScopeListEntry[S], int, errors.Error) {
+			children, err := searchRemoteScopes(apiClient, params)
+			return children, -1, err
+		}
+	}
+	return NewDsRemoteApiScopeSearchHelperWithCount[C, S](rap, withCount)
+}
+
+// NewDsRemoteApiScopeSearchHelperWithCount creates a search helper whose response additionally
+// contains the total number of matching scopes ("count"), if the search function reports it.
+func NewDsRemoteApiScopeSearchHelperWithCount[
+	C plugin.ToolLayerApiConnection,
+	S plugin.ToolLayerScope,
+](
+	rap *DsRemoteApiProxyHelper[C],
+	searchRemoteScopes DsSearchRemoteScopesWithCount[C, S],
 ) *DsRemoteApiScopeSearchHelper[C, S] {
 	return &DsRemoteApiScopeSearchHelper[C, S]{
 		DsRemoteApiProxyHelper: rap,
@@ -62,10 +86,20 @@ func (rss *DsRemoteApiScopeSearchHelper[C, S]) Get(input *plugin.ApiResourceInpu
 	if e := vld.Struct(params); e != nil {
 		return nil, errors.BadInput.Wrap(e, "invalid params")
 	}
-	children, err := rss.searchRemoteScopes(apiClient, params)
+	children, total, err := rss.searchRemoteScopes(apiClient, params)
 	if err != nil {
 		return nil, err
 	}
+	return &plugin.ApiResourceOutput{
+		Body: buildDsRemoteApiScopeSearchBody(children, total, params),
+	}, nil
+}
+
+func buildDsRemoteApiScopeSearchBody[S plugin.ToolLayerScope](
+	children []models.DsRemoteApiScopeListEntry[S],
+	total int,
+	params *models.DsRemoteApiScopeSearchParams,
+) map[string]interface{} {
 	if children == nil {
 		children = []models.DsRemoteApiScopeListEntry[S]{}
 	}
@@ -73,11 +107,14 @@ func (rss *DsRemoteApiScopeSearchHelper[C, S]) Get(input *plugin.ApiResourceInpu
 	for i := range children {
 		children[i].ParentId = nil
 	}
-	return &plugin.ApiResourceOutput{
-		Body: map[string]interface{}{
-			"children": children,
-			"page":     params.Page,
-			"pageSize": params.PageSize,
-		},
-	}, nil
+	body := map[string]interface{}{
+		"children": children,
+		"page":     params.Page,
+		"pageSize": params.PageSize,
+	}
+	// only expose the total if the plugin knows it, so the config-ui can fall back to its heuristic
+	if total >= 0 {
+		body["count"] = total
+	}
+	return body
 }

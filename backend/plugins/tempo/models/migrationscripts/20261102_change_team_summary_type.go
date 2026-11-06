@@ -15,25 +15,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package models
+package migrationscripts
 
-import git "github.com/libgit2/git2go/v34"
+import (
+	"github.com/apache/devlake/core/context"
+	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/plugin"
+)
 
-type DiffLines []git.DiffLine
+var _ plugin.MigrationScript = (*changeTeamSummaryType)(nil)
 
-// Len return length of diffLines
-func (diffLines DiffLines) Len() int {
-	return len(diffLines)
+type changeTeamSummaryType struct{}
+
+func (script *changeTeamSummaryType) Up(basicRes context.BasicRes) errors.Error {
+	return basicRes.GetDal().ModifyColumnType("_tool_tempo_teams", "summary", "text")
 }
 
-// Less function
-func (diffLines DiffLines) Less(i, j int) bool {
-	return diffLines[i].OldLineno > diffLines[j].OldLineno
+func (*changeTeamSummaryType) Version() uint64 {
+	return 20261102150000
 }
 
-// Swap function
-func (diffLines DiffLines) Swap(i, j int) {
-	temp := diffLines[i]
-	diffLines[i] = diffLines[j]
-	diffLines[j] = temp
+func (*changeTeamSummaryType) Name() string {
+	return "change _tool_tempo_teams.summary type to text"
 }

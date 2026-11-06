@@ -22,9 +22,13 @@ echo build-server.sh VERSION: $VERSION
 ROOT_DIR=$(dirname $(dirname "$0"))
 VERSION=${VERSION:-$(git describe --tags --always --dirty || true)}
 EXTRA=""
+# Strip the symbol table and DWARF from release builds: they roughly halve the
+# binary and nothing needs them at runtime. A debug build keeps them for delve.
+LDFLAGS="-s -w"
 
 if [ -n "$DEVLAKE_DEBUG" ]; then
     EXTRA="-gcflags='all=-N -l'"
+    LDFLAGS=""
 fi
 
-go build $EXTRA -ldflags "-X 'github.com/apache/devlake/core/version.Version=$VERSION'" -o $ROOT_DIR/bin/lake $ROOT_DIR/server/
+go build $EXTRA -trimpath -ldflags "$LDFLAGS -X 'github.com/apache/devlake/core/version.Version=$VERSION'" -o $ROOT_DIR/bin/lake $ROOT_DIR/server/

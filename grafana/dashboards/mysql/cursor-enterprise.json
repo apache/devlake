@@ -1,0 +1,1172 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor BugBot Review Analytics",
+      "type": "link",
+      "url": "/d/cursor_bugbot"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "mysql",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- **Use case:** AI code tracking, repo/PR attribution, and conversation insights from Cursor Enterprise Analytics (`/analytics/ai-code/*`, Conversation Insights).\n- **Data source:** Cursor plugin \u2014 requires `key_tier=enterprise` on the connection. Commit-detail cost panels also require `hasAiCodeCommitDetails`.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for billing and adoption; [Cursor BugBot Review Analytics](/d/cursor_bugbot) for automated PR reviews.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 300,
+      "title": "Enterprise AI Code Tracking",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Share of committed lines attributed to TAB, Composer, and non-AI coding from GET /analytics/ai-code/commits (Enterprise API). Requires an enterprise key.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TAB"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Composer"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Non-AI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 301,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE(ts) AS time,\n  metric,\n  SUM(value) AS value\nFROM (\n  SELECT COALESCE(commit_ts, ingested_at, created_at) AS ts,\n    'TAB' AS metric,\n    tab_lines_added AS value\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, ingested_at, created_at),\n    'Composer',\n    composer_lines_added\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  UNION ALL\n  SELECT COALESCE(commit_ts, ingested_at, created_at),\n    'Non-AI',\n    COALESCE(non_ai_lines_added, GREATEST(total_lines_added - tab_lines_added - composer_lines_added, 0))\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n) src\nGROUP BY DATE(ts), metric\nORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Committed Lines by AI Source",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "many"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Distribution of commits by source channel (IDE, CLI, Cloud) from GET /analytics/ai-code/commits",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IDE"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CLI"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cloud"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 302,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'ide' THEN 1 ELSE 0 END) AS IDE,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cli' THEN 1 ELSE 0 END) AS CLI,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) = 'cloud' THEN 1 ELSE 0 END) AS Cloud,\n  SUM(CASE WHEN LOWER(COALESCE(NULLIF(commit_source, ''), 'unknown')) NOT IN ('ide', 'cli', 'cloud') THEN 1 ELSE 0 END) AS Unknown\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Commits by Source",
+      "type": "piechart"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Users ranked by TAB + Composer lines committed in the selected period",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 303,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT user_email AS \"User\",\n  SUM(tab_lines_added + composer_lines_added) AS \"AI Lines Added\",\n  SUM(total_lines_added) AS \"Total Lines Added\",\n  ROUND(SUM(tab_lines_added + composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS \"AI Share %\"\nFROM _tool_cursor_ai_code_commits\nWHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n  AND connection_id = ${connection_id}\n  AND scope_id = '${scope_id}'\nGROUP BY user_email\nHAVING SUM(total_lines_added) > 0\nORDER BY SUM(tab_lines_added + composer_lines_added) DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Contributors by AI-Assisted Lines",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Repositories ranked by AI-assisted committed lines and attributed AI usage cost in the selected period. Cost requires Tier 4 commit-detail data and is deduplicated per conversation.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Share %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 480
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Commits"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Cost (USD)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conversations"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 305,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH conv_cost AS (\n  SELECT conversation_id, SUM(charged_cents) AS cost_cents\n  FROM _tool_cursor_usage_events\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND $__timeFilter(event_time)\n  GROUP BY conversation_id\n),\nrepo_lines AS (\n  SELECT\n    COALESCE(NULLIF(repo_name, ''), 'Unknown') AS repo_name,\n    COUNT(*) AS commit_count,\n    SUM(total_lines_added) AS line_count,\n    ROUND(SUM(tab_lines_added + composer_lines_added) * 100.0 / NULLIF(SUM(total_lines_added), 0), 1) AS ai_share_pct\n  FROM _tool_cursor_ai_code_commits\n  WHERE $__timeFilter(COALESCE(commit_ts, ingested_at, created_at))\n    AND connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n  GROUP BY COALESCE(NULLIF(repo_name, ''), 'Unknown')\n),\nrepo_cost AS (\n  SELECT\n    rc.repo_name,\n    COUNT(DISTINCT rc.conversation_id) AS conversations,\n    SUM(cc.cost_cents) AS cost_cents\n  FROM (\n    SELECT DISTINCT\n      COALESCE(NULLIF(c.repo_name, ''), 'Unknown') AS repo_name,\n      rann.conversation_id\n    FROM _tool_cursor_ai_code_range_annotations rann\n    JOIN _tool_cursor_ai_code_commits c\n      ON c.commit_hash = rann.commit_hash\n      AND c.connection_id = rann.connection_id\n      AND c.scope_id = rann.scope_id\n    WHERE rann.connection_id = ${connection_id}\n      AND rann.scope_id = '${scope_id}'\n      AND rann.conversation_id != ''\n  ) rc\n  JOIN conv_cost cc ON cc.conversation_id = rc.conversation_id\n  GROUP BY rc.repo_name\n)\nSELECT\n  COALESCE(rl.repo_name, rc.repo_name) AS \"Repo\",\n  COALESCE(rl.commit_count, 0) AS \"Commits\",\n  COALESCE(rl.line_count, 0) AS \"Lines\",\n  rl.ai_share_pct AS \"AI Share %\",\n  COALESCE(rc.conversations, 0) AS \"Conversations\",\n  ROUND(COALESCE(rc.cost_cents, 0) / 100, 2) AS \"AI Cost (USD)\"\nFROM repo_lines rl\nLEFT JOIN repo_cost rc ON rc.repo_name = rl.repo_name\nWHERE COALESCE(rl.line_count, 0) > 0 OR COALESCE(rc.cost_cents, 0) > 0\nUNION\nSELECT\n  rc.repo_name,\n  0,\n  0,\n  NULL,\n  rc.conversations,\n  ROUND(rc.cost_cents / 100, 2)\nFROM repo_cost rc\nLEFT JOIN repo_lines rl ON rl.repo_name = rc.repo_name\nWHERE rl.repo_name IS NULL\nORDER BY \"AI Cost (USD)\" DESC, \"Lines\" DESC\nLIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Repos by AI Lines & Cost",
+      "type": "table"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Pull requests with AI line attribution and attributed AI usage cost in the selected period. Requires GitHub/GitLab blueprint data and Tier 4 commit-detail data. Cost is deduplicated per conversation.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Share %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repo"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PR #"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Title"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Commits"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 75
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lines"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "URL"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI Cost (USD)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conversations"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 306,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH conv_cost AS (\n  SELECT conversation_id, SUM(charged_cents) AS cost_cents\n  FROM _tool_cursor_usage_events\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND $__timeFilter(event_time)\n  GROUP BY conversation_id\n),\npr_lines AS (\n  SELECT\n    pr.pull_request_key,\n    pr.status,\n    COALESCE(r.name, c.repo_name) AS repo_name,\n    pr.title,\n    pr.url,\n    COUNT(DISTINCT c.commit_hash) AS commit_count,\n    SUM(c.total_lines_added) AS line_count,\n    ROUND(SUM(c.tab_lines_added + c.composer_lines_added) * 100.0 / NULLIF(SUM(c.total_lines_added), 0), 1) AS ai_share_pct\n  FROM _tool_cursor_ai_code_commits c\n  JOIN (\n    SELECT prc.commit_sha, prc.pull_request_id\n    FROM pull_request_commits prc\n    UNION\n    SELECT pr.merge_commit_sha, pr.id\n    FROM pull_requests pr\n    WHERE pr.merge_commit_sha IS NOT NULL AND pr.merge_commit_sha != ''\n  ) pr_map ON pr_map.commit_sha = c.commit_hash\n  JOIN pull_requests pr ON pr.id = pr_map.pull_request_id\n  LEFT JOIN repos r ON r.id = pr.base_repo_id\n  WHERE $__timeFilter(COALESCE(c.commit_ts, c.ingested_at, c.created_at))\n    AND c.connection_id = ${connection_id}\n    AND c.scope_id = '${scope_id}'\n  GROUP BY COALESCE(r.name, c.repo_name), pr.pull_request_key, pr.title, pr.url, pr.status\n),\npr_cost AS (\n  SELECT\n    pc.pull_request_key,\n    pc.status,\n    pc.repo_name,\n    pc.title,\n    pc.url,\n    COUNT(DISTINCT pc.conversation_id) AS conversations,\n    SUM(cc.cost_cents) AS cost_cents\n  FROM (\n    SELECT DISTINCT\n      pr.pull_request_key,\n      pr.title,\n      pr.status,\n      COALESCE(r.name, c.repo_name) AS repo_name,\n      pr.url,\n      rann.conversation_id\n    FROM _tool_cursor_ai_code_range_annotations rann\n    JOIN _tool_cursor_ai_code_commits c\n      ON c.commit_hash = rann.commit_hash\n      AND c.connection_id = rann.connection_id\n      AND c.scope_id = rann.scope_id\n    JOIN (\n      SELECT prc.commit_sha, prc.pull_request_id\n      FROM pull_request_commits prc\n      UNION\n      SELECT pr.merge_commit_sha, pr.id\n      FROM pull_requests pr\n      WHERE pr.merge_commit_sha IS NOT NULL AND pr.merge_commit_sha != ''\n    ) pr_map ON pr_map.commit_sha = rann.commit_hash\n    JOIN pull_requests pr ON pr.id = pr_map.pull_request_id\n    LEFT JOIN repos r ON r.id = pr.base_repo_id\n    WHERE rann.connection_id = ${connection_id}\n      AND rann.scope_id = '${scope_id}'\n      AND rann.conversation_id != ''\n  ) pc\n  JOIN conv_cost cc ON cc.conversation_id = pc.conversation_id\n  GROUP BY pc.pull_request_key, pc.status, pc.repo_name, pc.title, pc.url\n)\nSELECT\n  COALESCE(pl.pull_request_key, pc.pull_request_key) AS \"PR #\",\n  COALESCE(pl.status, pc.status) AS \"Status\",\n  COALESCE(pl.repo_name, pc.repo_name) AS \"Repo\",\n  COALESCE(pl.title, pc.title) AS \"Title\",\n  COALESCE(pl.url, pc.url) AS \"URL\",\n  COALESCE(pl.commit_count, 0) AS \"Commits\",\n  COALESCE(pl.line_count, 0) AS \"Lines\",\n  pl.ai_share_pct AS \"AI Share %\",\n  COALESCE(pc.conversations, 0) AS \"Conversations\",\n  ROUND(COALESCE(pc.cost_cents, 0) / 100, 2) AS \"AI Cost (USD)\"\nFROM pr_lines pl\nLEFT JOIN pr_cost pc\n  ON pc.pull_request_key = pl.pull_request_key\n  AND pc.repo_name = pl.repo_name\n  AND pc.title = pl.title\n  AND pc.url = pl.url\n  AND pc.status = pl.status\nWHERE COALESCE(pl.line_count, 0) > 0 OR COALESCE(pc.cost_cents, 0) > 0\nUNION\nSELECT\n  pc.pull_request_key,\n  pc.status,\n  pc.repo_name,\n  pc.title,\n  pc.url,\n  0,\n  0,\n  NULL,\n  pc.conversations,\n  ROUND(pc.cost_cents / 100, 2)\nFROM pr_cost pc\nLEFT JOIN pr_lines pl\n  ON pc.pull_request_key = pl.pull_request_key\n  AND pc.repo_name = pl.repo_name\n  AND pc.title = pl.title\n  AND pc.url = pl.url\n  AND pc.status = pl.status\nWHERE pl.pull_request_key IS NULL\nORDER BY \"AI Cost (USD)\" DESC, \"Lines\" DESC\nLIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "PR AI Lines & Cost",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 320,
+      "title": "Conversation Insights",
+      "type": "row"
+    },
+    {
+      "datasource": "mysql",
+      "description": "Work category mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 326,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Category,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'categories'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Category,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Categories",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Category",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Work type mix for the selected dashboard period. KTLO = Keep The Lights On (maintenance, tech debt, dependency updates).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 325,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'ktlo' THEN 'Maintenance (KTLO)'\n      WHEN 'maintenance' THEN 'Maintenance (KTLO)'\n      WHEN 'new_feature' THEN 'New Features'\n      WHEN 'bug' THEN 'Bug Fixing'\n      WHEN 'bug_fix' THEN 'Bug Fixing'\n      ELSE dimension_value\n    END AS `Work Type`,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'workTypes'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT `Work Type`,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Work Types",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Work Type",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Conversation intent mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 321,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT dimension_value AS Intent,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'intents'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY dimension_value\n)\nSELECT Intent,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Conversation Intents",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Intent",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": "mysql",
+      "description": "Task complexity mix for the selected dashboard period (stacked share of conversation counts).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 323,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 12
+        },
+        "valueMode": "color",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": "mysql",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH totals AS (\n  SELECT\n    CASE LOWER(dimension_value)\n      WHEN 'low' THEN 'Low'\n      WHEN 'medium' THEN 'Medium'\n      WHEN 'high' THEN 'High'\n      WHEN 'trivial' THEN 'Trivial'\n      ELSE dimension_value\n    END AS Complexity,\n    SUM(count) AS cnt\n  FROM _tool_cursor_conversation_insights\n  WHERE connection_id = ${connection_id}\n    AND scope_id = '${scope_id}'\n    AND insight_type = 'complexity'\n    AND aggregation_type = 'timeSeries'\n    AND $__timeFilter(metric_date)\n  GROUP BY 1\n)\nSELECT Complexity,\n  ROUND(cnt * 100.0 / NULLIF(SUM(cnt) OVER (), 0), 1) AS `Share %`\nFROM totals\nORDER BY FIELD(Complexity, 'Trivial', 'Low', 'Medium', 'High'), cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Task Complexity",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Complexity",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Share %",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 104,
+      "title": "Diagnostics",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": "mysql",
+          "description": "Row counts and latest timestamps for enterprise Cursor tool tables",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 43
+          },
+          "id": 40,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": "mysql",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT '_tool_cursor_ai_code_commits' AS table_name, COUNT(*) AS row_count, MAX(COALESCE(commit_ts, ingested_at, created_at)) AS latest\nFROM _tool_cursor_ai_code_commits\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_changes', COUNT(*), MAX(COALESCE(ingested_at, created_at))\nFROM _tool_cursor_ai_code_changes\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_range_annotations', COUNT(*), MAX(COALESCE(ingested_at, created_at))\nFROM _tool_cursor_ai_code_range_annotations\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_ai_code_conversations', COUNT(*), MAX(COALESCE(ingested_at, created_at))\nFROM _tool_cursor_ai_code_conversations\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'\nUNION ALL\nSELECT '_tool_cursor_conversation_insights', COUNT(*), MAX(COALESCE(metric_date, period_end))\nFROM _tool_cursor_conversation_insights\nWHERE connection_id = ${connection_id} AND scope_id = '${scope_id}'",
+              "refId": "A"
+            }
+          ],
+          "title": "Data Volume",
+          "type": "table"
+        }
+      ]
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "cursor",
+    "devlake",
+    "ai",
+    "enterprise"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "2",
+          "value": "2"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "team",
+          "value": "team"
+        },
+        "datasource": "mysql",
+        "definition": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE connection_id = ${connection_id} ORDER BY id",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE connection_id = ${connection_id} ORDER BY id",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Cursor Enterprise AI Code & Insights",
+  "uid": "cursor_enterprise",
+  "version": 2,
+  "weekStart": ""
+}

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -271,6 +271,9 @@ fi
 
 echo "Creating datasource via API..."
 DATASOURCE_OK=false
+# The grafana/grafana image (Alpine/busybox) ships no bash, so stay POSIX sh.
+NL='
+'
 for i in $(seq 1 10); do
   # "|| true": a failing curl must not end this script (set -e) and with it the
   # container; the status check below reports the problem instead.
@@ -278,7 +281,8 @@ for i in $(seq 1 10); do
     -H "Content-Type: application/json" \
     -d @"$PAYLOAD_FILE" 2>&1) || true
   STATUS="${RESPONSE##*HTTP_STATUS=}"
-  RESPONSE="${RESPONSE%$'\n'HTTP_STATUS=*}"
+  RESPONSE="${RESPONSE%HTTP_STATUS=*}"
+  RESPONSE="${RESPONSE%"$NL"}"
 
   if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
     # Retrying cannot help: the credentials do not match the Grafana admin.

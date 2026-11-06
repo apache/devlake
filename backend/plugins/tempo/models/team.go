@@ -34,7 +34,7 @@ type TempoTeam struct {
 	Id           int64  `json:"id" gorm:"-" mapstructure:"-"` // JS scope selector compatibility (mirrors TeamId)
 	Key          string `json:"key" mapstructure:"key" gorm:"type:varchar(255)"`
 	Name         string `json:"name" mapstructure:"name" gorm:"type:varchar(255)"`
-	Summary      string `json:"summary" mapstructure:"summary" gorm:"type:varchar(255)"`
+	Summary      string `json:"summary" mapstructure:"summary" gorm:"type:text"`
 }
 
 // AfterFind populates the virtual Id field after reading from DB

@@ -241,6 +241,64 @@ func TestMakeDataSourcePipelinePlanV200(t *testing.T) {
 	assert.Equal(t, expectPlans, actualPlans)
 }
 
+func TestMakeDataSourcePipelinePlanV200ConvertsTimelineRecordsWithCicd(t *testing.T) {
+	data := []struct {
+		Name     string
+		Type     string
+		Private  bool
+		Entities []string
+	}{
+		// only CICD is planned for repositories hosted outside Azure Repos
+		{Name: "Private GitHub Repository", Type: models.RepositoryTypeGithub, Private: true, Entities: plugin.DOMAIN_TYPES},
+		{Name: "Azure DevOps Repository with CICD only", Type: models.RepositoryTypeADO, Private: false, Entities: []string{plugin.DOMAIN_TYPE_CICD}},
+	}
+
+	for _, d := range data {
+		t.Run(d.Name, func(t *testing.T) {
+			actualPlans, err := makePipelinePlanV200(
+				[]plugin.SubTaskMeta{
+					tasks.CollectBuildsMeta,
+					tasks.ExtractApiBuildsMeta,
+					tasks.ConvertBuildsMeta,
+					tasks.CollectJobsMeta,
+					tasks.ExtractApiBuildRecordsMeta,
+					tasks.ConvertApiTimelineRecordsMeta,
+				},
+				&models.AzuredevopsConnection{
+					BaseConnection: api.BaseConnection{
+						Model: common.Model{
+							ID: connectionID,
+						},
+					},
+				},
+				[]*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig]{
+					{
+						Scope: models.AzuredevopsRepo{
+							Id:        azuredevopsRepoId,
+							Type:      d.Type,
+							IsPrivate: d.Private,
+						},
+						ScopeConfig: &models.AzuredevopsScopeConfig{
+							ScopeConfig: common.ScopeConfig{
+								Entities: d.Entities,
+							},
+						},
+					},
+				},
+			)
+			assert.Nil(t, err)
+			assert.Equal(t, []string{
+				tasks.CollectBuildsMeta.Name,
+				tasks.ExtractApiBuildsMeta.Name,
+				tasks.ConvertBuildsMeta.Name,
+				tasks.CollectJobsMeta.Name,
+				tasks.ExtractApiBuildRecordsMeta.Name,
+				tasks.ConvertApiTimelineRecordsMeta.Name,
+			}, actualPlans[0][0].Subtasks)
+		})
+	}
+}
+
 func TestMakeRemoteRepoScopes(t *testing.T) {
 	mockAzuredevopsPlugin(t)
 
