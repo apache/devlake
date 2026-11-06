@@ -93,7 +93,14 @@ func (s *WorkerScheduler) SubmitBlocking(task func() errors.Error) {
 	}
 	s.waitGroup.Add(1)
 	s.checkError(s.pool.Submit(func() {
-		defer s.waitGroup.Done()
+		// Record a panic before Done: the pool's panic handler runs only after
+		// this function has returned, so WaitAsync could return nil first.
+		defer func() {
+			if r := recover(); r != nil {
+				s.checkError(r)
+			}
+			s.waitGroup.Done()
+		}()
 
 		id := atomic.AddInt32(&s.counter, 1)
 		s.logger.Debug("schedulerJob >>> %d started", id)
