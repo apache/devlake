@@ -93,6 +93,14 @@ func (p Azuredevops) GetTablesInfo() []dal.Tabler {
 		&models.AzuredevopsScopeConfig{},
 		&models.AzuredevopsTimelineRecord{},
 		&models.AzuredevopsUser{},
+		&models.AzuredevopsIteration{},
+		&models.AzuredevopsWorkItem{},
+		&models.AzuredevopsWorkItemComment{},
+		&models.AzuredevopsWorkItemUpdate{},
+		&models.AzuredevopsTestPlan{},
+		&models.AzuredevopsTestCase{},
+		&models.AzuredevopsTestRun{},
+		&models.AzuredevopsTestResult{},
 	}
 }
 

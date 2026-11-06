@@ -21,6 +21,7 @@ import (
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
+	"github.com/apache/devlake/plugins/azuredevops_go/models"
 )
 
 func init() {
@@ -48,12 +49,25 @@ func CollectAccounts(taskCtx plugin.SubTaskContext) errors.Error {
 		return nil
 	}
 
+	connectionHelper := api.NewConnectionHelper(taskCtx, nil, "azuredevops_go")
+	connection := &models.AzuredevopsConnection{}
+	err := connectionHelper.FirstById(connection, data.Options.ConnectionId)
+	if err != nil {
+		return err
+	}
+	// Graph users are served by vssps, not the dev.azure.com client used for the rest of the collection.
+	graphConnection := *connection
+	graphConnection.Endpoint = "https://vssps.dev.azure.com/"
+	graphClient, err := CreateApiClient(taskCtx.TaskContext(), &graphConnection)
+	if err != nil {
+		return err
+	}
+	defer graphClient.Release()
+
 	collector, err := api.NewApiCollector(api.ApiCollectorArgs{
-		RawDataSubTaskArgs: *rawDataSubTaskArgs,
-		ApiClient:          data.ApiClient,
-		// The Graph API can only be accessed through vssps.dev.azure.com.
-		// Since we cannot configure the connection host, we need to hardcode it
-		UrlTemplate:           "https://vssps.dev.azure.com/{{ .Params.OrganizationId }}/_apis/graph/users?api-version=7.0-preview.1",
+		RawDataSubTaskArgs:    *rawDataSubTaskArgs,
+		ApiClient:             graphClient,
+		UrlTemplate:           "{{ .Params.OrganizationId }}/_apis/graph/users?api-version=7.0-preview.1",
 		PageSize:              500,
 		GetNextPageCustomData: ExtractContToken,
 		Query:                 BuildPaginator(true),

@@ -53,7 +53,9 @@ func TestMakeScopes(t *testing.T) {
 	mockAzuredevopsPlugin(t)
 
 	actualScopes, err := makeScopeV200(
-		connectionID,
+		&models.AzuredevopsConnection{
+			BaseConnection: api.BaseConnection{Model: common.Model{ID: connectionID}},
+		},
 		[]*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig]{
 			{
 				Scope: models.AzuredevopsRepo{
@@ -62,6 +64,10 @@ func TestMakeScopes(t *testing.T) {
 					},
 					Id:   azuredevopsRepoId,
 					Type: models.RepositoryTypeADO,
+					AzureDevOpsPK: models.AzureDevOpsPK{
+						OrganizationId: "org",
+						ProjectId:      "proj",
+					},
 				},
 				ScopeConfig: &models.AzuredevopsScopeConfig{
 					ScopeConfig: common.ScopeConfig{
@@ -75,14 +81,19 @@ func TestMakeScopes(t *testing.T) {
 	assert.Equal(t, 3, len(actualScopes))
 	assert.Equal(t, actualScopes[0].ScopeId(), expectDomainScopeId)
 	assert.Equal(t, actualScopes[1].ScopeId(), expectDomainScopeId)
-	assert.Equal(t, actualScopes[2].ScopeId(), expectDomainScopeId)
+	assert.Equal(t, "repos", actualScopes[0].TableName())
+	assert.Equal(t, "cicd_scopes", actualScopes[1].TableName())
+	assert.Equal(t, "boards", actualScopes[2].TableName())
+	assert.Equal(t, "azuredevops_go:AzuredevopsRepo:1:org/proj/__project__", actualScopes[2].ScopeId())
 }
 
 func TestMakeScopesWithEmptyEntities(t *testing.T) {
 	mockAzuredevopsPlugin(t)
 
 	actualScopes, err := makeScopeV200(
-		connectionID,
+		&models.AzuredevopsConnection{
+			BaseConnection: api.BaseConnection{Model: common.Model{ID: connectionID}},
+		},
 		[]*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig]{
 			{
 				Scope: models.AzuredevopsRepo{
@@ -91,6 +102,10 @@ func TestMakeScopesWithEmptyEntities(t *testing.T) {
 					},
 					Id:   azuredevopsRepoId,
 					Type: models.RepositoryTypeADO,
+					AzureDevOpsPK: models.AzureDevOpsPK{
+						OrganizationId: "org",
+						ProjectId:      "proj",
+					},
 				},
 				ScopeConfig: &models.AzuredevopsScopeConfig{
 					ScopeConfig: common.ScopeConfig{
@@ -101,8 +116,7 @@ func TestMakeScopesWithEmptyEntities(t *testing.T) {
 		},
 	)
 	assert.Nil(t, err)
-	// empty entities should default to all domain types, producing repo + cicd + board scopes
-	assert.Equal(t, 3, len(actualScopes))
+	assert.Equal(t, 4, len(actualScopes))
 	assert.Equal(t, actualScopes[0].ScopeId(), expectDomainScopeId)
 }
 
@@ -110,7 +124,9 @@ func TestMakeScopesWithCrossEntity(t *testing.T) {
 	mockAzuredevopsPlugin(t)
 
 	actualScopes, err := makeScopeV200(
-		connectionID,
+		&models.AzuredevopsConnection{
+			BaseConnection: api.BaseConnection{Model: common.Model{ID: connectionID}},
+		},
 		[]*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig]{
 			{
 				Scope: models.AzuredevopsRepo{
@@ -119,6 +135,10 @@ func TestMakeScopesWithCrossEntity(t *testing.T) {
 					},
 					Id:   azuredevopsRepoId,
 					Type: models.RepositoryTypeADO,
+					AzureDevOpsPK: models.AzureDevOpsPK{
+						OrganizationId: "org",
+						ProjectId:      "proj",
+					},
 				},
 				ScopeConfig: &models.AzuredevopsScopeConfig{
 					ScopeConfig: common.ScopeConfig{
@@ -129,7 +149,6 @@ func TestMakeScopesWithCrossEntity(t *testing.T) {
 		},
 	)
 	assert.Nil(t, err)
-	// CROSS entity should trigger repo scope creation, plus ticket = board scope
 	assert.Equal(t, 2, len(actualScopes))
 	assert.Equal(t, actualScopes[0].ScopeId(), expectDomainScopeId)
 	assert.Equal(t, "repos", actualScopes[0].TableName())
@@ -250,11 +269,13 @@ func TestMakeRemoteRepoScopes(t *testing.T) {
 		Private        bool
 		ExpectedScopes []string
 	}{
-		{Name: "Azure DevOps Repository", Type: models.RepositoryTypeADO, Private: false, ExpectedScopes: []string{"*code.Repo", "*ticket.Board", "*devops.CicdScope"}},
+		{Name: "Azure DevOps Repository", Type: models.RepositoryTypeADO, Private: false, ExpectedScopes: []string{"*code.Repo", "*devops.CicdScope", "*ticket.Board", "*qa.QaProject"}},
 
-		{Name: "Public GitHub Repository", Type: models.RepositoryTypeGithub, Private: false, ExpectedScopes: []string{"*code.Repo", "*devops.CicdScope"}},
+		{Name: "Public GitHub Repository", Type: models.RepositoryTypeGithub, Private: false, ExpectedScopes: []string{"*code.Repo", "*devops.CicdScope", "*ticket.Board", "*qa.QaProject"}},
 
-		{Name: "Private GitHub Repository", Type: models.RepositoryTypeGithub, Private: true, ExpectedScopes: []string{"*devops.CicdScope"}},
+		{Name: "Private GitHub Repository", Type: models.RepositoryTypeGithub, Private: true, ExpectedScopes: []string{"*devops.CicdScope", "*ticket.Board", "*qa.QaProject"}},
+
+		{Name: "Azure DevOps Project", Type: models.RepositoryTypeProject, Private: false, ExpectedScopes: []string{"*ticket.Board", "*qa.QaProject"}},
 	}
 
 	for _, d := range data {
@@ -263,7 +284,9 @@ func TestMakeRemoteRepoScopes(t *testing.T) {
 			id := strings.ToLower(d.Name)
 			id = strings.ReplaceAll(id, " ", "-")
 			actualScopes, err := makeScopeV200(
-				connectionID,
+				&models.AzuredevopsConnection{
+					BaseConnection: api.BaseConnection{Model: common.Model{ID: connectionID}},
+				},
 				[]*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig]{
 					{
 						Scope: models.AzuredevopsRepo{
@@ -274,11 +297,15 @@ func TestMakeRemoteRepoScopes(t *testing.T) {
 							Type:      d.Type,
 							Name:      d.Name,
 							IsPrivate: d.Private,
+							AzureDevOpsPK: models.AzureDevOpsPK{
+								OrganizationId: "org",
+								ProjectId:      "proj",
+							},
 						},
 						ScopeConfig: &models.AzuredevopsScopeConfig{
 							ScopeConfig: common.ScopeConfig{
 								Entities: []string{plugin.DOMAIN_TYPE_CODE, plugin.DOMAIN_TYPE_TICKET,
-									plugin.DOMAIN_TYPE_CICD, plugin.DOMAIN_TYPE_CODE_REVIEW},
+									plugin.DOMAIN_TYPE_CICD, plugin.DOMAIN_TYPE_CODE_REVIEW, plugin.DOMAIN_TYPE_CODE_QUALITY},
 							},
 						},
 					},

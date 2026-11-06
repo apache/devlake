@@ -23,6 +23,7 @@ type AzureDevOpsPK struct {
 }
 
 const (
-	RepositoryTypeADO    = "TfsGit"
-	RepositoryTypeGithub = "github"
+	RepositoryTypeADO     = "TfsGit"
+	RepositoryTypeGithub  = "github"
+	RepositoryTypeProject = "project"
 )

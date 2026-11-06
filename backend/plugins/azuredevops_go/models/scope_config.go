@@ -31,6 +31,11 @@ type AzuredevopsScopeConfig struct {
 	DeploymentPattern string            `mapstructure:"deploymentPattern,omitempty" json:"deploymentPattern"`
 	ProductionPattern string            `mapstructure:"productionPattern,omitempty" json:"productionPattern"`
 	Refdiff           datatypes.JSONMap `mapstructure:"refdiff,omitempty" json:"refdiff" swaggertype:"object" format:"json"`
+	ProcessTemplate   string            `mapstructure:"processTemplate,omitempty" json:"processTemplate"`
+	TypeMappings      datatypes.JSONMap `mapstructure:"typeMappings,omitempty" json:"typeMappings" swaggertype:"object" format:"json"`
+	StatusMappings    datatypes.JSONMap `mapstructure:"statusMappings,omitempty" json:"statusMappings" swaggertype:"object" format:"json"`
+	CollectChangelogs bool              `mapstructure:"collectChangelogs" json:"collectChangelogs"`
+	CollectComments   bool              `mapstructure:"collectComments" json:"collectComments"`
 }
 
 // GetConnectionId implements plugin.ToolLayerScopeConfig.

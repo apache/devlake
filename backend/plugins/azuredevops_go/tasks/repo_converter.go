@@ -41,7 +41,6 @@ var ConvertRepoMeta = plugin.SubTaskMeta{
 	Description:      "Convert tool layer table _tool_azuredevops_go_repos into domain layer table repos and cicd scope",
 	DomainTypes: []string{
 		plugin.DOMAIN_TYPE_CODE,
-		plugin.DOMAIN_TYPE_TICKET,
 		plugin.DOMAIN_TYPE_CICD,
 		plugin.DOMAIN_TYPE_CODE_REVIEW,
 		plugin.DOMAIN_TYPE_CROSS},
@@ -55,6 +54,9 @@ var ConvertRepoMeta = plugin.SubTaskMeta{
 
 func ConvertRepo(taskCtx plugin.SubTaskContext) errors.Error {
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, models.AzuredevopsRepo{}.TableName())
+	if data.Options.RepositoryType == models.RepositoryTypeProject {
+		return nil
+	}
 	db := taskCtx.GetDal()
 	clauses := []dal.Clause{
 		dal.From(&models.AzuredevopsRepo{}),
@@ -94,7 +96,7 @@ func convertToCicdScopeModel(repo *models.AzuredevopsRepo) *devops.CicdScope {
 		DomainEntity: domainlayer.DomainEntity{
 			Id: didgen.NewDomainIdGenerator(repo).Generate(repo.ConnectionId, repo.Id),
 		},
-		Name:        repo.ProjectId + "/" + repo.Name,
+		Name:        repo.DomainName(),
 		Url:         repo.Url,
 		Description: "", // Not Supported in Azure DevOps
 	}
@@ -107,7 +109,7 @@ func convertToRepositoryModel(repo *models.AzuredevopsRepo) *code.Repo {
 		DomainEntity: domainlayer.DomainEntity{
 			Id: repoIdGen.Generate(repo.ConnectionId, repo.Id),
 		},
-		Name: repo.ProjectId + "/" + repo.Name,
+		Name: repo.DomainName(),
 		Url:  repo.Url,
 	}
 	return domainRepository
