@@ -46,11 +46,13 @@ type CopilotCodeMetrics struct {
 
 // CopilotCliMetrics contains CLI usage breakdown metrics.
 type CopilotCliMetrics struct {
-	CliSessionCount   int `json:"cliSessionCount" gorm:"comment:Number of CLI sessions"`
-	CliRequestCount   int `json:"cliRequestCount" gorm:"comment:Number of CLI requests"`
-	CliPromptCount    int `json:"cliPromptCount" gorm:"comment:Number of CLI prompts"`
-	CliOutputTokenSum int `json:"cliOutputTokenSum" gorm:"comment:Total output tokens from CLI"`
-	CliPromptTokenSum int `json:"cliPromptTokenSum" gorm:"comment:Total prompt tokens from CLI"`
+	CliSessionCount        int     `json:"cliSessionCount" gorm:"comment:Number of CLI sessions"`
+	CliRequestCount        int     `json:"cliRequestCount" gorm:"comment:Number of CLI requests"`
+	CliPromptCount         int     `json:"cliPromptCount" gorm:"comment:Number of CLI prompts"`
+	CliOutputTokenSum      int     `json:"cliOutputTokenSum" gorm:"comment:Total output tokens from CLI"`
+	CliPromptTokenSum      int     `json:"cliPromptTokenSum" gorm:"comment:Total prompt tokens from CLI"`
+	CliLastKnownVersion    string  `json:"cliLastKnownVersion" gorm:"type:varchar(50);comment:Last known Copilot CLI version"`
+	CliAvgTokensPerRequest float64 `json:"cliAvgTokensPerRequest" gorm:"comment:Average tokens consumed per CLI request"`
 }
 
 // GhCopilotEnterpriseDailyMetrics captures daily enterprise-level aggregate Copilot metrics.
@@ -59,7 +61,12 @@ type GhCopilotEnterpriseDailyMetrics struct {
 	ScopeId      string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
 	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
 
-	EnterpriseId            string `json:"enterpriseId" gorm:"type:varchar(100)"`
+	EnterpriseId string `json:"enterpriseId" gorm:"type:varchar(100)"`
+	// OrganizationId identifies the owning org for org-level connections/rows.
+	// Previously always written as "" by ExtractOrgMetrics, making org-level
+	// rows in this shared table unidentifiable without a join back to the
+	// connection/scope config.
+	OrganizationId          string `json:"organizationId" gorm:"type:varchar(100)"`
 	DailyActiveUsers        int    `json:"dailyActiveUsers"`
 	WeeklyActiveUsers       int    `json:"weeklyActiveUsers"`
 	MonthlyActiveUsers      int    `json:"monthlyActiveUsers"`
@@ -68,6 +75,11 @@ type GhCopilotEnterpriseDailyMetrics struct {
 
 	// CLI active users
 	DailyActiveCliUsers int `json:"dailyActiveCliUsers" gorm:"comment:Daily active CLI users"`
+
+	// Copilot cloud agent (coding agent) active user counts
+	DailyActiveCopilotCloudAgentUsers   int `json:"dailyActiveCopilotCloudAgentUsers" gorm:"comment:Daily active Copilot cloud/coding agent users"`
+	WeeklyActiveCopilotCloudAgentUsers  int `json:"weeklyActiveCopilotCloudAgentUsers" gorm:"comment:Weekly active Copilot cloud/coding agent users"`
+	MonthlyActiveCopilotCloudAgentUsers int `json:"monthlyActiveCopilotCloudAgentUsers" gorm:"comment:Monthly active Copilot cloud/coding agent users"`
 
 	// Code review user counts
 	DailyActiveCopilotCodeReviewUsers    int `json:"dailyActiveCopilotCodeReviewUsers"`
@@ -100,6 +112,10 @@ type GhCopilotEnterpriseDailyMetrics struct {
 	PRMedianMinToMergeCopilotReviewed float64 `json:"prMedianMinToMergeCopilotReviewed" gorm:"comment:Median min to merge Copilot-reviewed PRs"`
 	PRTotalCopilotSuggestions         int     `json:"prTotalCopilotSuggestions" gorm:"comment:Total Copilot review suggestions"`
 	PRTotalCopilotAppliedSuggestions  int     `json:"prTotalCopilotAppliedSuggestions" gorm:"comment:Total Copilot applied suggestions"`
+	// PRCopilotSuggestionsByCommentType is a JSON-encoded array of
+	// {comment_type, total_suggestions, total_applied_suggestions}, e.g. the
+	// split between "suggestion" and "explanation" style review comments.
+	PRCopilotSuggestionsByCommentType string `json:"prCopilotSuggestionsByCommentType" gorm:"type:text;comment:JSON breakdown of Copilot PR suggestions by comment type"`
 
 	CopilotActivityMetrics `mapstructure:",squash"`
 	CopilotCliMetrics      `mapstructure:",squash"`
@@ -186,4 +202,40 @@ type GhCopilotMetricsByModelFeature struct {
 
 func (GhCopilotMetricsByModelFeature) TableName() string {
 	return "_tool_copilot_metrics_by_model_feature"
+}
+
+// GhCopilotMetricsByAiAdoptionPhase stores enterprise/org metrics broken down
+// by AI adoption cohort (phase 0-3, see GitHub's totals_by_ai_adoption_phase).
+// Unlike CopilotActivityMetrics elsewhere in this file, most of these fields
+// are per-user averages within the phase rather than sums.
+type GhCopilotMetricsByAiAdoptionPhase struct {
+	ConnectionId uint64    `gorm:"primaryKey" json:"connectionId"`
+	ScopeId      string    `gorm:"primaryKey;type:varchar(255)" json:"scopeId"`
+	Day          time.Time `gorm:"primaryKey;type:date" json:"day"`
+	Phase        int       `gorm:"primaryKey" json:"phase"`
+
+	PhaseVersion int `json:"phaseVersion" gorm:"comment:Adoption-phase classification version, starts at 1"`
+	EngagedUsers int `json:"engagedUsers" gorm:"comment:Users engaged in this phase (2-day-in-28 window)"`
+
+	AvgUserInitiatedInteractionCount float64 `json:"avgUserInitiatedInteractionCount"`
+	AvgCodeGenerationActivityCount   float64 `json:"avgCodeGenerationActivityCount"`
+	AvgCodeAcceptanceActivityCount   float64 `json:"avgCodeAcceptanceActivityCount"`
+	AvgLocAddedSum                   float64 `json:"avgLocAddedSum"`
+	AvgLocDeletedSum                 float64 `json:"avgLocDeletedSum"`
+
+	AvgPullRequestsCreated  float64 `json:"avgPullRequestsCreated"`
+	AvgPullRequestsMerged   float64 `json:"avgPullRequestsMerged"`
+	AvgPullRequestsReviewed float64 `json:"avgPullRequestsReviewed"`
+	AvgMedianMinutesToMerge float64 `json:"avgMedianMinutesToMerge"`
+
+	AvgPullRequestsMinutesToReview float64 `json:"avgPullRequestsMinutesToReview" gorm:"comment:Added 2026-07-07"`
+	AvgPullRequestsReviewCycles    float64 `json:"avgPullRequestsReviewCycles" gorm:"comment:Added 2026-07-07"`
+
+	TotalPullRequestsMerged int `json:"totalPullRequestsMerged" gorm:"comment:True sum (not average), added 2026-06-26"`
+
+	common.NoPKModel
+}
+
+func (GhCopilotMetricsByAiAdoptionPhase) TableName() string {
+	return "_tool_copilot_metrics_by_ai_adoption_phase"
 }

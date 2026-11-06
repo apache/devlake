@@ -99,17 +99,26 @@ func ExtractOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 			var results []interface{}
 
 			// Main daily metrics — same model as enterprise extractor
+			organizationId := dt.OrganizationId
+			if organizationId == "" {
+				organizationId = connection.Organization
+			}
 			dailyMetrics := &models.GhCopilotEnterpriseDailyMetrics{
 				ConnectionId:            data.Options.ConnectionId,
 				ScopeId:                 data.Options.ScopeId,
 				Day:                     day,
-				EnterpriseId:            "", // org-level, no enterprise
+				EnterpriseId:            dt.EnterpriseId,
+				OrganizationId:          organizationId,
 				DailyActiveUsers:        dt.DailyActiveUsers,
 				WeeklyActiveUsers:       dt.WeeklyActiveUsers,
 				MonthlyActiveUsers:      dt.MonthlyActiveUsers,
 				MonthlyActiveChatUsers:  dt.MonthlyActiveChatUsers,
 				MonthlyActiveAgentUsers: dt.MonthlyActiveAgentUsers,
 				DailyActiveCliUsers:     dt.DailyActiveCliUsers,
+
+				DailyActiveCopilotCloudAgentUsers:   dt.DailyActiveCopilotCloudAgentUsers,
+				WeeklyActiveCopilotCloudAgentUsers:  dt.WeeklyActiveCopilotCloudAgentUsers,
+				MonthlyActiveCopilotCloudAgentUsers: dt.MonthlyActiveCopilotCloudAgentUsers,
 
 				DailyActiveCopilotCodeReviewUsers:    dt.DailyActiveCopilotCodeReviewUsers,
 				DailyPassiveCopilotCodeReviewUsers:   dt.DailyPassiveCopilotCodeReviewUsers,
@@ -137,13 +146,15 @@ func ExtractOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			if dt.TotalsByCli != nil {
 				dailyMetrics.CopilotCliMetrics = models.CopilotCliMetrics{
-					CliSessionCount: dt.TotalsByCli.SessionCount,
-					CliRequestCount: dt.TotalsByCli.RequestCount,
-					CliPromptCount:  dt.TotalsByCli.PromptCount,
+					CliSessionCount:     dt.TotalsByCli.SessionCount,
+					CliRequestCount:     dt.TotalsByCli.RequestCount,
+					CliPromptCount:      dt.TotalsByCli.PromptCount,
+					CliLastKnownVersion: dt.TotalsByCli.LastKnownCliVersion,
 				}
 				if dt.TotalsByCli.TokenUsage != nil {
 					dailyMetrics.CopilotCliMetrics.CliOutputTokenSum = dt.TotalsByCli.TokenUsage.OutputTokensSum
 					dailyMetrics.CopilotCliMetrics.CliPromptTokenSum = dt.TotalsByCli.TokenUsage.PromptTokensSum
+					dailyMetrics.CopilotCliMetrics.CliAvgTokensPerRequest = dt.TotalsByCli.TokenUsage.AvgTokensPerRequest
 				}
 			}
 			if dt.PullRequests != nil {
@@ -161,8 +172,37 @@ func ExtractOrgMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 				dailyMetrics.PRMedianMinToMergeCopilotReviewed = dt.PullRequests.MedianMinToMergeCopilotReviewed
 				dailyMetrics.PRTotalCopilotSuggestions = dt.PullRequests.TotalCopilotSuggestions
 				dailyMetrics.PRTotalCopilotAppliedSuggestions = dt.PullRequests.TotalCopilotAppliedSuggestions
+				if len(dt.PullRequests.CopilotSuggestionsByCommentType) > 0 {
+					if b, jsonErr := json.Marshal(dt.PullRequests.CopilotSuggestionsByCommentType); jsonErr == nil {
+						dailyMetrics.PRCopilotSuggestionsByCommentType = string(b)
+					}
+				}
 			}
 			results = append(results, dailyMetrics)
+
+			// By AI adoption phase
+			for _, phase := range dt.TotalsByAiAdoptionPhase {
+				results = append(results, &models.GhCopilotMetricsByAiAdoptionPhase{
+					ConnectionId:                     data.Options.ConnectionId,
+					ScopeId:                          data.Options.ScopeId,
+					Day:                              day,
+					Phase:                            phase.Phase,
+					PhaseVersion:                     phase.Version,
+					EngagedUsers:                     phase.EngagedUsers,
+					AvgUserInitiatedInteractionCount: phase.AvgUserInitiatedInteractionCount,
+					AvgCodeGenerationActivityCount:   phase.AvgCodeGenerationActivityCount,
+					AvgCodeAcceptanceActivityCount:   phase.AvgCodeAcceptanceActivityCount,
+					AvgLocAddedSum:                   phase.AvgLocAddedSum,
+					AvgLocDeletedSum:                 phase.AvgLocDeletedSum,
+					AvgPullRequestsCreated:           phase.AvgPullRequestsCreated,
+					AvgPullRequestsMerged:            phase.AvgPullRequestsMerged,
+					AvgPullRequestsReviewed:          phase.AvgPullRequestsReviewed,
+					AvgMedianMinutesToMerge:          phase.AvgMedianMinutesToMerge,
+					AvgPullRequestsMinutesToReview:   phase.AvgPullRequestsMinutesToReview,
+					AvgPullRequestsReviewCycles:      phase.AvgPullRequestsReviewCycles,
+					TotalPullRequestsMerged:          phase.TotalPullRequestsMerged,
+				})
+			}
 
 			// By IDE
 			for _, ide := range dt.TotalsByIde {
