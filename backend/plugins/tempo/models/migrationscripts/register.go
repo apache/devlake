@@ -25,5 +25,6 @@ import (
 func All() []plugin.MigrationScript {
 	return []plugin.MigrationScript{
 		new(tempoInitTables20240401),
+		new(changeTeamSummaryType),
 	}
 }
