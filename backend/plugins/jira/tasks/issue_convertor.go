@@ -40,6 +40,43 @@ var ConvertIssuesMeta = plugin.SubTaskMeta{
 	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
 }
 
+// convertIssuesInputClauses selects the tool-layer issues that the convertor
+// turns into domain issues/board_issues for one board.
+//
+// On a board SHARED by several DevLake projects, each project collected its own
+// slice of the board (its ExtraJQL result) into _tool_jira_board_issues rows
+// tagged with that project's name. The convertor therefore MUST filter by
+// project_name as well as connection_id + board_id; otherwise a project's run
+// would read every project's rows for the board and stamp them all with its own
+// name, leaking issues across projects.
+//
+// The empty-project_name rows are always included so that pre-feature data
+// (collected before project_name existed) and no-project pipelines keep working.
+func convertIssuesInputClauses(connectionId uint64, boardId uint64, projectName string) []dal.Clause {
+	return []dal.Clause{
+		dal.Select("_tool_jira_issues.*"),
+		dal.From("_tool_jira_issues"),
+		dal.Join(`left join _tool_jira_board_issues
+			on _tool_jira_board_issues.issue_id = _tool_jira_issues.issue_id
+			and _tool_jira_board_issues.connection_id = _tool_jira_issues.connection_id`),
+		dal.Where(
+			`_tool_jira_board_issues.connection_id = ? AND _tool_jira_board_issues.board_id = ?
+				AND (
+					_tool_jira_board_issues.project_name = ?
+					OR NOT EXISTS (
+						SELECT 1 FROM _tool_jira_board_issues b2
+						WHERE b2.connection_id = _tool_jira_board_issues.connection_id
+						  AND b2.board_id = _tool_jira_board_issues.board_id
+						  AND b2.project_name IS NOT NULL AND b2.project_name <> ''
+					)
+				)`,
+			connectionId,
+			boardId,
+			projectName,
+		),
+	}
+}
+
 func ConvertIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 	logger := subtaskCtx.GetLogger()
 	data := subtaskCtx.GetData().(*JiraTaskData)
@@ -61,22 +98,12 @@ func ConvertIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 			Params: JiraApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				BoardId:      data.Options.BoardId,
+				ProjectName:  data.Options.ProjectName,
 			},
 			SubtaskConfig: mappings,
 		},
 		Input: func(stateManager *api.SubtaskStateManager) (dal.Rows, errors.Error) {
-			clauses := []dal.Clause{
-				dal.Select("_tool_jira_issues.*"),
-				dal.From("_tool_jira_issues"),
-				dal.Join(`left join _tool_jira_board_issues
-					on _tool_jira_board_issues.issue_id = _tool_jira_issues.issue_id
-					and _tool_jira_board_issues.connection_id = _tool_jira_issues.connection_id`),
-				dal.Where(
-					"_tool_jira_board_issues.connection_id = ? AND _tool_jira_board_issues.board_id = ?",
-					data.Options.ConnectionId,
-					data.Options.BoardId,
-				),
-			}
+			clauses := convertIssuesInputClauses(data.Options.ConnectionId, data.Options.BoardId, data.Options.ProjectName)
 			if stateManager.IsIncremental() {
 				since := stateManager.GetSince()
 				if since != nil {
@@ -155,8 +182,9 @@ func ConvertIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 				result = append(result, issueAssignee)
 			}
 			boardIssue := &ticket.BoardIssue{
-				BoardId: boardId,
-				IssueId: issue.Id,
+				BoardId:     boardId,
+				IssueId:     issue.Id,
+				ProjectName: data.ProjectName,
 			}
 			result = append(result, boardIssue)
 			return result, nil

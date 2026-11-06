@@ -1,4 +1,5 @@
 sprint_id,issue_id
+jira:JiraSprint:2:30,jira:JiraIssue:2:20001
 jira:JiraSprint:2:17,jira:JiraIssue:2:10079
 jira:JiraSprint:2:7,jira:JiraIssue:2:10063
 jira:JiraSprint:2:7,jira:JiraIssue:2:10064

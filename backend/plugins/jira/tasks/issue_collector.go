@@ -56,6 +56,7 @@ func CollectIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		Params: JiraApiParams{
 			ConnectionId: data.Options.ConnectionId,
 			BoardId:      data.Options.BoardId,
+			ProjectName:  data.Options.ProjectName,
 		},
 		Table: RAW_ISSUE_TABLE,
 	})

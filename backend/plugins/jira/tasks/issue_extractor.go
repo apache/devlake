@@ -69,6 +69,7 @@ func ExtractIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 			Params: JiraApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				BoardId:      data.Options.BoardId,
+				ProjectName:  data.Options.ProjectName,
 			},
 			SubtaskConfig: map[string]any{
 				"typeMappings":    mappings,
@@ -216,6 +217,7 @@ func extractIssues(data *JiraTaskData, mappings *typeMappings, apiIssue *apiv2mo
 		ConnectionId: data.Options.ConnectionId,
 		BoardId:      data.Options.BoardId,
 		IssueId:      issue.IssueId,
+		ProjectName:  data.Options.ProjectName,
 	})
 	// labels
 	labels := apiIssue.Fields.Labels

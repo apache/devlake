@@ -61,5 +61,6 @@ func All() []plugin.MigrationScript {
 		new(addSprintReportTable),
 		new(addRawDataColumnsToSprintReport),
 		new(addJiraOAuth20260907),
+		new(addProjectNameToBoardIssue),
 	}
 }

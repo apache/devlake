@@ -1,4 +1,4 @@
-board_id,issue_id
-incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_01
-incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_02
-incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_04
+board_id,issue_id,project_name
+incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_01,
+incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_02,
+incidentio:IncidentType:1:type_01,incidentio:Incident:1:inc_04,

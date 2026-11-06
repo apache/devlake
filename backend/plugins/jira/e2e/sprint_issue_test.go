@@ -36,8 +36,13 @@ func TestSprintIssueDataFlow(t *testing.T) {
 			BoardId:      8,
 		},
 	}
-	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_jira_sprint_issues.csv", models.JiraSprintIssue{})
-	dataflowTester.FlushTabler(ticket.SprintIssue{})
+	// sprint_issues is built from the board's Sprint Reports. The fixture also
+	// holds rows for another board on the same connection and for the same
+	// board id on another connection; neither may be converted for board 8.
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_jira_sprint_reports_for_sprint_issues.csv", models.JiraSprintReport{})
+	// Pre-existing links: one from board 9, which must survive a board 8 run,
+	// and a stale one from board 8, which must be replaced.
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/sprint_issues_other_board.csv", ticket.SprintIssue{})
 	dataflowTester.Subtask(tasks.ConvertSprintIssuesMeta, taskData)
 
 	dataflowTester.VerifyTable(

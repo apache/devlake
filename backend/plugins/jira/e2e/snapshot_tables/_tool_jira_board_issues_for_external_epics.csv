@@ -1,4 +1,4 @@
-connection_id,board_id,issue_id
-1,93,20708
-1,93,20709
-1,93,20710
+connection_id,board_id,issue_id,project_name
+1,93,20708,
+1,93,20709,
+1,93,20710,
