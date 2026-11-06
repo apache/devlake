@@ -43,7 +43,7 @@ var LinkPrToIssueMeta = plugin.SubTaskMeta{
 func normalizeIssueKey(issueKey string) string {
 	issueKey = strings.ReplaceAll(issueKey, "#", "")
 	issueKey = strings.TrimSpace(issueKey)
-	return issueKey
+	return strings.ToUpper(issueKey)
 }
 
 func clearHistoryData(db dal.Dal, data *LinkerTaskData) errors.Error {
@@ -122,7 +122,7 @@ func LinkPrToIssue(taskCtx plugin.SubTaskContext) errors.Error {
 
 			var clauses = []dal.Clause{
 				dal.From(&ticket.Issue{}),
-				dal.Where("issues.id in ? AND issues.issue_key in ?", projectIssueIds, issueKeys),
+				dal.Where("issues.id in ? AND UPPER(issues.issue_key) in ?", projectIssueIds, issueKeys),
 			}
 
 			if err := db.All(&issues, clauses...); err != nil {

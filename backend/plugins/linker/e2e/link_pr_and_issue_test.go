@@ -71,6 +71,46 @@ func TestLinkPrToIssueWithSharedRepo(t *testing.T) {
 	)
 }
 
+func TestLinkPrToIssueCaseInsensitive(t *testing.T) {
+	var plugin impl.Linker
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "linker", plugin)
+
+	regexpStr := `(?i)\b(PROJ)-\d+\b`
+	taskData := &tasks.LinkerTaskData{
+		Options: &tasks.LinkerOptions{
+			PrToIssueRegexp: regexpStr,
+			ProjectName:     "GitHub1",
+		},
+		PrToIssueRegexp: regexp.MustCompile(regexpStr),
+	}
+
+	dataflowTester.FlushTabler(&ticket.Issue{})
+	dataflowTester.FlushTabler(&code.PullRequest{})
+	dataflowTester.FlushTabler(&crossdomain.ProjectMapping{})
+	dataflowTester.FlushTabler(&ticket.BoardIssue{})
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/case_issues.csv", &ticket.Issue{})
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/case_pull_requests.csv", &code.PullRequest{})
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/case_project_mapping.csv", &crossdomain.ProjectMapping{})
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/case_board_issues.csv", &ticket.BoardIssue{})
+
+	dataflowTester.FlushTabler(&crossdomain.PullRequestIssue{})
+	dataflowTester.Subtask(tasks.LinkPrToIssueMeta, taskData)
+	dataflowTester.VerifyTable(
+		crossdomain.PullRequestIssue{},
+		"./snapshot_tables/case_pull_request_issues.csv",
+		[]string{
+			"pull_request_id",
+			"pull_request_key",
+			"issue_id",
+			"issue_key",
+			"_raw_data_params",
+			"_raw_data_table",
+			"_raw_data_id",
+			"_raw_data_remark",
+		},
+	)
+}
+
 func TestLinkPrToIssue(t *testing.T) {
 	var plugin impl.Linker
 	dataflowTester := e2ehelper.NewDataFlowTester(t, "linker", plugin)
