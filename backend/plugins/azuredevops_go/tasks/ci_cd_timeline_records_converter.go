@@ -39,7 +39,7 @@ var ConvertApiTimelineRecordsMeta = plugin.SubTaskMeta{
 	EntryPoint:       ConvertApiTimelineRecords,
 	EnabledByDefault: true,
 	Description:      "Convert tool layer table azuredevops_timeline_records into domain layer table cicd_tasks",
-	DomainTypes:      []string{plugin.DOMAIN_TYPE_CODE_REVIEW},
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_CICD},
 	DependencyTables: []string{
 		models.AzuredevopsTimelineRecord{}.TableName(),
 	},
