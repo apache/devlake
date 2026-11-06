@@ -130,8 +130,7 @@ func CollectComments(taskCtx plugin.SubTaskContext) errors.Error {
 			return query, variables, nil
 		},
 		GetPageInfo: func(iQuery interface{}, args *helper.GraphqlCollectorArgs) (*helper.GraphqlQueryPageInfo, error) {
-			query := iQuery.(*GraphqlQueryCommentWrapper)
-			return query.Issue.Comments.PageInfo, nil
+			return commentsPageInfo(iQuery.(*GraphqlQueryCommentWrapper)), nil
 		},
 		ResponseParser: func(queryWrapper interface{}) (messages []json.RawMessage, err errors.Error) {
 			query := queryWrapper.(*GraphqlQueryCommentWrapper)
