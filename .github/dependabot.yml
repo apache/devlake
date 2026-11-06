@@ -117,6 +117,7 @@ updates:
       - /backend/python
       - /backend/python/pydevlake
       - /backend/python/plugins/azuredevops
+      - /backend/python/plugins/glpi
       - /backend/python/plugins/redmine
       - /backend/python/plugins/zephyr
       - /backend/python/test/fakeplugin

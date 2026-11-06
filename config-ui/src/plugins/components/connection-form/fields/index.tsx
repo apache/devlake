@@ -25,6 +25,7 @@ import { ConnectionProxy } from './proxy';
 import { ConnectionRateLimit } from './rate-limit';
 import { ConnectionAppId } from './app-id';
 import { ConnectionSecretKey } from './secret-key';
+import { ConnectionTimezone } from './timezone';
 
 interface Props {
   type: 'create' | 'update';
@@ -86,6 +87,8 @@ export const Form = ({ type, name, fields, initialValues, values, errors, setVal
           return <ConnectionProxy key={key} {...getProps('proxy')} {...field} />;
         case 'rateLimitPerHour':
           return <ConnectionRateLimit key={key} {...getProps('rateLimitPerHour', 0)} {...field} />;
+        case 'timezone':
+          return <ConnectionTimezone key={key} {...getProps('timezone')} {...field} />;
         default:
           return null;
       }

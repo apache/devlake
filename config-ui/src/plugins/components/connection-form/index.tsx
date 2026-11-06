@@ -64,6 +64,7 @@ const buildUpdateTestPayload = (connection: any, values: any, customHeaders: ICu
   organization: isEqual(connection?.organization, values.organization) ? undefined : values.organization,
   enterprise: isEqual(connection?.enterprise, values.enterprise) ? undefined : values.enterprise,
   customHeaders: isEqual(connection?.customHeaders, customHeaders) ? undefined : customHeaders,
+  timezone: isEqual(connection?.timezone, values.timezone) ? undefined : values.timezone,
 });
 
 const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: ICustomHeader[] | undefined) =>
@@ -94,6 +95,7 @@ const buildCreateTestPayload = (initialValues: any, values: any, customHeaders: 
     'organization',
     'enterprise',
     'customHeaders',
+    'timezone',
   ]);
 
 interface Props {
