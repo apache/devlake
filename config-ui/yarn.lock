@@ -19,20 +19,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ahooksjs/use-url-state@npm:^3.5.1":
-  version: 3.5.1
-  resolution: "@ahooksjs/use-url-state@npm:3.5.1"
-  dependencies:
-    ahooks: "npm:^3.4.1"
-    query-string: "npm:^6.9.0"
-    tslib: "npm:^2.4.1"
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    react-router: ^5.0.0 || ^6.0.0
-  checksum: 10c0/769640b65f4d3bddae67486db10957ed7ca6170e811830ccd688346ea168e5a0465118907965026b1c84bcd515d50c5c11c61a3c1306cb9b61b75caafb4ba562
-  languageName: node
-  linkType: hard
-
 "@ant-design/colors@npm:^8.0.1":
   version: 8.0.1
   resolution: "@ant-design/colors@npm:8.0.1"
@@ -2480,25 +2466,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ahooks@npm:^3.4.1":
-  version: 3.10.0
-  resolution: "ahooks@npm:3.10.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.21.0"
-    dayjs: "npm:^1.9.1"
-    js-cookie: "npm:^3.0.5"
-    lodash: "npm:^4.17.21"
-    react-fast-compare: "npm:^3.2.2"
-    resize-observer-polyfill: "npm:^1.5.1"
-    screenfull: "npm:^5.0.0"
-    tslib: "npm:^2.4.1"
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/80a4c7a6b565b79d65370d4eb3c100f64ffff99f9d06bd9e0774240f845356b3a3bc19c31468ceadb2232e98721732beddd3f2bb2579cc8b430df1bba182ad2b
-  languageName: node
-  linkType: hard
-
 "ajv@npm:^6.14.0":
   version: 6.15.0
   resolution: "ajv@npm:6.15.0"
@@ -3042,7 +3009,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "config-ui@workspace:."
   dependencies:
-    "@ahooksjs/use-url-state": "npm:^3.5.1"
     "@ant-design/icons": "npm:6.3.4"
     "@eslint/js": "npm:^10.0.1"
     "@reduxjs/toolkit": "npm:2.13.0"
@@ -3319,13 +3285,6 @@ __metadata:
   dependencies:
     character-entities: "npm:^2.0.0"
   checksum: 10c0/66a9fc5d9b5385a2b3675c69ba0d8e893393d64057f7dbbb585265bb4fc05ec513d76943b8e5aac7d8016d20eea4499322cbf4cd6d54b466976b78f3a7587a4c
-  languageName: node
-  linkType: hard
-
-"decode-uri-component@npm:^0.2.0":
-  version: 0.2.2
-  resolution: "decode-uri-component@npm:0.2.2"
-  checksum: 10c0/1f4fa54eb740414a816b3f6c24818fbfcabd74ac478391e9f4e2282c994127db02010ce804f3d08e38255493cfe68608b3f5c8e09fd6efc4ae46c807691f7a31
   languageName: node
   linkType: hard
 
@@ -3946,13 +3905,6 @@ __metadata:
   version: 2.0.5
   resolution: "file-saver@npm:2.0.5"
   checksum: 10c0/0a361f683786c34b2574aea53744cb70d0a6feb0fa5e3af00f2fcb6c9d40d3049cc1470e38c6c75df24219f247f6fb3076f86943958f580e62ee2ffe897af8b1
-  languageName: node
-  linkType: hard
-
-"filter-obj@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "filter-obj@npm:1.1.0"
-  checksum: 10c0/071e0886b2b50238ca5026c5bbf58c26a7c1a1f720773b8c7813d16ba93d0200de977af14ac143c5ac18f666b2cfc83073f3a5fe6a4e996c49e0863d5500fccf
   languageName: node
   linkType: hard
 
@@ -6091,18 +6043,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"query-string@npm:^6.9.0":
-  version: 6.14.1
-  resolution: "query-string@npm:6.14.1"
-  dependencies:
-    decode-uri-component: "npm:^0.2.0"
-    filter-obj: "npm:^1.1.0"
-    split-on-first: "npm:^1.0.0"
-    strict-uri-encode: "npm:^2.0.0"
-  checksum: 10c0/900e0fa788000e9dc5f929b6f4141742dcf281f02d3bab9714bc83bea65fab3de75169ea8d61f19cda996bc0dcec72e156efe3c5614c6bce65dcf234ac955b14
-  languageName: node
-  linkType: hard
-
 "react-copy-to-clipboard@npm:5.1.1":
   version: 5.1.1
   resolution: "react-copy-to-clipboard@npm:5.1.1"
@@ -6732,13 +6672,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split-on-first@npm:^1.0.0":
-  version: 1.1.0
-  resolution: "split-on-first@npm:1.1.0"
-  checksum: 10c0/56df8344f5a5de8521898a5c090023df1d8b8c75be6228f56c52491e0fc1617a5236f2ac3a066adb67a73231eac216ccea7b5b4a2423a543c277cb2f48d24c29
-  languageName: node
-  linkType: hard
-
 "std-env@npm:^4.3.0":
   version: 4.3.0
   resolution: "std-env@npm:4.3.0"
@@ -6753,13 +6686,6 @@ __metadata:
     es-errors: "npm:^1.3.0"
     internal-slot: "npm:^1.1.0"
   checksum: 10c0/de4e45706bb4c0354a4b1122a2b8cc45a639e86206807ce0baf390ee9218d3ef181923fa4d2b67443367c491aa255c5fbaa64bb74648e3c5b48299928af86c09
-  languageName: node
-  linkType: hard
-
-"strict-uri-encode@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "strict-uri-encode@npm:2.0.0"
-  checksum: 10c0/010cbc78da0e2cf833b0f5dc769e21ae74cdc5d5f5bd555f14a4a4876c8ad2c85ab8b5bdf9a722dc71a11dcd3184085e1c3c0bd50ec6bb85fffc0f28cf82597d
   languageName: node
   linkType: hard
 

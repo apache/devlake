@@ -24,7 +24,6 @@
     ]
   },
   "dependencies": {
-    "@ahooksjs/use-url-state": "^3.5.1",
     "@ant-design/icons": "6.3.4",
     "@reduxjs/toolkit": "2.13.0",
     "ahooks": "3.11.0",
