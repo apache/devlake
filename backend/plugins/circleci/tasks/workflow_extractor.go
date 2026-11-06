@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -37,16 +35,18 @@ var ExtractWorkflowsMeta = plugin.SubTaskMeta{
 }
 
 func ExtractWorkflows(taskCtx plugin.SubTaskContext) errors.Error {
-	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_WORKFLOW_TABLE)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: *rawDataSubTaskArgs,
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			userRes := models.CircleciWorkflow{}
-			err := errors.Convert(json.Unmarshal(row.Data, &userRes))
-			if err != nil {
-				return nil, err
-			}
-			toolL := userRes
+	data := taskCtx.GetData().(*CircleciTaskData)
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[models.CircleciWorkflow]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_WORKFLOW_TABLE,
+			Params: models.CircleciApiParams{
+				ConnectionId: data.Options.ConnectionId,
+				ProjectSlug:  data.Options.ProjectSlug,
+			},
+		},
+		Extract: func(userRes *models.CircleciWorkflow, row *api.RawData) ([]any, errors.Error) {
+			toolL := *userRes
 			toolL.ConnectionId = data.Options.ConnectionId
 			toolL.ProjectSlug = data.Options.ProjectSlug
 			if userRes.CreatedDate != nil && userRes.StoppedAt != nil {
@@ -57,7 +57,7 @@ func ExtractWorkflows(taskCtx plugin.SubTaskContext) errors.Error {
 					toolL.DurationSec = durationSec
 				}
 			}
-			return []interface{}{
+			return []any{
 				&toolL,
 			}, nil
 		},
