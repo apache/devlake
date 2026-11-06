@@ -20,6 +20,7 @@ package tasks
 import (
 	"encoding/json"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -46,30 +47,29 @@ type TempoTeamResponse struct {
 func ExtractTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*TempoTaskData)
 
+	// The extracted teams are the team scopes themselves, which the extractor
+	// re-creates: keep the scope config users assigned to them.
+	clauses := []dal.Clause{dal.Where("connection_id = ?", data.Options.ConnectionId)}
+	if data.Options.TeamId != 0 {
+		clauses = append(clauses, dal.Where("team_id = ?", data.Options.TeamId))
+	}
+	var existingTeams []models.TempoTeam
+	err := taskCtx.GetDal().All(&existingTeams, clauses...)
+	if err != nil {
+		return err
+	}
+	scopeConfigIds := make(map[int64]uint64, len(existingTeams))
+	for _, team := range existingTeams {
+		scopeConfigIds[team.TeamId] = team.ScopeConfigId
+	}
+
 	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
-			Params: models.TempoApiParams{
-				ConnectionId: data.Options.ConnectionId,
-			},
-			Table: RAW_TEAM_TABLE,
-		},
+		RawDataSubTaskArgs: teamRawDataSubTaskArgs(taskCtx, data.Options),
 		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			var apiTeam TempoTeamResponse
-			err := errors.Convert(json.Unmarshal(row.Data, &apiTeam))
-			if err != nil {
+			team, err := extractTeam(row.Data, data.Options, scopeConfigIds)
+			if err != nil || team == nil {
 				return nil, err
 			}
-
-			// Transform to tool layer model
-			team := &models.TempoTeam{
-				TeamId:  apiTeam.Id,
-				Key:     apiTeam.Key,
-				Name:    apiTeam.Name,
-				Summary: apiTeam.Summary,
-			}
-			team.ConnectionId = data.Options.ConnectionId
-
 			return []interface{}{team}, nil
 		},
 	})
@@ -79,4 +79,28 @@ func ExtractTeams(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return extractor.Execute()
+}
+
+// extractTeam returns nil for a team other than the team of this scope, so
+// that collecting one team scope doesn't add every Tempo team as a scope.
+func extractTeam(data []byte, opts *TempoOptions, scopeConfigIds map[int64]uint64) (*models.TempoTeam, errors.Error) {
+	var apiTeam TempoTeamResponse
+	err := errors.Convert(json.Unmarshal(data, &apiTeam))
+	if err != nil {
+		return nil, err
+	}
+	if opts.TeamId != 0 && apiTeam.Id != opts.TeamId {
+		return nil, nil
+	}
+
+	// Transform to tool layer model
+	team := &models.TempoTeam{
+		TeamId:  apiTeam.Id,
+		Key:     apiTeam.Key,
+		Name:    apiTeam.Name,
+		Summary: apiTeam.Summary,
+	}
+	team.ConnectionId = opts.ConnectionId
+	team.ScopeConfigId = scopeConfigIds[apiTeam.Id]
+	return team, nil
 }

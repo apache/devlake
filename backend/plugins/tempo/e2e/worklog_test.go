@@ -102,3 +102,32 @@ func TestTeamDataFlow(t *testing.T) {
 		),
 	)
 }
+
+func TestTeamScopeExtraction(t *testing.T) {
+	var plugin impl.Tempo
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "tempo", plugin)
+
+	taskData := &tasks.TempoTaskData{
+		Options: &tasks.TempoOptions{
+			ConnectionId: 1,
+			TeamId:       71,
+		},
+	}
+
+	// two team scopes with scope configs; only team 71 is extracted
+	dataflowTester.ImportCsvIntoTabler("./snapshot_tables/_tool_tempo_teams_scopes.csv", &models.TempoTeam{})
+	dataflowTester.ImportCsvIntoRawTable("./raw_tables/_raw_tempo_api_teams_team_71.csv", "_raw_tempo_api_teams")
+	dataflowTester.Subtask(tasks.ExtractTeamsMeta, taskData)
+	dataflowTester.VerifyTable(
+		models.TempoTeam{},
+		"./snapshot_tables/_tool_tempo_teams_team_71.csv",
+		e2ehelper.ColumnWithRawData(
+			"connection_id",
+			"team_id",
+			"scope_config_id",
+			"name",
+			"summary",
+			"key",
+		),
+	)
+}
