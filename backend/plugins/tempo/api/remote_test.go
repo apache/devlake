@@ -26,20 +26,34 @@ import (
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
+	dsmodels "github.com/apache/devlake/helpers/pluginhelper/api/models"
 	"github.com/apache/devlake/plugins/tempo/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// fakeTempoClient answers every GET with the same body and records the query.
+// fakeTempoClient answers every GET with the same body, or with the body of
+// the requested offset (0 by default) when pages is set, and records the
+// queries.
 type fakeTempoClient struct {
-	body  string
-	query url.Values
+	body    string
+	pages   map[string]string
+	query   url.Values
+	queries []url.Values
 }
 
 func (c *fakeTempoClient) Get(_ string, query url.Values, _ http.Header) (*http.Response, errors.Error) {
 	c.query = query
-	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(c.body))}, nil
+	c.queries = append(c.queries, query)
+	body := c.body
+	if c.pages != nil {
+		offset := query.Get("offset")
+		if offset == "" {
+			offset = "0"
+		}
+		body = c.pages[offset]
+	}
+	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body))}, nil
 }
 
 func (c *fakeTempoClient) Post(string, url.Values, interface{}, http.Header) (*http.Response, errors.Error) {
@@ -91,4 +105,50 @@ func TestListTempoRemoteTeamsPagination(t *testing.T) {
 		assert.Equal(t, "2", client.query.Get("offset"))
 		assert.Nil(t, nextPage)
 	})
+}
+
+// two pages of GET /4/teams (PageableTeam): the first links the second
+var twoTeamPages = map[string]string{
+	"0": `{
+		"self": "https://api.tempo.io/4/teams?offset=0&limit=50",
+		"metadata": {"count": 2, "offset": 0, "limit": 50,
+			"next": "https://api.tempo.io/4/teams?offset=50&limit=50"},
+		"results": [
+			{"id": 17, "name": "Backend", "summary": "", "key": ""},
+			{"id": 71, "name": "Frontend", "summary": "", "key": ""}
+		]
+	}`,
+	"50": `{
+		"self": "https://api.tempo.io/4/teams?offset=50&limit=50",
+		"metadata": {"count": 1, "offset": 50, "limit": 50,
+			"previous": "https://api.tempo.io/4/teams?offset=0&limit=50"},
+		"results": [{"id": 90, "name": "Backend QA", "summary": "", "key": ""}]
+	}`,
+}
+
+func TestListAllTempoTeams(t *testing.T) {
+	client := &fakeTempoClient{pages: twoTeamPages}
+	teams, err := listAllTempoTeams(client, url.Values{"name": {"x"}})
+	require.NoError(t, err)
+	require.Len(t, teams, 3)
+	assert.Equal(t, int64(17), teams[0].Id)
+	assert.Equal(t, int64(90), teams[2].Id)
+	require.Len(t, client.queries, 2)
+	assert.Equal(t, "0", client.queries[0].Get("offset"))
+	assert.Equal(t, "50", client.queries[1].Get("offset"))
+	assert.Equal(t, "50", client.queries[1].Get("limit"))
+	assert.Equal(t, "x", client.queries[1].Get("name"))
+}
+
+func TestSearchTempoRemoteTeamsSearchesEveryPage(t *testing.T) {
+	client := &fakeTempoClient{pages: twoTeamPages}
+	children, err := searchTempoRemoteTeams(client, &dsmodels.DsRemoteApiScopeSearchParams{
+		Search: "backend", Page: 1, PageSize: 50,
+	})
+	require.NoError(t, err)
+	require.Len(t, children, 2)
+	assert.Equal(t, "17", children[0].Id)
+	// on the second page of the Tempo API
+	assert.Equal(t, "90", children[1].Id)
+	assert.Equal(t, "backend", client.query.Get("name"))
 }
