@@ -93,6 +93,7 @@ func RegisterRouter(r *gin.Engine, basicRes context.BasicRes) {
 	r.GET(auth.PathCallback, auth.Callback)
 	r.POST(auth.PathLogout, auth.Logout)
 	r.GET(auth.PathUserInfo, auth.UserInfo)
+	r.GET(auth.PathSwitchAccount, auth.SwitchAccount)
 
 	// mount all api resources for all plugins
 	resources, err := services.GetPluginsApiResources()

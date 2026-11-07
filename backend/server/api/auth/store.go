@@ -37,6 +37,9 @@ type AuthSession struct {
 	ExpiresAt  time.Time  `gorm:"index" json:"expiresAt"`
 	RevokedAt  *time.Time `gorm:"index" json:"revokedAt,omitempty"`
 	LastSeenAt time.Time  `json:"lastSeenAt"`
+	// IDToken is the raw id_token from login, kept only to send as
+	// id_token_hint on RP-initiated logout. Cleared on revocation.
+	IDToken string `gorm:"type:text" json:"-"`
 }
 
 func (AuthSession) TableName() string { return "auth_sessions" }
@@ -45,10 +48,26 @@ func CreateSession(db dal.Dal, s *AuthSession) errors.Error {
 	return db.Create(s)
 }
 
-// RevokeSession marks the session row revoked. No-op if no row matches.
+// RevokeSession marks the session row revoked and drops its id_token.
+// No-op if no row matches.
 func RevokeSession(db dal.Dal, jti string) errors.Error {
 	now := time.Now()
-	return db.UpdateColumn(&AuthSession{}, "revoked_at", now, dal.Where("jti = ?", jti))
+	return db.UpdateColumns(&AuthSession{}, []dal.DalSet{
+		{ColumnName: "revoked_at", Value: now},
+		{ColumnName: "id_token", Value: ""},
+	}, dal.Where("jti = ?", jti))
+}
+
+// GetSessionIDToken returns the id_token stored for jti, or "" if none.
+func GetSessionIDToken(db dal.Dal, jti string) (string, errors.Error) {
+	var row AuthSession
+	if err := db.First(&row, dal.Select("id_token"), dal.Where("jti = ?", jti)); err != nil {
+		if db.IsErrorNotFound(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return row.IDToken, nil
 }
 
 // UpdateLastSeen records that the session was used. Throttled by the caller

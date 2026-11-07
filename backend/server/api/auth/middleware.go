@@ -44,6 +44,7 @@ var publicPaths = map[string]struct{}{
 	PathCallback:            {},
 	PathLogout:              {},
 	PathUserInfo:            {},
+	PathSwitchAccount:       {},
 }
 
 func OIDCAuthentication() gin.HandlerFunc { return defaultService.OIDCAuthentication() }

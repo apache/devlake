@@ -44,11 +44,54 @@ type StatePayload struct {
 // EncodeState seals a StatePayload with AES-GCM (key derived from
 // SESSION_SECRET via SHA-256) and returns a URL-safe base64 string.
 func EncodeState(secret []byte, p *StatePayload) (string, error) {
+	return sealJSON(secret, p)
+}
+
+// DecodeState reverses EncodeState and rejects payloads older than StateCookieMaxAge.
+func DecodeState(secret []byte, encoded string) (*StatePayload, error) {
+	var p StatePayload
+	if err := openJSON(secret, encoded, &p); err != nil {
+		return nil, fmt.Errorf("state %w", err)
+	}
+	if time.Since(p.IssuedAt) > StateCookieMaxAge {
+		return nil, fmt.Errorf("state expired")
+	}
+	return &p, nil
+}
+
+// LogoutHintPayload is encrypted into the logout-hint cookie. It lets the
+// switch-account endpoint end the IdP session of a user whose login was
+// rejected by DevLake (no DevLake session exists in that case).
+type LogoutHintPayload struct {
+	Provider string    `json:"v"`
+	IDToken  string    `json:"i"`
+	IssuedAt time.Time `json:"t"`
+}
+
+// EncodeLogoutHint seals a LogoutHintPayload like EncodeState.
+func EncodeLogoutHint(secret []byte, p *LogoutHintPayload) (string, error) {
+	return sealJSON(secret, p)
+}
+
+// DecodeLogoutHint reverses EncodeLogoutHint and rejects payloads older
+// than LogoutHintCookieMaxAge.
+func DecodeLogoutHint(secret []byte, encoded string) (*LogoutHintPayload, error) {
+	var p LogoutHintPayload
+	if err := openJSON(secret, encoded, &p); err != nil {
+		return nil, fmt.Errorf("logout hint %w", err)
+	}
+	if time.Since(p.IssuedAt) > LogoutHintCookieMaxAge {
+		return nil, fmt.Errorf("logout hint expired")
+	}
+	return &p, nil
+}
+
+func sealJSON(secret []byte, v any) (string, error) {
 	gcm, err := newGCM(secret)
 	if err != nil {
 		return "", err
 	}
-	plaintext, err := json.Marshal(p)
+	plaintext, err := json.Marshal(v)
 	if err != nil {
 		return "", err
 	}
@@ -60,32 +103,27 @@ func EncodeState(secret []byte, p *StatePayload) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(ciphertext), nil
 }
 
-// DecodeState reverses EncodeState and rejects payloads older than StateCookieMaxAge.
-func DecodeState(secret []byte, encoded string) (*StatePayload, error) {
+func openJSON(secret []byte, encoded string, v any) error {
 	gcm, err := newGCM(secret)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(encoded)
 	if err != nil {
-		return nil, fmt.Errorf("state decode: %w", err)
+		return fmt.Errorf("decode: %w", err)
 	}
 	if len(raw) < gcm.NonceSize() {
-		return nil, fmt.Errorf("state too short")
+		return fmt.Errorf("too short")
 	}
 	nonce, ciphertext := raw[:gcm.NonceSize()], raw[gcm.NonceSize():]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return nil, fmt.Errorf("state decrypt: %w", err)
+		return fmt.Errorf("decrypt: %w", err)
 	}
-	var p StatePayload
-	if err := json.Unmarshal(plaintext, &p); err != nil {
-		return nil, fmt.Errorf("state unmarshal: %w", err)
+	if err := json.Unmarshal(plaintext, v); err != nil {
+		return fmt.Errorf("unmarshal: %w", err)
 	}
-	if time.Since(p.IssuedAt) > StateCookieMaxAge {
-		return nil, fmt.Errorf("state expired")
-	}
-	return &p, nil
+	return nil
 }
 
 // NewNonce returns a 24-char base64 random string suitable for the OIDC

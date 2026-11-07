@@ -132,3 +132,64 @@ func TestLoadConfigRequiresSessionSecretForOIDC(t *testing.T) {
 		t.Fatal("LoadConfig should reject OIDC-enabled config without SESSION_SECRET")
 	}
 }
+
+func oidcTestViper() *viper.Viper {
+	v := viper.New()
+	v.Set("AUTH_ENABLED", true)
+	v.Set("OIDC_ENABLED", true)
+	v.Set("SESSION_SECRET", "test-secret-with-at-least-32-bytes!")
+	v.Set("OIDC_PROVIDERS", "keycloak")
+	v.Set("OIDC_KEYCLOAK_ISSUER_URL", "https://idp.example.com/realms/company")
+	v.Set("OIDC_KEYCLOAK_CLIENT_ID", "devlake")
+	v.Set("OIDC_KEYCLOAK_CLIENT_SECRET", "secret")
+	v.Set("OIDC_KEYCLOAK_REDIRECT_URL", "https://devlake.example.com:8443/api/auth/callback")
+	return v
+}
+
+func TestLoadConfigPostLogoutRedirectDefaultsToRedirectOrigin(t *testing.T) {
+	cfg, err := LoadConfig(basicResStub{cfg: oidcTestViper()})
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if got := cfg.Providers["keycloak"].PostLogoutRedirectURL; got != "https://devlake.example.com:8443/" {
+		t.Fatalf("PostLogoutRedirectURL = %q", got)
+	}
+}
+
+func TestLoadConfigPostLogoutRedirectExplicit(t *testing.T) {
+	v := oidcTestViper()
+	v.Set("OIDC_KEYCLOAK_POST_LOGOUT_REDIRECT_URL", "https://devlake.example.com/devlake/")
+	cfg, err := LoadConfig(basicResStub{cfg: v})
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if got := cfg.Providers["keycloak"].PostLogoutRedirectURL; got != "https://devlake.example.com/devlake/" {
+		t.Fatalf("PostLogoutRedirectURL = %q", got)
+	}
+}
+
+func TestLoadConfigRejectsInvalidURLs(t *testing.T) {
+	cases := map[string]string{
+		"OIDC_KEYCLOAK_POST_LOGOUT_REDIRECT_URL": "/relative",
+		"OIDC_ACCESS_REQUEST_URL":                "javascript:alert(1)",
+	}
+	for key, value := range cases {
+		v := oidcTestViper()
+		v.Set(key, value)
+		if _, err := LoadConfig(basicResStub{cfg: v}); err == nil {
+			t.Errorf("LoadConfig should reject %s=%q", key, value)
+		}
+	}
+}
+
+func TestLoadConfigAccessRequestURL(t *testing.T) {
+	v := oidcTestViper()
+	v.Set("OIDC_ACCESS_REQUEST_URL", "https://intranet.example.com/devlake-access")
+	cfg, err := LoadConfig(basicResStub{cfg: v})
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if cfg.AccessRequestURL != "https://intranet.example.com/devlake-access" {
+		t.Fatalf("AccessRequestURL = %q", cfg.AccessRequestURL)
+	}
+}

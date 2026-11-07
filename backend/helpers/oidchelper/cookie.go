@@ -52,6 +52,14 @@ func ClearStateCookie(c *gin.Context, cfg *Config) {
 	writeCookie(c, cfg, StateCookieName, "", -1, true)
 }
 
+func SetLogoutHintCookie(c *gin.Context, cfg *Config, value string) {
+	writeCookie(c, cfg, LogoutHintCookieName, value, int(LogoutHintCookieMaxAge.Seconds()), true)
+}
+
+func ClearLogoutHintCookie(c *gin.Context, cfg *Config) {
+	writeCookie(c, cfg, LogoutHintCookieName, "", -1, true)
+}
+
 // SetCSRFCookie writes the CSRF token. Not HttpOnly so that JS can read
 // it and echo the value back as the X-CSRF-Token header.
 func SetCSRFCookie(c *gin.Context, cfg *Config, token string) {

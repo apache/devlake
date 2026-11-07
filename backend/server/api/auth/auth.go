@@ -50,11 +50,25 @@ import (
 // Auth-related route paths, defined in one place so router registration and
 // the middleware whitelist cannot drift.
 const (
-	PathMethods  = "/auth/methods"
-	PathLogin    = "/auth/login"
-	PathCallback = "/auth/callback"
-	PathLogout   = "/auth/logout"
-	PathUserInfo = "/auth/userinfo"
+	PathMethods       = "/auth/methods"
+	PathLogin         = "/auth/login"
+	PathCallback      = "/auth/callback"
+	PathLogout        = "/auth/logout"
+	PathUserInfo      = "/auth/userinfo"
+	PathSwitchAccount = "/auth/switch-account"
+)
+
+// uiAuthErrorPath is the config-ui route that renders browser-facing login
+// errors. Like the post-login return URL, it is relative to the UI root.
+const uiAuthErrorPath = "/auth-error"
+
+// Error codes passed to uiAuthErrorPath. Technical details only go to the
+// server log; the UI maps each code to a user-facing message.
+const (
+	AuthErrorForbidden   = "forbidden"
+	AuthErrorExpired     = "expired"
+	AuthErrorIdP         = "idp_error"
+	AuthErrorServerError = "server_error"
 )
 
 // lastSeenThrottle bounds DB writes to one per-jti per window. Tracking
@@ -144,6 +158,8 @@ type ProviderInfo struct {
 type Methods struct {
 	Providers []ProviderInfo `json:"providers,omitempty"`
 	APIKey    *APIKey        `json:"apiKey,omitempty"`
+	// AccessRequestURL tells rejected users where to request access.
+	AccessRequestURL string `json:"accessRequestUrl,omitempty"`
 }
 
 type APIKey struct {
@@ -159,6 +175,7 @@ func GetMethods(c *gin.Context) { defaultService.GetMethods(c) }
 func (s *Service) GetMethods(c *gin.Context) {
 	out := Methods{APIKey: &APIKey{Enabled: true}}
 	if s.cfg != nil && s.cfg.OIDCEnabled {
+		out.AccessRequestURL = s.cfg.AccessRequestURL
 		for _, name := range s.cfg.ProviderNames() {
 			pc := s.cfg.Providers[name]
 			out.Providers = append(out.Providers, ProviderInfo{
@@ -183,20 +200,21 @@ func (s *Service) LoginInit(c *gin.Context) {
 	if !s.ensureOIDC(c) {
 		return
 	}
-	name, p, ok := s.pickProvider(c, c.Query("provider"))
-	if !ok {
+	name, p, err := s.pickProvider(c.Query("provider"))
+	if err != nil {
+		s.failRedirect(c, AuthErrorServerError, "pick provider", err, "")
 		return
 	}
 	returnURL := safeReturnURL(c.Query("return_url"))
 
 	verifier, err := newPKCEVerifier()
 	if err != nil {
-		fail(c, http.StatusInternalServerError, "pkce generate", err)
+		s.failRedirect(c, AuthErrorServerError, "pkce generate", err, name)
 		return
 	}
 	nonce, err := oidchelper.NewNonce()
 	if err != nil {
-		fail(c, http.StatusInternalServerError, "state nonce", err)
+		s.failRedirect(c, AuthErrorServerError, "state nonce", err, name)
 		return
 	}
 	encoded, err := oidchelper.EncodeState(s.cfg.SessionSecret, &oidchelper.StatePayload{
@@ -207,16 +225,16 @@ func (s *Service) LoginInit(c *gin.Context) {
 		IssuedAt:     time.Now(),
 	})
 	if err != nil {
-		fail(c, http.StatusInternalServerError, "state encode", err)
+		s.failRedirect(c, AuthErrorServerError, "state encode", err, name)
 		return
 	}
-	oidchelper.SetStateCookie(c, s.cfg, encoded)
 
 	oa, err := p.OAuth2Config(c.Request.Context())
 	if err != nil {
-		fail(c, http.StatusBadGateway, "oauth2 config", err)
+		s.failRedirect(c, AuthErrorIdP, "oauth2 config", err, name)
 		return
 	}
+	oidchelper.SetStateCookie(c, s.cfg, encoded)
 	authURL := oa.AuthCodeURL(nonce,
 		oauth2.SetAuthURLParam("code_challenge", pkceChallenge(verifier)),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
@@ -237,40 +255,40 @@ func (s *Service) Callback(c *gin.Context) {
 
 	encoded, err := c.Cookie(oidchelper.StateCookieName)
 	if err != nil || encoded == "" {
-		fail(c, http.StatusBadRequest, "missing state cookie", err)
+		s.failRedirect(c, AuthErrorExpired, "missing state cookie", err, "")
 		return
 	}
 	oidchelper.ClearStateCookie(c, s.cfg)
 
 	state, err := oidchelper.DecodeState(s.cfg.SessionSecret, encoded)
 	if err != nil {
-		fail(c, http.StatusBadRequest, "state decode", err)
+		s.failRedirect(c, AuthErrorExpired, "state decode", err, "")
 		return
 	}
 	// Constant-time compare even though the nonce is non-secret. Keeps the
 	// auth path free of timing-leak audit questions.
 	if subtle.ConstantTimeCompare([]byte(c.Query("state")), []byte(state.Nonce)) != 1 {
-		fail(c, http.StatusBadRequest, "state mismatch", nil)
+		s.failRedirect(c, AuthErrorExpired, "state mismatch", nil, "")
 		return
 	}
 	p, ok := s.providers[state.Provider]
 	if !ok {
-		fail(c, http.StatusBadRequest, "unknown provider in state: "+state.Provider, nil)
+		s.failRedirect(c, AuthErrorExpired, "unknown provider in state: "+state.Provider, nil, "")
 		return
 	}
 	code := c.Query("code")
 	if code == "" {
 		if msg := c.Query("error"); msg != "" {
-			fail(c, http.StatusBadRequest, "idp error: "+msg+" "+c.Query("error_description"), nil)
+			s.failRedirect(c, AuthErrorIdP, "idp error: "+msg+" "+c.Query("error_description"), nil, state.Provider)
 			return
 		}
-		fail(c, http.StatusBadRequest, "missing authorization code", nil)
+		s.failRedirect(c, AuthErrorIdP, "missing authorization code", nil, state.Provider)
 		return
 	}
 
 	oa, err := p.OAuth2Config(c.Request.Context())
 	if err != nil {
-		fail(c, http.StatusBadGateway, "oauth2 config", err)
+		s.failRedirect(c, AuthErrorIdP, "oauth2 config", err, state.Provider)
 		return
 	}
 	exchangeOpts := []oauth2.AuthCodeOption{
@@ -279,7 +297,7 @@ func (s *Service) Callback(c *gin.Context) {
 	if pc := s.cfg.Providers[state.Provider]; pc != nil && pc.UseWorkloadIdentity {
 		assertion, werr := oidchelper.FederatedAssertion()
 		if werr != nil {
-			fail(c, http.StatusInternalServerError, "workload identity assertion", werr)
+			s.failRedirect(c, AuthErrorServerError, "workload identity assertion", werr, state.Provider)
 			return
 		}
 		exchangeOpts = append(exchangeOpts,
@@ -289,39 +307,50 @@ func (s *Service) Callback(c *gin.Context) {
 	}
 	tok, err := oa.Exchange(c.Request.Context(), code, exchangeOpts...)
 	if err != nil {
-		fail(c, http.StatusBadGateway, "code exchange", err)
+		s.failRedirect(c, AuthErrorIdP, "code exchange", err, state.Provider)
 		return
 	}
 	rawID, _ := tok.Extra("id_token").(string)
 	if rawID == "" {
-		fail(c, http.StatusBadGateway, "id_token missing from token response", nil)
+		s.failRedirect(c, AuthErrorIdP, "id_token missing from token response", nil, state.Provider)
 		return
 	}
 	idTok, err := p.VerifyIDToken(c.Request.Context(), rawID)
 	if err != nil {
-		fail(c, http.StatusUnauthorized, "id_token verify", err)
+		s.failRedirect(c, AuthErrorIdP, "id_token verify", err, state.Provider)
 		return
 	}
 
 	sub, email, name, err := extractUser(idTok)
 	if err != nil {
-		fail(c, http.StatusBadGateway, "extract claims", err)
+		s.failRedirect(c, AuthErrorIdP, "extract claims", err, state.Provider)
 		return
 	}
 
 	if !s.cfg.IsUserAllowed(email) {
-		fail(c, http.StatusForbidden, "user is not allowed", nil)
+		// The IdP session stays alive, so remember the id_token to let
+		// "sign in with a different account" end it without a prompt.
+		hint, herr := oidchelper.EncodeLogoutHint(s.cfg.SessionSecret, &oidchelper.LogoutHintPayload{
+			Provider: state.Provider,
+			IDToken:  rawID,
+			IssuedAt: time.Now(),
+		})
+		if herr == nil {
+			oidchelper.SetLogoutHintCookie(c, s.cfg, hint)
+		}
+		s.logger.Warn(nil, "oidc login rejected: provider=%s sub=%s email=%s is not allowed", state.Provider, sub, email)
+		s.redirectAuthError(c, AuthErrorForbidden, state.Provider)
 		return
 	}
 
 	jti := uuid.NewString()
 	jwt, expiresAt, err := oidchelper.IssueSession(s.cfg, jti, state.Provider, sub, email, name)
 	if err != nil {
-		fail(c, http.StatusInternalServerError, "issue session", err)
+		s.failRedirect(c, AuthErrorServerError, "issue session", err, state.Provider)
 		return
 	}
 	now := time.Now()
-	if dbErr := CreateSession(s.db, &AuthSession{
+	session := &AuthSession{
 		Jti:        jti,
 		Sub:        sub,
 		Email:      email,
@@ -329,20 +358,66 @@ func (s *Service) Callback(c *gin.Context) {
 		IssuedAt:   now,
 		ExpiresAt:  expiresAt,
 		LastSeenAt: now,
-	}); dbErr != nil {
-		fail(c, http.StatusInternalServerError, "persist session", dbErr)
+	}
+	if s.cfg.LogoutRedirect {
+		session.IDToken = rawID
+	}
+	if dbErr := CreateSession(s.db, session); dbErr != nil {
+		s.failRedirect(c, AuthErrorServerError, "persist session", dbErr, state.Provider)
 		return
 	}
 	csrf, err := oidchelper.NewCSRFToken()
 	if err != nil {
-		fail(c, http.StatusInternalServerError, "csrf token", err)
+		s.failRedirect(c, AuthErrorServerError, "csrf token", err, state.Provider)
 		return
 	}
 	oidchelper.SetSessionCookie(c, s.cfg, jwt)
 	oidchelper.SetCSRFCookie(c, s.cfg, csrf)
+	oidchelper.ClearLogoutHintCookie(c, s.cfg)
 	s.logger.Info("oidc login: provider=%s sub=%s email=%s jti=%s", state.Provider, sub, email, jti)
 
 	c.Redirect(http.StatusSeeOther, state.ReturnURL)
+}
+
+func SwitchAccount(c *gin.Context) { defaultService.SwitchAccount(c) }
+
+// SwitchAccount ends the IdP session of a user whose login DevLake rejected,
+// so the next sign-in prompts for credentials again. The IdP then returns
+// the user to the provider's post-logout redirect URL.
+//
+// @Summary Sign out at the IdP to sign in with a different account
+// @Tags framework/auth
+// @Param provider query string false "provider name (used when the logout hint cookie is missing)"
+// @Success 303
+// @Router /auth/switch-account [get]
+func (s *Service) SwitchAccount(c *gin.Context) {
+	if !s.ensureOIDC(c) {
+		return
+	}
+	providerName, idTokenHint := c.Query("provider"), ""
+	if raw, err := c.Cookie(oidchelper.LogoutHintCookieName); err == nil && raw != "" {
+		oidchelper.ClearLogoutHintCookie(c, s.cfg)
+		if hint, err := oidchelper.DecodeLogoutHint(s.cfg.SessionSecret, raw); err == nil {
+			providerName, idTokenHint = hint.Provider, hint.IDToken
+		} else {
+			s.logger.Debug("auth: ignore logout hint cookie: %v", err)
+		}
+	}
+	_, p, err := s.pickProvider(providerName)
+	if err != nil {
+		s.failRedirect(c, AuthErrorServerError, "switch account: pick provider", err, "")
+		return
+	}
+	u, err := p.EndSessionURL(c.Request.Context(), idTokenHint)
+	if err != nil {
+		s.failRedirect(c, AuthErrorIdP, "switch account: end_session_endpoint", err, p.Name())
+		return
+	}
+	if u == "" {
+		s.logger.Warn(nil, "auth: provider %s has no end_session_endpoint; cannot end IdP session", p.Name())
+		u = "/"
+	}
+	c.Redirect(http.StatusSeeOther, u)
 }
 
 type logoutResponse struct {
@@ -362,11 +437,19 @@ func (s *Service) Logout(c *gin.Context) {
 		return
 	}
 
-	var sessionProvider string
+	var sessionProvider, idTokenHint string
 	if len(s.cfg.SessionSecret) > 0 {
 		if raw, err := c.Cookie(oidchelper.SessionCookieName); err == nil && raw != "" {
 			if claims, err := oidchelper.ParseSession(s.cfg.SessionSecret, raw); err == nil && claims.ID != "" {
 				sessionProvider = claims.Provider
+				if s.cfg.OIDCEnabled && s.cfg.LogoutRedirect && sessionProvider != "" {
+					// Read before revoking: revocation clears the stored token.
+					if tok, err := GetSessionIDToken(s.db, claims.ID); err != nil {
+						s.logger.Warn(err, "auth: load id_token for logout hint")
+					} else {
+						idTokenHint = tok
+					}
+				}
 				if err := RevokeSession(s.db, claims.ID); err != nil {
 					s.logger.Error(err, "auth: revoke session row")
 				}
@@ -380,7 +463,7 @@ func (s *Service) Logout(c *gin.Context) {
 	out := logoutResponse{OK: true}
 	if s.cfg.OIDCEnabled && s.cfg.LogoutRedirect && sessionProvider != "" {
 		if p, ok := s.providers[sessionProvider]; ok {
-			if u, err := p.EndSessionURL(c.Request.Context()); err == nil && u != "" {
+			if u, err := p.EndSessionURL(c.Request.Context(), idTokenHint); err == nil && u != "" {
 				out.LogoutURL = u
 			}
 		}
@@ -418,24 +501,21 @@ func (s *Service) UserInfo(c *gin.Context) {
 
 // pickProvider resolves the requested provider name. Empty names are allowed
 // only when exactly one provider is configured (single-IdP convenience).
-func (s *Service) pickProvider(c *gin.Context, requested string) (string, *oidchelper.Provider, bool) {
+func (s *Service) pickProvider(requested string) (string, *oidchelper.Provider, error) {
 	name := strings.ToLower(strings.TrimSpace(requested))
 	if name == "" {
-		if len(s.providers) == 1 {
-			for n := range s.providers {
-				name = n
-			}
-		} else {
-			fail(c, http.StatusBadRequest, "provider query param required (multiple configured)", nil)
-			return "", nil, false
+		if len(s.providers) != 1 {
+			return "", nil, fmt.Errorf("provider query param required (multiple configured)")
+		}
+		for n := range s.providers {
+			name = n
 		}
 	}
 	p, ok := s.providers[name]
 	if !ok {
-		fail(c, http.StatusBadRequest, "unknown provider: "+name, nil)
-		return "", nil, false
+		return "", nil, fmt.Errorf("unknown provider: %s", name)
 	}
-	return name, p, true
+	return name, p, nil
 }
 
 func (s *Service) ensureOIDC(c *gin.Context) bool {
@@ -465,12 +545,19 @@ func (s *Service) bumpLastSeen(jti string) {
 	}()
 }
 
-func fail(c *gin.Context, status int, msg string, cause error) {
-	wrapped := errors.HttpStatus(status).New(msg)
-	if cause != nil {
-		wrapped = errors.HttpStatus(status).Wrap(cause, msg)
+// failRedirect logs a browser-facing login failure and sends the user to the
+// UI error page. Only the coarse error code reaches the browser.
+func (s *Service) failRedirect(c *gin.Context, code, msg string, cause error, provider string) {
+	s.logger.Error(cause, "oidc login failed (%s): %s", code, msg)
+	s.redirectAuthError(c, code, provider)
+}
+
+func (s *Service) redirectAuthError(c *gin.Context, code, provider string) {
+	q := url.Values{"code": {code}}
+	if provider != "" {
+		q.Set("provider", provider)
 	}
-	shared.ApiOutputError(c, wrapped)
+	c.Redirect(http.StatusSeeOther, uiAuthErrorPath+"?"+q.Encode())
 }
 
 // safeReturnURL prevents open-redirect by stripping anything that doesn't
