@@ -23,13 +23,16 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
-FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS builder
+FROM --platform=$BUILDPLATFORM node:26-trixie-slim AS builder
 
 WORKDIR /home/node/code
 COPY . .
 
-RUN yarn install
-RUN yarn build
+# Node 25+ images no longer bundle Yarn or Corepack, so run the Yarn release
+# checked in under .yarn/releases (the yarnPath in .yarnrc.yml).
+RUN YARN="node $(sed -n 's/^yarnPath: *//p' .yarnrc.yml)" && \
+    $YARN install && \
+    $YARN build
 
 FROM nginxinc/nginx-unprivileged:1.31.7
 USER 0
