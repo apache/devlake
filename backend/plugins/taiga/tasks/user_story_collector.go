@@ -19,9 +19,7 @@ package tasks
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -54,15 +52,11 @@ func CollectUserStories(taskCtx plugin.SubTaskContext) errors.Error {
 			},
 			Table: RAW_USER_STORY_TABLE,
 		},
-		ApiClient:   data.ApiClient,
-		PageSize:    1000, // Fetch all in one page - Taiga returns all user stories for a project
-		UrlTemplate: "userstories",
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			query := url.Values{}
-			query.Set("project", fmt.Sprintf("%d", data.Options.ProjectId))
-			// Don't specify page - get all results
-			return query, nil
-		},
+		ApiClient:             data.ApiClient,
+		PageSize:              taigaPageSize,
+		UrlTemplate:           "userstories",
+		Query:                 taigaProjectListQuery(data.Options.ProjectId),
+		GetNextPageCustomData: getNextTaigaPage,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var result []json.RawMessage
 			err := api.UnmarshalResponse(res, &result)

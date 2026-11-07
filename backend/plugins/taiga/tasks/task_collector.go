@@ -19,9 +19,7 @@ package tasks
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -54,14 +52,11 @@ func CollectTasks(taskCtx plugin.SubTaskContext) errors.Error {
 			},
 			Table: RAW_TASK_TABLE,
 		},
-		ApiClient:   data.ApiClient,
-		PageSize:    1000,
-		UrlTemplate: "tasks",
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			query := url.Values{}
-			query.Set("project", fmt.Sprintf("%d", data.Options.ProjectId))
-			return query, nil
-		},
+		ApiClient:             data.ApiClient,
+		PageSize:              taigaPageSize,
+		UrlTemplate:           "tasks",
+		Query:                 taigaProjectListQuery(data.Options.ProjectId),
+		GetNextPageCustomData: getNextTaigaPage,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var result []json.RawMessage
 			err := api.UnmarshalResponse(res, &result)
