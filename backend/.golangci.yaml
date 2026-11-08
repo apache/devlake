@@ -239,13 +239,6 @@ linters:
       - linters:
           - revive
         path: plugins/([^hc].*|.[^eo].*|..[^lr].*|...[^pe].*|....[^e].*|.....[^r].*)
-      # aws-sdk-go v1 is end-of-support and its last release marks every
-      # package as deprecated. Tolerate that only for the kiro plugin until it
-      # is migrated to aws-sdk-go-v2; remove this rule afterwards.
-      - linters:
-          - staticcheck
-        path: plugins/kiro/
-        text: 'SA1019: "?github.com/aws/aws-sdk-go/'
       # RawDataSubTaskArgs.Params is deprecated in favour of Options, but it is
       # JSON-encoded into _raw_data_params of every raw table. Migrating a
       # plugin changes that key and orphans existing raw data, so this needs a
