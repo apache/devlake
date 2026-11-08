@@ -41,6 +41,7 @@ import { ClickUpTransformation } from '@/plugins/register/clickup';
 import { YoutrackTransformation } from '@/plugins/register/youtrack';
 import { RedmineTransformation } from '@/plugins/register/redmine';
 import { ZephyrTransformation } from '@/plugins/register/zephyr';
+import { GlpiTransformation } from '@/plugins/register/glpi';
 import { DOC_URL } from '@/release';
 import { operator } from '@/utils';
 
@@ -350,6 +351,14 @@ export const ScopeConfigForm = ({
 
               {plugin === 'zephyr' && (
                 <ZephyrTransformation
+                  entities={entities}
+                  transformation={transformation}
+                  setTransformation={setTransformation}
+                />
+              )}
+
+              {plugin === 'glpi' && (
+                <GlpiTransformation
                   entities={entities}
                   transformation={transformation}
                   setTransformation={setTransformation}
