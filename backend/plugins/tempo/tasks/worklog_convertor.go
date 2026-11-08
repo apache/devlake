@@ -73,48 +73,7 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 		InputRowType: reflect.TypeOf(models.TempoWorklog{}),
 		Input:        cursor,
 		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
-			tempoWorklog := inputRow.(*models.TempoWorklog)
-
-			// Must match the domain ids the jira plugin generates with didgen
-			// for JiraIssue / JiraAccount (plugins may not import each other),
-			// so worklogs join issues and accounts. Like before, this assumes
-			// the Tempo connection id equals the Jira connection id.
-			domainIssueId := fmt.Sprintf("jira:JiraIssue:%d:%d", connectionId, tempoWorklog.IssueId)
-			authorId := ""
-			if tempoWorklog.AuthorAccountId != "" {
-				authorId = fmt.Sprintf("jira:JiraAccount:%d:%s", connectionId, tempoWorklog.AuthorAccountId)
-			}
-
-			domainWorklogId := fmt.Sprintf("tempo:TempoWorklog:%d", tempoWorklog.TempoWorklogId)
-			timeSpentMinutes := tempoWorklog.TimeSpentSeconds / 60
-
-			var startedDate *time.Time
-			if tempoWorklog.StartDate != "" && tempoWorklog.StartTime != "" {
-				if t, err := time.Parse("2006-01-02 15:04:05", tempoWorklog.StartDate+" "+tempoWorklog.StartTime); err == nil {
-					startedDate = &t
-				}
-			}
-
-			var loggedDate *time.Time
-			if tempoWorklog.CreatedAt != "" {
-				if t, err := time.Parse(time.RFC3339, tempoWorklog.CreatedAt); err == nil {
-					loggedDate = &t
-				}
-			}
-
-			worklog := &ticket.IssueWorklog{
-				DomainEntity: domainlayer.DomainEntity{
-					Id: domainWorklogId,
-				},
-				IssueId:          domainIssueId,
-				AuthorId:         authorId,
-				TimeSpentMinutes: timeSpentMinutes,
-				StartedDate:      startedDate,
-				LoggedDate:       loggedDate,
-				Comment:          tempoWorklog.Description,
-			}
-
-			return []interface{}{worklog}, nil
+			return []interface{}{convertWorklog(connectionId, inputRow.(*models.TempoWorklog))}, nil
 		},
 	})
 
@@ -123,4 +82,50 @@ func ConvertWorklogs(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
+}
+
+// convertWorklog maps a Tempo worklog to the domain layer.
+func convertWorklog(connectionId uint64, tempoWorklog *models.TempoWorklog) *ticket.IssueWorklog {
+	// Must match the domain ids the jira plugin generates with didgen
+	// for JiraIssue / JiraAccount (plugins may not import each other),
+	// so worklogs join issues and accounts. Like before, this assumes
+	// the Tempo connection id equals the Jira connection id.
+	domainIssueId := fmt.Sprintf("jira:JiraIssue:%d:%d", connectionId, tempoWorklog.IssueId)
+	authorId := ""
+	if tempoWorklog.AuthorAccountId != "" {
+		authorId = fmt.Sprintf("jira:JiraAccount:%d:%s", connectionId, tempoWorklog.AuthorAccountId)
+	}
+
+	// Tempo worklog ids are only unique within one Tempo instance, so the id
+	// carries the connection id like the tool layer primary key (and like
+	// didgen would generate it): otherwise two connections that share a
+	// worklog id overwrite each other's issue_worklogs row.
+	domainWorklogId := fmt.Sprintf("tempo:TempoWorklog:%d:%d", connectionId, tempoWorklog.TempoWorklogId)
+	timeSpentMinutes := tempoWorklog.TimeSpentSeconds / 60
+
+	var startedDate *time.Time
+	if tempoWorklog.StartDate != "" && tempoWorklog.StartTime != "" {
+		if t, err := time.Parse("2006-01-02 15:04:05", tempoWorklog.StartDate+" "+tempoWorklog.StartTime); err == nil {
+			startedDate = &t
+		}
+	}
+
+	var loggedDate *time.Time
+	if tempoWorklog.CreatedAt != "" {
+		if t, err := time.Parse(time.RFC3339, tempoWorklog.CreatedAt); err == nil {
+			loggedDate = &t
+		}
+	}
+
+	return &ticket.IssueWorklog{
+		DomainEntity: domainlayer.DomainEntity{
+			Id: domainWorklogId,
+		},
+		IssueId:          domainIssueId,
+		AuthorId:         authorId,
+		TimeSpentMinutes: timeSpentMinutes,
+		StartedDate:      startedDate,
+		LoggedDate:       loggedDate,
+		Comment:          tempoWorklog.Description,
+	}
 }
