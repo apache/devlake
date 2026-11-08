@@ -270,7 +270,7 @@ func render(plugins []plugin) ([]byte, error) {
 	buf.WriteString(")\n\n")
 	buf.WriteString("func init() {\n")
 	for _, p := range plugins {
-		fmt.Fprintf(&buf, "\tplugin.MustRegister(%s.%s{})\n", p.alias, p.typ)
+		fmt.Fprintf(&buf, "\tplugin.MustRegister(&%s.%s{})\n", p.alias, p.typ)
 	}
 	buf.WriteString("}\n")
 
