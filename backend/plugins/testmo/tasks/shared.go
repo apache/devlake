@@ -45,20 +45,20 @@ func CreateTestmoApiClient(taskCtx plugin.TaskContext, connection *models.Testmo
 	return CreateApiClient(taskCtx, connection)
 }
 
+// GetTotalPagesFromResponse reads the page count of a Testmo list response.
+// Testmo returns the pagination fields (page, prev_page, next_page,
+// last_page, per_page, total) at the top level of the body, not in a meta
+// object; last_page is nullable.
 func GetTotalPagesFromResponse(res *http.Response, args *helper.ApiCollectorArgs) (int, errors.Error) {
-	body := &models.TestmoResponse{}
+	body := &struct {
+		LastPage *int `json:"last_page"`
+	}{}
 	err := helper.UnmarshalResponse(res, body)
 	if err != nil {
 		return 0, err
 	}
-
-	// Parse meta information for pagination
-	if meta, ok := body.Meta.(map[string]interface{}); ok {
-		if totalPages, exists := meta["total_pages"]; exists {
-			if pages, ok := totalPages.(float64); ok {
-				return int(pages), nil
-			}
-		}
+	if body.LastPage != nil && *body.LastPage > 1 {
+		return *body.LastPage, nil
 	}
 	return 1, nil
 }
