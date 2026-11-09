@@ -17,6 +17,7 @@
  */
 
 export * from './api-keys';
+export * from './auth-error';
 export * from './blueprint';
 export * from './connection';
 export * from './db-migrate';

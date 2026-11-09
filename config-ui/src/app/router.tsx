@@ -25,6 +25,7 @@ import {
   Layout,
   layoutLoader,
   Login,
+  AuthError,
   Connections,
   Connection,
   ProjectHomePage,
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
   {
     path: `${PATH_PREFIX}/login`,
     element: <Login />,
+  },
+  {
+    path: `${PATH_PREFIX}/auth-error`,
+    element: <AuthError />,
   },
   {
     path: `${PATH_PREFIX}/onboard`,

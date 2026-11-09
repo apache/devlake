@@ -36,6 +36,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/apache/devlake/core/dal"
+	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/helpers/oidchelper"
 	"github.com/apache/devlake/impls/logruslog"
 	mockdal "github.com/apache/devlake/mocks/core/dal"
@@ -169,6 +170,8 @@ func newTestService(t *testing.T, idp *fakeIdP) (*Service, *mockdal.Dal) {
 		RedirectURL:  "http://localhost/auth/callback",
 		Scopes:       []string{"openid", "profile", "email"},
 		DisplayName:  "Test IdP",
+
+		PostLogoutRedirectURL: "http://localhost/",
 	}
 	cfg := &oidchelper.Config{
 		AuthEnabled:    true,
@@ -180,8 +183,27 @@ func newTestService(t *testing.T, idp *fakeIdP) (*Service, *mockdal.Dal) {
 		CookieSecure:   false,
 	}
 	db := &mockdal.Dal{}
-	db.On("Create", mock.Anything, mock.Anything).Return(nil)
+	// Remember the last persisted session so First can serve its id_token.
+	var lastSession AuthSession
+	var lastSessionMu sync.Mutex
+	recordSession := func(args mock.Arguments) {
+		if row, ok := args.Get(0).(*AuthSession); ok {
+			lastSessionMu.Lock()
+			lastSession = *row
+			lastSessionMu.Unlock()
+		}
+	}
+	db.On("Create", mock.Anything).Run(recordSession).Return(nil)
+	db.On("Create", mock.Anything, mock.Anything).Run(recordSession).Return(nil)
+	db.On("First", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		if dst, ok := args.Get(0).(*AuthSession); ok {
+			lastSessionMu.Lock()
+			dst.IDToken = lastSession.IDToken
+			lastSessionMu.Unlock()
+		}
+	}).Return(nil)
 	db.On("UpdateColumn", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	db.On("UpdateColumns", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	db.On("All", mock.Anything, mock.Anything).Return(nil)
 	db.On("Delete", mock.Anything, mock.Anything).Return(nil)
 
@@ -206,6 +228,8 @@ func newTestRouter(s *Service) *gin.Engine {
 	r.GET(PathCallback, s.Callback)
 	r.GET(PathUserInfo, s.UserInfo)
 	r.POST(PathLogout, s.Logout)
+	r.GET(PathSwitchAccount, s.SwitchAccount)
+	r.GET(PathMethods, s.GetMethods)
 	return r
 }
 
@@ -283,7 +307,10 @@ func TestFullLoginCallbackFlow(t *testing.T) {
 	if sessionCookie.Value == "" || csrfCookie.Value == "" {
 		t.Fatal("expected session and csrf cookies to be set")
 	}
-	db.AssertCalled(t, "Create", mock.Anything, mock.Anything)
+	created, ok := db.Calls[indexOfCall(db, "Create")].Arguments.Get(0).(*AuthSession)
+	if !ok || created.IDToken == "" {
+		t.Fatalf("expected the session row to persist the id_token, got %+v", created)
+	}
 
 	// 3. /auth/userinfo with the session cookie should report authenticated.
 	uiReq := httptest.NewRequest(http.MethodGet, PathUserInfo, nil)
@@ -311,7 +338,14 @@ func TestFullLoginCallbackFlow(t *testing.T) {
 	if logoutW.Code != http.StatusOK {
 		t.Fatalf("logout: expected 200, got %d body=%s", logoutW.Code, logoutW.Body.String())
 	}
-	db.AssertCalled(t, "UpdateColumn", mock.Anything, "revoked_at", mock.Anything, mock.Anything)
+	db.AssertCalled(t, "UpdateColumns", mock.Anything, mock.MatchedBy(func(set []dal.DalSet) bool {
+		return len(set) == 2 && set[0].ColumnName == "revoked_at" && set[1].ColumnName == "id_token" && set[1].Value == ""
+	}), mock.Anything)
+	var logoutBody logoutResponse
+	if err := json.Unmarshal(logoutW.Body.Bytes(), &logoutBody); err != nil {
+		t.Fatalf("decode logout: %v: %s", err, logoutW.Body.String())
+	}
+	assertEndSessionURL(t, idp, logoutBody.LogoutURL, created.IDToken)
 
 	// 5. The same session cookie now belongs to a revoked jti; userinfo
 	// should report not authenticated.
@@ -341,12 +375,7 @@ func TestCallbackRejectsStateMismatch(t *testing.T) {
 	cbReq.AddCookie(stateCookie)
 	cbW := httptest.NewRecorder()
 	r.ServeHTTP(cbW, cbReq)
-	if cbW.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 on state mismatch, got %d", cbW.Code)
-	}
-	if !strings.Contains(cbW.Body.String(), "state mismatch") {
-		t.Fatalf("expected state mismatch in body, got %s", cbW.Body.String())
-	}
+	assertAuthErrorRedirect(t, cbW, AuthErrorExpired, "")
 }
 
 func TestCallbackRejectsMissingStateCookie(t *testing.T) {
@@ -357,12 +386,7 @@ func TestCallbackRejectsMissingStateCookie(t *testing.T) {
 	cbReq := httptest.NewRequest(http.MethodGet, PathCallback+"?code=x&state=anything", nil)
 	cbW := httptest.NewRecorder()
 	r.ServeHTTP(cbW, cbReq)
-	if cbW.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 with missing state cookie, got %d", cbW.Code)
-	}
-	if !strings.Contains(cbW.Body.String(), "missing state cookie") {
-		t.Fatalf("expected missing state cookie in body, got %s", cbW.Body.String())
-	}
+	assertAuthErrorRedirect(t, cbW, AuthErrorExpired, "")
 }
 
 func TestCSRFRequiredOnUnsafeMethod(t *testing.T) {
@@ -418,6 +442,258 @@ func TestLogoutPublicWhenNoSession(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, PathLogout, nil))
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected logout-without-session to return 200, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+// indexOfCall returns the index of the first recorded call to method.
+func indexOfCall(db *mockdal.Dal, method string) int {
+	for i, c := range db.Calls {
+		if c.Method == method {
+			return i
+		}
+	}
+	panic("no call to " + method)
+}
+
+// assertAuthErrorRedirect checks that w redirects to the UI error page with
+// the given code (and provider, if non-empty) and leaks no error details.
+func assertAuthErrorRedirect(t *testing.T, w *httptest.ResponseRecorder, code, provider string) {
+	t.Helper()
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d body=%s", w.Code, w.Body.String())
+	}
+	loc, err := url.Parse(w.Header().Get("Location"))
+	if err != nil {
+		t.Fatalf("parse Location: %v", err)
+	}
+	if loc.Path != uiAuthErrorPath || loc.IsAbs() {
+		t.Fatalf("expected relative redirect to %s, got %s", uiAuthErrorPath, loc)
+	}
+	q := loc.Query()
+	if q.Get("code") != code {
+		t.Fatalf("code = %q, want %q (Location=%s)", q.Get("code"), code, loc)
+	}
+	if q.Get("provider") != provider {
+		t.Fatalf("provider = %q, want %q (Location=%s)", q.Get("provider"), provider, loc)
+	}
+	if len(q) > 2 {
+		t.Fatalf("unexpected extra query params in %s", loc)
+	}
+}
+
+// assertEndSessionURL checks an RP-initiated logout URL against the fake IdP.
+func assertEndSessionURL(t *testing.T, idp *fakeIdP, raw, wantHint string) {
+	t.Helper()
+	u, err := url.Parse(raw)
+	if err != nil || raw == "" {
+		t.Fatalf("invalid end-session URL %q: %v", raw, err)
+	}
+	if got := u.Scheme + "://" + u.Host + u.Path; got != idp.issuer+"/logout" {
+		t.Fatalf("end-session URL %q does not target the IdP logout endpoint", raw)
+	}
+	q := u.Query()
+	if q.Get("client_id") != "test-client" {
+		t.Errorf("client_id = %q", q.Get("client_id"))
+	}
+	if q.Get("post_logout_redirect_uri") != "http://localhost/" {
+		t.Errorf("post_logout_redirect_uri = %q", q.Get("post_logout_redirect_uri"))
+	}
+	if q.Get("id_token_hint") != wantHint {
+		t.Errorf("id_token_hint = %q, want %q", q.Get("id_token_hint"), wantHint)
+	}
+}
+
+// startLogin runs /auth/login and returns the state cookie and its nonce.
+func startLogin(t *testing.T, r *gin.Engine, s *Service) (*http.Cookie, string) {
+	t.Helper()
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathLogin+"?provider=test", nil))
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("login: expected 303, got %d", w.Code)
+	}
+	c := extractCookie(t, w.Result(), oidchelper.StateCookieName)
+	return c, stateNonceFromCookie(t, s.cfg.SessionSecret, c.Value)
+}
+
+func findCookie(resp *http.Response, name string) *http.Cookie {
+	for _, c := range resp.Cookies() {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
+}
+
+func TestCallbackForbiddenRedirectsToErrorPage(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, db := newTestService(t, idp)
+	s.cfg.AllowDomains = map[string]struct{}{"other.example": {}}
+	r := newTestRouter(s)
+
+	stateCookie, nonce := startLogin(t, r, s)
+	cbReq := httptest.NewRequest(http.MethodGet, PathCallback+"?code=c&state="+url.QueryEscape(nonce), nil)
+	cbReq.AddCookie(stateCookie)
+	cbW := httptest.NewRecorder()
+	r.ServeHTTP(cbW, cbReq)
+
+	assertAuthErrorRedirect(t, cbW, AuthErrorForbidden, "test")
+	resp := cbW.Result()
+	if c := findCookie(resp, oidchelper.SessionCookieName); c != nil && c.Value != "" {
+		t.Fatal("rejected user must not get a session cookie")
+	}
+	db.AssertNotCalled(t, "Create", mock.Anything)
+	hint := extractCookie(t, resp, oidchelper.LogoutHintCookieName)
+	if !hint.HttpOnly || hint.Value == "" {
+		t.Fatalf("expected an HttpOnly logout hint cookie, got %+v", hint)
+	}
+
+	// "Sign in with a different account" ends the IdP session using the
+	// id_token from the hint and clears the cookie.
+	swReq := httptest.NewRequest(http.MethodGet, PathSwitchAccount, nil)
+	swReq.AddCookie(hint)
+	swW := httptest.NewRecorder()
+	r.ServeHTTP(swW, swReq)
+	if swW.Code != http.StatusSeeOther {
+		t.Fatalf("switch-account: expected 303, got %d body=%s", swW.Code, swW.Body.String())
+	}
+	decoded, err := oidchelper.DecodeLogoutHint(s.cfg.SessionSecret, hint.Value)
+	if err != nil {
+		t.Fatalf("decode hint: %v", err)
+	}
+	assertEndSessionURL(t, idp, swW.Header().Get("Location"), decoded.IDToken)
+	if c := findCookie(swW.Result(), oidchelper.LogoutHintCookieName); c == nil || c.MaxAge >= 0 {
+		t.Fatalf("expected logout hint cookie to be cleared, got %+v", c)
+	}
+}
+
+func TestSwitchAccountWithoutHint(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	r := newTestRouter(s)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathSwitchAccount+"?provider=test", nil))
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d body=%s", w.Code, w.Body.String())
+	}
+	assertEndSessionURL(t, idp, w.Header().Get("Location"), "")
+}
+
+func TestSwitchAccountUnknownProvider(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	r := newTestRouter(s)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathSwitchAccount+"?provider=nope", nil))
+	assertAuthErrorRedirect(t, w, AuthErrorServerError, "")
+}
+
+func TestCallbackIdPErrorRedirectsToErrorPage(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	r := newTestRouter(s)
+
+	stateCookie, nonce := startLogin(t, r, s)
+	cbReq := httptest.NewRequest(http.MethodGet,
+		PathCallback+"?error=access_denied&error_description=denied&state="+url.QueryEscape(nonce), nil)
+	cbReq.AddCookie(stateCookie)
+	cbW := httptest.NewRecorder()
+	r.ServeHTTP(cbW, cbReq)
+	assertAuthErrorRedirect(t, cbW, AuthErrorIdP, "test")
+}
+
+func TestCallbackPersistFailureRedirectsToErrorPage(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	failing := &mockdal.Dal{}
+	failing.On("Create", mock.Anything).Return(errors.Default.New("db down"))
+	s.db = failing
+	r := newTestRouter(s)
+
+	stateCookie, nonce := startLogin(t, r, s)
+	cbReq := httptest.NewRequest(http.MethodGet, PathCallback+"?code=c&state="+url.QueryEscape(nonce), nil)
+	cbReq.AddCookie(stateCookie)
+	cbW := httptest.NewRecorder()
+	r.ServeHTTP(cbW, cbReq)
+	assertAuthErrorRedirect(t, cbW, AuthErrorServerError, "test")
+}
+
+func TestLoginInitUnknownProviderRedirectsToErrorPage(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	r := newTestRouter(s)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathLogin+"?provider=nope", nil))
+	assertAuthErrorRedirect(t, w, AuthErrorServerError, "")
+}
+
+func TestLoginInitUnreachableIdPRedirectsToErrorPage(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	idp.server.Close()
+	r := newTestRouter(s)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathLogin+"?provider=test", nil))
+	assertAuthErrorRedirect(t, w, AuthErrorIdP, "test")
+	if c := findCookie(w.Result(), oidchelper.StateCookieName); c != nil {
+		t.Fatal("no state cookie expected when the login cannot start")
+	}
+}
+
+func TestLogoutRedirectDisabledKeepsNoIDToken(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, db := newTestService(t, idp)
+	s.cfg.LogoutRedirect = false
+	r := newTestRouter(s)
+
+	stateCookie, nonce := startLogin(t, r, s)
+	cbReq := httptest.NewRequest(http.MethodGet, PathCallback+"?code=c&state="+url.QueryEscape(nonce), nil)
+	cbReq.AddCookie(stateCookie)
+	cbW := httptest.NewRecorder()
+	r.ServeHTTP(cbW, cbReq)
+	if cbW.Code != http.StatusSeeOther {
+		t.Fatalf("callback: expected 303, got %d", cbW.Code)
+	}
+	created := db.Calls[indexOfCall(db, "Create")].Arguments.Get(0).(*AuthSession)
+	if created.IDToken != "" {
+		t.Fatal("id_token must not be stored when OIDC_LOGOUT_REDIRECT is off")
+	}
+
+	sessionCookie := extractCookie(t, cbW.Result(), oidchelper.SessionCookieName)
+	csrfCookie := extractCookie(t, cbW.Result(), oidchelper.CSRFCookieName)
+	logoutReq := httptest.NewRequest(http.MethodPost, PathLogout, nil)
+	logoutReq.AddCookie(sessionCookie)
+	logoutReq.AddCookie(csrfCookie)
+	logoutReq.Header.Set(oidchelper.CSRFHeaderName, csrfCookie.Value)
+	logoutW := httptest.NewRecorder()
+	r.ServeHTTP(logoutW, logoutReq)
+	var body logoutResponse
+	if err := json.Unmarshal(logoutW.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode logout: %v", err)
+	}
+	if !body.OK || body.LogoutURL != "" {
+		t.Fatalf("expected local-only logout, got %+v", body)
+	}
+	db.AssertNotCalled(t, "First", mock.Anything, mock.Anything)
+}
+
+func TestGetMethodsExposesAccessRequestURL(t *testing.T) {
+	idp := newFakeIdP(t)
+	s, _ := newTestService(t, idp)
+	s.cfg.AccessRequestURL = "https://intranet.example.com/access"
+	r := newTestRouter(s)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, PathMethods, nil))
+	var m Methods
+	if err := json.Unmarshal(w.Body.Bytes(), &m); err != nil {
+		t.Fatalf("decode methods: %v: %s", err, w.Body.String())
+	}
+	if m.AccessRequestURL != "https://intranet.example.com/access" {
+		t.Fatalf("accessRequestUrl = %q", m.AccessRequestURL)
 	}
 }
 

@@ -20,6 +20,7 @@ package oidchelper
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 
@@ -111,7 +112,12 @@ func (p *Provider) VerifyIDToken(ctx context.Context, raw string) (*oidc.IDToken
 	return verifier.Verify(ctx, raw)
 }
 
-func (p *Provider) EndSessionURL(ctx context.Context) (string, error) {
+// EndSessionURL builds an RP-Initiated Logout URL (OpenID Connect
+// RP-Initiated Logout 1.0) for the IdP's end_session_endpoint. client_id
+// and post_logout_redirect_uri let the IdP return the user to DevLake;
+// idTokenHint (optional) lets IdPs such as Keycloak skip the logout
+// confirmation prompt. Returns "" when the IdP advertises no endpoint.
+func (p *Provider) EndSessionURL(ctx context.Context, idTokenHint string) (string, error) {
 	prov, err := p.OIDC(ctx)
 	if err != nil {
 		return "", err
@@ -122,5 +128,21 @@ func (p *Provider) EndSessionURL(ctx context.Context) (string, error) {
 	if err := prov.Claims(&claims); err != nil {
 		return "", err
 	}
-	return claims.EndSessionEndpoint, nil
+	if claims.EndSessionEndpoint == "" {
+		return "", nil
+	}
+	u, err := url.Parse(claims.EndSessionEndpoint)
+	if err != nil {
+		return "", fmt.Errorf("parse end_session_endpoint: %w", err)
+	}
+	q := u.Query()
+	q.Set("client_id", p.cfg.ClientID)
+	if p.cfg.PostLogoutRedirectURL != "" {
+		q.Set("post_logout_redirect_uri", p.cfg.PostLogoutRedirectURL)
+	}
+	if idTokenHint != "" {
+		q.Set("id_token_hint", idTokenHint)
+	}
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }

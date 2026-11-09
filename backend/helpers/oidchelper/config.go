@@ -19,6 +19,7 @@ package oidchelper
 
 import (
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -34,9 +35,17 @@ const (
 	// back as the X-CSRF-Token header (double-submit cookie pattern).
 	CSRFCookieName = "devlake_csrf"
 	CSRFHeaderName = "X-CSRF-Token"
+	// LogoutHintCookieName carries the encrypted id_token of a login that
+	// was rejected after a successful IdP sign-in (e.g. user not allowed),
+	// so "sign in with a different account" can end the IdP session
+	// without a confirmation prompt.
+	LogoutHintCookieName = "devlake_oidc_logout_hint"
 
 	// State cookie max-age. Covers a slow user typing 2FA at the IdP.
 	StateCookieMaxAge = 10 * time.Minute
+	// Logout-hint cookie max-age. Long enough to read the error page and
+	// click "sign in with a different account".
+	LogoutHintCookieMaxAge = 10 * time.Minute
 
 	defaultSessionTTL = 8 * time.Hour
 	defaultScopes     = "openid,profile,email"
@@ -52,6 +61,11 @@ type ProviderConfig struct {
 	RedirectURL  string
 	Scopes       []string
 	DisplayName  string
+
+	// PostLogoutRedirectURL is sent as post_logout_redirect_uri to the IdP's
+	// end_session_endpoint. Defaults to the origin of RedirectURL plus "/".
+	// Must be registered with the IdP as an allowed post-logout redirect.
+	PostLogoutRedirectURL string
 
 	// UseWorkloadIdentity authenticates the code exchange with an Azure
 	// Workload Identity federated assertion (read from the SA token file)
@@ -71,6 +85,10 @@ type Config struct {
 	// Empty means no restriction.
 	AllowEmails  map[string]struct{}
 	AllowDomains map[string]struct{}
+
+	// AccessRequestURL is shown on the login error page so rejected users
+	// know where to request access. Optional; must be http(s).
+	AccessRequestURL string
 
 	SessionSecret []byte
 	SessionTTL    time.Duration
@@ -145,6 +163,13 @@ func LoadConfig(basicRes context.BasicRes) (*Config, error) {
 		AllowDomains:   parseStringSet(cfg.GetString("OIDC_ALLOW_DOMAINS")),
 	}
 
+	if v := strings.TrimSpace(cfg.GetString("OIDC_ACCESS_REQUEST_URL")); v != "" {
+		if !isHTTPURL(v) {
+			return nil, fmt.Errorf("OIDC_ACCESS_REQUEST_URL must be an absolute http(s) URL, got %q", v)
+		}
+		out.AccessRequestURL = v
+	}
+
 	if !out.OIDCEnabled {
 		return out, nil
 	}
@@ -194,7 +219,31 @@ func loadProviderConfig(cfg config.ConfigReader, name, prefix string) (*Provider
 	if len(missing) > 0 {
 		return nil, fmt.Errorf("provider %q missing required env vars: %s", name, strings.Join(missing, ", "))
 	}
+
+	if v := strings.TrimSpace(cfg.GetString(prefix + "POST_LOGOUT_REDIRECT_URL")); v != "" {
+		if !isHTTPURL(v) {
+			return nil, fmt.Errorf("%sPOST_LOGOUT_REDIRECT_URL must be an absolute http(s) URL, got %q", prefix, v)
+		}
+		p.PostLogoutRedirectURL = v
+	} else {
+		p.PostLogoutRedirectURL = originOf(p.RedirectURL)
+	}
 	return p, nil
+}
+
+func isHTTPURL(raw string) bool {
+	u, err := url.Parse(raw)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+}
+
+// originOf returns scheme://host/ of raw, or "" if raw is not an absolute
+// http(s) URL.
+func originOf(raw string) string {
+	if !isHTTPURL(raw) {
+		return ""
+	}
+	u, _ := url.Parse(raw)
+	return (&url.URL{Scheme: u.Scheme, Host: u.Host, Path: "/"}).String()
 }
 
 func parseProviderNames(raw string) []string {

@@ -108,3 +108,44 @@ func flipChar(b byte) string {
 	}
 	return "A"
 }
+
+func TestLogoutHintRoundTrip(t *testing.T) {
+	secret := []byte("a-test-secret-with-at-least-32-bytes!")
+	in := &LogoutHintPayload{Provider: "keycloak", IDToken: "raw.id.token", IssuedAt: time.Now()}
+	encoded, err := EncodeLogoutHint(secret, in)
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if strings.Contains(encoded, in.IDToken) {
+		t.Fatal("logout hint must not contain the id_token in clear text")
+	}
+	out, err := DecodeLogoutHint(secret, encoded)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if out.Provider != in.Provider || out.IDToken != in.IDToken {
+		t.Fatalf("round-trip mismatch: %+v vs %+v", in, out)
+	}
+}
+
+func TestDecodeLogoutHintRejectsExpiredAndForeign(t *testing.T) {
+	secret := []byte("a-test-secret-with-at-least-32-bytes!")
+	old, err := EncodeLogoutHint(secret, &LogoutHintPayload{
+		Provider: "keycloak",
+		IDToken:  "t",
+		IssuedAt: time.Now().Add(-LogoutHintCookieMaxAge - time.Minute),
+	})
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if _, err := DecodeLogoutHint(secret, old); err == nil || !strings.Contains(err.Error(), "expired") {
+		t.Fatalf("expected expired error, got: %v", err)
+	}
+	fresh, err := EncodeLogoutHint(secret, &LogoutHintPayload{Provider: "keycloak", IDToken: "t", IssuedAt: time.Now()})
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if _, err := DecodeLogoutHint([]byte("other-secret-with-at-least-32-bytes!"), fresh); err == nil {
+		t.Fatal("expected decode to fail with a different secret")
+	}
+}

@@ -29,6 +29,7 @@ export type Methods = {
   apiKey?: {
     enabled: boolean;
   };
+  accessRequestUrl?: string;
 };
 
 export type UserInfo = {
