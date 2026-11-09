@@ -94,6 +94,27 @@ func TestConvertPhaseToResult(t *testing.T) {
 	assert.Equal(t, devops.RESULT_DEFAULT, convertPhaseToResult("Unknown"))
 }
 
+func TestConvertSyncOperationResult(t *testing.T) {
+	cases := []struct {
+		phase          string
+		health         string
+		result         string
+		originalResult string
+	}{
+		{"Succeeded", "Degraded", devops.RESULT_FAILURE, "Degraded"},
+		{"Succeeded", "Healthy", devops.RESULT_SUCCESS, "Succeeded"},
+		{"Succeeded", "Progressing", devops.RESULT_SUCCESS, "Succeeded"},
+		{"Succeeded", "", devops.RESULT_SUCCESS, "Succeeded"},
+		{"Failed", "Degraded", devops.RESULT_FAILURE, "Failed"},
+		{"Running", "Degraded", devops.RESULT_DEFAULT, "Running"},
+	}
+	for _, c := range cases {
+		result, originalResult := convertSyncOperationResult(&models.ArgocdSyncOperation{Phase: c.phase, HealthStatus: c.health})
+		assert.Equal(t, c.result, result, "%s/%s", c.phase, c.health)
+		assert.Equal(t, c.originalResult, originalResult, "%s/%s", c.phase, c.health)
+	}
+}
+
 func TestConvertPhaseToStatus(t *testing.T) {
 	assert.Equal(t, devops.STATUS_DONE, convertPhaseToStatus("Succeeded"))
 	assert.Equal(t, devops.STATUS_DONE, convertPhaseToStatus("Failed"))

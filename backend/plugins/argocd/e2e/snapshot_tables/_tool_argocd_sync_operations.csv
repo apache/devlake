@@ -1,0 +1,4 @@
+connection_id,application_name,deployment_id,revision,phase,health_status
+1,myapp,1793527200,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,Succeeded,
+1,myapp,1793700000,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,Succeeded,Degraded
+1,myapp,1793786400,cccccccccccccccccccccccccccccccccccccccc,Succeeded,Healthy

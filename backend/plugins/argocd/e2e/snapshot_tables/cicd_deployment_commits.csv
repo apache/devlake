@@ -1,0 +1,4 @@
+id,cicd_deployment_id,result,commit_sha
+argocd:ArgocdSyncOperation:1:myapp:1793527200,argocd:ArgocdSyncOperation:1:myapp:1793527200,SUCCESS,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+argocd:ArgocdSyncOperation:1:myapp:1793700000,argocd:ArgocdSyncOperation:1:myapp:1793700000,FAILURE,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+argocd:ArgocdSyncOperation:1:myapp:1793786400,argocd:ArgocdSyncOperation:1:myapp:1793786400,SUCCESS,cccccccccccccccccccccccccccccccccccccccc

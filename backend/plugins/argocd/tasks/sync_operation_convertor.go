@@ -109,6 +109,8 @@ func ConvertSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			created = created.UTC()
 
+			result, originalResult := convertSyncOperationResult(syncOp)
+
 			deployment := &devops.CICDDeployment{
 				DomainEntity: domainlayer.DomainEntity{
 					Id: deploymentId,
@@ -116,10 +118,10 @@ func ConvertSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 				CicdScopeId:         scopeId,
 				Name:                fmt.Sprintf("%s:%d", syncOp.ApplicationName, syncOp.DeploymentId),
 				DisplayTitle:        syncOp.Message,
-				Result:              convertPhaseToResult(syncOp.Phase),
+				Result:              result,
 				Status:              convertPhaseToStatus(syncOp.Phase),
 				OriginalStatus:      syncOp.Phase,
-				OriginalResult:      syncOp.Phase,
+				OriginalResult:      originalResult,
 				Environment:         detectEnvironment(syncOp, application, data.Options.ScopeConfig, data.RegexEnricher),
 				OriginalEnvironment: syncOp.ApplicationName,
 				TaskDatesInfo: devops.TaskDatesInfo{
@@ -181,6 +183,16 @@ func ConvertSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
+}
+
+// convertSyncOperationResult returns the deployment result of a sync and the Argo CD
+// value it comes from. A sync only reports whether the manifests were applied, so a
+// Succeeded sync whose rollout ended up Degraded is a failed deployment.
+func convertSyncOperationResult(syncOp *models.ArgocdSyncOperation) (string, string) {
+	if syncOp.Phase == "Succeeded" && syncOp.HealthStatus == "Degraded" {
+		return devops.RESULT_FAILURE, syncOp.HealthStatus
+	}
+	return convertPhaseToResult(syncOp.Phase), syncOp.Phase
 }
 
 func convertPhaseToResult(phase string) string {

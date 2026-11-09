@@ -66,6 +66,8 @@ type ArgocdApiSyncOperation struct {
 	} `json:"initiatedBy"`
 	Metadata  ArgocdApiSyncOperationMetadata `json:"metadata"`
 	Operation ArgocdApiSyncOperationDetails  `json:"operation"`
+	// ApplicationHealth is not an Argo CD field, see recordHealthOnLatestSync
+	ApplicationHealth string `json:"applicationHealth"`
 
 	// For operationState (current operation)
 	Phase      string     `json:"phase"` // Succeeded, Failed, Error, Running, Terminating
@@ -147,6 +149,7 @@ func ExtractSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	revisionDirty := make(map[string][]string)
+	lastSeenHealth := make(map[int64]string)
 
 	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
 		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
@@ -245,6 +248,13 @@ func ExtractSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 				}
 				syncOp.StartedAt = start
 				syncOp.Phase = "Succeeded"
+
+				// Raw rows are read oldest first and a sync only carries health while it
+				// is the newest one, so keep the last value seen for later rows.
+				if apiOp.ApplicationHealth != "" {
+					lastSeenHealth[syncOp.DeploymentId] = apiOp.ApplicationHealth
+				}
+				syncOp.HealthStatus = lastSeenHealth[syncOp.DeploymentId]
 
 				if apiOp.InitiatedBy.Automated {
 					syncOp.InitiatedBy = "automated"

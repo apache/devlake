@@ -66,3 +66,43 @@ func TestSanitizeOperationEntries_TrimsWhitespace(t *testing.T) {
 		assert.JSONEq(t, `{ "id":3 }`, string(result[0]))
 	}
 }
+
+func TestRecordHealthOnLatestSync_TagsOnlyNewestHistoryEntry(t *testing.T) {
+	history := []json.RawMessage{
+		json.RawMessage(`{"id": 1, "revision": "aaa"}`),
+		json.RawMessage(`{"id": 2, "revision": "bbb"}`),
+		json.RawMessage("null"),
+	}
+
+	recordHealthOnLatestSync(json.RawMessage(`{"phase": "Succeeded"}`), history, "Degraded")
+
+	assert.JSONEq(t, `{"id": 1, "revision": "aaa"}`, string(history[0]))
+	assert.JSONEq(t, `{"id": 2, "revision": "bbb", "applicationHealth": "Degraded"}`, string(history[1]))
+	assert.Equal(t, "null", string(history[2]))
+}
+
+func TestRecordHealthOnLatestSync_NoOperationState(t *testing.T) {
+	history := []json.RawMessage{json.RawMessage(`{"id": 7}`)}
+
+	recordHealthOnLatestSync(nil, history, "Healthy")
+
+	assert.JSONEq(t, `{"id": 7, "applicationHealth": "Healthy"}`, string(history[0]))
+}
+
+func TestRecordHealthOnLatestSync_NewerOperationOwnsTheHealth(t *testing.T) {
+	for _, phase := range []string{"Failed", "Error", "Running", "Terminating"} {
+		history := []json.RawMessage{json.RawMessage(`{"id": 1}`)}
+
+		recordHealthOnLatestSync(json.RawMessage(`{"phase": "`+phase+`"}`), history, "Degraded")
+
+		assert.JSONEq(t, `{"id": 1}`, string(history[0]), phase)
+	}
+}
+
+func TestRecordHealthOnLatestSync_NoHealthReported(t *testing.T) {
+	history := []json.RawMessage{json.RawMessage(`{"id": 1}`)}
+
+	recordHealthOnLatestSync(nil, history, "")
+
+	assert.JSONEq(t, `{"id": 1}`, string(history[0]))
+}
