@@ -78,7 +78,7 @@ func main() {
 	flag.Parse()
 
 	if err := run(*root, *out, *subset); err != nil {
-		fmt.Fprintf(os.Stderr, "pluginsgen: %v\n", err)
+		fmt.Fprintln(os.Stderr, "pluginsgen:", err)
 		os.Exit(1)
 	}
 }

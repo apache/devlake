@@ -193,6 +193,7 @@ linters:
             - fmt.Printf
             - fmt.Println
             - fmt.Fprintln
+            - bytes.Buffer.WriteString
             - res.Body.Close
             - body.Close
           severity: warning
