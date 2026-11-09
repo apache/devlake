@@ -42,6 +42,6 @@ class FakePipeline(ToolModel, table=True):
         SUCCESS = "success"
 
     id: str = Field(primary_key=True)
-    started_at: Optional[datetime]
-    finished_at: Optional[datetime]
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
     state: State

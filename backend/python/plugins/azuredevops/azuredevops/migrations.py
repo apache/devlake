@@ -30,24 +30,24 @@ from pydevlake.pipeline_tasks import RefDiffOptions
 def init_schemas(b: MigrationScriptBuilder):
     class AzureDevOpsConnection(Connection):
         token: SecretStr
-        organization: Optional[str]
+        organization: Optional[str] = None
 
     class AzureDevopsTransformationRule(ToolTable, Model):
         name: str = Field(default="default")
-        refdiff: Optional[RefDiffOptions]
-        deployment_pattern: Optional[re.Pattern]
-        production_pattern: Optional[re.Pattern]
+        refdiff: Optional[RefDiffOptions] = None
+        deployment_pattern: Optional[re.Pattern] = None
+        production_pattern: Optional[re.Pattern] = None
 
     class GitRepository(ToolModel):
         id: str = Field(primary_key=True)
         name: str
         url: str
-        remote_url: Optional[str]
-        default_branch: Optional[str]
+        remote_url: Optional[str] = None
+        default_branch: Optional[str] = None
         project_id: str
         org_id: str
-        parent_repository_url: Optional[str]
-        provider: Optional[str]
+        parent_repository_url: Optional[str] = None
+        provider: Optional[str] = None
 
     class GitPullRequest(ToolModel):
         class PRStatus(Enum):
@@ -56,21 +56,21 @@ def init_schemas(b: MigrationScriptBuilder):
             Completed = "completed"
 
         pull_request_id: int = Field(primary_key=True)
-        description: Optional[str]
+        description: Optional[str] = None
         status: PRStatus
         created_by_id: str
         created_by_name: str
         creation_date: datetime.datetime
-        closed_date: Optional[datetime.datetime]
+        closed_date: Optional[datetime.datetime] = None
         source_commit_sha: str
         target_commit_sha: str
-        merge_commit_sha: Optional[str]
-        url: Optional[str]
-        type: Optional[str]
-        title: Optional[str]
-        target_ref_name: Optional[str]
-        source_ref_name: Optional[str]
-        fork_repo_id: Optional[str]
+        merge_commit_sha: Optional[str] = None
+        url: Optional[str] = None
+        type: Optional[str] = None
+        title: Optional[str] = None
+        target_ref_name: Optional[str] = None
+        source_ref_name: Optional[str] = None
+        fork_repo_id: Optional[str] = None
 
     class GitPullRequestCommit(ToolModel):
         commit_id: str = Field(primary_key=True)
@@ -96,10 +96,10 @@ def init_schemas(b: MigrationScriptBuilder):
 
         id: int = Field(primary_key=True, auto_increment=False)
         name: str
-        start_time: Optional[datetime.datetime]
-        finish_time: Optional[datetime.datetime]
+        start_time: Optional[datetime.datetime] = None
+        finish_time: Optional[datetime.datetime] = None
         status: BuildStatus
-        result: Optional[BuildResult]
+        result: Optional[BuildResult] = None
         source_branch: str
         source_version: str
 
@@ -120,10 +120,10 @@ def init_schemas(b: MigrationScriptBuilder):
         id: str = Field(primary_key=True)
         build_id: str
         name: str
-        startTime: Optional[datetime.datetime]
-        finishTime: Optional[datetime.datetime]
+        startTime: Optional[datetime.datetime] = None
+        finishTime: Optional[datetime.datetime] = None
         state: JobState
-        result: Optional[JobResult]
+        result: Optional[JobResult] = None
 
     b.create_tables(
         AzureDevOpsConnection,

@@ -32,12 +32,12 @@ def init_schemas(b: MigrationScriptBuilder):
         timezone: str
 
     class Entity(ToolScope):
-        completename: Optional[str]
+        completename: Optional[str] = None
 
     class ScopeConfig(ToolTable, Model):
         name: str = Field(default="default")
-        entities: Optional[str]
-        connection_id: Optional[int]
+        entities: Optional[str] = None
+        connection_id: Optional[int] = None
         collect_assignees: bool = True
         collect_followups: bool = False
         collect_ticket_links: bool = False
@@ -48,139 +48,139 @@ def init_schemas(b: MigrationScriptBuilder):
 
     class Ticket(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
-        content: Optional[str]
-        date: Optional[datetime.datetime]
-        closedate: Optional[datetime.datetime]
-        solvedate: Optional[datetime.datetime]
-        date_mod: Optional[datetime.datetime]
-        date_creation: Optional[datetime.datetime]
-        status: Optional[int]
-        type: Optional[int]
-        urgency: Optional[int]
-        impact: Optional[int]
-        priority: Optional[int]
-        entities_id: Optional[str]
-        itilcategories_id: Optional[int]
-        category_name: Optional[str]
-        locations_id: Optional[int]
-        location_name: Optional[str]
-        suppliers_id: Optional[int]
-        supplier_name: Optional[str]
-        requesttypes_id: Optional[int]
-        requesttype_name: Optional[str]
-        users_id_recipient: Optional[int]
-        users_id_lastupdater: Optional[int]
-        time_to_resolve: Optional[datetime.datetime]
-        time_to_own: Optional[datetime.datetime]
-        internal_time_to_resolve: Optional[datetime.datetime]
-        internal_time_to_own: Optional[datetime.datetime]
-        actiontime: Optional[int]
-        solve_delay_stat: Optional[int]
-        takeintoaccount_delay_stat: Optional[int]
-        requester_name: Optional[str]
-        assignee_id: Optional[int]
-        assignee_name: Optional[str]
-        parent_ticket_id: Optional[int]
-        solution_content: Optional[str]
-        plugin_fields_json: Optional[str]
+        name: Optional[str] = None
+        content: Optional[str] = None
+        date: Optional[datetime.datetime] = None
+        closedate: Optional[datetime.datetime] = None
+        solvedate: Optional[datetime.datetime] = None
+        date_mod: Optional[datetime.datetime] = None
+        date_creation: Optional[datetime.datetime] = None
+        status: Optional[int] = None
+        type: Optional[int] = None
+        urgency: Optional[int] = None
+        impact: Optional[int] = None
+        priority: Optional[int] = None
+        entities_id: Optional[str] = None
+        itilcategories_id: Optional[int] = None
+        category_name: Optional[str] = None
+        locations_id: Optional[int] = None
+        location_name: Optional[str] = None
+        suppliers_id: Optional[int] = None
+        supplier_name: Optional[str] = None
+        requesttypes_id: Optional[int] = None
+        requesttype_name: Optional[str] = None
+        users_id_recipient: Optional[int] = None
+        users_id_lastupdater: Optional[int] = None
+        time_to_resolve: Optional[datetime.datetime] = None
+        time_to_own: Optional[datetime.datetime] = None
+        internal_time_to_resolve: Optional[datetime.datetime] = None
+        internal_time_to_own: Optional[datetime.datetime] = None
+        actiontime: Optional[int] = None
+        solve_delay_stat: Optional[int] = None
+        takeintoaccount_delay_stat: Optional[int] = None
+        requester_name: Optional[str] = None
+        assignee_id: Optional[int] = None
+        assignee_name: Optional[str] = None
+        parent_ticket_id: Optional[int] = None
+        solution_content: Optional[str] = None
+        plugin_fields_json: Optional[str] = None
 
     class TicketUser(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        users_id: Optional[int]
-        user_name: Optional[str]
-        type: Optional[int]
+        tickets_id: Optional[int] = None
+        users_id: Optional[int] = None
+        user_name: Optional[str] = None
+        type: Optional[int] = None
 
     class TicketGroup(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        groups_id: Optional[int]
-        group_name: Optional[str]
-        type: Optional[int]
+        tickets_id: Optional[int] = None
+        groups_id: Optional[int] = None
+        group_name: Optional[str] = None
+        type: Optional[int] = None
 
     class Followup(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        items_id: Optional[int]
-        users_id: Optional[int]
-        content: Optional[str]
-        date: Optional[datetime.datetime]
-        date_mod: Optional[datetime.datetime]
-        is_private: Optional[int]
+        items_id: Optional[int] = None
+        users_id: Optional[int] = None
+        content: Optional[str] = None
+        date: Optional[datetime.datetime] = None
+        date_mod: Optional[datetime.datetime] = None
+        is_private: Optional[int] = None
 
     class TicketTask(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        users_id: Optional[int]
-        content: Optional[str]
-        begin: Optional[datetime.datetime]
-        end: Optional[datetime.datetime]
-        actiontime: Optional[int]
+        tickets_id: Optional[int] = None
+        users_id: Optional[int] = None
+        content: Optional[str] = None
+        begin: Optional[datetime.datetime] = None
+        end: Optional[datetime.datetime] = None
+        actiontime: Optional[int] = None
 
     class TicketLog(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        items_id: Optional[int]
-        itemtype: Optional[str]
-        itemtype_link: Optional[str]
-        linked_action: Optional[int]
-        user_name: Optional[str]
-        date_mod: Optional[datetime.datetime]
-        id_search_option: Optional[int]
-        old_value: Optional[str]
-        new_value: Optional[str]
+        tickets_id: Optional[int] = None
+        items_id: Optional[int] = None
+        itemtype: Optional[str] = None
+        itemtype_link: Optional[str] = None
+        linked_action: Optional[int] = None
+        user_name: Optional[str] = None
+        date_mod: Optional[datetime.datetime] = None
+        id_search_option: Optional[int] = None
+        old_value: Optional[str] = None
+        new_value: Optional[str] = None
 
     class User(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
-        realname: Optional[str]
-        firstname: Optional[str]
-        email: Optional[str]
+        name: Optional[str] = None
+        realname: Optional[str] = None
+        firstname: Optional[str] = None
+        email: Optional[str] = None
 
     class Group(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
-        completename: Optional[str]
+        name: Optional[str] = None
+        completename: Optional[str] = None
 
     class ITILCategory(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
-        completename: Optional[str]
+        name: Optional[str] = None
+        completename: Optional[str] = None
 
     class Location(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
-        completename: Optional[str]
+        name: Optional[str] = None
+        completename: Optional[str] = None
 
     class Supplier(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
+        name: Optional[str] = None
 
     class RequestType(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        name: Optional[str]
+        name: Optional[str] = None
 
     class TicketLabelRecord(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        label_name: Optional[str]
+        label_name: Optional[str] = None
 
     class TicketCustomField(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        field_id: Optional[str]
-        field_value: Optional[str]
+        tickets_id: Optional[int] = None
+        field_id: Optional[str] = None
+        field_value: Optional[str] = None
 
     class TicketLink(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        tickets_id_1: Optional[int]
-        tickets_id_2: Optional[int]
-        link: Optional[int]
+        tickets_id: Optional[int] = None
+        tickets_id_1: Optional[int] = None
+        tickets_id_2: Optional[int] = None
+        link: Optional[int] = None
 
     class ITILSolution(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        tickets_id: Optional[int]
-        content: Optional[str]
+        tickets_id: Optional[int] = None
+        content: Optional[str] = None
 
     b.create_tables(
         Connection,

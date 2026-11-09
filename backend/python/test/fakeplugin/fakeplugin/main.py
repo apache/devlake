@@ -29,7 +29,7 @@ class FakePipelineStream(Stream):
 
     def collect(self, state, context):
         for p in self.generate_fake_pipelines():
-            yield json.loads(p.json()), {}
+            yield json.loads(p.model_dump_json()), {}
 
     def convert(self, pipeline: FakePipeline, ctx):
         env = ctx.scope_config.env
@@ -68,7 +68,7 @@ class FakePipelineStream(Stream):
         fake_pipelines = []
         for i in range(250):
             fake_pipelines.append(FakePipeline(
-                id=i,
+                id=str(i),
                 state=states[i % len(states)],
                 started_at=datetime(2023, 1, 10, 11, 0, 0, microsecond=i),
                 finished_at=datetime(2023, 1, 10, 11, 3, 0, microsecond=i),
@@ -92,7 +92,7 @@ class FakePlugin(Plugin):
     def domain_scopes(self, project: FakeProject):
         project_name = "_".join(project.name.lower().split(" "))
         yield CicdScope(
-            id=1,
+            id="1",
             name=project.name,
             url=f"http://fake.org/api/project/{project_name}"
         )

@@ -96,9 +96,9 @@ def _glpi_native_ticket_keys() -> set[str]:
         }
         glpi_ticket_ignored_keys = {'links'}
         return {
-            name for name, field_info in Ticket.__fields__.items()
+            name for name, field_info in Ticket.model_fields.items()
             if name not in ticket_enrichment_fields
-            and not field_info.field_info.extra.get('source')
+            and not (field_info.json_schema_extra or {}).get('source')
         } | glpi_ticket_ignored_keys
 
 
@@ -209,8 +209,20 @@ class Tickets(Stream):
                     return text
         return str(user_raw.get('id', ''))
 
+    @staticmethod
+    def _dropdown_ids_only(raw: dict) -> dict:
+        # GLPI expands dropdowns to 'Name (id)'; reduce them to the id for the
+        # integer columns so the model validates. The enrichment below still
+        # reads the names from the original raw data.
+        cleaned = dict(raw)
+        for name, field_info in Ticket.model_fields.items():
+            value = cleaned.get(name)
+            if isinstance(value, str) and int in getattr(field_info.annotation, '__args__', (field_info.annotation,)):
+                cleaned[name] = parse_glpi_dropdown(value)[1]
+        return cleaned
+
     def extract(self, raw: dict, ctx: Optional[Context] = None) -> Ticket:
-        ticket_model = autoextract(raw, self.tool_model)
+        ticket_model = autoextract(self._dropdown_ids_only(raw), self.tool_model)
         if ctx is not None:
             self._apply_ticket_enrichment(ticket_model, raw, ctx)
         return ticket_model

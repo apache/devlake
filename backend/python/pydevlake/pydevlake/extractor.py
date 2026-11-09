@@ -14,11 +14,24 @@
 # limitations under the License.
 
 
-from typing import Type
+from typing import Type, get_args, get_origin, Union
+from types import NoneType
 
+from pydantic_core import PydanticUndefined
 from jsonpointer import resolve_pointer, JsonPointerException
 
 from pydevlake import ToolModel
+
+
+def _is_optional(field_info) -> bool:
+    """Check if a field's annotation allows None (is Optional)."""
+    annotation = field_info.annotation
+    if annotation is None:
+        return True
+    origin = get_origin(annotation)
+    if origin is Union:
+        return NoneType in get_args(annotation)
+    return False
 
 
 def autoextract(json: dict, model_cls: Type[ToolModel]) -> ToolModel:
@@ -42,18 +55,33 @@ def autoextract(json: dict, model_cls: Type[ToolModel]) -> ToolModel:
         model = autoextract(json, DummyModel)
     """
     attributes = {}
-    for field in model_cls.__fields__.values():
-        pointer = field.field_info.extra.get('source')
+    for field_name, field_info in model_cls.model_fields.items():
+        # In SQLModel 0.0.38, schema_extra is stored in field_info.json_schema_extra
+        extra = field_info.json_schema_extra or {}
+        if isinstance(extra, dict):
+            pointer = extra.get('source')
+        else:
+            pointer = None
 
         if pointer:
-            if field.required:
+            # A field is considered optional if its annotation allows None
+            is_optional = _is_optional(field_info)
+            if not is_optional:
                 try:
                     value = resolve_pointer(json, pointer)
                 except JsonPointerException:
-                    raise ValueError(f"Missing required value for field {field.name} at {pointer}")
+                    raise ValueError(f"Missing required value for field {field_name} at {pointer}")
             else:
-                value = resolve_pointer(json, pointer, field.default)
+                default = field_info.default if field_info.default is not PydanticUndefined else None
+                try:
+                    value = resolve_pointer(json, pointer, default)
+                except JsonPointerException:
+                    value = default
         else:
-            value = json.get(field.name) or json.get(field.alias)
-        attributes[field.name] = value
-    return model_cls(**attributes)
+            alias = field_info.alias
+            value = json.get(field_name) or json.get(alias) if alias else json.get(field_name)
+        attributes[field_name] = value
+    # Use model_validate so values are coerced (e.g. str -> datetime/Enum).
+    # SQLModel table=True models skip validation on __init__, which would leave
+    # raw strings uncoerced under Pydantic v2, so validate explicitly here.
+    return model_cls.model_validate(attributes)

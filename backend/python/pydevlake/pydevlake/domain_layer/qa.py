@@ -28,10 +28,10 @@ class QaProject(DomainScope, table=True):
 class QaTestCase(DomainModel, table=True):
     __tablename__ = 'qa_test_cases'
     name: str
-    create_time: Optional[datetime]
-    creator_id: Optional[str]
-    type: Optional[str]
-    qa_api_id: Optional[str]
+    create_time: Optional[datetime] = None
+    creator_id: Optional[str] = None
+    type: Optional[str] = None
+    qa_api_id: Optional[str] = None
     qa_project_id: str
 
 
@@ -39,9 +39,9 @@ class QaTestCaseExecution(DomainModel, table=True):
     __tablename__ = 'qa_test_case_executions'
     qa_project_id: str
     qa_test_case_id: str
-    create_time: Optional[datetime]
-    start_time: Optional[datetime]
-    finish_time: Optional[datetime]
-    creator_id: Optional[str]
-    status: Optional[str]
+    create_time: Optional[datetime] = None
+    start_time: Optional[datetime] = None
+    finish_time: Optional[datetime] = None
+    creator_id: Optional[str] = None
+    status: Optional[str] = None
     is_invalid: bool = False

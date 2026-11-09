@@ -27,14 +27,26 @@ def Field(*args, primary_key: bool = False, auto_increment: Optional[bool] = Non
     """
     A wrapper around sqlmodel.Field that adds a source parameter.
     """
-    schema_extra = kwargs.get('schema_extra', {})
+    schema_extra = kwargs.pop('schema_extra', {})
     if source is not None:
         schema_extra['source'] = source
     if primary_key:
         schema_extra['primaryKey'] = True
     if auto_increment is not None:
         schema_extra['autoIncrement'] = auto_increment
-    return _Field(*args, **kwargs, primary_key=primary_key, schema_extra=schema_extra)
+    # Only pass primary_key if True; SQLModel 0.0.38 rejects it alongside sa_column
+    if primary_key:
+        field = _Field(*args, **kwargs, primary_key=True, schema_extra=schema_extra)
+    elif schema_extra:
+        field = _Field(*args, **kwargs, schema_extra=schema_extra)
+    else:
+        field = _Field(*args, **kwargs)
+    # SQLModel 0.0.38 doesn't propagate schema_extra to FieldInfo.json_schema_extra,
+    # so we set it manually for consumers like autoextract and model_json_schema.
+    if schema_extra:
+        field.json_schema_extra = schema_extra
+    return field
+
 
 
 from .model import ToolModel, ToolScope, DomainScope, Connection, ScopeConfig, DomainType, domain_id

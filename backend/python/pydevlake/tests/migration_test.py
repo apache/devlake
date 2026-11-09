@@ -45,7 +45,7 @@ def test_registration():
 
 
 def test_serialization():
-    val = my_migration.dict()
+    val = my_migration.model_dump()
     assert val["version"] == 20230520174322
     assert val["name"] == "my_migration"
     assert len(val["operations"]) == 3

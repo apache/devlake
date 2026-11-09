@@ -16,7 +16,7 @@
 import datetime
 from typing import Dict, Optional
 
-from pydantic import AnyUrl, BaseModel, SecretStr
+from pydantic import AnyUrl, BaseModel, ConfigDict, SecretStr
 
 from pydevlake import Field, ScopeConfig as BaseScopeConfig
 from pydevlake.model import Connection as BaseConnection, ToolModel, ToolScope
@@ -27,15 +27,13 @@ from redmine.migrations import *
 class StatusMapping(BaseModel):
     standard_status: str = Field(alias='standardStatus')
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class TypeMapping(BaseModel):
     standard_type: str = Field(alias='standardType')
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Connection(BaseConnection):
@@ -51,59 +49,59 @@ class ScopeConfig(BaseScopeConfig):
 
 
 class Project(ToolScope, table=True):
-    identifier: Optional[str]
-    description: Optional[str]
+    identifier: Optional[str] = None
+    description: Optional[str] = None
 
 
 class Issue(ToolModel, table=True):
     id: int = Field(primary_key=True, auto_increment=False)
-    project_id: Optional[int]
-    tracker_name: Optional[str]
-    status_name: Optional[str]
-    priority_name: Optional[str]
-    author_id: Optional[int]
-    author_name: Optional[str]
-    assigned_to_id: Optional[int]
-    assigned_to_name: Optional[str]
-    parent_id: Optional[int]
-    category_id: Optional[int]
-    category_name: Optional[str]
-    fixed_version_id: Optional[int]
-    fixed_version_name: Optional[str]
-    subject: Optional[str]
-    description: Optional[str]
-    start_date: Optional[datetime.date]
-    due_date: Optional[datetime.date]
-    done_ratio: Optional[int]
-    estimated_hours: Optional[float]
-    spent_hours: Optional[float]
-    total_spent_hours: Optional[float]
-    custom_fields_json: Optional[str]
-    relations_json: Optional[str]
-    created_on: Optional[datetime.datetime]
-    updated_on: Optional[datetime.datetime]
-    closed_on: Optional[datetime.datetime]
+    project_id: Optional[int] = None
+    tracker_name: Optional[str] = None
+    status_name: Optional[str] = None
+    priority_name: Optional[str] = None
+    author_id: Optional[int] = None
+    author_name: Optional[str] = None
+    assigned_to_id: Optional[int] = None
+    assigned_to_name: Optional[str] = None
+    parent_id: Optional[int] = None
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
+    fixed_version_id: Optional[int] = None
+    fixed_version_name: Optional[str] = None
+    subject: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime.date] = None
+    due_date: Optional[datetime.date] = None
+    done_ratio: Optional[int] = None
+    estimated_hours: Optional[float] = None
+    spent_hours: Optional[float] = None
+    total_spent_hours: Optional[float] = None
+    custom_fields_json: Optional[str] = None
+    relations_json: Optional[str] = None
+    created_on: Optional[datetime.datetime] = None
+    updated_on: Optional[datetime.datetime] = None
+    closed_on: Optional[datetime.datetime] = None
 
 
 class Journal(ToolModel, table=True):
     id: int = Field(primary_key=True, auto_increment=False)
-    issue_id: Optional[int]
-    user_id: Optional[int]
-    user_name: Optional[str]
-    notes: Optional[str]
-    details_json: Optional[str]
-    created_on: Optional[datetime.datetime]
-    private_notes: Optional[bool]
+    issue_id: Optional[int] = None
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    notes: Optional[str] = None
+    details_json: Optional[str] = None
+    created_on: Optional[datetime.datetime] = None
+    private_notes: Optional[bool] = None
 
 
 class TimeEntry(ToolModel, table=True):
     id: int = Field(primary_key=True, auto_increment=False)
-    project_id: Optional[int]
-    issue_id: Optional[int]
-    user_id: Optional[int]
-    user_name: Optional[str]
-    hours: Optional[float]
-    comments: Optional[str]
-    spent_on: Optional[datetime.date]
-    created_on: Optional[datetime.datetime]
-    updated_on: Optional[datetime.datetime]
+    project_id: Optional[int] = None
+    issue_id: Optional[int] = None
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    hours: Optional[float] = None
+    comments: Optional[str] = None
+    spent_on: Optional[datetime.date] = None
+    created_on: Optional[datetime.datetime] = None
+    updated_on: Optional[datetime.datetime] = None
