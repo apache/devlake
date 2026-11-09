@@ -1,0 +1,51 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Assigns an issue to its author when the author ticks
+# "Yes I am willing to submit a PR!" in the bug report or feature request form.
+# Runs on `edited` too, so ticking the box after the issue is opened also works.
+
+name: issue-auto-assign
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  assign-author:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.issue.state == 'open' &&
+      github.event.issue.user.type == 'User' &&
+      !contains(github.event.issue.assignees.*.login, github.event.issue.user.login)
+    steps:
+      - name: Assign the author when they will submit a PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          # Pass the body through env, never inline it into the script.
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          if printf '%s' "$BODY" | grep -qiE '^[[:space:]]*-[[:space:]]*\[x\][[:space:]]*Yes I am willing to submit a PR!'; then
+            gh issue edit "$ISSUE_NUMBER" --add-assignee "$AUTHOR"
+            echo "Assigned #$ISSUE_NUMBER to @$AUTHOR"
+          else
+            echo "The PR checkbox is not ticked; nothing to do"
+          fi
