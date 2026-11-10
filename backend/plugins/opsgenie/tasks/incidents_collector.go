@@ -130,7 +130,7 @@ func CollectIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 	return collector.Execute()
 }
