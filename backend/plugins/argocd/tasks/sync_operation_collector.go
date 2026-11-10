@@ -69,6 +69,9 @@ func CollectSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var appResponse struct {
 				Status struct {
+					Health struct {
+						Status string `json:"status"`
+					} `json:"health"`
 					History        []json.RawMessage `json:"history"`
 					OperationState json.RawMessage   `json:"operationState"`
 				} `json:"status"`
@@ -79,6 +82,7 @@ func CollectSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, err
 			}
 
+			recordHealthOnLatestSync(appResponse.Status.OperationState, appResponse.Status.History, appResponse.Status.Health.Status)
 			return sanitizeOperationEntries(appResponse.Status.OperationState, appResponse.Status.History), nil
 		},
 	})
@@ -88,6 +92,34 @@ func CollectSyncOperations(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return collector.Execute()
+}
+
+// recordHealthOnLatestSync stores the application's current health on the newest
+// history entry. Argo CD only reports health for the application as a whole, so
+// this is the one moment the value can be tied to a sync. When the operation in
+// progress failed or is still running, that newer sync owns the current health
+// and the last history entry is left untouched.
+func recordHealthOnLatestSync(operationState json.RawMessage, history []json.RawMessage, health string) {
+	if health == "" {
+		return
+	}
+	var operation struct {
+		Phase string `json:"phase"`
+	}
+	if err := json.Unmarshal(operationState, &operation); err == nil && operation.Phase != "" && !isRedundantOperationState(operation.Phase) {
+		return
+	}
+	for i := len(history) - 1; i >= 0; i-- {
+		var entry map[string]json.RawMessage
+		if err := json.Unmarshal(history[i], &entry); err != nil || entry == nil {
+			continue
+		}
+		entry["applicationHealth"], _ = json.Marshal(health)
+		if tagged, err := json.Marshal(entry); err == nil {
+			history[i] = tagged
+		}
+		return
+	}
 }
 
 func sanitizeOperationEntries(operationState json.RawMessage, history []json.RawMessage) []json.RawMessage {

@@ -1,0 +1,4 @@
+id,result,status,original_status,original_result
+argocd:ArgocdSyncOperation:1:myapp:1793527200,SUCCESS,DONE,Succeeded,Succeeded
+argocd:ArgocdSyncOperation:1:myapp:1793700000,FAILURE,DONE,Succeeded,Degraded
+argocd:ArgocdSyncOperation:1:myapp:1793786400,SUCCESS,DONE,Succeeded,Succeeded
