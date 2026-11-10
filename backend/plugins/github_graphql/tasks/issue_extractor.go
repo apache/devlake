@@ -47,11 +47,11 @@ func ExtractIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	config := data.Options.ScopeConfig
 	issueRegexes, err := githubTasks.NewIssueRegexes(config)
 	if err != nil {
-		return nil
+		return err
 	}
 	milestoneMap, err := getMilestoneMap(db, data.Options.GithubId, data.Options.ConnectionId)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{

@@ -91,7 +91,7 @@ func ExtractApiIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	config := data.Options.ScopeConfig
 	issueRegexes, err := NewIssueRegexes(config)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	extractor, extErr := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[IssuesResponse]{
