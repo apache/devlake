@@ -142,14 +142,8 @@ func NewApiClient(
 		if err != nil {
 			return nil, errors.Convert(err)
 		}
-		// check connectivity
-		res, err := apiClient.Get("/", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		if res.StatusCode == http.StatusBadGateway {
-			return nil, errors.BadInput.New(fmt.Sprintf("fail to connect to %v via %v", endpoint, proxy))
-		}
+		// No connectivity request here: endpoints behind SSO may redirect the
+		// API root to a login page and fail. Plugins test their own API instead.
 	} else {
 		// check connectivity
 		parsedUrl, err := url.Parse(endpoint)
