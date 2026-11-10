@@ -22,9 +22,9 @@ limitations under the License.
 For the Python plugin tests to run properly, the following steps must be taken:
 
 1. The following packages are required for Ubuntu: `libffi-dev default-libmysqlclient-dev libpq-dev`
-2. `python3.11` is required by the time of this document.
-   - Try `deadsnakes` if you are using Ubuntu 22.04 or above, the `python3.11-dev` is required.
-   - Use `virtualenv` if you are having multiple python versions. `virtualenv -p python3.11 path/to/venv` and `source path/to/venv/bin/activate.sh` should do the trick
+2. `python3.14` is required by the time of this document.
+   - Try `deadsnakes` if you are using Ubuntu 22.04 or above, the `python3.14-dev` is required.
+   - Use `virtualenv` if you are having multiple python versions. `virtualenv -p python3.14 path/to/venv` and `source path/to/venv/bin/activate.sh` should do the trick
 3. both `mysql-client` and `postgresql` are required.
    - `postgresql` is required for `psycopg2` to work
 4. [poetry](https://python-poetry.org/) is required.

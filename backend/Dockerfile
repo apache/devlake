@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     DEVLAKE_PLUGINS="$GO_PLUGINS" make all
 
 
-FROM python:3.11-slim-bookworm as base
+FROM python:3.14-slim-bookworm as base
 
 # apt-get upgrade picks up Debian security fixes that the base tag does not contain yet
 RUN apt-get update && \

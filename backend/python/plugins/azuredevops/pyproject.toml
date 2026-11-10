@@ -21,7 +21,7 @@ authors = ["Hezheng Yin <hezheng@merico.dev>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.14,<3.15"
 pydevlake = { path = "../../pydevlake", develop = true }
 
 

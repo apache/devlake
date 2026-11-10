@@ -21,7 +21,7 @@ authors = ["Roger Abelenda <3179183+rabelenda@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.14,<3.15"
 pydevlake = { path = "../../pydevlake", develop = true }
 
 [tool.poetry.group.dev.dependencies]

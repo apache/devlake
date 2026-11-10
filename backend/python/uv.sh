@@ -50,7 +50,7 @@ sync_project() {
     rm -rf .venv
   fi
   if [ ! -x .venv/bin/python ]; then
-    uv venv --python "${DEVLAKE_PYTHON_VERSION:-3.11}" .venv
+    uv venv --python "${DEVLAKE_PYTHON_VERSION:-3.14}" .venv
   fi
   uv pip install --python .venv/bin/python -e .
 }
