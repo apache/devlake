@@ -142,7 +142,7 @@ class Plugin(ABC):
                 domain_scopes.append(
                     msg.DynamicDomainScope(
                         type_name=type(scope).__name__,
-                        data=scope.json(exclude_unset=True, by_alias=True)
+                        data=scope.model_dump_json(exclude_unset=True, by_alias=True)
                     )
                 )
         return msg.PipelineData(

@@ -138,17 +138,11 @@ updates:
           - minor
           - patch
     ignore:
-      # pydevlake is written against Pydantic 1 and SQLModel 0.0.8. SQLModel is
-      # still pre-1.0, so SemVer treats even 0.0.8 -> 0.0.30 as a patch, yet that
-      # release pulls in SQLAlchemy 2 and Pydantic 2 and breaks
-      # `pydevlake/model.py` with "Passing primary_key is not supported when also
-      # passing a sa_column". Verified on a fork: the bump landed in the group
-      # and turned unit-test and test-e2e red.
-      # Drop both entries once pydevlake has been migrated to Pydantic 2.
+      # SQLModel is still pre-1.0, so SemVer treats every 0.0.x release as a
+      # patch, yet they change behavior: 0.0.48 rejects naive datetimes (which
+      # pydevlake stores) and pulls in SQLAlchemy 2.1. Bump it by hand and run
+      # the Python unit tests plus test-e2e (fakeplugin).
       - dependency-name: sqlmodel
-      - dependency-name: pydantic
-        update-types:
-          - version-update:semver-major
 
   # ------------------------------------------------------------- Docker ----
   #

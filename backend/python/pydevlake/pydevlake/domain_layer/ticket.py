@@ -24,10 +24,10 @@ from pydevlake.model import DomainModel, DomainScope, NoPKModel
 class Board(DomainScope, table=True):
     __tablename__ = 'boards'
     name: str
-    description: Optional[str]
-    url: Optional[str]
-    created_date: Optional[datetime]
-    type: Optional[str]
+    description: Optional[str] = None
+    url: Optional[str] = None
+    created_date: Optional[datetime] = None
+    type: Optional[str] = None
 
 
 class BoardIssue(NoPKModel, table=True):
@@ -45,12 +45,12 @@ class BoardSprint(NoPKModel, table=True):
 class Sprint(DomainModel, table=True):
     __tablename__ = 'sprints'
     name: str
-    url: Optional[str]
-    status: Optional[str]
-    started_date: Optional[datetime]
-    ended_date: Optional[datetime]
-    completed_date: Optional[datetime]
-    original_board_id: Optional[str]
+    url: Optional[str] = None
+    status: Optional[str] = None
+    started_date: Optional[datetime] = None
+    ended_date: Optional[datetime] = None
+    completed_date: Optional[datetime] = None
+    original_board_id: Optional[str] = None
 
 
 class SprintIssue(NoPKModel, table=True):
@@ -61,44 +61,44 @@ class SprintIssue(NoPKModel, table=True):
 
 class Issue(DomainModel, table=True):
     __tablename__ = 'issues'
-    url: Optional[str]
-    issue_key: Optional[str]
+    url: Optional[str] = None
+    issue_key: Optional[str] = None
     title: str
-    description: Optional[str]
-    epic_key: Optional[str]
-    type: Optional[str]
-    original_type: Optional[str]
+    description: Optional[str] = None
+    epic_key: Optional[str] = None
+    type: Optional[str] = None
+    original_type: Optional[str] = None
     status: str
-    original_status: Optional[str]
-    story_point: Optional[float]
-    resolution_date: Optional[datetime]
-    created_date: Optional[datetime]
-    updated_date: Optional[datetime]
-    lead_time_minutes: Optional[int]
-    original_estimate_minutes: Optional[int]
-    time_spent_minutes: Optional[int]
-    time_remaining_minutes: Optional[int]
-    creator_id: Optional[str]
-    creator_name: Optional[str]
-    assignee_id: Optional[str]
-    assignee_name: Optional[str]
-    parent_issue_id: Optional[str]
-    priority: Optional[str]
-    severity: Optional[str]
-    urgency: Optional[str]
-    component: Optional[str]
-    icon_url: Optional[str]
-    original_project: Optional[str]
+    original_status: Optional[str] = None
+    story_point: Optional[float] = None
+    resolution_date: Optional[datetime] = None
+    created_date: Optional[datetime] = None
+    updated_date: Optional[datetime] = None
+    lead_time_minutes: Optional[int] = None
+    original_estimate_minutes: Optional[int] = None
+    time_spent_minutes: Optional[int] = None
+    time_remaining_minutes: Optional[int] = None
+    creator_id: Optional[str] = None
+    creator_name: Optional[str] = None
+    assignee_id: Optional[str] = None
+    assignee_name: Optional[str] = None
+    parent_issue_id: Optional[str] = None
+    priority: Optional[str] = None
+    severity: Optional[str] = None
+    urgency: Optional[str] = None
+    component: Optional[str] = None
+    icon_url: Optional[str] = None
+    original_project: Optional[str] = None
     is_subtask: bool = False
-    due_date: Optional[datetime]
-    fix_versions: Optional[str]
+    due_date: Optional[datetime] = None
+    fix_versions: Optional[str] = None
 
 
 class IssueAssignee(NoPKModel, table=True):
     __tablename__ = 'issue_assignees'
     issue_id: str = Field(primary_key=True)
     assignee_id: str = Field(primary_key=True)
-    assignee_name: Optional[str]
+    assignee_name: Optional[str] = None
 
 
 class IssueLabel(NoPKModel, table=True):
@@ -110,34 +110,34 @@ class IssueLabel(NoPKModel, table=True):
 class IssueComment(DomainModel, table=True):
     __tablename__ = 'issue_comments'
     issue_id: str
-    body: Optional[str]
-    account_id: Optional[str]
-    created_date: Optional[datetime]
-    updated_date: Optional[datetime]
+    body: Optional[str] = None
+    account_id: Optional[str] = None
+    created_date: Optional[datetime] = None
+    updated_date: Optional[datetime] = None
 
 
 class IssueChangelogs(DomainModel, table=True):
     __tablename__ = 'issue_changelogs'
     issue_id: str
-    author_id: Optional[str]
-    author_name: Optional[str]
-    field_id: Optional[str]
-    field_name: Optional[str]
-    original_from_value: Optional[str]
-    original_to_value: Optional[str]
-    from_value: Optional[str]
-    to_value: Optional[str]
-    created_date: Optional[datetime]
+    author_id: Optional[str] = None
+    author_name: Optional[str] = None
+    field_id: Optional[str] = None
+    field_name: Optional[str] = None
+    original_from_value: Optional[str] = None
+    original_to_value: Optional[str] = None
+    from_value: Optional[str] = None
+    to_value: Optional[str] = None
+    created_date: Optional[datetime] = None
 
 
 class IssueWorklog(DomainModel, table=True):
     __tablename__ = 'issue_worklogs'
-    author_id: Optional[str]
-    comment: Optional[str]
-    time_spent_minutes: Optional[int]
-    logged_date: Optional[datetime]
-    started_date: Optional[datetime]
-    issue_id: Optional[str]
+    author_id: Optional[str] = None
+    comment: Optional[str] = None
+    time_spent_minutes: Optional[int] = None
+    logged_date: Optional[datetime] = None
+    started_date: Optional[datetime] = None
+    issue_id: Optional[str] = None
 
 
 class IssueRelationship(NoPKModel, table=True):

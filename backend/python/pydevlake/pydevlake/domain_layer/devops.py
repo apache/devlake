@@ -51,26 +51,26 @@ class CICDPipeline(DomainModel, table=True):
     __tablename__ = 'cicd_pipelines'
 
     name: str
-    cicd_scope_id: Optional[str]
+    cicd_scope_id: Optional[str] = None
 
-    status: Optional[CICDStatus]
-    result: Optional[CICDResult]
-    original_status: Optional[str]
-    original_result: Optional[str]
+    status: Optional[CICDStatus] = None
+    result: Optional[CICDResult] = None
+    original_status: Optional[str] = None
+    original_result: Optional[str] = None
 
-    created_date: Optional[datetime]
-    started_date: Optional[datetime]
-    queued_date: Optional[datetime]
-    finished_date: Optional[datetime]
+    created_date: Optional[datetime] = None
+    started_date: Optional[datetime] = None
+    queued_date: Optional[datetime] = None
+    finished_date: Optional[datetime] = None
 
-    duration_sec: Optional[float]
-    queued_duration_sec: Optional[float]
+    duration_sec: Optional[float] = None
+    queued_duration_sec: Optional[float] = None
 
-    type: Optional[CICDType]
-    environment: Optional[CICDEnvironment]
+    type: Optional[CICDType] = None
+    environment: Optional[CICDEnvironment] = None
 
-    display_title: Optional[str]
-    url: Optional[str]
+    display_title: Optional[str] = None
+    url: Optional[str] = None
 
 
 class CiCDPipelineCommit(NoPKModel, table=True):
@@ -80,17 +80,17 @@ class CiCDPipelineCommit(NoPKModel, table=True):
     branch: str
     repo_id: str
     repo_url: str
-    display_title: Optional[str]
-    url: Optional[str]
+    display_title: Optional[str] = None
+    url: Optional[str] = None
 
 
 class CicdScope(DomainScope):
     __tablename__ = 'cicd_scopes'
     name: str
-    description: Optional[str]
-    url: Optional[str]
-    createdDate: Optional[datetime]
-    updatedDate: Optional[datetime]
+    description: Optional[str] = None
+    url: Optional[str] = None
+    createdDate: Optional[datetime] = None
+    updatedDate: Optional[datetime] = None
 
 
 class CICDTask(DomainModel, table=True):
@@ -100,18 +100,18 @@ class CICDTask(DomainModel, table=True):
     pipeline_id: str
     cicd_scope_id: str
 
-    result: Optional[CICDResult]
-    status: Optional[CICDStatus]
-    original_status: Optional[str]
-    original_result: Optional[str]
+    result: Optional[CICDResult] = None
+    status: Optional[CICDStatus] = None
+    original_status: Optional[str] = None
+    original_result: Optional[str] = None
 
-    type: Optional[CICDType]
-    environment: Optional[CICDEnvironment]
+    type: Optional[CICDType] = None
+    environment: Optional[CICDEnvironment] = None
 
-    created_date: Optional[datetime]
-    queued_date: Optional[datetime]
-    started_date: Optional[datetime]
-    finished_date: Optional[datetime]
+    created_date: Optional[datetime] = None
+    queued_date: Optional[datetime] = None
+    started_date: Optional[datetime] = None
+    finished_date: Optional[datetime] = None
 
     duration_sec: float
-    queued_duration_sec: Optional[float]
+    queued_duration_sec: Optional[float] = None

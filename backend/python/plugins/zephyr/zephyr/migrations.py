@@ -30,99 +30,99 @@ def init_schemas(b: MigrationScriptBuilder):
         token: SecretStr
 
     class Project(ToolScope):
-        jira_project_id: Optional[int]
-        project_key: Optional[str]
+        jira_project_id: Optional[int] = None
+        project_key: Optional[str] = None
 
     class ScopeConfig(ToolTable, Model):
         name: str = Field(default='default')
-        entities: Optional[str]
-        connection_id: Optional[int]
+        entities: Optional[str] = None
+        connection_id: Optional[int] = None
         test_type_custom_field: str = Field(default='Test Type')
 
     class Folder(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        project_key: Optional[str]
-        name: Optional[str]
-        parent_id: Optional[int]
-        folder_type: Optional[str]
-        index: Optional[int]
+        project_key: Optional[str] = None
+        name: Optional[str] = None
+        parent_id: Optional[int] = None
+        folder_type: Optional[str] = None
+        index: Optional[int] = None
 
     class TestCase(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        key: Optional[str]
-        project_key: Optional[str]
-        name: Optional[str]
-        objective: Optional[str]
-        precondition: Optional[str]
-        created_on: Optional[datetime.datetime]
-        folder_id: Optional[int]
-        folder_name: Optional[str]
-        component_id: Optional[int]
-        component_name: Optional[str]
-        priority_id: Optional[int]
-        priority_name: Optional[str]
-        status_id: Optional[int]
-        status_name: Optional[str]
-        owner_account_id: Optional[str]
-        estimated_time: Optional[int]
-        labels_json: Optional[str]
-        custom_fields_json: Optional[str]
-        issue_links_json: Optional[str]
+        key: Optional[str] = None
+        project_key: Optional[str] = None
+        name: Optional[str] = None
+        objective: Optional[str] = None
+        precondition: Optional[str] = None
+        created_on: Optional[datetime.datetime] = None
+        folder_id: Optional[int] = None
+        folder_name: Optional[str] = None
+        component_id: Optional[int] = None
+        component_name: Optional[str] = None
+        priority_id: Optional[int] = None
+        priority_name: Optional[str] = None
+        status_id: Optional[int] = None
+        status_name: Optional[str] = None
+        owner_account_id: Optional[str] = None
+        estimated_time: Optional[int] = None
+        labels_json: Optional[str] = None
+        custom_fields_json: Optional[str] = None
+        issue_links_json: Optional[str] = None
 
     class TestCaseLabel(ToolModel):
         id: str = Field(primary_key=True, auto_increment=False)
-        test_case_id: Optional[int]
-        test_case_key: Optional[str]
-        label_name: Optional[str]
+        test_case_id: Optional[int] = None
+        test_case_key: Optional[str] = None
+        label_name: Optional[str] = None
 
     class TestCaseIssueLink(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        test_case_id: Optional[int]
-        test_case_key: Optional[str]
-        issue_id: Optional[int]
-        link_type: Optional[str]
+        test_case_id: Optional[int] = None
+        test_case_key: Optional[str] = None
+        issue_id: Optional[int] = None
+        link_type: Optional[str] = None
 
     class TestCycle(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        key: Optional[str]
-        project_key: Optional[str]
-        name: Optional[str]
-        description: Optional[str]
-        folder_id: Optional[int]
-        folder_name: Optional[str]
-        status_id: Optional[int]
-        status_name: Optional[str]
-        jira_project_version_id: Optional[int]
-        jira_project_version_name: Optional[str]
-        planned_start_date: Optional[datetime.datetime]
-        planned_end_date: Optional[datetime.datetime]
+        key: Optional[str] = None
+        project_key: Optional[str] = None
+        name: Optional[str] = None
+        description: Optional[str] = None
+        folder_id: Optional[int] = None
+        folder_name: Optional[str] = None
+        status_id: Optional[int] = None
+        status_name: Optional[str] = None
+        jira_project_version_id: Optional[int] = None
+        jira_project_version_name: Optional[str] = None
+        planned_start_date: Optional[datetime.datetime] = None
+        planned_end_date: Optional[datetime.datetime] = None
 
     class TestExecution(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        key: Optional[str]
-        project_key: Optional[str]
-        test_case_id: Optional[int]
-        test_cycle_id: Optional[int]
-        test_execution_status_id: Optional[int]
-        test_execution_status_name: Optional[str]
-        jira_project_version_id: Optional[int]
-        jira_project_version_name: Optional[str]
-        actual_end_date: Optional[datetime.datetime]
-        execution_time: Optional[int]
-        estimated_time: Optional[int]
-        executed_by_id: Optional[str]
-        assigned_to_id: Optional[str]
-        comment: Optional[str]
-        automated: Optional[bool]
-        custom_fields_json: Optional[str]
-        issue_links_json: Optional[str]
+        key: Optional[str] = None
+        project_key: Optional[str] = None
+        test_case_id: Optional[int] = None
+        test_cycle_id: Optional[int] = None
+        test_execution_status_id: Optional[int] = None
+        test_execution_status_name: Optional[str] = None
+        jira_project_version_id: Optional[int] = None
+        jira_project_version_name: Optional[str] = None
+        actual_end_date: Optional[datetime.datetime] = None
+        execution_time: Optional[int] = None
+        estimated_time: Optional[int] = None
+        executed_by_id: Optional[str] = None
+        assigned_to_id: Optional[str] = None
+        comment: Optional[str] = None
+        automated: Optional[bool] = None
+        custom_fields_json: Optional[str] = None
+        issue_links_json: Optional[str] = None
 
     class TestExecutionIssueLink(ToolModel):
         id: int = Field(primary_key=True, auto_increment=False)
-        test_execution_id: Optional[int]
-        test_execution_key: Optional[str]
-        issue_id: Optional[int]
-        link_type: Optional[str]
+        test_execution_id: Optional[int] = None
+        test_execution_key: Optional[str] = None
+        issue_id: Optional[int] = None
+        link_type: Optional[str] = None
 
     b.create_tables(
         Connection,

@@ -108,7 +108,7 @@ def _seed_raw(session, plugin, ctx, rows_by_stream):
     for stream_name, rows in rows_by_stream.items():
         raw_model = plugin.get_stream(stream_name).raw_model(session)
         for row in rows:
-            session.add(raw_model(params=params, data=json.dumps(row)))
+            session.add(raw_model(params=params, data=json.dumps(row).encode('utf8')))
     session.commit()
 
 

@@ -113,7 +113,7 @@ def test_extract_data(stream, raw_data, ctx):
         for each in raw_data:
             raw_model = stream.raw_model(session)
             raw_model.params = raw_data_params(ctx.connection.id, ctx.scope.id)
-            session.add(raw_model(data=json.dumps(each)))
+            session.add(raw_model(data=json.dumps(each).encode('utf8')))
         session.commit()
 
     gen = stream.extractor.run(ctx)

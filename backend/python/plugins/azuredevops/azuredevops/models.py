@@ -30,26 +30,26 @@ from azuredevops.migrations import *
 
 class AzureDevOpsConnection(Connection):
     token: SecretStr
-    organization: Optional[str]
+    organization: Optional[str] = None
 
 
 class GitRepositoryConfig(ScopeConfig):
-    refdiff: Optional[RefDiffOptions]
-    deployment_pattern: Optional[re.Pattern]
-    production_pattern: Optional[re.Pattern]
+    refdiff: Optional[RefDiffOptions] = None
+    deployment_pattern: Optional[re.Pattern] = None
+    production_pattern: Optional[re.Pattern] = None
     # Optional pattern with capture group to extract environment name from job/stage names
     # Example: r'(?:deploy|predeploy)[_-](.+?)(?:[_-](?:helm|terraform))?$' extracts 'xxxx-prod' from 'deploy_xxxx-prod_helm'
-    environment_pattern: Optional[re.Pattern]
+    environment_pattern: Optional[re.Pattern] = None
 
 
 class GitRepository(ToolScope, table=True):
     url: str
-    remote_url: Optional[str]
-    default_branch: Optional[str]
+    remote_url: Optional[str] = None
+    default_branch: Optional[str] = None
     project_id: str
     org_id: str
-    parent_repository_url: Optional[str] = Field(source='/parentRepository/url')
-    provider: Optional[str]
+    parent_repository_url: Optional[str] = Field(default=None, source='/parentRepository/url')
+    provider: Optional[str] = None
     updated_date: datetime.datetime = Field(source='/project/lastUpdateTime')
 
     def is_external(self):
@@ -63,28 +63,28 @@ class GitPullRequest(ToolModel, table=True):
         Completed = "completed"
 
     pull_request_id: int = Field(primary_key=True)
-    description: Optional[str]
+    description: Optional[str] = None
     status: PRStatus
     created_by_id: str = Field(source='/createdBy/id')
     created_by_name: str = Field(source='/createdBy/displayName')
     creation_date: datetime.datetime
-    closed_date: Optional[datetime.datetime]
+    closed_date: Optional[datetime.datetime] = None
     source_commit_sha: str = Field(source='/lastMergeSourceCommit/commitId')
     target_commit_sha: str = Field(source='/lastMergeTargetCommit/commitId')
-    merge_commit_sha: Optional[str] = Field(source='/lastMergeCommit/commitId')
-    url: Optional[str]
-    type: Optional[str] = Field(source='/labels/0/name')  # TODO: Add regex to scope config
-    title: Optional[str]
-    target_ref_name: Optional[str]
-    source_ref_name: Optional[str]
-    fork_repo_id: Optional[str] = Field(source='/forkSource/repository/id')
+    merge_commit_sha: Optional[str] = Field(default=None, source='/lastMergeCommit/commitId')
+    url: Optional[str] = None
+    type: Optional[str] = Field(default=None, source='/labels/0/name')  # TODO: Add regex to scope config
+    title: Optional[str] = None
+    target_ref_name: Optional[str] = None
+    source_ref_name: Optional[str] = None
+    fork_repo_id: Optional[str] = Field(default=None, source='/forkSource/repository/id')
 
 
 class GitPullRequestCommit(ToolModel, table=True):
     commit_id: str = Field(primary_key=True)
     pull_request_id: str
     author_name: str = Field(source='/author/name')
-    author_email: Optional[str] = Field(source='/author/email')
+    author_email: Optional[str] = Field(default=None, source='/author/email')
     author_date: datetime.datetime = Field(source='/author/date')
 
 
@@ -111,15 +111,15 @@ class Build(ToolModel, table=True):
 
     id: int = Field(primary_key=True)
     name: str = Field(source='/definition/name')
-    queue_time: Optional[datetime.datetime] = Field(source='/queueTime')
-    start_time: Optional[datetime.datetime]
-    finish_time: Optional[datetime.datetime]
+    queue_time: Optional[datetime.datetime] = Field(default=None, source='/queueTime')
+    start_time: Optional[datetime.datetime] = None
+    finish_time: Optional[datetime.datetime] = None
     status: BuildStatus
-    result: Optional[BuildResult]
+    result: Optional[BuildResult] = None
     source_branch: str
     source_version: str
-    display_title: Optional[str] = Field(source='/triggerInfo/ci.message')
-    url: Optional[str] = Field(source='/_links/web/href')
+    display_title: Optional[str] = Field(default=None, source='/triggerInfo/ci.message')
+    url: Optional[str] = Field(default=None, source='/_links/web/href')
 
 
 class Job(ToolModel, table=True):
@@ -145,10 +145,10 @@ class Job(ToolModel, table=True):
     id: str = Field(primary_key=True)
     build_id: str = Field(primary_key=True)
     name: str
-    start_time: Optional[datetime.datetime]
-    finish_time: Optional[datetime.datetime]
+    start_time: Optional[datetime.datetime] = None
+    finish_time: Optional[datetime.datetime] = None
     state: JobState
-    result: Optional[JobResult]
-    identifier: Optional[str]
-    type: Optional[str]
-    parent_id: Optional[str] = Field(source='/parentId')
+    result: Optional[JobResult] = None
+    identifier: Optional[str] = None
+    type: Optional[str] = None
+    parent_id: Optional[str] = Field(default=None, source='/parentId')

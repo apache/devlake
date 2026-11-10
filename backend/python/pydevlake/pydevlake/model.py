@@ -22,8 +22,8 @@ from datetime import datetime
 from enum import Enum
 
 import inflect
-from pydantic import AnyUrl, SecretStr, validator
-from sqlalchemy import Column, DateTime, Text
+from pydantic import AnyUrl, SecretStr, field_validator, ConfigDict
+from sqlalchemy import DateTime, Text
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.inspection import inspect
 from sqlmodel import SQLModel
@@ -33,12 +33,13 @@ inflect_engine = inflect.engine()
 
 
 class Model(SQLModel):
-    id: Optional[int] = Field(primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     created_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime(), default=datetime.utcnow)
+        default=None, sa_type=DateTime(), sa_column_kwargs={'default': datetime.utcnow}
     )
     updated_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+        default=None, sa_type=DateTime(),
+        sa_column_kwargs={'default': datetime.utcnow, 'onupdate': datetime.utcnow}
     )
 
     def set_updated_at(self):
@@ -46,32 +47,33 @@ class Model(SQLModel):
             self.updated_at = datetime.utcnow()
 
 
+def _to_camel(attr_name: str) -> str:
+    """Convert snake_case to camelCase for alias generation."""
+    parts = attr_name.split('_')
+    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+
+
 class ToolTable(SQLModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=_to_camel,
+        # Pydantic v1 accepted numbers for str fields; APIs often return ids as numbers.
+        coerce_numbers_to_str=True,
+    )
+
     @declared_attr
     def __tablename__(cls) -> str:
         plugin_name = _get_plugin_name(cls)
         plural_entity = inflect_engine.plural_noun(cls.__name__.lower())
         return f'_tool_{plugin_name}_{plural_entity}'
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {
-            SecretStr: lambda v: v.get_secret_value() if v else None
-        }
-
-        @classmethod
-        def alias_generator(cls, attr_name: str) -> str:
-            # Allow to set snake_cased attributes with camelCased keyword args.
-            # Useful for extractors dealing with raw data that has camelCased attributes.
-            parts = attr_name.split('_')
-            return parts[0] + ''.join(word.capitalize() for word in parts[1:])
-
 
 class Connection(ToolTable, Model):
     name: str = Field(unique=True)
-    proxy: Optional[AnyUrl]
+    proxy: Optional[AnyUrl] = None
 
-    @validator('proxy', pre=True)
+    @field_validator('proxy', mode='before')
+    @classmethod
     def allow_empty_proxy(cls, proxy):
         if proxy == "":
             return None
@@ -90,9 +92,10 @@ class DomainType(Enum):
 class ScopeConfig(ToolTable, Model):
     name: str = Field(default="default")
     domain_types: list[DomainType] = Field(default=list(DomainType), alias="entities")
-    connection_id: Optional[int]
+    connection_id: Optional[int] = None
 
-    @validator('domain_types', pre=True, always=True)
+    @field_validator('domain_types', mode='before')
+    @classmethod
     def set_default_domain_types(cls, v):
         if v is None:
             return list(DomainType)
@@ -101,9 +104,11 @@ class ScopeConfig(ToolTable, Model):
 
 class RawModel(SQLModel):
     id: int = Field(primary_key=True)
-    params: str = b''
+    # Keep the column types of existing raw tables (they are only created if
+    # missing): data/input are binary, url is TEXT.
+    params: str = ''
     data: bytes
-    url: str = Field(default=b'', sa_column=Column(Text))
+    url: str = Field(default='', sa_type=Text())
     input: bytes = b''
     created_at: datetime = Field(default_factory=datetime.now)
 
@@ -111,10 +116,10 @@ class RawModel(SQLModel):
 class RawDataOrigin(SQLModel):
     # SQLModel doesn't like attributes starting with _
     # so we change the names of the columns.
-    raw_data_params: Optional[str] = Field(sa_column_kwargs={'name': '_raw_data_params'}, alias='_raw_data_params')
-    raw_data_table: Optional[str] = Field(sa_column_kwargs={'name': '_raw_data_table'}, alias='_raw_data_table')
-    raw_data_id: Optional[str] = Field(sa_column_kwargs={'name': '_raw_data_id'}, alias='_raw_data_id')
-    raw_data_remark: Optional[str] = Field(sa_column_kwargs={'name': '_raw_data_remark'}, alias='_raw_data_remark')
+    raw_data_params: Optional[str] = Field(default=None, sa_column_kwargs={'name': '_raw_data_params'}, alias='_raw_data_params')
+    raw_data_table: Optional[str] = Field(default=None, sa_column_kwargs={'name': '_raw_data_table'}, alias='_raw_data_table')
+    raw_data_id: Optional[str] = Field(default=None, sa_column_kwargs={'name': '_raw_data_id'}, alias='_raw_data_id')
+    raw_data_remark: Optional[str] = Field(default=None, sa_column_kwargs={'name': '_raw_data_remark'}, alias='_raw_data_remark')
 
     def set_raw_origin(self, raw: RawModel):
         self.raw_data_id = raw.id
@@ -129,10 +134,11 @@ class RawDataOrigin(SQLModel):
 
 class NoPKModel(RawDataOrigin):
     created_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime(), default=datetime.utcnow)
+        default=None, sa_type=DateTime(), sa_column_kwargs={'default': datetime.utcnow}
     )
     updated_at: Optional[datetime] = Field(
-        sa_column=Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+        default=None, sa_type=DateTime(),
+        sa_column_kwargs={'default': datetime.utcnow, 'onupdate': datetime.utcnow}
     )
 
     def set_updated_at(self):
@@ -141,7 +147,7 @@ class NoPKModel(RawDataOrigin):
 
 
 class ToolModel(ToolTable, NoPKModel):
-    connection_id: Optional[int] = Field(primary_key=True, auto_increment=False)
+    connection_id: Optional[int] = Field(default=None, primary_key=True, auto_increment=False)
 
     def domain_id(self):
         """
@@ -161,13 +167,13 @@ class ToolModel(ToolTable, NoPKModel):
 
 
 class DomainModel(NoPKModel):
-    id: Optional[str] = Field(primary_key=True)
+    id: Optional[str] = Field(default=None, primary_key=True)
 
 
 class ToolScope(ToolModel):
     id: str = Field(primary_key=True)
     name: str
-    scope_config_id: Optional[int]
+    scope_config_id: Optional[int] = None
 
 
 class DomainScope(DomainModel):
@@ -210,9 +216,9 @@ class SubtaskRun(SQLModel, table=True):
     """
     Table storing information about the execution of subtasks.
     """
-    id: Optional[int] = Field(primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     subtask_name: str
     connection_id: int
     started: datetime
-    completed: Optional[datetime]
-    state: str = Field(sa_column=Column(Text))  # JSON encoded dict of atomic values
+    completed: Optional[datetime] = None
+    state: str = Field(sa_type=Text())  # JSON encoded dict of atomic values

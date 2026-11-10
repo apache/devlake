@@ -14,9 +14,9 @@
 # limitations under the License.
 
 
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel, SerializeAsAny
 
 from pydevlake.model import ToolScope
 from pydevlake.migration import MigrationScript
@@ -25,8 +25,7 @@ from pydevlake.model_info import DynamicModelInfo
 
 
 class Message(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class SubtaskMeta(BaseModel):
@@ -36,7 +35,7 @@ class SubtaskMeta(BaseModel):
     enabled_by_default: bool
     description: str
     domain_types: list[str]
-    arguments: list[str] = None
+    arguments: Optional[list[str]] = None
 
 
 class PluginInfo(Message):
@@ -44,7 +43,7 @@ class PluginInfo(Message):
     description: str
     connection_model_info: DynamicModelInfo
     scope_model_info: DynamicModelInfo
-    scope_config_model_info: Optional[DynamicModelInfo]
+    scope_config_model_info: Optional[DynamicModelInfo] = None
     tool_model_infos: list[DynamicModelInfo]
     migration_scripts: list[MigrationScript]
     plugin_path: str
@@ -81,17 +80,20 @@ class RemoteScopeTreeNode(Message):
 
 
 class RemoteScopeGroup(RemoteScopeTreeNode):
-    type: str = Field("group", const=True)
+    type: Literal["group"] = "group"
 
 
 class RemoteScope(RemoteScopeTreeNode):
-    type: str = Field("scope", const=True)
+    type: Literal["scope"] = "scope"
     parent_id: str = Field(..., alias="parentId")
-    data: ToolScope
+    # SerializeAsAny keeps pydantic v2 from serializing this field by its
+    # declared base type (ToolScope) and dropping subclass-only fields such as
+    # the concrete scope's `url`; v1 always serialized the runtime type.
+    data: SerializeAsAny[ToolScope]
 
 
-class RemoteScopes(Message):
-    __root__: list[RemoteScopeTreeNode]
+class RemoteScopes(RootModel[list[RemoteScopeTreeNode]]):
+    pass
 
 
 class TestConnectionResult(Message):

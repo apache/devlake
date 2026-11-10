@@ -33,11 +33,11 @@ class PullRequest(DomainModel, table=True):
     url: str
     author_name: str
     author_id: str
-    parent_pr_id: Optional[str]
+    parent_pr_id: Optional[str] = None
     pull_request_key: int
     created_date: datetime
-    merged_date: Optional[datetime]
-    closed_date: Optional[datetime]
+    merged_date: Optional[datetime] = None
+    closed_date: Optional[datetime] = None
     type: str
     component: str
     merge_commit_sha: str
@@ -78,8 +78,8 @@ class Commit(NoPKModel, table=True):
     __tablename__ = 'commits'
     sha: str = Field(primary_key=True)
     additions: str
-    deletions: Optional[str]
-    dev_eq: Optional[str]
+    deletions: Optional[str] = None
+    dev_eq: Optional[str] = None
     message: str
     author_name: str
     author_email: int
@@ -144,12 +144,12 @@ class Repo(DomainScope, table=True):
     __tablename__ = "repos"
     name: str
     url: str
-    description: Optional[str]
-    owner_id: Optional[str]
-    language: Optional[str]
-    forked_from: Optional[str]
-    created_date: Optional[datetime]
-    updated_date: Optional[datetime]
+    description: Optional[str] = None
+    owner_id: Optional[str] = None
+    language: Optional[str] = None
+    forked_from: Optional[str] = None
+    created_date: Optional[datetime] = None
+    updated_date: Optional[datetime] = None
     deleted: bool
 
 
