@@ -1,0 +1,4 @@
+connection_id,full_name,job_name,job_path,duration,estimated_duration,number,result,timestamp,start_time,class,building,_raw_data_params,_raw_data_table,_raw_data_id,_raw_data_remark
+1,devlake#1,devlake,job/,3600000,0,1,SUCCESS,1767052800000,2025-12-30T00:00:00.000+00:00,WorkflowRun,0,,,0,
+1,devlake#2,devlake,job/,0,0,2,,1767139200000,2025-12-31T00:00:00.000+00:00,WorkflowRun,1,,,0,
+1,other#7,other,job/,0,0,7,,1767139200000,2025-12-31T00:00:00.000+00:00,WorkflowRun,1,,,0,
