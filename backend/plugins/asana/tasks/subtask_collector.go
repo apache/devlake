@@ -74,13 +74,15 @@ func CollectSubtask(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		ApiClient:   data.ApiClient,
 		Input:       iterator,
+		PageSize:    asanaPageSize,
 		UrlTemplate: "tasks/{{ .Input.Gid }}/subtasks",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			query.Set("opt_fields", "gid,name,notes,resource_type,resource_subtype,completed,completed_at,due_on,created_at,modified_at,permalink_url,assignee,created_by,parent,num_subtasks,memberships.section,memberships.project")
-			query.Set("limit", "100")
+			setAsanaPageQuery(query, reqData)
 			return query, nil
 		},
+		GetNextPageCustomData: getNextAsanaPageOffset,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var resp asanaListResponse
 			err := api.UnmarshalResponse(res, &resp)

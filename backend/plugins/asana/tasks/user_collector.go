@@ -52,30 +52,15 @@ func CollectUser(taskCtx plugin.SubTaskContext) errors.Error {
 			Table: rawUserTable,
 		},
 		ApiClient:   data.ApiClient,
-		PageSize:    100,
+		PageSize:    asanaPageSize,
 		UrlTemplate: "projects/{{ .Params.ProjectId }}/members",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			query.Set("opt_fields", "gid,name,email,resource_type,photo.image_128x128")
-			query.Set("limit", "100")
-			if reqData.CustomData != nil {
-				if offset, ok := reqData.CustomData.(string); ok && offset != "" {
-					query.Set("offset", offset)
-				}
-			}
+			setAsanaPageQuery(query, reqData)
 			return query, nil
 		},
-		GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-			var resp asanaListResponse
-			err := api.UnmarshalResponse(prevPageResponse, &resp)
-			if err != nil {
-				return nil, err
-			}
-			if resp.NextPage != nil && resp.NextPage.Offset != "" {
-				return resp.NextPage.Offset, nil
-			}
-			return nil, nil
-		},
+		GetNextPageCustomData: getNextAsanaPageOffset,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var resp asanaListResponse
 			err := api.UnmarshalResponse(res, &resp)

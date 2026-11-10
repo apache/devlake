@@ -61,31 +61,16 @@ func CollectTask(taskCtx plugin.SubTaskContext) errors.Error {
 			Table: rawTaskTable,
 		},
 		ApiClient:   data.ApiClient,
-		PageSize:    100,
+		PageSize:    asanaPageSize,
 		UrlTemplate: "projects/{{ .Params.ProjectId }}/tasks",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
-			query.Set("limit", "100")
 			// Request all fields needed for transformation including section name
 			query.Set("opt_fields", "gid,name,notes,resource_type,resource_subtype,completed,completed_at,due_on,created_at,modified_at,permalink_url,assignee,assignee.name,created_by,created_by.name,parent,num_subtasks,memberships.section,memberships.section.name,memberships.project")
-			if reqData.CustomData != nil {
-				if offset, ok := reqData.CustomData.(string); ok && offset != "" {
-					query.Set("offset", offset)
-				}
-			}
+			setAsanaPageQuery(query, reqData)
 			return query, nil
 		},
-		GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-			var resp asanaTaskListResponse
-			err := api.UnmarshalResponse(prevPageResponse, &resp)
-			if err != nil {
-				return nil, err
-			}
-			if resp.NextPage != nil && resp.NextPage.Offset != "" {
-				return resp.NextPage.Offset, nil
-			}
-			return nil, nil
-		},
+		GetNextPageCustomData: getNextAsanaPageOffset,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var w asanaTaskListResponse
 			err := api.UnmarshalResponse(res, &w)

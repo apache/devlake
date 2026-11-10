@@ -73,13 +73,15 @@ func CollectTag(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		ApiClient:   data.ApiClient,
 		Input:       iterator,
+		PageSize:    asanaPageSize,
 		UrlTemplate: "tasks/{{ .Input.Gid }}/tags",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			query.Set("opt_fields", "gid,name,resource_type,color,notes,permalink_url")
-			query.Set("limit", "100")
+			setAsanaPageQuery(query, reqData)
 			return query, nil
 		},
+		GetNextPageCustomData: getNextAsanaPageOffset,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var resp asanaListResponse
 			err := api.UnmarshalResponse(res, &resp)
