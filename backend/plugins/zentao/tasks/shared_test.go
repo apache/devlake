@@ -195,3 +195,20 @@ func Test_getZentaoWebURL(t *testing.T) {
 		})
 	}
 }
+
+func Test_getSeverity(t *testing.T) {
+	tests := []struct {
+		severity int
+		want     string
+	}{
+		{1, "1"},
+		{3, "3"},
+		{4, "4"},
+		{10, "10"},
+	}
+	for _, tt := range tests {
+		if got := getSeverity(tt.severity); got != tt.want {
+			t.Errorf("getSeverity(%d) = %q, want %q", tt.severity, got, tt.want)
+		}
+	}
+}
