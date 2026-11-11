@@ -18,7 +18,7 @@
 FROM ghcr.io/astral-sh/uv:0.13.7 AS uv
 
 # Same Python line as the runtime image in backend/Dockerfile.
-FROM python:3.14-slim-bookworm
+FROM python:3.14-slim-trixie
 
 RUN apt -y update && apt -y upgrade && apt -y install tzdata make tar curl gcc g++ pkg-config git \
     zlib1g libffi-dev  \
