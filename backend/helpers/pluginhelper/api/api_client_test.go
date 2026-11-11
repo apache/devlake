@@ -18,11 +18,18 @@ limitations under the License.
 package api
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
+	"github.com/apache/devlake/core/config"
 	"github.com/apache/devlake/core/errors"
+	implcontext "github.com/apache/devlake/impls/context"
 	"github.com/apache/devlake/impls/logruslog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestApiClientBlackList(t *testing.T) {
@@ -94,4 +101,30 @@ func TestApiClientBlackList(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestNewApiClientWithProxyDoesNotProbeEndpoint is a regression test for
+// apache/devlake#8632: creating a client with a proxy must not send a request
+// to the endpoint root. Jira behind SSO redirects that root to a login page,
+// which made client creation fail with "stopped after 10 redirects".
+func TestNewApiClientWithProxyDoesNotProbeEndpoint(t *testing.T) {
+	var proxied atomic.Int32
+	// Behaves like a proxy in front of an SSO-protected server: every request
+	// is redirected back to itself, so any probe would end in a redirect loop.
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		proxied.Add(1)
+		http.Redirect(w, r, r.URL.String(), http.StatusFound)
+	}))
+	defer proxy.Close()
+
+	br := implcontext.NewDefaultBasicRes(config.GetConfig(), logruslog.Global, nil)
+	client, err := NewApiClient(context.Background(), "http://jira.example.invalid/rest/", nil, 0, proxy.URL, br)
+
+	require.Nil(t, err)
+	require.NotNil(t, client)
+	assert.Equal(t, int32(0), proxied.Load(), "NewApiClient must not send requests through the proxy")
+
+	// Requests made later still go through the proxy.
+	_, _ = client.Get("api/2/serverInfo", nil, nil)
+	assert.Greater(t, proxied.Load(), int32(0), "requests should be routed through the proxy")
 }
