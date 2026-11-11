@@ -86,8 +86,15 @@ func listAzuredevopsRemoteScopes(
 			children = append(children, remote...)
 		}
 
-		if remote, err := listAzuredevopsRepos(vsc, orgId, projectId); err == nil {
-			children = append(children, remote...)
+		// Repos turned off in project settings still leaves the default Git repo in the Git API.
+		reposEnabled, reposErr := vsc.GitReposEnabled(orgId, projectId)
+		if reposErr != nil || reposEnabled {
+			if remote, err := listAzuredevopsRepos(vsc, orgId, projectId); err == nil {
+				children = append(children, remote...)
+			}
+		}
+		if len(children) == 0 {
+			children = append(children, projectScopeEntry(connection, orgId, projectId))
 		}
 	}
 	return children, nextPage, nil
@@ -137,9 +144,10 @@ func listAzuredevopsProjects(connection *models.AzuredevopsConnection, vsc azure
 					groupId = accountName + idSeparator + vv.Name
 				}
 				tmp = append(tmp, dsmodels.DsRemoteApiScopeListEntry[models.AzuredevopsRepo]{
-					Id:   groupId,
-					Type: api.RAS_ENTRY_TYPE_GROUP,
-					Name: vv.Name,
+					Id:       groupId,
+					Type:     api.RAS_ENTRY_TYPE_GROUP,
+					Name:     vv.Name,
+					FullName: vv.Name,
 				})
 			}
 			mu.Lock()
@@ -193,12 +201,39 @@ func listAzuredevopsRepos(
 			Type:     api.RAS_ENTRY_TYPE_SCOPE,
 			ParentId: &pID,
 			Id:       v.Id,
-			Name:     v.Name,
-			FullName: v.Name,
+			Name:     repo.Name,
+			FullName: repo.Name,
 			Data:     &repo,
 		})
 	}
 	return
+}
+
+func projectScopeEntry(connection *models.AzuredevopsConnection, orgId, projectId string) dsmodels.DsRemoteApiScopeListEntry[models.AzuredevopsRepo] {
+	parent := projectId
+	if orgId != "" {
+		parent = orgId + idSeparator + projectId
+	}
+	endpoint := ""
+	if connection != nil {
+		endpoint = connection.GetEndpoint()
+	}
+	repo := models.AzuredevopsRepo{
+		Id:   models.ProjectScopeID(orgId, projectId),
+		Type: models.RepositoryTypeProject,
+		Name: projectId + " (project)",
+		Url:  models.ProjectBoardURL(endpoint, orgId, projectId),
+	}
+	repo.ProjectId = projectId
+	repo.OrganizationId = orgId
+	return dsmodels.DsRemoteApiScopeListEntry[models.AzuredevopsRepo]{
+		Type:     api.RAS_ENTRY_TYPE_SCOPE,
+		ParentId: &parent,
+		Id:       repo.Id,
+		Name:     repo.Name,
+		FullName: repo.Name,
+		Data:     &repo,
+	}
 }
 
 func listRemoteRepos(

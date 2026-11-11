@@ -18,6 +18,8 @@ limitations under the License.
 package models
 
 import (
+	"strings"
+
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/plugin"
 )
@@ -48,6 +50,51 @@ func (repo AzuredevopsRepo) ScopeName() string {
 
 func (repo AzuredevopsRepo) ScopeFullName() string {
 	return repo.Name
+}
+
+func (repo AzuredevopsRepo) ProjectName() string {
+	name := repo.ProjectId
+	if name == "" {
+		name = repo.Name
+	}
+	return strings.TrimSuffix(name, " (project)")
+}
+
+func (repo AzuredevopsRepo) DomainName() string {
+	if repo.Type == RepositoryTypeADO && repo.ProjectId != "" && repo.Name != "" && !strings.HasPrefix(repo.Name, repo.ProjectId+"/") {
+		return repo.ProjectId + "/" + repo.Name
+	}
+	return repo.Name
+}
+
+func (repo AzuredevopsRepo) ProjectKey() string {
+	project := repo.ProjectName()
+	if repo.Type != RepositoryTypeProject && repo.ProjectId == "" {
+		return ""
+	}
+	return repo.OrganizationId + "/" + project
+}
+
+func (repo AzuredevopsRepo) ProjectDomainScopeID() string {
+	return ProjectScopeID(repo.OrganizationId, repo.ProjectName())
+}
+
+func ProjectScopeID(org, project string) string {
+	if org != "" {
+		return org + "/" + project + "/__project__"
+	}
+	return project + "/__project__"
+}
+
+func ProjectBoardURL(endpoint, org, project string) string {
+	base := strings.TrimRight(endpoint, "/")
+	if base == "" {
+		base = "https://dev.azure.com"
+	}
+	if org != "" {
+		return base + "/" + org + "/" + project
+	}
+	return base + "/" + project
 }
 
 func (repo AzuredevopsRepo) ScopeParams() interface{} {

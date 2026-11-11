@@ -93,19 +93,16 @@ export const AzureGoConfig: IPluginConfig = {
       ),
       {
         key: 'username',
-        label: 'Username (Optional for On-Premises)',
+        label: 'Username',
+        required: false,
         subLabel:
           'For On-Premises Azure DevOps Server, enter your Windows/Domain username if required (e.g. Administrator or domain\\user). Leave empty for Cloud.',
       },
       {
         key: 'token',
         label: 'Personal Access Token',
-        subLabel: (
-          <span>
-            For Azure DevOps Cloud, use a Personal Access Token (PAT). For On-Premises Server, use a PAT or your domain
-            password.
-          </span>
-        ),
+        subLabel:
+          'For Azure DevOps Cloud, use a Personal Access Token. For On-Premises Server, use a PAT or your domain password. Grant Read access to Build, Code, Graph, Project and Team, Work Items, and Test Management. Service Connections (Read) is also required to list externally connected repositories (GitHub, Bitbucket).',
       },
       ({ initialValues, values, setValues }: any) => (
         <ConnectionOrganization
@@ -129,16 +126,21 @@ export const AzureGoConfig: IPluginConfig = {
   },
   dataScope: {
     localSearch: true,
-    title: 'Repositories',
+    title: 'Projects and Repositories',
     millerColumn: {
       columnCount: 2,
     },
   },
   scopeConfig: {
-    entities: ['CODE', 'CODEREVIEW', 'CROSS', 'CICD'],
+    entities: ['CODE', 'CODEREVIEW', 'CROSS', 'CICD', 'TICKET', 'CODEQUALITY'],
     transformation: {
       deploymentPattern: '(deploy|push-image)',
       productionPattern: 'prod(.*)',
+      processTemplate: '',
+      typeMappings: {},
+      statusMappings: {},
+      collectChangelogs: false,
+      collectComments: false,
       refdiff: {
         tagsLimit: 10,
         tagsPattern: '/v\\d+\\.\\d+(\\.\\d+(-rc)*\\d*)*$/',

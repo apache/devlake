@@ -311,3 +311,81 @@ func (c *Client) GetRemoteRepositories(args GetRemoteRepositoriesArgs) ([]Remote
 		query.Set("continuationToken", contToken)
 	}
 }
+
+const reposFeatureID = "ms.vss-code.version-control"
+
+func (c *Client) GitReposEnabled(orgId, projectName string) (bool, errors.Error) {
+	project, err := c.getProject(orgId, projectName)
+	if err != nil {
+		return false, err
+	}
+	query := url.Values{}
+	query.Set("api-version", "4.1-preview.1")
+	path := fmt.Sprintf("_apis/FeatureManagement/FeatureStatesQuery/host/project/%s", url.PathEscape(project.Id))
+	if orgId != "" {
+		path = url.PathEscape(orgId) + "/" + path
+	}
+	res, err := c.apiClient.Post(path, query, map[string]interface{}{
+		"featureIds":  []string{reposFeatureID},
+		"scopeValues": map[string]string{"project": project.Id},
+	}, nil)
+	if err != nil {
+		return false, err
+	}
+	if res.StatusCode == http.StatusNonAuthoritativeInfo || res.StatusCode == http.StatusUnauthorized || res.StatusCode >= 400 {
+		_, _ = io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+		return false, errors.Default.New(fmt.Sprintf("failed to read Azure Repos service state (%d)", res.StatusCode))
+	}
+	var body struct {
+		FeatureStates map[string]struct {
+			State json.RawMessage `json:"state"`
+		} `json:"featureStates"`
+	}
+	if err = api.UnmarshalResponse(res, &body); err != nil {
+		return false, err
+	}
+	feature, ok := body.FeatureStates[reposFeatureID]
+	if !ok {
+		return true, nil
+	}
+	return !featureStateDisabled(feature.State), nil
+}
+
+func (c *Client) getProject(orgId, projectName string) (Project, errors.Error) {
+	query := url.Values{}
+	query.Set("api-version", apiVersion)
+	path := fmt.Sprintf("_apis/projects/%s", url.PathEscape(projectName))
+	if orgId != "" {
+		path = url.PathEscape(orgId) + "/" + path
+	}
+	res, err := c.apiClient.Get(path, query, nil)
+	if err != nil {
+		return Project{}, err
+	}
+	if res.StatusCode == http.StatusNonAuthoritativeInfo || res.StatusCode == http.StatusUnauthorized || res.StatusCode >= 400 {
+		_, _ = io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+		return Project{}, errors.Default.New(fmt.Sprintf("failed to read Azure DevOps project %s (%d)", projectName, res.StatusCode))
+	}
+	var project Project
+	if err = api.UnmarshalResponse(res, &project); err != nil {
+		return Project{}, err
+	}
+	if project.Id == "" {
+		return Project{}, errors.Default.New(fmt.Sprintf("Azure DevOps project %s has no id", projectName))
+	}
+	return project, nil
+}
+
+func featureStateDisabled(raw json.RawMessage) bool {
+	var text string
+	if json.Unmarshal(raw, &text) == nil {
+		return strings.EqualFold(text, "disabled") || text == "0"
+	}
+	var number float64
+	if json.Unmarshal(raw, &number) == nil {
+		return number == 0
+	}
+	return false
+}

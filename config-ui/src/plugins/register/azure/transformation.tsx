@@ -22,6 +22,8 @@ import { theme, Collapse, Tag, Input } from 'antd';
 import { ExternalLink, HelpTooltip } from '@/components';
 import { DOC_URL } from '@/release';
 
+import { AzureTicketTransformation } from './ticket-transformation';
+
 interface Props {
   entities: string[];
   transformation: any;
@@ -121,6 +123,12 @@ const renderCollapseItems = ({
           </div>
         </>
       ),
+    },
+    {
+      key: 'TICKET',
+      label: 'Work Items',
+      style: panelStyle,
+      children: <AzureTicketTransformation transformation={transformation} setTransformation={onChangeTransformation} />,
     },
     {
       key: 'ADDITIONAL',

@@ -25,6 +25,7 @@ interface Props {
   label?: string;
   subLabel?: string;
   placeholder?: string;
+  required?: boolean;
   initialValue: string;
   value: string;
   error: string;
@@ -36,6 +37,7 @@ export const ConnectionUsername = ({
   label,
   subLabel,
   placeholder,
+  required = true,
   initialValue,
   value,
   setValue,
@@ -46,15 +48,15 @@ export const ConnectionUsername = ({
   }, [initialValue]);
 
   useEffect(() => {
-    setError(value ? '' : 'username is required');
-  }, [value]);
+    setError(!required || value ? '' : 'username is required');
+  }, [required, value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
 
   return (
-    <Block title={label ?? 'Username'} description={subLabel ? subLabel : null} required>
+    <Block title={label ?? 'Username'} description={subLabel ? subLabel : null} required={required}>
       <Input
         style={{ width: 386 }}
         placeholder={placeholder ?? 'Your Username'}

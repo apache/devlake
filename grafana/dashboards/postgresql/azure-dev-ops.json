@@ -47,7 +47,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- Use Cases: This dashboard shows the basic Git and Code Review metrics from Azure DevOps.\n- Data Source Required: Azure DevOps",
+        "content": "- Use Cases: This dashboard shows Git, Code Review, CI/CD, Work Item, and Test Management metrics from Azure DevOps.\n- Data Source Required: Azure DevOps\n- Scope filters: **Repo** for code/CI metrics; **Board** for work items and test management metrics",
         "mode": "markdown"
       },
       "pluginVersion": "13.0.2",
@@ -2223,6 +2223,768 @@
       "type": "barchart"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 54
+      },
+      "id": 200,
+      "title": "4. Work Items (Azure Boards)",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 55
+      },
+      "id": 201,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select count(distinct i.id) as work_item_count\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere\n  $__timeFilter(i.created_date)\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "4.1 Number of Work Items Created",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 55
+      },
+      "id": 202,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select count(distinct i.id) as completed_work_items\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere\n  i.status = 'DONE'\n  and $__timeFilter(coalesce(i.resolution_date, i.updated_date))\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "4.2 Number of Completed Work Items",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 55
+      },
+      "id": 203,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CAST(i.created_date AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(i.created_date AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(i.created_date AS DATE)) - 1) END + 1) as time,\n  count(distinct case when i.status <> 'DONE' then i.id else null end) as \"Open Work Items\",\n  count(distinct case when i.status = 'DONE' then i.id else null end) as \"Completed Work Items\"\nFROM issues i\n  join board_issues bi on i.id = bi.issue_id\nWHERE\n  $__timeFilter(i.created_date)\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\ngroup by 1\nORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "4.3 Work Items Created Over Time",
+      "type": "barchart"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 61
+      },
+      "id": 204,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select AVG(CAST(i.lead_time_minutes AS NUMERIC) / NULLIF(1440, 0)) as mean_lead_time_days\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere\n  i.status = 'DONE'\n  and i.lead_time_minutes is not null\n  and $__timeFilter(coalesce(i.resolution_date, i.updated_date))\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "4.4 Mean Lead Time (Days)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 6,
+        "y": 61
+      },
+      "id": 205,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select\n  coalesce(nullif(i.type, ''), 'Unknown') as work_item_type,\n  count(distinct i.id) as work_item_count\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere\n  $__timeFilter(i.created_date)\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\ngroup by 1\norder by 2 desc",
+          "refId": "A"
+        }
+      ],
+      "title": "4.5 Work Items by Type",
+      "type": "piechart"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "id": 206,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select\n  i.issue_key,\n  i.title,\n  i.type,\n  i.original_type,\n  i.status,\n  i.original_status,\n  i.assignee_name,\n  i.created_date,\n  i.resolution_date,\n  i.url\nfrom issues i\n  join board_issues bi on i.id = bi.issue_id\nwhere\n  $__timeFilter(i.created_date)\n  and ('${board_id:csv}' = '' OR bi.board_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\norder by i.created_date desc\nlimit 50",
+          "refId": "A"
+        }
+      ],
+      "title": "4.6 Recent Work Items",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 300,
+      "title": "5. Test Management",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 76
+      },
+      "id": 301,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select count(distinct tc.id) as test_case_count\nfrom qa_test_cases tc\nwhere ('${board_id:csv}' = '' OR tc.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "5.1 Total Test Cases",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 76
+      },
+      "id": 302,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select count(distinct e.id) as execution_count\nfrom qa_test_case_executions e\nwhere\n  $__timeFilter(e.create_time)\n  and ('${board_id:csv}' = '' OR e.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "5.2 Test Executions",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "green",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 76
+      },
+      "id": 303,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select\n  100.0 * count(distinct case when e.status = 'SUCCESS' then e.id else null end)\n  / nullif(count(distinct e.id), 0) as pass_rate\nfrom qa_test_case_executions e\nwhere\n  $__timeFilter(e.create_time)\n  and ('${board_id:csv}' = '' OR e.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))",
+          "refId": "A"
+        }
+      ],
+      "title": "5.3 Test Pass Rate %",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 82
+      },
+      "id": 304,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  CAST(e.create_time AS DATE) + INTERVAL '1 DAY' * (-CASE WHEN '$interval' = 'DAYOFMONTH' THEN EXTRACT(DAY FROM CAST(e.create_time AS DATE)) ELSE (EXTRACT(ISODOW FROM CAST(e.create_time AS DATE)) - 1) END + 1) as time,\n  count(distinct case when e.status = 'SUCCESS' then e.id else null end) as \"Passed\",\n  count(distinct case when e.status = 'FAILED' then e.id else null end) as \"Failed\",\n  count(distinct case when e.status not in ('SUCCESS', 'FAILED') then e.id else null end) as \"Other\"\nFROM qa_test_case_executions e\nWHERE\n  $__timeFilter(e.create_time)\n  and ('${board_id:csv}' = '' OR e.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\nGROUP BY 1\nORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "5.4 Test Executions Over Time",
+      "type": "barchart"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 82
+      },
+      "id": 305,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select\n  coalesce(e.status, 'UNKNOWN') as status,\n  count(distinct e.id) as execution_count\nfrom qa_test_case_executions e\nwhere\n  $__timeFilter(e.create_time)\n  and ('${board_id:csv}' = '' OR e.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\ngroup by 1\norder by 2 desc",
+          "refId": "A"
+        }
+      ],
+      "title": "5.5 Test Execution Status Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 90
+      },
+      "id": 306,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "9.5.15",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select\n  tc.name as test_case,\n  e.status,\n  e.start_time,\n  e.finish_time,\n  e.create_time\nfrom qa_test_case_executions e\n  join qa_test_cases tc on tc.id = e.qa_test_case_id\nwhere\n  $__timeFilter(e.create_time)\n  and ('${board_id:csv}' = '' OR e.qa_project_id::text = ANY(ARRAY[${board_id:singlequote}]::text[]))\norder by e.create_time desc\nlimit 50",
+          "refId": "A"
+        }
+      ],
+      "title": "5.6 Recent Test Executions",
+      "type": "table"
+    },
+    {
       "datasource": {
         "type": "datasource",
         "uid": "grafana"
@@ -2231,7 +2993,7 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 98
       },
       "id": 99,
       "options": {
@@ -2267,6 +3029,32 @@
   "templating": {
     "list": [
       {
+        "allValue": "'*'",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+        "definition": "SELECT DISTINCT project || '--' || project AS text FROM (SELECT split_part(name, '/', 1) AS project FROM repos WHERE id::text LIKE 'azure%' AND position('/' in name) > 0 UNION SELECT name AS project FROM boards WHERE id::text LIKE 'azure%' UNION SELECT name AS project FROM qa_projects WHERE id::text LIKE 'azure%') projects WHERE project <> '' ORDER BY 1",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Project",
+        "multi": true,
+        "name": "project",
+        "options": [],
+        "query": "SELECT DISTINCT project || '--' || project AS text FROM (SELECT split_part(name, '/', 1) AS project FROM repos WHERE id::text LIKE 'azure%' AND position('/' in name) > 0 UNION SELECT name AS project FROM boards WHERE id::text LIKE 'azure%' UNION SELECT name AS project FROM qa_projects WHERE id::text LIKE 'azure%') projects WHERE project <> '' ORDER BY 1",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)--(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
         "allValue": "",
         "current": {
           "selected": true,
@@ -2278,14 +3066,40 @@
           ]
         },
         "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
-        "definition": "SELECT name || '--' || id AS text FROM repos WHERE id::text LIKE 'azure%'",
+        "definition": "SELECT CASE WHEN concat(${project}) = '*' THEN name ELSE CASE WHEN split_part(name, '/', 2) = '' THEN name ELSE split_part(name, '/', 2) END END || '--' || id AS text FROM repos WHERE id::text LIKE 'azure%' AND (concat(${project}) = '*' OR split_part(name, '/', 1) IN (${project}))",
         "hide": 0,
         "includeAll": true,
         "label": "Repo",
         "multi": true,
         "name": "repo_id",
         "options": [],
-        "query": "SELECT name || '--' || id AS text FROM repos WHERE id::text LIKE 'azure%'",
+        "query": "SELECT CASE WHEN concat(${project}) = '*' THEN name ELSE CASE WHEN split_part(name, '/', 2) = '' THEN name ELSE split_part(name, '/', 2) END END || '--' || id AS text FROM repos WHERE id::text LIKE 'azure%' AND (concat(${project}) = '*' OR split_part(name, '/', 1) IN (${project}))",
+        "refresh": 1,
+        "regex": "/^(?<text>.*)--(?<value>.*)$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "devlake-postgres-api"},
+        "definition": "SELECT name || '--' || id AS text FROM (SELECT name, id FROM boards WHERE id::text LIKE 'azure%' UNION SELECT name, id FROM qa_projects WHERE id::text LIKE 'azure%') scopes WHERE concat(${project}) = '*' OR name IN (${project})",
+        "hide": 2,
+        "includeAll": true,
+        "label": "Board",
+        "multi": true,
+        "name": "board_id",
+        "options": [],
+        "query": "SELECT name || '--' || id AS text FROM (SELECT name, id FROM boards WHERE id::text LIKE 'azure%' UNION SELECT name, id FROM qa_projects WHERE id::text LIKE 'azure%') scopes WHERE concat(${project}) = '*' OR name IN (${project})",
         "refresh": 1,
         "regex": "/^(?<text>.*)--(?<value>.*)$/",
         "skipUrlSync": false,
@@ -2330,6 +3144,6 @@
   "timezone": "utc",
   "title": "Azure DevOps",
   "uid": "ba7e3a95-80ed-4067-a54b-2a82758eb3dd-pg",
-  "version": 5,
+  "version": 7,
   "weekStart": ""
 }

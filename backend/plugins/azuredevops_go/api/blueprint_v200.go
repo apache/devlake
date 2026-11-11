@@ -20,15 +20,16 @@ package api
 import (
 	"net/url"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/utils"
 
 	coreModels "github.com/apache/devlake/core/models"
+	"github.com/apache/devlake/core/models/common"
+	"github.com/apache/devlake/core/models/domainlayer"
 	"github.com/apache/devlake/core/models/domainlayer/code"
 	"github.com/apache/devlake/core/models/domainlayer/devops"
 	"github.com/apache/devlake/core/models/domainlayer/didgen"
+	"github.com/apache/devlake/core/models/domainlayer/qa"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
 	"github.com/apache/devlake/core/plugin"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
@@ -51,7 +52,7 @@ func MakePipelinePlanV200(
 		return nil, nil, err
 	}
 
-	sc, err := makeScopeV200(connectionId, scopeDetails)
+	sc, err := makeScopeV200(connection, scopeDetails)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,65 +66,73 @@ func MakePipelinePlanV200(
 }
 
 func makeScopeV200(
-	connectionId uint64,
+	connection *models.AzuredevopsConnection,
 	scopeDetails []*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig],
 ) ([]plugin.Scope, errors.Error) {
 	sc := make([]plugin.Scope, 0, 3*len(scopeDetails))
-
-	for _, scope := range scopeDetails {
-		azuredevopsRepo, scopeConfig := scope.Scope, scope.ScopeConfig
-		if azuredevopsRepo.Type != models.RepositoryTypeADO {
-			continue
-		}
-		id := didgen.NewDomainIdGenerator(&models.AzuredevopsRepo{}).Generate(connectionId, azuredevopsRepo.Id)
-
-		// if no entities specified, use all entities enabled by default
-		if len(scopeConfig.Entities) == 0 {
-			scopeConfig.Entities = plugin.DOMAIN_TYPES
-		}
-
-		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE_REVIEW) ||
-			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) ||
-			utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CROSS) {
-			// if we don't need to collect gitex, we need to add repo to scopes here
-			scopeRepo := code.NewRepo(id, azuredevopsRepo.Name)
-			sc = append(sc, scopeRepo)
-		}
-
-		// add cicd_scope to scopes
-		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CICD) {
-			scopeCICD := devops.NewCicdScope(id, azuredevopsRepo.Name)
-			sc = append(sc, scopeCICD)
-		}
-
-		// add board to scopes
-		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_TICKET) {
-			scopeTicket := ticket.NewBoard(id, azuredevopsRepo.Name)
-			sc = append(sc, scopeTicket)
-		}
+	connectionId := uint64(0)
+	endpoint := ""
+	if connection != nil {
+		connectionId = connection.ID
+		endpoint = connection.GetEndpoint()
 	}
+	claimedProjects := map[string]struct{}{}
 
 	for _, scope := range scopeDetails {
 		azuredevopsRepo, scopeConfig := scope.Scope, scope.ScopeConfig
+		entities := models.ClaimProjectEntities(
+			models.ScopeEntities(azuredevopsRepo.Type, scopeConfig.Entities),
+			azuredevopsRepo.ProjectKey(),
+			claimedProjects,
+		)
+		repoID := didgen.NewDomainIdGenerator(&models.AzuredevopsRepo{}).Generate(connectionId, azuredevopsRepo.Id)
+		name := azuredevopsRepo.DomainName()
+
 		if azuredevopsRepo.Type == models.RepositoryTypeADO {
-			continue
+			if utils.StringsContains(entities, plugin.DOMAIN_TYPE_CODE_REVIEW) ||
+				utils.StringsContains(entities, plugin.DOMAIN_TYPE_CODE) ||
+				utils.StringsContains(entities, plugin.DOMAIN_TYPE_CROSS) {
+				sc = append(sc, code.NewRepo(repoID, name))
+			}
+			if utils.StringsContains(entities, plugin.DOMAIN_TYPE_CICD) {
+				sc = append(sc, devops.NewCicdScope(repoID, name))
+			}
+		} else if azuredevopsRepo.Type != models.RepositoryTypeProject {
+			if utils.StringsContains(entities, plugin.DOMAIN_TYPE_CICD) {
+				sc = append(sc, devops.NewCicdScope(repoID, name))
+			}
+			if !azuredevopsRepo.IsPrivate && utils.StringsContains(entities, plugin.DOMAIN_TYPE_CODE) {
+				sc = append(sc, code.NewRepo(repoID, name))
+			}
 		}
-		id := didgen.NewDomainIdGenerator(&models.AzuredevopsRepo{}).Generate(connectionId, azuredevopsRepo.Id)
-
-		// Azure DevOps Pipeline can be used with remote repositories such as GitHub and Bitbucket
-		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CICD) {
-			scopeCICD := devops.NewCicdScope(id, azuredevopsRepo.Name)
-			sc = append(sc, scopeCICD)
-		}
-
-		// DOMAIN_TYPE_CODE (i.e. gitextractor, rediff) only works if the repository is public
-		if !azuredevopsRepo.IsPrivate && utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) {
-			scopeRepo := code.NewRepo(id, azuredevopsRepo.Name)
-			sc = append(sc, scopeRepo)
-		}
+		sc = appendProjectScopes(sc, connectionId, endpoint, azuredevopsRepo, entities)
 	}
 
 	return sc, nil
+}
+
+func appendProjectScopes(sc []plugin.Scope, connectionId uint64, endpoint string, repo models.AzuredevopsRepo, entities []string) []plugin.Scope {
+	if !models.HasProjectEntity(entities) {
+		return sc
+	}
+	id := didgen.NewDomainIdGenerator(&models.AzuredevopsRepo{}).Generate(connectionId, repo.ProjectDomainScopeID())
+	projectName := repo.ProjectName()
+	if utils.StringsContains(entities, plugin.DOMAIN_TYPE_TICKET) {
+		board := ticket.NewBoard(id, projectName)
+		board.Type = "Scrum"
+		board.Url = models.ProjectBoardURL(endpoint, repo.OrganizationId, projectName)
+		sc = append(sc, board)
+	}
+	if utils.StringsContains(entities, plugin.DOMAIN_TYPE_CODE_QUALITY) {
+		sc = append(sc, &qa.QaProject{
+			DomainEntityExtended: domainlayer.DomainEntityExtended{
+				Id:        id,
+				NoPKModel: common.NewNoPKModel(),
+			},
+			Name: projectName,
+		})
+	}
+	return sc
 }
 
 func makePipelinePlanV200(
@@ -132,6 +141,7 @@ func makePipelinePlanV200(
 	scopeDetails []*srvhelper.ScopeDetail[models.AzuredevopsRepo, models.AzuredevopsScopeConfig],
 ) (coreModels.PipelinePlan, errors.Error) {
 	plans := make(coreModels.PipelinePlan, 0, 3*len(scopeDetails))
+	claimedProjects := map[string]struct{}{}
 	for _, scope := range scopeDetails {
 		azuredevopsRepo, scopeConfig := scope.Scope, scope.ScopeConfig
 		var stage coreModels.PipelineStage
@@ -147,18 +157,19 @@ func makePipelinePlanV200(
 		options["repositoryId"] = azuredevopsRepo.Id
 		options["repositoryType"] = azuredevopsRepo.Type
 
-		// construct subtasks
-		var entities []string
-		if scope.Scope.Type == models.RepositoryTypeADO {
-			entities = append(entities, scopeConfig.Entities...)
-		} else {
-			if i := slices.Index(scopeConfig.Entities, plugin.DOMAIN_TYPE_CICD); i >= 0 {
-				entities = append(entities, scopeConfig.Entities[i])
+		entities := models.ClaimProjectEntities(
+			models.ScopeEntities(azuredevopsRepo.Type, scopeConfig.Entities),
+			azuredevopsRepo.ProjectKey(),
+			claimedProjects,
+		)
+		if azuredevopsRepo.Type != models.RepositoryTypeADO && azuredevopsRepo.Type != models.RepositoryTypeProject && azuredevopsRepo.IsPrivate {
+			filtered := make([]string, 0, len(entities))
+			for _, entity := range entities {
+				if entity != plugin.DOMAIN_TYPE_CODE {
+					filtered = append(filtered, entity)
+				}
 			}
-
-			if i := slices.Index(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE); i >= 0 && !scope.Scope.IsPrivate {
-				entities = append(entities, scopeConfig.Entities[i])
-			}
+			entities = filtered
 		}
 
 		subtasks, err := helper.MakePipelinePlanSubtasks(subtaskMetas, entities)
@@ -173,7 +184,7 @@ func makePipelinePlanV200(
 		})
 
 		// collect git data by gitextractor if CODE was requested
-		if utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) && !scope.Scope.IsPrivate || len(scopeConfig.Entities) == 0 {
+		if azuredevopsRepo.Type != models.RepositoryTypeProject && (utils.StringsContains(scopeConfig.Entities, plugin.DOMAIN_TYPE_CODE) && !scope.Scope.IsPrivate || len(scopeConfig.Entities) == 0) {
 			cloneUrl, err := errors.Convert01(url.Parse(azuredevopsRepo.RemoteUrl))
 			if err != nil {
 				return nil, err
@@ -201,7 +212,7 @@ func makePipelinePlanV200(
 		plans = append(plans, stage)
 
 		// refdiff part
-		if scopeConfig.Refdiff != nil {
+		if azuredevopsRepo.Type != models.RepositoryTypeProject && scopeConfig.Refdiff != nil {
 			task := &coreModels.PipelineTask{
 				Plugin:  "refdiff",
 				Options: scopeConfig.Refdiff,
