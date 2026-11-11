@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+# uv version matches backend/Dockerfile; Dependabot updates both FROM lines.
+FROM ghcr.io/astral-sh/uv:0.13.7 AS uv
+
 # Same Python line as the runtime image in backend/Dockerfile.
 FROM python:3.11-slim-bookworm
 
@@ -47,4 +50,4 @@ ENV GOROOT=
 ENV PATH=${GOPATH}/bin:${PATH}
 
 # Python package manager
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/usr/local/bin sh
+COPY --from=uv /uv /uvx /usr/local/bin/
