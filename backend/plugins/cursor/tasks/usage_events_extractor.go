@@ -27,21 +27,22 @@ import (
 )
 
 type usageEventRecord struct {
-	Timestamp        string           `json:"timestamp"`
-	Model            string           `json:"model"`
-	Kind             string           `json:"kind"`
-	MaxMode          bool             `json:"maxMode"`
-	RequestsCosts    float64          `json:"requestsCosts"`
-	IsTokenBasedCall bool             `json:"isTokenBasedCall"`
-	TokenUsage       *usageTokenUsage `json:"tokenUsage"`
-	UserEmail        string           `json:"userEmail"`
-	IsChargeable     bool             `json:"isChargeable"`
-	ServiceAccountId string           `json:"serviceAccountId"`
-	IsHeadless       bool             `json:"isHeadless"`
-	ChargedCents     float64          `json:"chargedCents"`
-	CursorTokenFee   float64          `json:"cursorTokenFee"`
-	HostingType      string           `json:"hostingType"`
-	ConversationId   string           `json:"conversationId"`
+	Timestamp          string           `json:"timestamp"`
+	Model              string           `json:"model"`
+	Kind               string           `json:"kind"`
+	MaxMode            bool             `json:"maxMode"`
+	RequestsCosts      float64          `json:"requestsCosts"`
+	IsTokenBasedCall   bool             `json:"isTokenBasedCall"`
+	TokenUsage         *usageTokenUsage `json:"tokenUsage"`
+	UserEmail          string           `json:"userEmail"`
+	IsChargeable       bool             `json:"isChargeable"`
+	ServiceAccountId   string           `json:"serviceAccountId"`
+	ServiceAccountName string           `json:"serviceAccountName"`
+	IsHeadless         bool             `json:"isHeadless"`
+	ChargedCents       float64          `json:"chargedCents"`
+	CursorTokenFee     float64          `json:"cursorTokenFee"`
+	HostingType        string           `json:"hostingType"`
+	ConversationId     string           `json:"conversationId"`
 }
 
 type usageTokenUsage struct {
@@ -50,6 +51,20 @@ type usageTokenUsage struct {
 	CacheWriteTokens int     `json:"cacheWriteTokens"`
 	CacheReadTokens  int     `json:"cacheReadTokens"`
 	TotalCents       float64 `json:"totalCents"`
+}
+
+// resolveUsageEventActor returns stored userEmail, the key used in computeEventId, and false when the row should be skipped.
+func resolveUsageEventActor(userEmail, serviceAccountId string) (storedEmail, eventIdKey string, ok bool) {
+	storedEmail = strings.TrimSpace(userEmail)
+	serviceAccountId = normalizeNullableString(serviceAccountId)
+	if storedEmail == "" && serviceAccountId == "" {
+		return "", "", false
+	}
+	eventIdKey = storedEmail
+	if eventIdKey == "" {
+		eventIdKey = "sa:" + serviceAccountId
+	}
+	return storedEmail, eventIdKey, true
 }
 
 // ExtractUsageEvents parses raw usage event records into tool-layer tables.
@@ -71,34 +86,37 @@ func ExtractUsageEvents(taskCtx plugin.SubTaskContext) errors.Error {
 				return nil, err
 			}
 
-			userEmail := strings.TrimSpace(record.UserEmail)
-			if userEmail == "" {
+			userEmail, eventIdKey, ok := resolveUsageEventActor(record.UserEmail, record.ServiceAccountId)
+			if !ok {
 				rawID := uint64(0)
 				if row != nil {
 					rawID = row.ID
 				}
-				logger.Warn(nil, "skipping usage event raw row id=%d: missing userEmail", rawID)
+				logger.Warn(nil, "skipping usage event raw row id=%d: missing userEmail and serviceAccountId", rawID)
 				return nil, nil
 			}
 
+			serviceAccountId := normalizeNullableString(record.ServiceAccountId)
+
 			event := &models.CursorUsageEvent{
-				ConnectionId:     data.Options.ConnectionId,
-				ScopeId:          data.Options.ScopeId,
-				EventId:          computeEventId(record.Timestamp, userEmail, record.ConversationId, record.Model, record.ChargedCents, record.RequestsCosts),
-				EventTime:        eventTime,
-				UserEmail:        userEmail,
-				Model:            strings.TrimSpace(record.Model),
-				Kind:             strings.TrimSpace(record.Kind),
-				ConversationId:   strings.TrimSpace(record.ConversationId),
-				ChargedCents:     record.ChargedCents,
-				RequestsCosts:    record.RequestsCosts,
-				IsTokenBasedCall: record.IsTokenBasedCall,
-				IsChargeable:     record.IsChargeable,
-				MaxMode:          record.MaxMode,
-				IsHeadless:       record.IsHeadless,
-				CursorTokenFee:   record.CursorTokenFee,
-				HostingType:      strings.TrimSpace(record.HostingType),
-				ServiceAccountId: normalizeNullableString(record.ServiceAccountId),
+				ConnectionId:       data.Options.ConnectionId,
+				ScopeId:            data.Options.ScopeId,
+				EventId:            computeEventId(record.Timestamp, eventIdKey, record.ConversationId, record.Model, record.ChargedCents, record.RequestsCosts),
+				EventTime:          eventTime,
+				UserEmail:          userEmail,
+				Model:              strings.TrimSpace(record.Model),
+				Kind:               strings.TrimSpace(record.Kind),
+				ConversationId:     strings.TrimSpace(record.ConversationId),
+				ChargedCents:       record.ChargedCents,
+				RequestsCosts:      record.RequestsCosts,
+				IsTokenBasedCall:   record.IsTokenBasedCall,
+				IsChargeable:       record.IsChargeable,
+				MaxMode:            record.MaxMode,
+				IsHeadless:         record.IsHeadless,
+				CursorTokenFee:     record.CursorTokenFee,
+				HostingType:        strings.TrimSpace(record.HostingType),
+				ServiceAccountId:   serviceAccountId,
+				ServiceAccountName: normalizeNullableString(record.ServiceAccountName),
 			}
 			if record.TokenUsage != nil {
 				event.InputTokens = record.TokenUsage.InputTokens

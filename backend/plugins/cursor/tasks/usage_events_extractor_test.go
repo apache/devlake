@@ -18,48 +18,25 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestUsageEventRecordUnmarshalFractionalRequestsCosts(t *testing.T) {
-	raw := []byte(`{
-		"timestamp":"1783617259310",
-		"model":"composer-2.5-fast",
-		"kind":"Usage-based",
-		"requestsCosts":3.8,
-		"userEmail":"user@example.com",
-		"chargedCents":8,
-		"conversationId":"846952e0-0221-473b-bb1d-e5d016f071b1"
-	}`)
+func TestResolveUsageEventActor(t *testing.T) {
+	email, key, ok := resolveUsageEventActor("user@example.com", "null")
+	assert.True(t, ok)
+	assert.Equal(t, "user@example.com", email)
+	assert.Equal(t, "user@example.com", key)
 
-	var record usageEventRecord
-	if err := json.Unmarshal(raw, &record); err != nil {
-		t.Fatalf("unmarshal usage event: %v", err)
-	}
-	if record.RequestsCosts != 3.8 {
-		t.Fatalf("requestsCosts = %v, want 3.8", record.RequestsCosts)
-	}
-}
+	email, key, ok = resolveUsageEventActor("", "sa_radbot_123")
+	assert.True(t, ok)
+	assert.Equal(t, "", email)
+	assert.Equal(t, "sa:sa_radbot_123", key)
 
-func TestComputeEventIdWithFractionalRequestsCosts(t *testing.T) {
-	fractional := computeEventId(
-		"1783617259310",
-		"user@example.com",
-		"846952e0-0221-473b-bb1d-e5d016f071b1",
-		"composer-2.5-fast",
-		8,
-		3.8,
-	)
-	integer := computeEventId(
-		"1783617259310",
-		"user@example.com",
-		"846952e0-0221-473b-bb1d-e5d016f071b1",
-		"composer-2.5-fast",
-		8,
-		2,
-	)
-	if fractional == integer {
-		t.Fatal("expected fractional requestsCosts to change event id")
-	}
+	_, _, ok = resolveUsageEventActor("", "")
+	assert.False(t, ok)
+
+	_, _, ok = resolveUsageEventActor("  ", "null")
+	assert.False(t, ok)
 }

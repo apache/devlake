@@ -26,6 +26,17 @@
       "keepTime": true,
       "tags": [],
       "targetBlank": true,
+      "title": "Cursor Member Use",
+      "type": "link",
+      "url": "/d/cursor_member_use"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
       "title": "Cursor Usage & Cost",
       "type": "link",
       "url": "/d/cursor_usage"
@@ -59,7 +70,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- **Use case:** AI code tracking, repo/PR attribution, and conversation insights from Cursor Enterprise Analytics (`/analytics/ai-code/*`, Conversation Insights).\n- **Data source:** Cursor plugin \u2014 requires `key_tier=enterprise` on the connection. Commit-detail cost panels also require `hasAiCodeCommitDetails`.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for billing and adoption; [Cursor BugBot Review Analytics](/d/cursor_bugbot) for automated PR reviews.",
+        "content": "- **Use case:** AI code tracking, repo/PR attribution, and conversation insights from Cursor Enterprise Analytics (`/analytics/ai-code/*`, Conversation Insights).\n- **Data source:** Cursor plugin \u2014 requires `key_tier=enterprise` on the connection. Commit-detail cost panels also require `hasAiCodeCommitDetails`.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for billing and adoption; [Cursor Member Use](/d/cursor_member_use) for per-member and service-account cost; [Cursor BugBot Review Analytics](/d/cursor_bugbot) for automated PR reviews.",
         "mode": "markdown"
       },
       "pluginVersion": "11.0.0",

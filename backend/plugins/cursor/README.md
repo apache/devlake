@@ -45,7 +45,7 @@ It follows the same structure and patterns as other DevLake AI usage plugins (no
 | Table | Description |
 |-------|-------------|
 | `_tool_cursor_members` | Team member roster (email, name, role) |
-| `_tool_cursor_usage_events` | Billable usage events with model, tokens, and charged amounts |
+| `_tool_cursor_usage_events` | Billable usage events with model, tokens, charged amounts, and service account id/name when present |
 | `_tool_cursor_user_spend` | Per-user spend for the current billing cycle (on-demand and included) |
 | `_tool_cursor_daily_usage` | Daily adoption metrics: completions, requests by feature, tab acceptance, line edits |
 | `_tool_cursor_ai_code_commits` | Per-commit AI line attribution: TAB, Composer, and non-AI lines (Enterprise only) |
@@ -153,6 +153,7 @@ Grafana dashboard JSON lives under both `grafana/dashboards/mysql/` and `grafana
 | Cursor Usage & Cost | `cursor-usage.json` | `cursor_usage` | `cursor_usage-pg` |
 | Cursor Enterprise AI Code & Insights | `cursor-enterprise.json` | `cursor_enterprise` | `cursor_enterprise-pg` |
 | Cursor BugBot Review Analytics | `cursor-bugbot.json` | `cursor_bugbot` | `cursor_bugbot-pg` |
+| Cursor Member Use | `cursor-member-use.json` | `cursor_member_use` | `cursor_member_use-pg` |
 | AI Cost Efficiency (Cursor panels) | `ai-cost-efficiency.json` | — | — |
 | Multi-AI Comparison (Cursor panels) | `multi-ai-comparison.json` | — | — |
 
