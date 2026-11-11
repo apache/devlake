@@ -116,11 +116,17 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 // panicking; incident.io statuses are operator-defined, but their
 // categories form a small fixed enum, so anything new from upstream
 // shouldn't crash a production pipeline.
+//
+// The API values are triage, declined, merged, canceled, live,
+// learning, closed and paused. The app shows live as "Active" and
+// learning as "Post-incident". declined, merged and canceled are
+// terminal: the incident was declined in triage, merged into another
+// incident, or canceled.
 func mapStatusCategory(category string) (mapped string, known bool) {
 	switch category {
-	case "triage", "declared", "active", "paused", "post-incident":
+	case "triage", "live", "learning", "paused":
 		return ticket.IN_PROGRESS, true
-	case "closed", "resolved":
+	case "closed", "declined", "merged", "canceled":
 		return ticket.DONE, true
 	default:
 		return ticket.IN_PROGRESS, false
