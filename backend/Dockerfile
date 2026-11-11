@@ -23,6 +23,11 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
+# uv (Python package manager) is copied from its official image instead of
+# being downloaded by the install script at build time, so the version is
+# pinned and Dependabot keeps it current through this FROM line.
+FROM ghcr.io/astral-sh/uv:0.13.7 as uv
+
 FROM --platform=$BUILDPLATFORM golang:1.27-bookworm as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
@@ -105,8 +110,10 @@ COPY --chown=devlake:0 python/ /app/python/
 RUN python3 -m pip install --no-cache --upgrade pip setuptools && \
     python3 -m pip install --no-cache -r python/requirements.txt && \
     python3 -m pip install --upgrade pip && \
-    curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/app/.local/bin sh && \
     chgrp -R 0 /app/.local && chmod -R g=u /app/.local
+# Copied after the chgrp above so that it does not rewrite the binaries in a
+# second layer; they are already world-executable.
+COPY --from=uv --chown=devlake:0 /uv /uvx /app/.local/bin/
 ENV PATH="/app/.local/bin:${PATH}"
 
 # Build Python plugins, make sure the scripts has execute permission

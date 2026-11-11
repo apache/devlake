@@ -30,7 +30,7 @@
     "antd": "6.7.0",
     "axios": "1.21.0",
     "classnames": "^2.5.1",
-    "cron-parser": "5.10.3",
+    "cron-parser": "5.10.4",
     "cron-validate": "1.5.3",
     "dayjs": "1.11.23",
     "file-saver": "^2.0.5",

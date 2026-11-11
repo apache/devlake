@@ -2917,7 +2917,7 @@ __metadata:
     antd: "npm:6.7.0"
     axios: "npm:1.21.0"
     classnames: "npm:^2.5.1"
-    cron-parser: "npm:5.10.3"
+    cron-parser: "npm:5.10.4"
     cron-validate: "npm:1.5.3"
     dayjs: "npm:1.11.23"
     eslint: "npm:10.14.0"
@@ -2994,12 +2994,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.10.3":
-  version: 5.10.3
-  resolution: "cron-parser@npm:5.10.3"
+"cron-parser@npm:5.10.4":
+  version: 5.10.4
+  resolution: "cron-parser@npm:5.10.4"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/b993e803b3662e89e2af50a81d922e01e6bbf24f861576160d0cf22caf8dcd20231cc2e67d1d941ba47c78c39b8afe6df7b9c795c24de3be3ecab54adc706f3f
+  checksum: 10c0/4d672375cab88bcb886f914b545717a675d1fcdfcac5ca362b2cbbf34c60423271ae9893b280270a945ba8ed2f1a257f674de44e175bbad522218b98a8d48bc7
   languageName: node
   linkType: hard
 
