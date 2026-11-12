@@ -82,12 +82,16 @@ func listAzuredevopsRemoteScopes(
 	}
 
 	if projectId != "" {
-		if remote, err := listRemoteRepos(vsc, orgId, projectId); err == nil {
+		if remote, listErr := listRemoteRepos(vsc, orgId, projectId); listErr == nil {
 			children = append(children, remote...)
+		} else {
+			basicRes.GetLogger().Warn(listErr, "failed to list the external repositories of project %s", projectId)
 		}
 
-		if remote, err := listAzuredevopsRepos(vsc, orgId, projectId); err == nil {
+		if remote, listErr := listAzuredevopsRepos(vsc, orgId, projectId); listErr == nil {
 			children = append(children, remote...)
+		} else {
+			basicRes.GetLogger().Warn(listErr, "failed to list the Azure DevOps repositories of project %s", projectId)
 		}
 	}
 	return children, nextPage, nil
@@ -235,19 +239,25 @@ func listRemoteRepos(
 			Provider:        v.Type,
 			ServiceEndpoint: v.Id,
 		}
+		endpointName := v.Name
 
 		g.Go(func() error {
 			repos, err := vsc.GetRemoteRepositories(remoteRepoArgs)
+			if err != nil {
+				// A single service connection that cannot be queried (e.g. expired credentials) must not
+				// hide the repositories of all the other service connections, so skip it and keep going.
+				basicRes.GetLogger().Warn(err, "failed to list the repositories of service connection %q (%s), skipping it", endpointName, remoteRepoArgs.Provider)
+				return nil
+			}
 			mu.Lock()
 			remoteRepos = append(remoteRepos, repos...)
 			mu.Unlock()
-			return err
+			return nil
 		})
 	}
 
-	if err := g.Wait(); err != nil {
-		return nil, errors.Internal.Wrap(err, "failed to call 'GetRemoteRepositories', falling back to empty list")
-	}
+	// The goroutines never return an error, failures are logged and skipped above.
+	_ = g.Wait()
 
 	for _, v := range remoteRepos {
 		pID := orgId + idSeparator + projectId
