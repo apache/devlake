@@ -22,6 +22,7 @@ import { Input } from 'antd';
 import { Block } from '@/components';
 
 interface Props {
+  required?: boolean;
   label?: string;
   subLabel?: string;
   placeholder?: string;
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export const ConnectionUsername = ({
+  required = true,
   label,
   subLabel,
   placeholder,
@@ -46,15 +48,15 @@ export const ConnectionUsername = ({
   }, [initialValue]);
 
   useEffect(() => {
-    setError(value ? '' : 'username is required');
-  }, [value]);
+    setError(!required || value ? '' : 'username is required');
+  }, [value, required]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
 
   return (
-    <Block title={label ?? 'Username'} description={subLabel ? subLabel : null} required>
+    <Block title={label ?? 'Username'} description={subLabel ? subLabel : null} required={required}>
       <Input
         style={{ width: 386 }}
         placeholder={placeholder ?? 'Your Username'}

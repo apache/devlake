@@ -88,11 +88,28 @@ export const AzureGoConfig: IPluginConfig = {
     initialValues: {},
     fields: [
       'name',
-      ({ values, setValues }: any) => (
-        <BaseURL key="base-url" value={values.endpoint} onChange={(val) => setValues({ endpoint: val })} />
+      ({
+        initialValues,
+        values,
+        setValues,
+        setErrors,
+      }: {
+        initialValues: { endpoint?: string };
+        values: { endpoint?: string };
+        setValues: (values: { endpoint: string }) => void;
+        setErrors: (errors: { endpoint: string }) => void;
+      }) => (
+        <BaseURL
+          key="base-url"
+          initialValue={initialValues.endpoint ?? ''}
+          value={values.endpoint}
+          onChange={(val) => setValues({ endpoint: val })}
+          setError={(error) => setErrors({ endpoint: error })}
+        />
       ),
       {
         key: 'username',
+        required: false,
         label: 'Username (Optional for On-Premises)',
         subLabel:
           'For On-Premises Azure DevOps Server, enter your Windows/Domain username if required (e.g. Administrator or domain\\user). Leave empty for Cloud.',

@@ -16,30 +16,42 @@
  *
  */
 
-import React, { useState } from 'react';
-import { Input, Radio } from 'antd';
+import { useEffect, useState } from 'react';
+import { Input, Radio, type RadioChangeEvent } from 'antd';
 import { Block } from '@/components';
 
 interface Props {
+  initialValue?: string;
   value?: string;
   onChange?: (value: string) => void;
+  setError?: (error: string) => void;
 }
 
-export const BaseURL = ({ value, onChange }: Props) => {
-  // Default to 'server' mode if an endpoint value already exists, 'cloud' otherwise
+export const BaseURL = ({ initialValue, value, onChange, setError }: Props) => {
   const [version, setVersion] = useState<'cloud' | 'server'>(value ? 'server' : 'cloud');
 
-  const handleVersionChange = (e: any) => {
+  useEffect(() => {
+    if (initialValue !== undefined) {
+      onChange?.(initialValue);
+      setVersion(initialValue ? 'server' : 'cloud');
+    }
+  }, [initialValue]);
+
+  useEffect(() => {
+    setError?.(version === 'server' && !value?.trim() ? 'endpoint is required' : '');
+  }, [version, value]);
+
+  const handleVersionChange = (e: RadioChangeEvent) => {
     const selectedVersion = e.target.value;
     setVersion(selectedVersion);
     if (selectedVersion === 'cloud') {
-      onChange?.(''); // Reset endpoint when switching to Cloud mode
+      onChange?.('');
     }
   };
 
   return (
     <Block title="Azure DevOps Version" required>
-      <Radio.Group value={version} onChange={handleVersionChange}>
+      <Radio.Group name="azure-devops-version" value={version} onChange={handleVersionChange}>
         <Radio value="cloud">Azure DevOps Cloud</Radio>
         <Radio value="server">Azure DevOps Server (On-Premises)</Radio>
       </Radio.Group>

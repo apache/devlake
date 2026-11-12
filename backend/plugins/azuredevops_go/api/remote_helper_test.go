@@ -92,3 +92,32 @@ func TestListRemoteReposSkipsFailingServiceConnection(t *testing.T) {
 	}
 	logger.AssertExpectations(t)
 }
+
+func TestOnPremisesScopeDiscoveryIgnoresCloudOrganization(t *testing.T) {
+	connection := &models.AzuredevopsConnection{AzuredevopsConn: models.AzuredevopsConn{
+		Endpoint: "https://ado.example.com/tfs/DefaultCollection/", Organization: "cloud-org",
+	}}
+	client := &fakeApiClient{responses: map[string]string{
+		"_apis/projects":                                 `{"count":1,"value":[{"id":"project","name":"Project One"}]}`,
+		"Project%20One/_apis/git/repositories":           `{"value":[{"id":"native","name":"native"}]}`,
+		"Project%20One/_apis/serviceendpoint/endpoints/": `{"value":[{"id":"service","type":"github"}]}`,
+		"Project%20One/_apis/sourceProviders/github/repositories/?service": `{"repositories":[
+			{"id":"external","name":"external","fullName":"org/external","sourceProviderName":"github",
+			 "properties":{"connectedServiceId":"service","externalId":"external"}}
+		]}`,
+	}}
+	groups, _, err := listAzuredevopsRemoteScopes(connection, client, "", AzuredevopsRemotePagination{})
+	assert.Nil(t, err)
+	if assert.Len(t, groups, 1) {
+		assert.Equal(t, "Project One", groups[0].Id)
+	}
+	repos, _, err := listAzuredevopsRemoteScopes(connection, client, "Project One", AzuredevopsRemotePagination{})
+	assert.Nil(t, err)
+	if assert.Len(t, repos, 2) {
+		for _, repo := range repos {
+			assert.Equal(t, "Project One", *repo.ParentId)
+			assert.Empty(t, repo.Data.OrganizationId)
+			assert.Equal(t, "Project One", repo.Data.ProjectId)
+		}
+	}
+}

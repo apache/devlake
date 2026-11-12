@@ -60,6 +60,9 @@ func listAzuredevopsRemoteScopes(
 ) {
 
 	org := connection.Organization
+	if connection.Endpoint != "" {
+		org = ""
+	}
 	// Use the connection endpoint for On-Premises, or VSSPS for Cloud
 	clientUrl := "https://app.vssps.visualstudio.com"
 	if connection.Endpoint != "" {
@@ -260,7 +263,10 @@ func listRemoteRepos(
 	_ = g.Wait()
 
 	for _, v := range remoteRepos {
-		pID := orgId + idSeparator + projectId
+		pID := projectId
+		if orgId != "" {
+			pID = orgId + idSeparator + projectId
+		}
 		isFork, _ := strconv.ParseBool(v.Properties.IsFork)
 		isPrivate, _ := strconv.ParseBool(v.Properties.IsPrivate)
 
