@@ -24,6 +24,7 @@ import (
 	"path"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/apache/devlake/core/dal"
@@ -78,6 +79,11 @@ func getPriority(pri int) string {
 		}
 		return "Error"
 	*/
+}
+
+// getSeverity formats the numeric zentao bug severity (e.g. 3) as its decimal string ("3")
+func getSeverity(severity int) string {
+	return strconv.Itoa(severity)
 }
 
 func getOriginalProject(data *ZentaoTaskData) string {
