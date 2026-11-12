@@ -35,12 +35,16 @@ func TestMapStatusCategory(t *testing.T) {
 		expectedKnown bool
 	}{
 		{"triage", ticket.IN_PROGRESS, true},
-		{"declared", ticket.IN_PROGRESS, true},
-		{"active", ticket.IN_PROGRESS, true},
+		{"live", ticket.IN_PROGRESS, true},
+		{"learning", ticket.IN_PROGRESS, true},
 		{"paused", ticket.IN_PROGRESS, true},
-		{"post-incident", ticket.IN_PROGRESS, true},
 		{"closed", ticket.DONE, true},
-		{"resolved", ticket.DONE, true},
+		{"declined", ticket.DONE, true},
+		{"merged", ticket.DONE, true},
+		{"canceled", ticket.DONE, true},
+		// App display names, not API values.
+		{"active", ticket.IN_PROGRESS, false},
+		{"post-incident", ticket.IN_PROGRESS, false},
 		{"wat", ticket.IN_PROGRESS, false},
 		{"", ticket.IN_PROGRESS, false},
 	}
