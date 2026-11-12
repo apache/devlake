@@ -20,6 +20,7 @@ package tasks
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -41,7 +42,10 @@ var CollectPipelinesMeta = plugin.SubTaskMeta{
 func CollectPipelines(taskCtx plugin.SubTaskContext) errors.Error {
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_PIPELINE_TABLE)
 	logger := taskCtx.GetLogger()
-	timeAfter := rawDataSubTaskArgs.Ctx.TaskContext().SyncPolicy().TimeAfter
+	var timeAfter *time.Time
+	if syncPolicy := rawDataSubTaskArgs.Ctx.TaskContext().SyncPolicy(); syncPolicy != nil {
+		timeAfter = syncPolicy.TimeAfter
+	}
 	logger.Info("collect pipelines")
 	collector, err := api.NewStatefulApiCollectorForFinalizableEntity(api.FinalizableApiCollectorArgs{
 		RawDataSubTaskArgs: *rawDataSubTaskArgs,
@@ -53,25 +57,7 @@ func CollectPipelines(taskCtx plugin.SubTaskContext) errors.Error {
 				UrlTemplate: "/v2/project/{{ .Params.ProjectSlug }}/pipeline",
 				Query:       BuildQueryParamsWithPageToken,
 				ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-					data := CircleciPageTokenResp[[]json.RawMessage]{}
-					err := api.UnmarshalResponse(res, &data)
-
-					if err != nil {
-						return nil, err
-					}
-					filteredItems := []json.RawMessage{}
-					for _, item := range data.Items {
-						pipelineCreatedAt, err := extractCreatedAt(item)
-
-						if err != nil {
-							return nil, err
-						}
-						if pipelineCreatedAt.Before(*timeAfter) {
-							return filteredItems, api.ErrFinishCollect
-						}
-						filteredItems = append(filteredItems, item)
-					}
-					return filteredItems, nil
+					return parsePipelines(res, timeAfter)
 				},
 			},
 			GetCreated: extractCreatedAt,
@@ -82,4 +68,31 @@ func CollectPipelines(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 	return collector.Execute()
+}
+
+// parsePipelines returns the pipelines of a page. CircleCI lists pipelines
+// newest first, so the collection ends at the first pipeline created before
+// timeAfter. timeAfter is nil when the sync policy has no time range (e.g. an
+// advanced mode blueprint), and then every pipeline is kept.
+func parsePipelines(res *http.Response, timeAfter *time.Time) ([]json.RawMessage, errors.Error) {
+	data := CircleciPageTokenResp[[]json.RawMessage]{}
+	err := api.UnmarshalResponse(res, &data)
+	if err != nil {
+		return nil, err
+	}
+	if timeAfter == nil {
+		return data.Items, nil
+	}
+	filteredItems := []json.RawMessage{}
+	for _, item := range data.Items {
+		pipelineCreatedAt, err := extractCreatedAt(item)
+		if err != nil {
+			return nil, err
+		}
+		if pipelineCreatedAt.Before(*timeAfter) {
+			return filteredItems, api.ErrFinishCollect
+		}
+		filteredItems = append(filteredItems, item)
+	}
+	return filteredItems, nil
 }
