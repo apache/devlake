@@ -73,13 +73,15 @@ func CollectStory(taskCtx plugin.SubTaskContext) errors.Error {
 		},
 		ApiClient:   data.ApiClient,
 		Input:       iterator,
+		PageSize:    asanaPageSize,
 		UrlTemplate: "tasks/{{ .Input.Gid }}/stories",
 		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
 			query := url.Values{}
 			query.Set("opt_fields", "gid,resource_type,resource_subtype,text,html_text,is_pinned,is_edited,sticker_name,created_at,created_by,target")
-			query.Set("limit", "100")
+			setAsanaPageQuery(query, reqData)
 			return query, nil
 		},
+		GetNextPageCustomData: getNextAsanaPageOffset,
 		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
 			var resp asanaListResponse
 			err := api.UnmarshalResponse(res, &resp)
