@@ -28,6 +28,9 @@ This plugin can coexist with the Python Azure DevOps plugin at `../../python/plu
 
 Discovering external repositories also requires permission to read Service Connections.
 Cloud Graph account collection is skipped for on-premises connections.
+Source-provider repository HTTP errors are logged with their status and up to
+4 KiB of response detail. A failing service connection is skipped so repositories
+from other service connections can still be discovered.
 
 ## Azure DevOps Server (On-Premises)
 
@@ -62,7 +65,9 @@ use the following versions from the Microsoft REST reference:
 | Source provider repositories | 6.0-preview.1 | 7.0 | 7.1 | 7.2-preview.1 |
 
 On-premises requests are relative to the collection URL, without a Cloud
-organization prefix. This also applies to previously saved collection scopes.
+organization prefix. Previously saved organization-prefixed scope IDs are
+normalized to project-only parent IDs and empty organization IDs during
+on-premises discovery. Cloud scope IDs retain their organization prefix.
 External repository discovery follows the response body's `continuationToken`.
 The timeline API is not paginated; pull request commits use continuation tokens,
 not `$skip`.

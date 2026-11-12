@@ -303,8 +303,16 @@ func (c *Client) GetRemoteRepositories(args GetRemoteRepositoriesArgs) ([]Remote
 			return nil, errors.Internal.Wrap(err, "failed to read remote repositories")
 		}
 		if res.StatusCode != http.StatusOK {
+			body, readErr := io.ReadAll(io.LimitReader(res.Body, 4096))
 			res.Body.Close()
-			return nil, errors.Internal.New(fmt.Sprintf("failed to read remote repositories, upstream api call failed with (%v)", res.StatusCode))
+			message := fmt.Sprintf("failed to read remote repositories, upstream api call failed with (%v)", res.StatusCode)
+			if detail := strings.TrimSpace(string(body)); detail != "" {
+				message += ": " + detail
+			}
+			if readErr != nil {
+				return nil, errors.Internal.Wrap(readErr, message)
+			}
+			return nil, errors.Internal.New(message)
 		}
 		err = api.UnmarshalResponse(res, &response)
 		if err != nil {

@@ -80,8 +80,10 @@ func listAzuredevopsRemoteScopes(
 	if len(id) > 1 {
 		projectId = id[1]
 	} else if connection.Endpoint != "" {
-		orgId = ""
 		projectId = id[0]
+	}
+	if connection.Endpoint != "" {
+		orgId = ""
 	}
 
 	if projectId != "" {

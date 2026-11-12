@@ -104,6 +104,26 @@ describe('Azure DevOps Go connection fields', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled());
   });
 
+  it('preserves other field errors when endpoint validation changes', async () => {
+    render(<ConnectionFields initialValues={initialConnection} />);
+    const save = screen.getByRole('button', { name: 'Save' });
+    await waitFor(() => expect(save).not.toBeDisabled());
+
+    fireEvent.change(screen.getByPlaceholderText('Your Connection Name'), { target: { value: '' } });
+    await waitFor(() => expect(save).toBeDisabled());
+    fireEvent.change(screen.getByPlaceholderText('e.g., https://your-server/tfs/DefaultCollection/'), {
+      target: { value: '' },
+    });
+    await waitFor(() => expect(save).toBeDisabled());
+    fireEvent.change(screen.getByPlaceholderText('e.g., https://your-server/tfs/DefaultCollection/'), {
+      target: { value: endpoint },
+    });
+    await waitFor(() => expect(save).toBeDisabled());
+
+    fireEvent.change(screen.getByPlaceholderText('Your Connection Name'), { target: { value: 'Test' } });
+    await waitFor(() => expect(save).not.toBeDisabled());
+  });
+
   it('keeps username required by default for other connections', async () => {
     render(<ConnectionFields initialValues={{}} fields={['username']} />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled());

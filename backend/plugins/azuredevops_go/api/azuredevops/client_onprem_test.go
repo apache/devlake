@@ -18,14 +18,17 @@ limitations under the License.
 package azuredevops
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
+	"testing"
 
 	"github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/plugins/azuredevops_go/models"
-	"testing"
 )
 
 func TestOnPremisesScopeRequestsAcrossVersions(t *testing.T) {
@@ -129,19 +132,63 @@ func TestOnPremisesScopeRequestsAcrossVersions(t *testing.T) {
 }
 
 func TestGetRemoteRepositoriesRejectsUpstreamError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"message":"API version not supported"}`)
-	}))
-	defer server.Close()
-	apiClient := &api.ApiClient{}
-	apiClient.Setup(server.URL, nil, 0)
-	client := NewClient(&models.AzuredevopsConnection{}, apiClient, server.URL)
-	repos, err := client.GetRemoteRepositories(GetRemoteRepositoriesArgs{
-		OrgId: "org", ProjectId: "project", Provider: "github",
-	})
-	if err == nil || len(repos) != 0 {
-		t.Fatalf("expected upstream error, got repositories = %v, error = %v", repos, err)
+	for _, tc := range []struct {
+		name           string
+		status         int
+		body           string
+		wantDetail     string
+		excludedDetail string
+		incomplete     bool
+	}{
+		{
+			name: "JSON error", status: http.StatusBadRequest,
+			body: `{"message":"API version not supported"}`, wantDetail: "API version not supported",
+		},
+		{
+			name: "plain text error", status: http.StatusForbidden,
+			body: "Missing repository read permission", wantDetail: "Missing repository read permission",
+		},
+		{
+			name: "bounded error body", status: http.StatusBadGateway,
+			body: strings.Repeat("x", 4096) + "discarded-error-tail", wantDetail: strings.Repeat("x", 4096),
+			excludedDetail: "discarded-error-tail",
+		},
+		{
+			name: "empty error body", status: http.StatusInternalServerError,
+		},
+		{
+			name: "incomplete error body", status: http.StatusBadGateway,
+			body: "Upstream response interrupted", wantDetail: "Upstream response interrupted", incomplete: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if tc.incomplete {
+					w.Header().Set("Content-Length", strconv.Itoa(len(tc.body)+1))
+				}
+				w.WriteHeader(tc.status)
+				fmt.Fprint(w, tc.body)
+			}))
+			defer server.Close()
+			apiClient := &api.ApiClient{}
+			apiClient.Setup(server.URL, nil, 0)
+			client := NewClient(&models.AzuredevopsConnection{}, apiClient, server.URL)
+			repos, err := client.GetRemoteRepositories(GetRemoteRepositoriesArgs{
+				OrgId: "org", ProjectId: "project", Provider: "github",
+			})
+			if err == nil || len(repos) != 0 {
+				t.Fatalf("expected upstream error, got repositories = %v, error = %v", repos, err)
+			}
+			if !strings.Contains(err.Error(), fmt.Sprintf("(%d)", tc.status)) || !strings.Contains(err.Error(), tc.wantDetail) {
+				t.Errorf("error = %v; want HTTP %d and upstream detail %q", err, tc.status, tc.wantDetail)
+			}
+			if tc.excludedDetail != "" && strings.Contains(err.Error(), tc.excludedDetail) {
+				t.Errorf("error includes response body beyond the 4 KiB limit: %v", err)
+			}
+			if tc.incomplete && !errors.Is(err, io.ErrUnexpectedEOF) {
+				t.Errorf("error = %v; want wrapped response read failure", err)
+			}
+		})
 	}
 }
 
