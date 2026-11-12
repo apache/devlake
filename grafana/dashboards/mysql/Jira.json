@@ -1271,7 +1271,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  s.name AS sprint,\n  s.committed_story_point AS 'Committed',\n  s.completed_story_point AS 'Completed'\nFROM sprints s\n  JOIN board_sprints bs ON bs.sprint_id = s.id\nWHERE\n  bs.board_id in (${board_id})\n  AND s.committed_story_point is not null\nORDER BY s.completed_date asc",
+          "rawSql": "SELECT\n  s.name AS sprint,\n  s.committed_story_point AS 'Committed',\n  s.completed_story_point AS 'Completed'\nFROM sprints s\n  JOIN board_sprints bs ON bs.sprint_id = s.id\nWHERE\n  bs.board_id in (${board_id})\n  AND s.original_board_id = bs.board_id\n  AND s.committed_story_point is not null\n  AND $__timeFilter(s.completed_date)\nORDER BY s.completed_date asc",
           "refId": "A",
           "select": [
             [
