@@ -147,13 +147,10 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 }
 
 func getStatus(incident *models.Incident) string {
-	if incident.Status == models.IncidentStatusClosed {
-		return ticket.OTHER
-	}
 	if incident.Status == models.IncidentStatusOpen {
 		return ticket.IN_PROGRESS
 	}
-	if incident.Status == models.IncidentStatusResolved {
+	if incident.Status == models.IncidentStatusResolved || incident.Status == models.IncidentStatusClosed {
 		return ticket.DONE
 	}
 	panic("unknown incident status encountered")
@@ -162,7 +159,7 @@ func getStatus(incident *models.Incident) string {
 func getTimes(incident *models.Incident) (*uint, *time.Time) {
 	var leadTime *uint
 	var resolutionDate *time.Time
-	if incident.Status == models.IncidentStatusResolved {
+	if incident.Status == models.IncidentStatusResolved || incident.Status == models.IncidentStatusClosed {
 		resolutionDate = &incident.UpdatedDate
 		temp := uint(resolutionDate.Sub(incident.CreatedDate).Minutes())
 		leadTime = &temp
