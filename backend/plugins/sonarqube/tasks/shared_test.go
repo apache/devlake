@@ -66,6 +66,43 @@ func TestGenerateId(t *testing.T) {
 	}
 }
 
+func TestGenerateIdWithReusedHash(t *testing.T) {
+	// the issues extractor shares one hash across all code blocks of the subtask
+	hashCodeBlock := sha256.New()
+	other := &models.SonarqubeIssueCodeBlock{
+		IssueKey:  "ISSUE-456",
+		Component: "com.example:other-project",
+		StartLine: 1,
+		EndLine:   2,
+		Msg:       "Other message",
+	}
+	generateId(hashCodeBlock, other)
+
+	entity := &models.SonarqubeIssueCodeBlock{
+		IssueKey:    "ISSUE-123",
+		Component:   "com.example:example-project",
+		StartLine:   10,
+		EndLine:     20,
+		StartOffset: 5,
+		EndOffset:   10,
+		Msg:         "Example message",
+	}
+	generateId(hashCodeBlock, entity)
+
+	// same ID as TestGenerateId, whatever was hashed before
+	expectedId := "c590f554324b82421b898723e51b4aa9217dc897aa79e5d55b1716df88a5af1e"
+	if entity.Id != expectedId {
+		t.Errorf("generateId depends on the previous code block. Got %v, expected %v", entity.Id, expectedId)
+	}
+
+	sameAsOther := *other
+	sameAsOther.Id = ""
+	generateId(hashCodeBlock, &sameAsOther)
+	if sameAsOther.Id != other.Id {
+		t.Errorf("generateId gave the same code block two IDs: %v and %v", other.Id, sameAsOther.Id)
+	}
+}
+
 func TestGetTotalPagesFromResponse(t *testing.T) {
 	// mock response body
 	responseBody := `{

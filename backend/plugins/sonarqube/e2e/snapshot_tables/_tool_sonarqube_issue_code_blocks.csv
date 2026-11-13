@@ -1,166 +1,166 @@
 connection_id,id,issue_key,component,start_line,end_line,start_offset,end_offset,msg
-1,0371bf8ddacce7498c2af27e3d48104c4c5c0faca4e73c5a7cceff70638a459e,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,183,183,8,22,Implies 'output' can be null.
-1,0eb852737bb5c844d324554d18dd311e188994a8224b1a7697994639fd27594d,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,182,182,33,50,'Map.get()' is invoked.
+1,01d81ae77247795f1becdb1200dd05b53d1c99cfa741c85cfe7e6b71f5e7dfc4,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,182,182,33,56,"Replace this ""Map.get()"" and condition with a call to ""Map.computeIfAbsent()""."
+1,1438d4e4f34ed07d76a438375c12f2dde9861b0a366583212ae37014bd9c1fb8,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,174,174,6,24,'Map.put()' is invoked with same key.
 1,21c3c0c70941b3abc7e14e26b7428032ad252ba7a9c66cb8007902f4a5d00f6b,AYUwBbCC46XwcL-YZOTH,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/FeatureDictionary.java,24,24,2,8,"Change the visibility of this constructor to ""protected""."
-1,50cc5dc76f782d7eccbb39124b1dae37c5f2045956cee2db3a59eb3614c6f168,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,171,171,25,49,"Replace this ""Map.get()"" and condition with a call to ""Map.computeIfAbsent()""."
-1,8efd79ebd93284d576adc83a431248685c6e500e9af6383d818bed1dc9b6d800,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,172,172,8,22,Implies 'output' can be null.
-1,9b4e05a5c44e693bd22fb2ee72dbd0226278c56fb9bdf102576ce173d90be302,AYUwBbCC46XwcL-YZOTH,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/FeatureDictionary.java,17,17,7,15,"This class is ""abstract""."
-1,a4b2071c9b9f9575ea66166bca7affc6d79aa91329a088ad966885fd4538afa4,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,185,185,6,23,'Map.put()' is invoked with same key.
-1,c3977e958ef97c4e26e453094e8fbece5c859e4905deec44a7e01f348e5fb89b,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,182,182,33,56,"Replace this ""Map.get()"" and condition with a call to ""Map.computeIfAbsent()""."
-1,dd2bc364ecbf4b4ab71f1294e6d040a5e0fcb435c7a8ba2c3096099befd1b607,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,174,174,6,24,'Map.put()' is invoked with same key.
-1,fef00cc20bcd199055a794256186ce1ffc1ee297fccc932cf7e47e3b8644bdc2,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,171,171,25,43,'Map.get()' is invoked.
-2,0291151da2c1f00bdab487792aa276f23a0a7be00044e4db5523633b411cd0da,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,553,553,4,6,+4 (incl 3 for nesting)
-2,08aa5d581c76bb045fe86bc424b2a557d353775fca5e84a1da9fb56d754f5097,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,424,424,3,5,+3 (incl 2 for nesting)
-2,0ab91ecdb8fa6edb99913a20f07853aa494b5566c985cc8f4ca2132aed41e60c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,664,664,4,6,+4 (incl 3 for nesting)
-2,0b1c7f63da4711ea4f325be3da93a903d992a7d0273afe96c40cbebf76c855ad,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,397,397,1,4,+1
-2,0b7f71ed69a2bf3c58da706aa4bb59ec6ff305be0d9e4846b24a57585a168981,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,605,605,4,6,+4 (incl 3 for nesting)
-2,0c3fd8d559e04e8ec69e2702299061f22211e7291ba15133c650c6ecfa4b5d95,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,836,836,2,5,+2 (incl 1 for nesting)
-2,0ce6eb009a67183cd47a5156c036e03ba1ac05464684b0e301b0946e20e7a87b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,511,511,3,6,+3 (incl 2 for nesting)
-2,1062c2bb45c101979466b80a7c683eb413e00f77eb77b5efe4c258ab70b72c2a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,480,480,4,6,+4 (incl 3 for nesting)
-2,106c1ddd547cf7b5d89e9c97d9622c683abecc2eb3a7ad482937fbf154308166,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,438,438,4,6,+4 (incl 3 for nesting)
-2,120feb050f16659ad284d0f17e3d4887271d8be8ac2526d004c357b4d92b7a8a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,631,631,3,5,+3 (incl 2 for nesting)
-2,12f96da2be426014fd1c24f34fbbc4c003f5234d71a03e21a9d87ba8bec553bc,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,852,852,2,4,+2 (incl 1 for nesting)
-2,1333e5f0cdcf025ec655de6f59d0b78736ce7ff3f87fbc3d856acf88514afbc8,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,855,855,2,4,+2 (incl 1 for nesting)
-2,17634f11759fd1db4d019527fd2faa84817413d5cd508434177b04c2aa170bad,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,211,211,3,7,+1
-2,176808b51c439e289193bc2aacc7d2434a000e4d754507659fafff8714f43157,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,410,410,3,5,+3 (incl 2 for nesting)
-2,17cba77ddc228b0c79a37927e567996e8858fffe9740536c668ca317a209d6b8,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,198,198,3,7,+1
-2,1e57acb3c184bd325f60fe960ca5a622c6ce43f5826aa4f397b5013cf267b576,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,703,703,4,6,+4 (incl 3 for nesting)
-2,1fe948298287b569c9862913be0418fb047d8e1ba15cda222141b8330bf0a04b,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,864,864,3,6,+3 (incl 2 for nesting)
-2,2596a2affd865446701efd96e3a295941c1469c0e35daac5bfe7edd4c93656f5,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,225,225,1,3,+1
-2,28d864cfb36401fe128c02328d91fe62e542d7497f220dbdad88f8ac5e585ba3,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,874,874,4,6,+4 (incl 3 for nesting)
-2,2a27b32397b138fee17c32b62cb40239d9d510a0756a1689983bc83d4603fd2c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,422,422,2,8,+2 (incl 1 for nesting)
-2,2ba6345f535e1c7d8f03823725a92ce7a96db3836f684e7c2ea7bf7a394c6b50,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,246,246,1,3,+1
-2,2cc6a6500557ea214a7802990a4e4faecca2094ce160f6fc4d2cd06eaf04d5c4,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,825,825,1,3,+1
-2,2e7383d997d6a6755b63fad8aaa5baa8ae703e226dde1f6656649b69f8984549,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,429,429,4,6,+4 (incl 3 for nesting)
-2,2f6e9e2823bc3e03ee3df7471c7bac6bcbbde8d41900f82b8a90de81e98155a9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,615,615,4,6,+4 (incl 3 for nesting)
-2,2f94967f8247e339dc82fad45c0b72b975586e5151c93c24ba5870d3972a34cf,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,448,448,4,6,+4 (incl 3 for nesting)
-2,2f9e576aa94e07137714384c70a4ddfd12427985ab72fee3fd8265c212d09d22,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,419,419,2,4,+2 (incl 1 for nesting)
-2,3319d54159a017445c10cd3fe29b00bb7fe408f165d033254e6121d35f912346,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,802,802,4,6,+4 (incl 3 for nesting)
-2,331b4a0e40a4d57d4b5230752fb8cb5a6838ca0cec30edc4b174b552b15090bc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,694,694,4,6,+4 (incl 3 for nesting)
-2,33975ad5e4020bba9d24543fd42a7667302af5daaac720c6d978fa6f3b7fe726,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,416,416,2,4,+2 (incl 1 for nesting)
-2,340be79c34fb24311e7a64359bb46714719d43453a235db25385daa837abcdcb,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,624,624,4,6,+4 (incl 3 for nesting)
-2,346b766d58b8c2b342bbaa4d86650cae75525e686860e334d06ce946064887bb,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,227,227,3,7,+1
-2,3486b2662dc93f4942b0153ff9fd4d2331b12c5f10c206ee6e138e09239f8950,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,447,447,3,6,+3 (incl 2 for nesting)
-2,383f5ea9dfb85242bd1e93587aacd57fad19a8bf8e564ff7b069576d3af621dd,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,567,567,4,6,+4 (incl 3 for nesting)
-2,3866fb9f844b7493fe2bc9b13a77ac87d4ca0d04f62de95f93dbfd01f4e6d969,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,658,658,4,6,+4 (incl 3 for nesting)
-2,39dab534619f99bdee8dca4bfcabc15a8a7a6ece4990fa0eef4eb7dd9330cedc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,494,494,3,5,+3 (incl 2 for nesting)
-2,3a1a0f81d9dd6cf7bda11406e6deacd36b173364c8ac924d0fc683d3cdb005a6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,591,591,3,5,+3 (incl 2 for nesting)
-2,3c7155b41f52367a8076f3066a70d0b4428fe1b69cc7c4f45988bf3d45e34953,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,183,183,1,3,+1
-2,411304a8e271b054cd2ba425874d5706157c4a8a6762e60e86760a55992869e1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,709,709,3,5,+3 (incl 2 for nesting)
-2,450b5a5ddbe9e803c491868de29cdde604542b9bc5b5d69bca1069c52a35d19d,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,903,903,3,5,+3 (incl 2 for nesting)
-2,452312bc01ec873a7d717563b3ca961330b0cdee170d1f654124b7a36c038653,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,697,697,4,6,+4 (incl 3 for nesting)
-2,454864302de2b3351de8b786c5c67d939ee1a34ec94a58b244d5988a5c7047d0,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,733,733,3,6,+3 (incl 2 for nesting)
-2,45c2115067c59d8672aa6944aa0488ef741b117e2daa0eefc7cdd1adae62cdfd,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,564,564,4,6,+4 (incl 3 for nesting)
-2,45e438516a51ee90be73db4586370859092f5c4a1b69ea3cb092bbefeaed477c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,462,462,3,5,+3 (incl 2 for nesting)
-2,48be7eeba922e6f620ed70a1c2da1b9b6c53d9e35fe1b95ce1787c8380fe7c70,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,639,639,4,6,+4 (incl 3 for nesting)
-2,493edb1a98a2f31a7da675a48fc559969e19c72ae63016e6a4421dfbfec5abbc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,814,814,3,5,+3 (incl 2 for nesting)
-2,4d8911b77c9c7b1814d36ea09d46d1f239201d988a393a396d83712ffa04ed77,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,539,539,3,5,+3 (incl 2 for nesting)
-2,53bef733b2eeacdc0050688eb1d415b897663842b041980a8503a9948bab2a2e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,723,723,4,6,+4 (incl 3 for nesting)
-2,543508de01e5009533df7d84b3c3bc4975e315109a67121ed9edf4f326ce6959,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,475,475,3,5,+3 (incl 2 for nesting)
-2,54447d6a8536d9fe6b7066ccf8ab935c96009e0a8eb929ac218d7a697c38f86c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,837,837,3,5,+3 (incl 2 for nesting)
-2,54d594f6f374fbfa42c6d1b8d50e0391cc781d28d4f6bb60088f53a7c644f8da,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,654,654,3,6,+3 (incl 2 for nesting)
-2,5558de329b03daa4f700ee6fbb8454437492277569c6076d645687b542c05158,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,914,914,1,3,+1
-2,55c0ef0ed5cf1bf21d9f5d3d150b1041a2f630c81106aaccaa3a466f3717e7ae,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,858,858,2,8,+2 (incl 1 for nesting)
-2,55ffee2503670a55af609ff14cd5bc61d4d332c16d2a6237108e6b4987bde4dd,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,743,743,4,6,+4 (incl 3 for nesting)
-2,56744b733843fcb8a4ac104dfa49ecd38cf69e2a6410d09616a422109560383c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,903,903,19,21,+1
-2,56a3020f9061035dbf769e0c9070a3f28b0c29121d89f379372cf04348ef8e14,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,559,559,3,5,+3 (incl 2 for nesting)
-2,58045f83fd1e3a9195b05df17a1d5e9eb27e2e3f0f70ba8468eb3b4d0f901105,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,754,754,4,6,+4 (incl 3 for nesting)
-2,58c4973edf847a3495e1e49bd8b6a13643a1c539ebcb1085d783093900507567,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,792,792,3,6,+3 (incl 2 for nesting)
-2,5986531748514c7bf858d19b94b3fdd030b47c068d530724406db79872f107e6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,814,814,19,21,+1
-2,59f872c07a9b557f7b16f9ea6933e6b8d80dfca5fcf2029ba9d4c34e69b3c8b6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,782,782,4,6,+4 (incl 3 for nesting)
-2,5a193635f313c8642d540eb1368f966afee902571c417193b11b7bf3e7452533,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,267,267,3,7,+1
-2,5bd027a22ec7e8128b4fe4acb70702e3b82b0d6581e2e18e8a2ec90a12f0dd57,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,717,717,4,6,+4 (incl 3 for nesting)
-2,620f78ca2a48be64c12601e57afd0f1505af2781f2faaf7003403cc415d8c696,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,585,585,3,5,+3 (incl 2 for nesting)
-2,634b1034186012b4f38137cf292251d33ae4e61e0a5733c6821113bb2db8f856,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,469,469,3,5,+3 (incl 2 for nesting)
-2,63be74cac2090f1e92fb1801182281d5c0d9d7bab45a3da26ae74dc82377f317,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,544,544,4,6,+4 (incl 3 for nesting)
-2,65d97481cb386e0b18b408f9879a0a39cbfa08d79f8faa3df69e156f8e1594d7,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,187,187,4,8,+1
-2,6806c16afa222ac4e517e8071b9e0e71db16e59992b3640a298bcede7b0a1b51,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,884,884,4,6,+4 (incl 3 for nesting)
-2,682ae4c0a226dbc581e0c0657a36c5fbb2b642eb3282a8b5efd776a84bc7d128,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,543,543,3,6,+3 (incl 2 for nesting)
-2,6a2a9329587f5b60879b076ca52acddd4481ca21aa4af62a52a465186b9abfce,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,563,563,3,6,+3 (incl 2 for nesting)
-2,6e057d7df10cb534b494f127e0c4d1647448ccb034bc3639e6200656c42493b3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,498,498,3,5,+3 (incl 2 for nesting)
-2,6e2b19632b6388c2cea4912aecac66b14da4374fafcbc904f6aaf862f5c937bc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,512,512,4,6,+4 (incl 3 for nesting)
-2,6f58af364d87523ac9e6fb38a469fd2665dca825db6ecf393c47b5dfc46658fb,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,394,394,18,27,Refactor this method to reduce its Cognitive Complexity from 371 to the 15 allowed.
-2,70c810315e8f2ad6e031f333e8acd545bd4c685ba3b175bc02f45db0f63a5583,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,547,547,4,6,+4 (incl 3 for nesting)
-2,71f5317027c78dc07630566faad7242a4bcf010a09859b33d22780998a35ea18,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,772,772,3,6,+3 (incl 2 for nesting)
-2,733a3900bb93bf57899f90f1e286d2790606d3c37d263e993b4dc664e9e004e6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,817,817,3,5,+3 (incl 2 for nesting)
-2,74acc87f51191b99f35b876e31a95960e4c8b91decfbb0c9419632ce2fc9b929,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,250,250,4,8,+1
-2,75fa891991458e6529f0fc281542aba1d9bcaa522f86eb14cff04eaef3fff941,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,432,432,4,6,+4 (incl 3 for nesting)
-2,7ade6698c2f8f7b47c06c65ae74c757fb2e250bf70614a43f8f8ab626f10e1d9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,530,530,3,5,+3 (incl 2 for nesting)
-2,7d8e3dc9f01932a88c45907fa1edc48af02a9246851852522bdc94d256171866,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,217,217,1,3,+1
-2,807050f0c5731695804958177291405ca68e1eb5602242e01bb564a86e0a3a5f,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,906,906,3,5,+3 (incl 2 for nesting)
-2,80a7e5fb0ead5353db06fbca609f767faf5d5bdbefd54dff95b9e7b9d9be8e43,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,526,526,3,5,+3 (incl 2 for nesting)
-2,80d0a79658ad4c3e9ed45edf8775a69274e7af7f1fd27e467e18b06c65b7509b,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,868,868,4,6,+4 (incl 3 for nesting)
-2,80e5ee175fdab330e3e810594149ea139fed860d1157bc103292f1d10aabdc92,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,693,693,3,6,+3 (incl 2 for nesting)
-2,8266764315da7bb3946fdf8b3741ed07ed13731559b6ee6c6b38b5599ed2f12e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,675,675,4,6,+4 (incl 3 for nesting)
-2,8358ec9232a993889f23457f0ca8edd3a7dee72242de380731d254f47f6bd107,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,582,582,3,5,+3 (incl 2 for nesting)
-2,87c1f8f3ebcc8e1db5e8a27415b06b452832e9fad9752a0538e2b02d0e999c31,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,635,635,3,6,+3 (incl 2 for nesting)
-2,884d0c38c618cdd03450cc0ae94e8cfcd620d6f9b79b5ade9e17fda8892ab381,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,595,595,3,6,+3 (incl 2 for nesting)
-2,8a1f26bcb61b0a7ac46a3bc83b34405e8651876b6d01672e37c92240bab628fe,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,196,196,1,3,+1
-2,8b9bb0f57be29a5f5e054ea8515e61d11d5324aaf25a8ad965e7dfebe5ec5341,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,846,846,3,5,+3 (incl 2 for nesting)
-2,8c66edc370c5c46fd5c38dd68d59df8f05cf0c227ab6d7b2a247a8a420bd6660,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,678,678,4,6,+4 (incl 3 for nesting)
-2,90b7b8a1ac618c422469f00b4e18cf1aabecda6bb8525f82a92d2de3aae91421,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,573,573,4,6,+4 (incl 3 for nesting)
-2,922bb5568f02d228e30ed29c75cf8fc8671a6940d8f341447e935b475a6e8042,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,236,236,1,3,+1
-2,93f9e60b02ce19847bf6d69bccfdf5b7c2b3dd4d9612b4550869d37193c4c774,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,219,219,3,7,+1
-2,94151e9db337baa5febfa09246ca3d9ad4261d9b9f1b1da6fc8802e40486f760,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,833,833,1,4,+1
-2,94c18ca0003959d75330f0c71d22c8d2a1a1b258ee929faa0ba9685f6887e52f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,788,788,3,5,+3 (incl 2 for nesting)
-2,9585b8d3c69b440fcb6bbf5e870c06806fd5cf2b76c40e06cb8c3ccd046aa344,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,400,400,2,5,+2 (incl 1 for nesting)
-2,97126c23e0b548cd1c7c04504d49d9c20f8f4414dfe937feffaa308947f6097c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,860,860,3,5,+3 (incl 2 for nesting)
-2,9a3728424bed889af3045c618cafa3366c0a6be0d4c9f77700836b987fdebd4f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,533,533,3,5,+3 (incl 2 for nesting)
-2,9be71e16f064d4963f00425028e731a932deab36dea21ffd3618ba25cb837575,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,763,763,4,6,+4 (incl 3 for nesting)
-2,9c0735809debb56e01e7e40236b3d8942a7bfb0e8daeaa72d42aca499d6f6234,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,209,209,1,3,+1
-2,9c61266d662c69f40aa119b82161f00aca8e2dc01166171defb10a7b9739514c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,887,887,4,6,+4 (incl 3 for nesting)
-2,a04c95dc1dcf72664816891ee71d97808dea17f326168d3b719491ba7b63b711,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,713,713,3,6,+3 (incl 2 for nesting)
-2,a182c53c3411e4d11521d2114d91f8689bc09f79050b084366237127269bfc15,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,179,179,1,3,+1
-2,a194e09da349a92d6695e6fbd1b89ee85f78262fca3b26b089abb29cc56cb444,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,645,645,4,6,+4 (incl 3 for nesting)
-2,a27516123d500a4da218930163fcd74420d2e5820cf0e2dc7dbe49830b63a940,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,457,457,4,6,+4 (incl 3 for nesting)
-2,a6d2cde1a45ae34b9e4cc15cb43f3ea82955fefbb297a9d4e520fe44337ca464,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,737,737,4,6,+4 (incl 3 for nesting)
-2,a712dc2320ee233f9c8f35b7fa814c22dbfdf07fda1ddb5bb86d3a2d4bae5f20,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,830,830,19,28,Refactor this method to reduce its Cognitive Complexity from 65 to the 15 allowed.
-2,accccffceb76af2bca56172a04e55a28c9315f529e6d7573eddacf1bcd4433d5,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,734,734,4,6,+4 (incl 3 for nesting)
-2,ada85d69bad3e861bd7a639664dfc2a0b3b58790c4f2f9732554b14db830fa5d,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,443,443,3,5,+3 (incl 2 for nesting)
-2,ae6ec5bc28fa06ed45d296170779bed49165e74c5508e2383d6a0438f466f75e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,684,684,4,6,+4 (incl 3 for nesting)
-2,af8532a389ff239ccdc86d4fcfc42730d24f5bd985946fca0e298d85e54446a8,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,670,670,3,5,+3 (incl 2 for nesting)
-2,b11c4e4325101a21990d178d91a5b263b771b3f84e9b39b0fd49a0b7ce311a49,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,776,776,4,6,+4 (incl 3 for nesting)
-2,b57ce970dfc88026f3f9815f118d5de5c9cf2d67dae0f98ce4313951f0d3a264,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,655,655,4,6,+4 (incl 3 for nesting)
-2,b6f0a4e4bab2a2679980f57f0c4c32308e081b742a88ce89d52e93e53e76812c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,483,483,4,6,+4 (incl 3 for nesting)
-2,b95e6659d832ab830ae278346339fbda44b3ec420d9b5f2c2307daa45e290413,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,796,796,4,6,+4 (incl 3 for nesting)
-2,bb438d64bc3beb7e1fddbf0203d90be980fa9f4d2b851a66293db9c92b8594c7,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,636,636,4,6,+4 (incl 3 for nesting)
-2,bcc0320b6c8afb06f81ba77565532ff5e53908ee285b726107b7e667c0053b9d,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,265,265,1,3,+1
-2,bcf9e5ba55f2dc1beb5bd805e4b88fec5b284118aed9225b1d62964aa950835a,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,883,883,3,6,+3 (incl 2 for nesting)
-2,bd573962948d9360ad0448eac80c6ab4e2e304a30ab6632af46abd0b49e0b6a3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,650,650,3,5,+3 (incl 2 for nesting)
-2,be4bfe4256a9c090d61c81e284582a03543475a466f51858cee1b50d179b5e43,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,451,451,4,6,+4 (incl 3 for nesting)
-2,c0f6a8eb9e18519e07890c2d093978e0e8f880056b9cc5cf679d8fa3d689d5dd,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,610,610,3,5,+3 (incl 2 for nesting)
+1,2ea7a162494c29eb63ea8ba806d1cd988d882c562d86479e9eda26eacf349e83,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,171,171,25,49,"Replace this ""Map.get()"" and condition with a call to ""Map.computeIfAbsent()""."
+1,8105dcb7f44b69acd51a25eb6ad3fb5b5d4a076920a1c48c7347a487ffcf732a,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,182,182,33,50,'Map.get()' is invoked.
+1,83b7042091eea6f2b21a77f0335a11ca9e4516304644f73f39752c2b11031823,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,171,171,25,43,'Map.get()' is invoked.
+1,88fe8ed882e5438658656ff984a44bb4ab716a45f6d4c81650cbbc7bc9191d1d,AYUwBbCC46XwcL-YZOTH,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/FeatureDictionary.java,17,17,7,15,"This class is ""abstract""."
+1,b10deaaf535bca37dd2a13582ce0040cf19d7fc4259ca6531f5a56d718705560,AYUwBbGD46XwcL-YZOUu,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,172,172,8,22,Implies 'output' can be null.
+1,ba2d954918f8c2f4ca28d7400577c0781181a2e40f2d2d3764dcac92321a4608,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,185,185,6,23,'Map.put()' is invoked with same key.
+1,ce787c750e6b37f18c57e81956b4510bedbd804c8784e07229adc1cb1e5efd11,AYUwBbGD46XwcL-YZOUv,f5a50c63-2e8f-4107-9014-853f6f467757:core/src/main/java/com/airbnb/aerosolve/core/util/Util.java,183,183,8,22,Implies 'output' can be null.
+2,03f9256625901b5706395d701081cedc304534862553dcce0cddc6f56b2aefe6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,489,489,4,6,+4 (incl 3 for nesting)
+2,055b56f008584ac761305daa1c7388e716c548d6a1578840506a6fdff12bca56,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,618,618,4,6,+4 (incl 3 for nesting)
+2,05bc6d583778913dbf42d508c9b9cbf149545808b62afe5f61dace282254615f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,559,559,3,5,+3 (incl 2 for nesting)
+2,0647813769f0042b9a20da21352a134e1ab690d988060c75f1dccc454847549b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,605,605,4,6,+4 (incl 3 for nesting)
+2,09a6e7ca27bb5fb5febc6da88443abc40b36cc2a79fa659bf700197be031d6bb,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,714,714,4,6,+4 (incl 3 for nesting)
+2,0ba781858b729a52b6e08d415aeb58da8b84c1a6facb610e6006b15c435c3969,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,498,498,3,5,+3 (incl 2 for nesting)
+2,0e9cb931b9dc98d753ace9955cba5ae0eca6c386ef4e00e0ba921a901f1da835,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,903,903,3,5,+3 (incl 2 for nesting)
+2,110a997f2faad04b9dba24d0969a7ca103166070ebfb986c510f837af5db4570,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,825,825,1,3,+1
+2,132fb916a62b03bd5dc4fb661bd3701134acb47c71fbad523802c3b0a03e5116,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,670,670,3,5,+3 (incl 2 for nesting)
+2,16909c2f42cc4e61d9f3b1f9ec2ed21dda685108ae9d4affcd1cfcb87442705e,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,900,900,3,5,+3 (incl 2 for nesting)
+2,16ef50f8d4faed64f66cbf23e5b023b2ab084c85870174e09329229fcb617729,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,553,553,4,6,+4 (incl 3 for nesting)
+2,1a57e63afd19c5e19ce0837bb90814cdcbc717b6c617b09404fd8e5f3a6383e4,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,457,457,4,6,+4 (incl 3 for nesting)
+2,1ac7aa52315bd60c9098d12afa228f1a767b851fa62d2c8199efeb3937ea6ec8,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,840,840,3,5,+3 (incl 2 for nesting)
+2,1bc8bcc4ce796f31af31bdb4880709202791360f5c97545dc619226a8c192ddf,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,884,884,4,6,+4 (incl 3 for nesting)
+2,1cd0816f180ce8a61f07c2108068018475d054c2006b2951eaa39525e6645071,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,906,906,3,5,+3 (incl 2 for nesting)
+2,2008ea05bf6fd5075ea03a5e024fe07c4a787681a830dc399ac92c9eb22c2d6f,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,860,860,3,5,+3 (incl 2 for nesting)
+2,21b4ed315237acfcaa7d2562f35c57f93173e663cf560b7aeb3c2e5dd560bdb7,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,796,796,4,6,+4 (incl 3 for nesting)
+2,23bc1401079e20b2d64c51d2aacaa3f6afe36489f165332551dc584d0a00750a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,684,684,4,6,+4 (incl 3 for nesting)
+2,253bfd1c447a4df676ce0d824f0d30b91f6a6561bcec04d0bdb837e305ff6577,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,209,209,1,3,+1
+2,261bc7af41e70c6c55b7d4229171022bef3eec0c82a9ee37eda3ffe9bb32cf7c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,443,443,3,5,+3 (incl 2 for nesting)
+2,27eb537c2f950d82e38127e20d9ec5b2360bc92221d5cd87362a16a5ceab6ba2,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,494,494,3,5,+3 (incl 2 for nesting)
+2,28d0f1393ea189a9de4af2dcd7b6fb084ae14c447e0fb0a2a83d5efec52b6c67,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,636,636,4,6,+4 (incl 3 for nesting)
+2,2a14aee0f6a547c35e6fc69f1e0d70fd70db4d3632525022faa9b3cd31dd4231,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,655,655,4,6,+4 (incl 3 for nesting)
+2,2a6036770b288680cc4b73206dd4a295e8c0fe3d8feace4b8895882b2ad6494f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,530,530,3,5,+3 (incl 2 for nesting)
+2,2a8c87d13f80a390d2f58252eaa784185b5c82c85dd681fbde73560c73dcec0c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,879,879,3,5,+3 (incl 2 for nesting)
+2,2b2019d7052e0e3b8020bda5b965f9296203873df11531b204c8ec95446b36c9,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,246,246,1,3,+1
+2,2f1a2c5ef55b8eb1248f9fdd7c6b4cb45da10a68ec037ccb3ac8e9a9f0972dda,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,563,563,3,6,+3 (incl 2 for nesting)
+2,31515ab442af9dd81429f9227e2998bc06a169eea0d038db4c530b2676bd9008,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,903,903,19,21,+1
+2,354db617bcafef1a68ec733baa2feb90a4f7cf893385ac17f712f45e0270b196,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,694,694,4,6,+4 (incl 3 for nesting)
+2,36bc4704fbb68a41e68bd2677515abadc55becab381ad5bb09bfdf3394e57567,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,410,410,3,5,+3 (incl 2 for nesting)
+2,370f6f21198682da7b17c06bf73ee8169d6596eabbc802a88b6e99a7609b6c8a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,416,416,2,4,+2 (incl 1 for nesting)
+2,37b25dd2701abe0bbef0b2fdffeae0d46a62ecc6c9012da5b52988ab44298e0f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,401,401,3,5,+3 (incl 2 for nesting)
+2,384db1f2762f18c51430871e37f5922306f2e41ee0687b3cda9088cdf718fc4f,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,217,217,1,3,+1
+2,3a72803423ec3e87dcfd7ac707cd92edc34980c4341476edc9df75a5ef3e33c4,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,703,703,4,6,+4 (incl 3 for nesting)
+2,3b9da52c5026a743f26425c12bfe4319a7c5f9fde6e2aba2b205019ef91d3fe1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,539,539,3,5,+3 (incl 2 for nesting)
+2,3e928653e16b0201f8d3eae2521969becb116d911cbb049f5a0f55380e76e476,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,814,814,19,21,+1
+2,426138b097a31298a7146dd106242a5b3312309e17eb181d1adc302aab3280ef,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,855,855,2,4,+2 (incl 1 for nesting)
+2,42b64de17e34222ebc832980fb42bdd0f169e6d92d8d6a4346710d79483f015e,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,225,225,1,3,+1
+2,43c9235402136b94398abc5f43a67db17342c95d56f779a0b3a336b6b0a657c3,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,864,864,3,6,+3 (incl 2 for nesting)
+2,45311a977aaed5877fdecd78e8851f8b3101648c62c440629b95f8bd06b96ce9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,438,438,4,6,+4 (incl 3 for nesting)
+2,46d36bfa864bb1feff4e0ebc2f8af70b89ad7a72fc65e7b3e3264c6d947ce0c6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,397,397,1,4,+1
+2,4878fd5626e9df69caab8831c82991a0544450a17c84dfff4eb581871eba4301,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,250,250,4,8,+1
+2,493a92ab16c631c2b8cc55e20e5d3198ee28ab088b8c0199e90ec1a6c483b374,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,573,573,4,6,+4 (incl 3 for nesting)
+2,49b05dc9b1d464149c871f78a80bdcb1ae7b7575811e406c0c62c706cd04aa83,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,713,713,3,6,+3 (incl 2 for nesting)
+2,4a09f9c7ff6f7a88110aa6b979e4bbb5c63a96f9d5e56ffe53da1f430babcf7f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,480,480,4,6,+4 (incl 3 for nesting)
+2,4c865b33787cb7c120522c92b8667d822bfda5a814edc3a3a303a430d8463569,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,837,837,3,5,+3 (incl 2 for nesting)
+2,4ca3f6b730c03df8bd8da3b88c76f2e5f4c60ec024f7ba9c1e6f03ac1e477931,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,512,512,4,6,+4 (incl 3 for nesting)
+2,500357d1045b5267154d110202769cb8107e4485e24255f6ffb7d972e4b0a3fd,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,846,846,3,5,+3 (incl 2 for nesting)
+2,51053b38e9cdfc7cbe2359cc46c2b034ab4bd93a4e52af353cf14e4cd54b882a,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,865,865,4,6,+4 (incl 3 for nesting)
+2,54995a463c7cf020c3980984a8ce38edd2b27fdd858ac6e16f13aedb6bd04077,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,526,526,3,5,+3 (incl 2 for nesting)
+2,54be1be3791d3a0bb79e280f5345c6b85c45afad7025641e6367c0eaf13cbe0a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,631,631,3,5,+3 (incl 2 for nesting)
+2,55f05b6d450671f9b2e856942ffbc237236cf291ed934fa76444ba58e5cd9591,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,507,507,3,5,+3 (incl 2 for nesting)
+2,5610aeb4788cac77f573183ae5401eb884d3ef3ec2989c5bed7ef740e793c0a5,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,814,814,3,5,+3 (incl 2 for nesting)
+2,57df718e07c89f9e5acbe6d915bc407e2a3d254b276b55628e6519877f1de8f2,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,451,451,4,6,+4 (incl 3 for nesting)
+2,5a9f5fc864d4aab433f95c97d8bfee7cfa8b738bddd8221a9fa8451e927f051b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,768,768,3,5,+3 (incl 2 for nesting)
+2,5e51071c7ebbea61966bb719959ae4e6a92d30bb0cb059108cc91c2e503aa510,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,596,596,4,6,+4 (incl 3 for nesting)
+2,5eb8076a9c7ddcfd51f884a0ed54dca0eda1510c097f89f8eddd9973f867b3ad,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,650,650,3,5,+3 (incl 2 for nesting)
+2,5f78804564f7c63f45ff1025be1d9fa463404d1609ff7a3af58620fad23aab78,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,422,422,2,8,+2 (incl 1 for nesting)
+2,5fa782571d1546e3090881acb269fc7e2d03b239b020dc95703b47c0c38b34cd,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,615,615,4,6,+4 (incl 3 for nesting)
+2,61b1836e71db87d0c4845b508540148e12b33945bbb77c87702014553d729a87,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,582,582,3,5,+3 (incl 2 for nesting)
+2,62c502da4719835da72bab2dec55ce9753b0ef2c6343afaf2ac45100fd039bd5,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,664,664,4,6,+4 (incl 3 for nesting)
+2,63d36b8d9dff5ed872d302ed7b994b9af23d9b64e56e083ed323dfae54213c63,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,511,511,3,6,+3 (incl 2 for nesting)
+2,645005eb7ce1743e5b0674c19138c277ae5aff4047962db44c0f51abc136f5bc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,817,817,3,5,+3 (incl 2 for nesting)
+2,662f984f9589eb7c1634d5683a5fea58faa9a0a05879060cdccd158cdec97d97,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,836,836,2,5,+2 (incl 1 for nesting)
+2,679db69f0edc7c2727b64b42920a2d7d8d4a2269be85d4f876bec0dc161700d3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,693,693,3,6,+3 (incl 2 for nesting)
+2,6af43431a5cb819f8be9c4d034607fac4e0c41ea39b45dfae0cdfda88adde8b5,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,466,466,3,5,+3 (incl 2 for nesting)
+2,6d9db0bb3f41826ec5137a7fa78425bc2e29979704156e3594a72e7b7d22cc7b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,772,772,3,6,+3 (incl 2 for nesting)
+2,6dd8da6ec0da9adb2d076b1e3b60c926977e99d68d92d5c1efe1937f46cddcf6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,635,635,3,6,+3 (incl 2 for nesting)
+2,6ed6a3428a85977779d46d21d2a4994118fb78200b600586df0a1153ba7cf870,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,788,788,3,5,+3 (incl 2 for nesting)
+2,6ffa96e0c727d069b8439f81915c81c6d33be9707efd9a3799709d4bd93d4b39,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,887,887,4,6,+4 (incl 3 for nesting)
+2,700e2db2761bf0a5d06da0d7fab1f9523e2041b4b9976aa57ea7946c61c4b9a3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,544,544,4,6,+4 (incl 3 for nesting)
+2,7241157c1490b061a89b74a1b9ddc81dd9cccfb48a3461543b5185c1b39dd017,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,578,578,3,5,+3 (incl 2 for nesting)
+2,727acad5884e712f81dd110deb19c182bac62d75017f0944ef8203d1370d1eff,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,419,419,2,4,+2 (incl 1 for nesting)
+2,72c8f0eea8f3271f0cbf4d0c12dce33c169a95ec3f1f49b4b19de0a6b61cf7b2,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,448,448,4,6,+4 (incl 3 for nesting)
+2,7483938f97c69d1b88bb2ce26d99821c945cf749cee68056536d9f629dfb7e9e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,678,678,4,6,+4 (incl 3 for nesting)
+2,7488420eba7dbb6d77d50984e925f3880e6b24617e6546faef4fc25d131228c1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,811,811,3,5,+3 (incl 2 for nesting)
+2,74da26beffbdff65d7c1b2802d8eb9230a0e132cf58064423903e73280f12c2c,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,196,196,1,3,+1
+2,7b935287347059a5e07b7f4e6bcebccf01cb15b8a4934970297454554085c08c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,424,424,3,5,+3 (incl 2 for nesting)
+2,7d8d50bd48a3a2267521fea0682f9a5519984fd47a48abe7dbcea615941bb038,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,483,483,4,6,+4 (incl 3 for nesting)
+2,7dae9c60965d85e436940f9d402bb83060b62685f938b540e8631649d2560ee7,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,248,248,2,4,+2 (incl 1 for nesting)
+2,7dd6daf86617b783af9d395454d506ce7414c075c093ccc883f6424eb5bf76a1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,432,432,4,6,+4 (incl 3 for nesting)
+2,7e65c1efdf9c04c0a3ee7ad46809a3bebbcd019f5ae12f7e626a6437de768740,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,868,868,4,6,+4 (incl 3 for nesting)
+2,8018fcb10d57b3cbe3e28214e47f27ff70d37511228bfbd5c993f1e7887ccc00,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,723,723,4,6,+4 (incl 3 for nesting)
+2,8079872ca365771b8d05b9f4265c34263505841a38ad5c361f949f90d171c257,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,717,717,4,6,+4 (incl 3 for nesting)
+2,81ea16a816116abfb12be7299ec6764230c00b978d42b73e793f6d9d1052f4d5,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,776,776,4,6,+4 (incl 3 for nesting)
+2,8814ca66d7375b4e108dd80da1366fd30c99ee246a905edf09e7689b49a7625a,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,183,183,1,3,+1
+2,885cca4197309ee0b118d907d9b37f9aefddc0bedd1d1d8777a8317a6322821f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,595,595,3,6,+3 (incl 2 for nesting)
+2,89e2593d32f918da668a458a6f83cad72a3f5a1466f74d4366189691f6bb785d,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,501,501,3,5,+3 (incl 2 for nesting)
+2,8b1a95958b126e877d86eeba43c6ec8fe3453c0af77bd1c995df36c7eff66daa,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,614,614,3,6,+3 (incl 2 for nesting)
+2,8b602609be19dec614278e95f54f4edfe281c4108cd3c0c70d511db21eddcba9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,658,658,4,6,+4 (incl 3 for nesting)
+2,8fc981922d7683c1db7e4d0f526629f5929db7ccc2d7cf3126c33043e2d905b8,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,737,737,4,6,+4 (incl 3 for nesting)
+2,92ee508e2ac858402e90cc6ee32abfe5eb792a69cea4b7dda55650b0c6f2976b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,404,404,3,5,+3 (incl 2 for nesting)
+2,931fef10001b4f4eb6a77f96f9bc7a3dbef82ce63ebb4472fbc3dcaf008ab6f2,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,883,883,3,6,+3 (incl 2 for nesting)
+2,94120e1c69cf2bdec71b288675095dced6880ff21c04058b2c77c131e1b1e72b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,674,674,3,6,+3 (incl 2 for nesting)
+2,9482e2e16a9212c93b1676999bbe856658edcf0d8a6917925459bd0a6a42e6b9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,734,734,4,6,+4 (incl 3 for nesting)
+2,955796c5cd6249dd4924897e654c6ce4d9f5e2c0a54a9909a191b1f06128e696,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,858,858,2,8,+2 (incl 1 for nesting)
+2,958bc6f3e56c23eca2a0d048cc7d29feef8763c5539bbe0736f99cc21d5310a2,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,394,394,18,27,Refactor this method to reduce its Cognitive Complexity from 371 to the 15 allowed.
+2,974daf1ed387d1efd53c32291e37cc6198be7d3f07fd550df82fc249a3ba981b,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,236,236,1,3,+1
+2,9afe388d16e922a54a3d317894ad81146c4e1c91ba4ca58cbc321a2e64989528,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,830,830,19,28,Refactor this method to reduce its Cognitive Complexity from 65 to the 15 allowed.
+2,9ba104da15e4b587629e5350a3b478b198edd165c18b2153a532e2dce0446793,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,429,429,4,6,+4 (incl 3 for nesting)
+2,9de80c94bcddbab2553676eb75d7bcf95cc82ec3a1941e7e975f1cdd955391c7,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,400,400,2,5,+2 (incl 1 for nesting)
+2,9f8f3ff03b79efe0371d4b656f4e807eebd51e31a4bddda92c31f5fbf600fa87,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,219,219,3,7,+1
+2,9fe47f972c5b9a4d88d9887d884ef33b476e5eea3f59c5667297c568da1123bc,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,599,599,4,6,+4 (incl 3 for nesting)
+2,a3f552e16a7ecb9c11f66abb4316ee0c38faf58b1defd3a0dd4b4d15b50258f2,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,763,763,4,6,+4 (incl 3 for nesting)
+2,a5ee80b607db3ee5634a5419426c3de8384e7f29140acb65149617fb6f27ef7e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,743,743,4,6,+4 (incl 3 for nesting)
+2,a6206fffad65e1bed3f3129e0ac84961f7f8c132afc462e0e6ce62f4dac7ba61,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,754,754,4,6,+4 (incl 3 for nesting)
+2,ab91b98249eface3b45eb7e64eecb22e52804c24ee7d80b0b72a564fb74a3ec2,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,211,211,3,7,+1
+2,ae3749c372e62255c3ada86b7b6d9d0957bc94f7043fcdf22a91a981a7fbae21,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,697,697,4,6,+4 (incl 3 for nesting)
+2,afa1459644df73644158d1b9dd4bc2b831927f5cc831363a379a6c5dd67f0960,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,591,591,3,5,+3 (incl 2 for nesting)
+2,b1277923a3466879d30513dff8d46e76f9021012b5e0d0c1ced36f9b122b3f64,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,479,479,3,6,+3 (incl 2 for nesting)
+2,b46494dc56e460ac85b4fd1679f0f181c48de9f1dd8bd59959dcddf8251cfe02,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,689,689,3,5,+3 (incl 2 for nesting)
+2,b4a46669ba3d443ef183f3808424c90aa59c9b487bfc23ce0c4094cc3b0ba50b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,793,793,4,6,+4 (incl 3 for nesting)
+2,b4b4abbdc146f829f98a32969cc87a672d2f411e9634f1f144ababc7b3f13412,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,645,645,4,6,+4 (incl 3 for nesting)
+2,b5af5c376225e3fb5579dfa7ebaeec9c20511fd6b8572baa87ae5c987e0bf322,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,893,893,4,6,+4 (incl 3 for nesting)
+2,baa6e609c321e764bf3a636282f24bc7feb7126992585aaa962b32dd3f568823,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,475,475,3,5,+3 (incl 2 for nesting)
+2,bec59cad1c1e6eaed394987e6f0a2c50d2eb8db41370cdd5d5e3bf6d803be6f3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,802,802,4,6,+4 (incl 3 for nesting)
+2,bf4fa2448983fdd70a4b4998e8390e6a3f2f8176383c8addbbeb273f0e3f9479,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,914,914,1,3,+1
+2,bfb54e9e6733165f91ed03b8eb1ec0f8aa84ef03294c3f1fd04ee4575e52c3d7,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,521,521,4,6,+4 (incl 3 for nesting)
+2,c0e256becb382fa193a264084645d8e800feda9488051edd9263ee2f5b1b56b6,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,185,185,2,4,+2 (incl 1 for nesting)
+2,c1401ce23a0e4a153048aa5e6dc4f46c4ee74dc37d838483643529d6fe69676a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,753,753,3,6,+3 (incl 2 for nesting)
 2,c181db88f762ef1d59ca74a9daa4e565d26ed14e60afa3560f24c85d9daf6a70,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,174,174,18,38,Refactor this method to reduce its Cognitive Complexity from 21 to the 15 allowed.
-2,c1e10d11085d36801cb9725cd1adf7b7a025c6ca174ee0a2acc4ce677a376001,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,840,840,3,5,+3 (incl 2 for nesting)
-2,c29adbb8d4cae9f85f0c1e3744f5c296681445bd7e003c5ff699559e34da0948,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,729,729,3,5,+3 (incl 2 for nesting)
-2,c3515adaa7f02a3cb5f050d8c7e043be2782ead3f1992598b395ea0f61e96a47,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,466,466,3,5,+3 (incl 2 for nesting)
-2,c6258d53a51d086b5411545135ea43b141738c13a11621367242e6c9d95a11a6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,689,689,3,5,+3 (incl 2 for nesting)
-2,c681d76d04ca16e093a1907fa4f4526958d33b5856c4645f086c0195ab83e950,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,428,428,3,6,+3 (incl 2 for nesting)
-2,cb62be6e896c63edc026990624287f3a98d245a8c34c488943ddecc66f75138a,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,893,893,4,6,+4 (incl 3 for nesting)
-2,cc189b8687c3a4ade18ae7908bd5682db902626c3422ac466263776b01da466d,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,714,714,4,6,+4 (incl 3 for nesting)
-2,cd7b236a9e0efbe15616d81db918c1da3471b9df009ef852d86c4d205e6736f6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,489,489,4,6,+4 (incl 3 for nesting)
-2,cff80881cd876802fa7de55a466274e15af31c79c81ac32cd37e8d0da6518370,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,614,614,3,6,+3 (incl 2 for nesting)
-2,d10350bf7a8c3e231c2c663ce4c59ac57e58afd4fa30ed897ecb696a102ef4bb,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,753,753,3,6,+3 (incl 2 for nesting)
-2,d235e3e63536c340cac9e074e01884d6a6fadb07f63baf7b454172cf83c19014,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,578,578,3,5,+3 (incl 2 for nesting)
-2,d34e295ef104f36e015bb3b15b8f662d1144c5e4b3ee6ae84854d4bf6266fefb,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,248,248,2,4,+2 (incl 1 for nesting)
-2,d417996ba352c52f0e63cf9d0c499ef3bdc0e0656d26eab4aa84e47c26d0f03b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,507,507,3,5,+3 (incl 2 for nesting)
-2,d4b3b4e4e2d7b26d14467c864783768921e06a845d8e50025bceef61403fb589,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,599,599,4,6,+4 (incl 3 for nesting)
-2,d5109910af093d1dc91f0282691215961d0d10a18f95616cb16eb2fd46a8062b,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,674,674,3,6,+3 (incl 2 for nesting)
-2,d94bb86535e0437c8b2ee2eb708b4be02c022e2b4b856a6b8e734f5737ab7dab,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,238,238,3,7,+1
-2,d96d5c5770076f48eb66c75c7d0962ece6f70ebdc63a67793508289758106e9a,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,185,185,2,4,+2 (incl 1 for nesting)
-2,da59c32db2f5a2435b570bb060cef42af381c72a029aa84a9d7c54d19319261f,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,865,865,4,6,+4 (incl 3 for nesting)
-2,da6b2c6225070544a561107458a1418826531c444c17f9b5ad6b5aeb4f5d17df,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,596,596,4,6,+4 (incl 3 for nesting)
-2,dce66433af2bb147e023fc14698eb314c884e9d8949081633e36776900871998,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,793,793,4,6,+4 (incl 3 for nesting)
-2,e26a1b540b26b2e44b3debe40b55055dd1acd754e865604d178eb7189d906299,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,749,749,3,5,+3 (incl 2 for nesting)
-2,e2fa9b427a4c9531766d90eace759fc2c2b9c9eafc9b452f36c17f3f80b2b53f,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,773,773,4,6,+4 (incl 3 for nesting)
-2,e3c1c5c587d8412f7a7c919c992515eadab6215f0f5b665a344deb70b1dbec0c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,521,521,4,6,+4 (incl 3 for nesting)
-2,eb736e3733990f5782cfc4cb693ab893b3dfdb13756b2aad8c7b9070ef37d178,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,501,501,3,5,+3 (incl 2 for nesting)
-2,ef6dbf7c0a4bc1b5b3d3054f0bccd660adc5240dd041f306c52b3a6e97a5c8af,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,404,404,3,5,+3 (incl 2 for nesting)
-2,f014cc047af83ec6049cc7681b0ee562ca6926aa69b6302eb5ad9fe3828e2503,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,757,757,4,6,+4 (incl 3 for nesting)
-2,f0a50d9be32de9ba4641983264b20cb5c7cd29d397cfea93baad3b71e7d0ea5e,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,879,879,3,5,+3 (incl 2 for nesting)
-2,f36a4f0843dd61d500da0db9806ccd2f943a26d29d32606ecd2c9cf8cf0c7d91,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,900,900,3,5,+3 (incl 2 for nesting)
-2,f41b7884cf2e2fd946129c3f8b3db443366b1291cbbb743791bc18e8ded78174,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,618,618,4,6,+4 (incl 3 for nesting)
-2,f67a3e33c265d031fdda0e32add5f0ad6d9f9038c8b129188f3bfda543885c31,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,768,768,3,5,+3 (incl 2 for nesting)
-2,f90733a87a39a6bc926c244753fe3f410d7d694cbf01fd9e0c1d229dd6d619ec,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,479,479,3,6,+3 (incl 2 for nesting)
-2,fd0435834820d284bad0455c3db5ba3864f75b4f8aa36ce04b87773814a819d1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,401,401,3,5,+3 (incl 2 for nesting)
-2,fdc7ad845f36c738c53fe1590d2c91ddd8c1a7d8a376de7ca490403185f9b213,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,811,811,3,5,+3 (incl 2 for nesting)
-2,fe17ce8d86a35f6b2a9b3e15375ad9a20d7f4be576ad3e9cd97b847b29145cb4,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,515,515,4,6,+4 (incl 3 for nesting)
+2,c392a69d7ddc5d8e52f1b36b17945a9554cc1f1bc3f9afe1e3ae70d71641a23d,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,462,462,3,5,+3 (incl 2 for nesting)
+2,ca07a842c24177e4c4483f93f91d37662ec5fecfeb62c8bcb0dcc8db0c16ba43,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,179,179,1,3,+1
+2,cff6e9f3f1dcb6f78e5c884e12b9f37cde64d68b952d83fb96efbe41b54b13c7,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,447,447,3,6,+3 (incl 2 for nesting)
+2,d1f4f365b8626ee77f23302b58c2419707e135868ba763e3f30d359508c73fcb,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,198,198,3,7,+1
+2,d42ea5950dea824e31ed8b15c4fa899a05f0753f7539a6ea51f6d3795ae4c751,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,729,729,3,5,+3 (incl 2 for nesting)
+2,d4334757c5f127f04ceed8cf2f0738ac1d9f09fa1989fcf1e123a2510bf67463,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,709,709,3,5,+3 (incl 2 for nesting)
+2,d499446af3b175aec7c1fd9251cd865918ea9bcb77db55291080088ae80e387a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,782,782,4,6,+4 (incl 3 for nesting)
+2,d51552c933aaa66a9b8c06b9b112bd5b4f671fb054f5eb6711a5fcce8b9e4be6,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,773,773,4,6,+4 (incl 3 for nesting)
+2,d59627341fa16d0408aa5980b6d2eb4bd32ff62d063661c5e158a77953c9331c,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,852,852,2,4,+2 (incl 1 for nesting)
+2,d853470c1f626acb30cca964e94ffc9a957429216e3ffae23f8a85c9714ac8ec,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,833,833,1,4,+1
+2,d87573d1c48a25f17cf485922b5001a387c9ab6d8689f9b2ba2888eecddeb66a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,624,624,4,6,+4 (incl 3 for nesting)
+2,d88cf6e1d67c94c8c258f9971f674cefde1092459db1b1d98d1c801d7cce67d3,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,238,238,3,7,+1
+2,da8d1058202a6fdc040ae8c8a9aa19bfdc851b733ee950bbcfdf622c08c244ea,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,533,533,3,5,+3 (incl 2 for nesting)
+2,daa185cd0e06fedb17e2448da33ee1e60b5f9a0df3b15967785d06c35794232c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,654,654,3,6,+3 (incl 2 for nesting)
+2,db2a155776261613ddec554a38fa6d72aa75893ca0f891308b7777fa5b3220cf,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,267,267,3,7,+1
+2,dc03c8c62e88d1f192d9adced2d6fb37d659661ae12c58299f95ec2f131cdce9,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,543,543,3,6,+3 (incl 2 for nesting)
+2,dccf7cec7a5a6d907835e12ba43360d96768645dab369ae71bb01dfe96b28026,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,757,757,4,6,+4 (incl 3 for nesting)
+2,dedab0a445186be93eca98774a4a0a554b77802fd483875b1184f32e0c4d7fd4,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,547,547,4,6,+4 (incl 3 for nesting)
+2,df76d3c6d156e5d736d37d5d668c3c90f5b97b1a24a98879b962605aa8d34ba1,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,792,792,3,6,+3 (incl 2 for nesting)
+2,e0309e0357909bb93d0653729e156ab0f27cb703d0e990337a7b38b2d760130a,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,428,428,3,6,+3 (incl 2 for nesting)
+2,e7aeba241df4d1bdd96c49ac8f88ecbaa7a3cfa6c7fc2fd96b90a313c0f6d6a3,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,639,639,4,6,+4 (incl 3 for nesting)
+2,e8480f711367da19e47d01bbf2c6414e29fca7bc153682e0f65c53c9c59eb58b,AYYrCDQwCVdTZLqEeJty,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,874,874,4,6,+4 (incl 3 for nesting)
+2,ec777e7f74787d2d19606ade59a79e871fb6610daef87017154c06fe08ee3e66,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,733,733,3,6,+3 (incl 2 for nesting)
+2,ee4557756180601bcd267ad4b17d639236fb527d65802923c5b6325b5832d60b,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,265,265,1,3,+1
+2,ef1efc9b6d16a2e59886a47af82cf69253a1c950f81391947cb332a27fe6d8d0,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,187,187,4,8,+1
+2,ef598cbdf15d5cf28b0f550f6a91531290a9cd4de3aba4641acd964b0fdf7247,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,564,564,4,6,+4 (incl 3 for nesting)
+2,ef7b96ec2b3b2c6819b35dcc3e48404a6f2b7aab6fb4281febbb85756114ef53,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,585,585,3,5,+3 (incl 2 for nesting)
+2,f2ca0d2fba572025f85e3da38a18f6565b7e05dce45091b9b4969774adba8fe0,AYYrCDQwCVdTZLqEeJtw,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,227,227,3,7,+1
+2,f2ff458884aa75307dbcd851025d9570d5b1b83493818a5b6d3a9b32a4337b2e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,749,749,3,5,+3 (incl 2 for nesting)
+2,f393a1951323fc4a3872876a7bdd8fc4fdbabe049874dc4510959be7de6a5a0e,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,610,610,3,5,+3 (incl 2 for nesting)
+2,f3eb31e0ffae0868b482bacb388fdd4d45b465dc65a2f4405e3ca5018f4b4d41,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,515,515,4,6,+4 (incl 3 for nesting)
+2,f5c571000e80c2650288ccfae77a413056fc7327dcf99af11b168b3f30be2ca0,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,469,469,3,5,+3 (incl 2 for nesting)
+2,fcf38aa00a1fde1483957efac0c26a2652f5c448b816838f9e688a42dea9c439,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,567,567,4,6,+4 (incl 3 for nesting)
+2,ff88fb6ad852d8f81214a1a251ae3a5e3a307ca764874baaa7425b5c6d87b32c,AYYrCDQwCVdTZLqEeJtx,testWarrenEtcd:api/etcdserverpb/etcdserver.pb.go,675,675,4,6,+4 (incl 3 for nesting)
