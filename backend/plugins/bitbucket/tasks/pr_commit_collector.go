@@ -55,19 +55,8 @@ func CollectApiPullRequestCommits(taskCtx plugin.SubTaskContext) errors.Error {
 		Input:                 iterator,
 		UrlTemplate:           "repositories/{{ .Params.FullName }}/pullrequests/{{ .Input.BitbucketId }}/commits",
 		GetNextPageCustomData: GetNextPageCustomData,
-		Query: func(reqData *helper.RequestData) (url.Values, errors.Error) {
-			query := url.Values{}
-			query.Set("state", "all")
-			query.Set("pagelen", fmt.Sprintf("%v", reqData.Pager.Size))
-			query.Set("sort", "created_on")
-			query.Set("fields", "values.hash,values.date,values.message,values.author.raw,values.author.user.username,values.author.user.account_id,values.links.self")
-
-			if reqData.CustomData != nil {
-				query.Set("page", reqData.CustomData.(string))
-			}
-			return query, nil
-		},
-		ResponseParser: GetRawMessageFromResponse,
+		Query:                 getPrCommitsQuery,
+		ResponseParser:        GetRawMessageFromResponse,
 		// some pr have no commit
 		// such as: https://bitbucket.org/amdatulabs/amdatu-kubernetes-deployer/pull-requests/21
 		AfterResponse: ignoreHTTPStatus404,
@@ -77,4 +66,20 @@ func CollectApiPullRequestCommits(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return collectorWithState.Execute()
+}
+
+// getPrCommitsQuery builds the query for one page of a pull request's commits.
+// The fields list must include `next`: Bitbucket only returns the fields that are
+// listed, and GetNextPageCustomData reads the next page from `next`.
+func getPrCommitsQuery(reqData *helper.RequestData) (url.Values, errors.Error) {
+	query := url.Values{}
+	query.Set("state", "all")
+	query.Set("pagelen", fmt.Sprintf("%v", reqData.Pager.Size))
+	query.Set("sort", "created_on")
+	query.Set("fields", "values.hash,values.date,values.message,values.author.raw,values.author.user.username,values.author.user.account_id,values.links.self,next")
+
+	if reqData.CustomData != nil {
+		query.Set("page", reqData.CustomData.(string))
+	}
+	return query, nil
 }
