@@ -165,9 +165,7 @@ func testConnection(ctx context.Context, connection models.AzuredevopsConnection
 		}
 		_, err = vsc.GetProjects(args)
 		if err != nil {
-			// On-Premises Azure DevOps Server HTTP endpoints may use Windows NTLM Auth (which Git CLI succeeds with).
-			// If GetProjects returns 401/Unauthorized, log a warning but allow connection test to succeed.
-			basicRes.GetLogger().Warn(err, "GetProjects returned error for On-Premises connection, proceeding with connection setup")
+			return nil, errors.BadInput.Wrap(err, "Failed to fetch projects from Azure DevOps Server")
 		}
 	} else {
 		// Cloud: Azure DevOps Cloud test logic

@@ -93,7 +93,7 @@ func BuildPaginator(cursor bool) func(reqData *api.RequestData) (url.Values, err
 		if cursor && reqData.CustomData != nil {
 			pag := reqData.CustomData.(CustomPageDate)
 			query.Set("continuationToken", pag.ContinuationToken)
-		} else {
+		} else if !cursor {
 			query.Set("$skip", fmt.Sprint(reqData.Pager.Skip))
 		}
 		query.Set("$top", fmt.Sprint(reqData.Pager.Size))

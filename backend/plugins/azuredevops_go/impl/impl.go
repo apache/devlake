@@ -126,6 +126,9 @@ func (p Azuredevops) PrepareTaskData(taskCtx plugin.TaskContext, options map[str
 	if err != nil {
 		return nil, errors.Default.Wrap(err, "failed to retrieve an Azure DevOps connection from the database using the provided connection ID")
 	}
+	if connection.Endpoint != "" {
+		op.OrganizationId = ""
+	}
 
 	apiClient, err := tasks.CreateApiClient(taskCtx, connection)
 	if err != nil {

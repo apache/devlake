@@ -33,7 +33,7 @@ import (
 	"github.com/apache/devlake/plugins/azuredevops_go/models"
 )
 
-const apiVersion = "7.1"
+const apiVersion = models.DefaultAPIVersion
 const maxPageSize = 100
 
 type Client struct {
@@ -164,8 +164,8 @@ func (c *Client) GetProjects(args GetProjectsArgs) ([]Project, errors.Error) {
 		query.Set("$skip", strconv.Itoa(skip))
 
 		path := "_apis/projects"
-		if args.OrgId != "" {
-			path = fmt.Sprintf("%s/_apis/projects", args.OrgId)
+		if args.OrgId != "" && (c.connection == nil || c.connection.Endpoint == "") {
+			path = fmt.Sprintf("%s/_apis/projects", url.PathEscape(args.OrgId))
 		}
 		res, err := c.apiClient.Get(path, query, nil)
 		if err != nil {
@@ -200,6 +200,13 @@ type GetRepositoriesArgs struct {
 	ProjectId string
 }
 
+func (c *Client) projectPath(org, project string) string {
+	if org == "" || (c.connection != nil && c.connection.Endpoint != "") {
+		return url.PathEscape(project)
+	}
+	return url.PathEscape(org) + "/" + url.PathEscape(project)
+}
+
 func (c *Client) GetRepositories(args GetRepositoriesArgs) ([]Repository, errors.Error) {
 	query := url.Values{}
 	query.Set("api-version", apiVersion)
@@ -208,10 +215,7 @@ func (c *Client) GetRepositories(args GetRepositoriesArgs) ([]Repository, errors
 		Repos []Repository `json:"value"`
 	}
 
-	path := fmt.Sprintf("%s/%s/_apis/git/repositories", args.OrgId, args.ProjectId)
-	if args.OrgId == "" {
-		path = fmt.Sprintf("%s/_apis/git/repositories", args.ProjectId)
-	}
+	path := fmt.Sprintf("%s/_apis/git/repositories", c.projectPath(args.OrgId, args.ProjectId))
 	res, err := c.apiClient.Get(path, query, nil)
 	if err != nil {
 		return nil, err
@@ -244,7 +248,7 @@ func (c *Client) GetServiceEndpoints(args GetServiceEndpointsArgs) ([]ServiceEnd
 	query := url.Values{}
 	query.Set("api-version", apiVersion)
 
-	path := fmt.Sprintf("%s/%s/_apis/serviceendpoint/endpoints/", args.OrgId, args.ProjectId)
+	path := fmt.Sprintf("%s/_apis/serviceendpoint/endpoints/", c.projectPath(args.OrgId, args.ProjectId))
 	res, err := c.apiClient.Get(path, query, nil)
 	if err != nil {
 		return nil, err
@@ -282,20 +286,33 @@ type GetRemoteRepositoriesArgs struct {
 func (c *Client) GetRemoteRepositories(args GetRemoteRepositoriesArgs) ([]RemoteRepository, error) {
 	query := url.Values{}
 	query.Set("api-version", apiVersion)
+	query.Set("pageResults", "true")
 	if args.ServiceEndpoint != "" {
 		query.Set("serviceEndpointId", args.ServiceEndpoint)
 	}
 
 	var repos []RemoteRepository
-	var response struct {
-		Repository []RemoteRepository `json:"repositories"`
-	}
-
 	for {
-		path := fmt.Sprintf("%s/%s/_apis/sourceProviders/%s/repositories/", args.OrgId, args.ProjectId, args.Provider)
+		var response struct {
+			Repository        []RemoteRepository `json:"repositories"`
+			ContinuationToken string             `json:"continuationToken"`
+		}
+		path := fmt.Sprintf("%s/_apis/sourceProviders/%s/repositories/", c.projectPath(args.OrgId, args.ProjectId), url.PathEscape(args.Provider))
 		res, err := c.apiClient.Get(path, query, nil)
 		if err != nil {
 			return nil, errors.Internal.Wrap(err, "failed to read remote repositories")
+		}
+		if res.StatusCode != http.StatusOK {
+			body, readErr := io.ReadAll(io.LimitReader(res.Body, 4096))
+			res.Body.Close()
+			message := fmt.Sprintf("failed to read remote repositories, upstream api call failed with (%v)", res.StatusCode)
+			if detail := strings.TrimSpace(string(body)); detail != "" {
+				message += ": " + detail
+			}
+			if readErr != nil {
+				return nil, errors.Internal.Wrap(readErr, message)
+			}
+			return nil, errors.Internal.New(message)
 		}
 		err = api.UnmarshalResponse(res, &response)
 		if err != nil {
@@ -303,7 +320,10 @@ func (c *Client) GetRemoteRepositories(args GetRemoteRepositoriesArgs) ([]Remote
 		}
 
 		repos = append(repos, response.Repository...)
-		contToken := res.Header.Get("X-Ms-Continuationtoken")
+		contToken := response.ContinuationToken
+		if contToken == "" {
+			contToken = res.Header.Get("X-Ms-Continuationtoken")
+		}
 		if contToken == "" {
 			return repos, nil
 		}

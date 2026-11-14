@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -32,6 +33,26 @@ func makeResponse(statusCode int, body string) *http.Response {
 		StatusCode: statusCode,
 		Body:       io.NopCloser(bytes.NewBufferString(body)),
 		Request:    &http.Request{},
+	}
+}
+
+func TestBuildPaginatorCursorDoesNotSendOffset(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		custom interface{}
+		want   url.Values
+	}{
+		{"first page", nil, url.Values{"$top": {"100"}}},
+		{"continuation", CustomPageDate{ContinuationToken: "next"}, url.Values{"$top": {"100"}, "continuationToken": {"next"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			query, err := BuildPaginator(true)(&api.RequestData{
+				Pager:      &api.Pager{Size: 100},
+				CustomData: tc.custom,
+			})
+			assert.NoError(t, err)
+			assert.Equal(t, tc.want, query)
+		})
 	}
 }
 
