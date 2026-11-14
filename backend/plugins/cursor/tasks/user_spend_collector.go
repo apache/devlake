@@ -91,6 +91,32 @@ func spendPageBody(reqData *helper.RequestData) map[string]interface{} {
 	}
 }
 
+// nextSpendPage advances through POST /teams/spend pages. Unlike
+// filtered-usage-events, this endpoint has no pagination object; it reports
+// the page count as a top-level totalPages field.
+func nextSpendPage(prevReqData *helper.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
+	body, err := readResponseBody(prevPageResponse)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		TotalPages int `json:"totalPages"`
+	}
+	if jsonErr := json.Unmarshal(body, &response); jsonErr != nil {
+		return nil, errors.Default.Wrap(errors.Convert(jsonErr), "failed to decode spend pagination")
+	}
+	currentPage := 1
+	if state, ok := prevReqData.CustomData.(cursorPageState); ok && state.Page > 0 {
+		currentPage = state.Page
+	} else if prevReqData.Pager != nil && prevReqData.Pager.Page > 0 {
+		currentPage = prevReqData.Pager.Page
+	}
+	if currentPage >= response.TotalPages {
+		return nil, helper.ErrFinishCollect
+	}
+	return cursorPageState{Page: currentPage + 1}, nil
+}
+
 // CollectUserSpend collects per-user billing cycle spend from POST /teams/spend.
 func CollectUserSpend(taskCtx plugin.SubTaskContext) errors.Error {
 	data, ok := taskCtx.TaskContext().GetData().(*CursorTaskData)
@@ -116,7 +142,7 @@ func CollectUserSpend(taskCtx plugin.SubTaskContext) errors.Error {
 		UrlTemplate:           "teams/spend",
 		PageSize:              cursorApiPageSize,
 		RequestBody:           spendPageBody,
-		GetNextPageCustomData: nextPostPage,
+		GetNextPageCustomData: nextSpendPage,
 		ResponseParser:        parseSpendPageResponse,
 	})
 	if err != nil {
