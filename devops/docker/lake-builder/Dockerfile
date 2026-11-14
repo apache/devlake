@@ -15,7 +15,7 @@
 #
 
 # uv version matches backend/Dockerfile; Dependabot updates both FROM lines.
-FROM ghcr.io/astral-sh/uv:0.13.7 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.8 AS uv
 
 # Same Python line as the runtime image in backend/Dockerfile.
 FROM python:3.14-slim-trixie

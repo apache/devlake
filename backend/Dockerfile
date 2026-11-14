@@ -26,7 +26,7 @@
 # uv (Python package manager) is copied from its official image instead of
 # being downloaded by the install script at build time, so the version is
 # pinned and Dependabot keeps it current through this FROM line.
-FROM ghcr.io/astral-sh/uv:0.13.7 as uv
+FROM ghcr.io/astral-sh/uv:0.13.8 as uv
 
 FROM --platform=$BUILDPLATFORM golang:1.27-trixie as builder
 
