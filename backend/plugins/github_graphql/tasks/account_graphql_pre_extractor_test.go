@@ -18,12 +18,16 @@ limitations under the License.
 package tasks
 
 import (
+	"context"
 	"encoding/json"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/merico-ai/graphql"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInlineAccountQueryAccount(t *testing.T) {
@@ -95,27 +99,139 @@ func TestExtractGraphqlPreAccountSkipsUnresolvedActors(t *testing.T) {
 	assert.Len(t, results, 1)
 }
 
-// `... on Bot` may only be spread where the schema says `Actor`; on a `User` field
-// GitHub rejects the whole query with "Fragment on Bot can't be spread inside User"
+// The client decoder fills overlapping fields in both inline fragments. Exercise
+// that decoder, then the same JSON round trip used by collection and extraction.
+func TestInlineActorQueryClientRoundTrip(t *testing.T) {
+	for _, tc := range []struct {
+		name, actorType, login, wantLogin string
+		id                                int
+	}{
+		{"copilot", "Bot", "copilot-pull-request-reviewer", "copilot-pull-request-reviewer[bot]", 175728472},
+		{"human", "User", "octocat", "octocat", 583231},
+		{"suffixed bot", "Bot", "renovate[bot]", "renovate[bot]", 29139614},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := graphql.NewClient("https://github.invalid/graphql", &http.Client{
+				Transport: actorRoundTripper(func(req *http.Request) (*http.Response, error) {
+					var request struct{ Query string }
+					require.NoError(t, json.NewDecoder(req.Body).Decode(&request))
+					assert.Contains(t, request.Query, "__typename")
+					actor := map[string]interface{}{
+						"login": tc.login, "databaseId": tc.id,
+						"avatarUrl": "https://github.invalid/avatar", "url": "https://github.invalid/profile",
+					}
+					// Return only requested fields, as GitHub would. This also lets the
+					// regression expose the old accessor's incorrect login before the fix.
+					if strings.Contains(request.Query, "__typename") {
+						actor["__typename"] = tc.actorType
+					}
+					if tc.actorType == "User" {
+						actor["name"], actor["company"], actor["email"] = "The Octocat", "GitHub", "octocat@github.com"
+					}
+					body, err := json.Marshal(map[string]interface{}{"data": map[string]interface{}{"author": actor}})
+					require.NoError(t, err)
+					return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(string(body)))}, nil
+				}),
+			})
+			var query struct{ Author *GraphqlInlineActorQuery }
+			dataErrors, err := client.Query(context.Background(), &query, nil)
+			require.NoError(t, err)
+			require.Empty(t, dataErrors)
+			require.NotNil(t, query.Author)
+			// This is the decoder behavior that hand-built fragment tests missed.
+			assert.Equal(t, tc.id, query.Author.GithubAccountEdge.Id)
+			assert.Equal(t, tc.id, query.Author.Bot.Id)
+			raw, err := json.Marshal(query)
+			require.NoError(t, err)
+			var extracted struct{ Author *GraphqlInlineActorQuery }
+			require.NoError(t, json.Unmarshal(raw, &extracted))
+			account := extracted.Author.Account()
+			assert.Equal(t, tc.wantLogin, account.Login)
+			assert.Equal(t, tc.id, account.Id)
+			assert.Equal(t, "https://github.invalid/avatar", account.AvatarUrl)
+			assert.Equal(t, "https://github.invalid/profile", account.HtmlUrl)
+			if tc.actorType == "User" {
+				assert.Equal(t, "The Octocat", account.Name)
+				assert.Equal(t, "octocat@github.com", account.Email)
+			} else {
+				assert.Empty(t, account.Name)
+				assert.Empty(t, account.Email)
+			}
+		})
+	}
+}
+
+type actorRoundTripper func(*http.Request) (*http.Response, error)
+
+func (f actorRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
+
+func TestInlineActorQueryRawCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		name, raw string
+		want      GithubAccountEdge
+	}{
+		{"null", `null`, GithubAccountEdge{}},
+		{"unresolved", `{}`, GithubAccountEdge{}},
+		{"unsupported explicit type", `{"TypeName":"Organization","Login":"org","Id":1,"Bot":{"Login":"org","Id":1}}`, GithubAccountEdge{}},
+		{"unresolved explicit bot", `{"TypeName":"Bot","Login":"stale-user","Id":1}`, GithubAccountEdge{}},
+		{"explicit user selects user only", `{"TypeName":"User","Bot":{"Login":"stale-bot","Id":1}}`, GithubAccountEdge{}},
+		{"legacy user", `{"Login":"octocat","Id":583231}`, GithubAccountEdge{Login: "octocat", Id: 583231}},
+		{"legacy bot", `{"Bot":{"Login":"dependabot","Id":49699333}}`, GithubAccountEdge{Login: "dependabot[bot]", Id: 49699333}},
+		// Old ambiguous records keep the historical user-first behavior; only a
+		// fresh collection can supply the missing type discriminator.
+		{"legacy overlapping fragments", `{"Login":"copilot-pull-request-reviewer","Id":175728472,"Bot":{"Login":"copilot-pull-request-reviewer","Id":175728472}}`, GithubAccountEdge{Login: "copilot-pull-request-reviewer", Id: 175728472}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var actor *GraphqlInlineActorQuery
+			require.NoError(t, json.Unmarshal([]byte(tc.raw), &actor))
+			assert.Equal(t, tc.want, actor.Account())
+		})
+	}
+}
+
+// Bot fragments and actor type discriminators must never reach User-only fields.
 func TestBotFragmentOnlySpreadOnActorFields(t *testing.T) {
-	prQuery, _ := graphql.ConstructQuery(&GraphqlQueryPrWrapper{}, map[string]interface{}{})
-	issueQuery, _ := graphql.ConstructQuery(&GraphqlQueryIssueWrapper{}, map[string]interface{}{})
-
-	assert.Contains(t, prQuery, `author{... on User{`)
-	assert.Contains(t, prQuery, `... on Bot{`)
-	assert.Contains(t, issueQuery, `... on Bot{`)
-
-	// assignees and commit authors are typed `User`, they must stay User-only
-	for _, userField := range []string{`assignees(first: 1){nodes{`, `assignees(first: 100){nodes{`} {
-		if idx := strings.Index(prQuery+issueQuery, userField); idx >= 0 {
-			tail := (prQuery + issueQuery)[idx : idx+120]
-			assert.NotContains(t, tail, `... on Bot`)
+	for _, query := range []interface{}{
+		&GraphqlQueryPrWrapper{}, &GraphqlQueryPrDetailWrapper{},
+		&GraphqlQueryIssueWrapper{}, &GraphqlQueryIssueDetailWrapper{},
+	} {
+		generated, _ := graphql.ConstructQuery(query, map[string]interface{}{
+			"pullRequest": []map[string]interface{}{{"number": graphql.Int(1)}},
+			"issue":       []map[string]interface{}{{"number": graphql.Int(1)}},
+		})
+		actorSelection := `{__typename,... on User{login,databaseId,name,company,email,avatarUrl,url},... on Bot{login,databaseId,avatarUrl,url}}`
+		assert.Contains(t, generated, "author"+actorSelection)
+		if strings.Contains(generated, "mergedBy") {
+			assert.Contains(t, generated, "mergedBy"+actorSelection)
+			// PR authors, review authors and mergedBy are all Actor fields.
+			assert.Equal(t, 3, strings.Count(generated, actorSelection))
+		}
+		for _, prefix := range []string{"assignees(first: 1){nodes", "assignees(first: 100){nodes", "user"} {
+			if strings.Contains(generated, prefix+"{") {
+				assert.Contains(t, generated, prefix+`{... on User{login,databaseId,name,company,email,avatarUrl,url}}`)
+			}
 		}
 	}
-	commitAuthor := `commits(first: 100){`
-	if idx := strings.Index(prQuery, commitAuthor); idx >= 0 {
-		tail := prQuery[idx : idx+400]
-		assert.Contains(t, tail, `user{... on User{`)
-		assert.NotContains(t, tail, `user{... on User{login,databaseId,name,company,email,avatarUrl,url},... on Bot`)
+}
+
+func TestInlineActorQueryClientUnresolved(t *testing.T) {
+	for _, actorJSON := range []string{`null`, `{}`, `{"__typename":"Mannequin"}`} {
+		t.Run(actorJSON, func(t *testing.T) {
+			client := graphql.NewClient("https://github.invalid/graphql", &http.Client{
+				Transport: actorRoundTripper(func(req *http.Request) (*http.Response, error) {
+					return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header),
+						Body: io.NopCloser(strings.NewReader(`{"data":{"author":` + actorJSON + `}}`))}, nil
+				}),
+			})
+			var query struct{ Author *GraphqlInlineActorQuery }
+			dataErrors, err := client.Query(context.Background(), &query, nil)
+			require.NoError(t, err)
+			require.Empty(t, dataErrors)
+			raw, err := json.Marshal(query)
+			require.NoError(t, err)
+			var extracted struct{ Author *GraphqlInlineActorQuery }
+			require.NoError(t, json.Unmarshal(raw, &extracted))
+			assert.Equal(t, GithubAccountEdge{}, extracted.Author.Account())
+		})
 	}
 }

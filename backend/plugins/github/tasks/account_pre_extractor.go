@@ -18,6 +18,8 @@ limitations under the License.
 package tasks
 
 import (
+	"strings"
+
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/plugins/github/models"
 )
@@ -44,10 +46,16 @@ type GithubAccountResponse struct {
 }
 
 func convertAccount(res *GithubAccountResponse, repoId int, connId uint64) (*models.GithubRepoAccount, errors.Error) {
+	login := res.Login
+	// Some REST endpoints return bot aliases without the usual suffix. Keep
+	// the explicit type available to conversion even without profile enrichment.
+	if res.Type == "Bot" && !strings.HasSuffix(login, "[bot]") {
+		login += "[bot]"
+	}
 	githubAccount := &models.GithubRepoAccount{
 		ConnectionId: connId,
 		RepoGithubId: repoId,
-		Login:        res.Login,
+		Login:        login,
 		AccountId:    res.Id,
 	}
 	return githubAccount, nil

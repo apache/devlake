@@ -70,6 +70,7 @@ func (q *GraphqlInlineAccountQuery) Account() GithubAccountEdge {
 // `User`-typed field makes GitHub reject the whole query with
 // "Fragment on Bot can't be spread inside User".
 type GraphqlInlineActorQuery struct {
+	TypeName          string `graphql:"__typename"`
 	GithubAccountEdge `graphql:"... on User"`
 	Bot               GithubBotEdge `graphql:"... on Bot"`
 }
@@ -79,8 +80,21 @@ func (q *GraphqlInlineActorQuery) Account() GithubAccountEdge {
 	if q == nil {
 		return GithubAccountEdge{}
 	}
-	if q.GithubAccountEdge.Id != 0 {
+	// The GraphQL decoder populates overlapping fields in both fragments.
+	// Only __typename identifies which fragment actually resolved.
+	switch q.TypeName {
+	case "User":
 		return q.GithubAccountEdge
+	case "Bot":
+		// Normalize the bot fragment below.
+	case "":
+		// Historical raw records lack a discriminator. Preserve their original
+		// user-first behavior, including when both fragments are populated.
+		if q.GithubAccountEdge.Id != 0 {
+			return q.GithubAccountEdge
+		}
+	default:
+		return GithubAccountEdge{}
 	}
 	if q.Bot.Id == 0 {
 		return GithubAccountEdge{}
