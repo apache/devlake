@@ -153,12 +153,13 @@ updates:
   # `latest` and are left untouched.
   #
   # Note on Docker tag semantics: language base images encode their version in
-  # the tag, so `node:24 -> node:25` is a major update while
+  # the tag, so `node:26 -> node:27` is a major update while
   # `python:3.11 -> python:3.14` would count as a minor one. All three images
-  # define a runtime rather than a dependency: the Python tag has to match what
-  # the Poetry lockfiles resolve against, and the Go tag has to match the `go`
-  # directive in backend/go.mod and the toolchain used by CI. They are raised
-  # deliberately, so they are ignored here.
+  # define a runtime rather than a dependency: the Python tag has to match the
+  # `python` constraint in the pyproject.toml files (installed with uv), and
+  # the Go tag has to match the `go` directive in backend/go.mod and the
+  # toolchain used by CI. They are raised deliberately, so they are ignored
+  # here.
   - package-ecosystem: docker
     directories:
       - /backend
@@ -183,14 +184,15 @@ updates:
           - patch
     ignore:
       # MySQL 8.4 is the selected LTS line. The registry also exposes unrelated
-      # higher numeric tags (currently 26.7.0), which Dependabot treats as a
+      # higher numeric tags (currently 26.10.0), which Dependabot treats as a
       # valid major upgrade; changing the database major is always manual.
       - dependency-name: mysql
         update-types:
           - version-update:semver-major
-      # The build image tracks the active LTS line. Node 26 is not an LTS
-      # release, and a trial run confirmed that without this rule Dependabot
-      # proposes moving from 24 to 25.
+      # The build image tracks the active LTS line. Majors are raised
+      # deliberately once the next even release becomes LTS; odd releases are
+      # never LTS, and a trial run confirmed that without this rule Dependabot
+      # proposes them (24 -> 25).
       - dependency-name: node
         update-types:
           - version-update:semver-major

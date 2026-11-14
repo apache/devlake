@@ -2,7 +2,7 @@
   "name": "config-ui",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "yarn@4.17.0",
+  "packageManager": "yarn@4.18.1",
   "scripts": {
     "start": "vite --host --strictPort",
     "build": "vite build",
@@ -82,8 +82,8 @@
     "vitest": "5.1.0"
   },
   "volta": {
-    "node": "24.22.1",
-    "yarn": "4.17.0"
+    "node": "26.13.1",
+    "yarn": "4.18.1"
   },
   "resolutions": {
     "miller-columns-select@1.4.1": "patch:miller-columns-select@npm%3A1.4.1#./.yarn/patches/miller-columns-select-npm-1.4.1-a8bc1f9d49.patch"
