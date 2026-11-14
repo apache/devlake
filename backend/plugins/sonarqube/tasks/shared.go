@@ -75,6 +75,8 @@ type Paging struct {
 }
 
 func generateId(hashCodeBlock hash.Hash, entity *models.SonarqubeIssueCodeBlock) {
+	// the hash is shared by all code blocks of the subtask, so clear the previous input first
+	hashCodeBlock.Reset()
 	hashCodeBlock.Write([]byte(fmt.Sprintf("%s-%s-%d-%d-%d-%d-%s", entity.IssueKey, entity.Component, entity.StartLine, entity.EndLine, entity.StartOffset, entity.EndOffset, entity.Msg)))
 	entity.Id = hex.EncodeToString(hashCodeBlock.Sum(nil))
 }
