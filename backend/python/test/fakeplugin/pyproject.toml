@@ -20,7 +20,7 @@ description = "Fake python plugin used only in tests"
 authors = []
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.14,<3.15"
 pydevlake = { path = "../../pydevlake", develop = true }
 
 

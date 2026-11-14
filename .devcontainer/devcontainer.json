@@ -24,7 +24,7 @@
     "ghcr.io/jungaretti/features/make:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2.12.0": {},
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
+      "version": "3.14"
     },
     "ghcr.io/devcontainers-extra/features/poetry:2": {},
     "ghcr.io/devcontainers/features/node:1": {

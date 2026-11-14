@@ -23,7 +23,7 @@
 #While incubation status is not necessarily a reflection of the completeness or stability of the code,
 #it does indicate that the project has yet to be fully endorsed by the ASF.
 
-FROM golang:1.27-bookworm as builder
+FROM golang:1.27-trixie as builder
 
 ARG GOPROXY=
 ARG HTTP_PROXY=
@@ -65,13 +65,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
     VERSION=${TAG}@${SHA} make build
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     # gitextractor shells out to the git CLI, so the binary must be present or
     # every clone fails with "git: executable file not found in $PATH".
-    # debian:bookworm-slim does not ship it; the official image inherits it from
+    # debian:trixie-slim does not ship it; the official image inherits it from
     # its python base.
     git \
     && rm -rf /var/lib/apt/lists/*

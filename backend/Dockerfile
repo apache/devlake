@@ -28,7 +28,7 @@
 # pinned and Dependabot keeps it current through this FROM line.
 FROM ghcr.io/astral-sh/uv:0.13.7 as uv
 
-FROM --platform=$BUILDPLATFORM golang:1.27-bookworm as builder
+FROM --platform=$BUILDPLATFORM golang:1.27-trixie as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
 ARG GOPROXY=
@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     DEVLAKE_PLUGINS="$GO_PLUGINS" make all
 
 
-FROM python:3.11-slim-bookworm as base
+FROM python:3.14-slim-trixie as base
 
 # apt-get upgrade picks up Debian security fixes that the base tag does not contain yet
 RUN apt-get update && \
@@ -85,7 +85,8 @@ RUN apt-get update && \
 
 EXPOSE 8080
 
-RUN useradd -ms /bin/bash -d /app devlake -u 1010 -G 0
+# trixie's login.defs sets HOME_MODE 0700; keep /app traversable for a random UID.
+RUN useradd -ms /bin/bash -d /app -K HOME_MODE=0755 devlake -u 1010 -G 0
 RUN chown -R devlake:devlake /etc/ssl/certs
 USER devlake
 ENV PYTHONUNBUFFERED=1

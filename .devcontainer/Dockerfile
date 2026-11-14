@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM mcr.microsoft.com/devcontainers/go:2-1.27-bookworm
+FROM mcr.microsoft.com/devcontainers/go:2-1.27-trixie
 
 ENV DEVLAKE_PLUGINS=argocd,bamboo,bitbucket,circleci,customize,dora,gitextractor,github,github_graphql,gitlab,issue_trace,jenkins,jira,org,pagerduty,refdiff,slack,sonarqube,trello,webhook
 

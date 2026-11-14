@@ -665,7 +665,7 @@ name = "pydevlake"
 version = "0.1.0"
 description = "Devlake plugin framework"
 optional = false
-python-versions = ">=3.11,<3.12"
+python-versions = ">=3.14,<3.15"
 groups = ["main"]
 files = []
 develop = true
@@ -923,5 +923,5 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.11,<3.12"
-content-hash = "5db22af317d36524b8188aa25d13fdb3861e379699f4eb86944e7bb58c79f49a"
+python-versions = ">=3.14,<3.15"
+content-hash = "34b1d9618c6f82658528288fee62f704db6e673f5dc7a6e5d8650b54ee727468"
