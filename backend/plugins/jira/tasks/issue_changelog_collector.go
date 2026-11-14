@@ -37,6 +37,8 @@ var _ plugin.SubTaskEntryPoint = CollectIssueChangelogs
 
 const RAW_CHANGELOG_TABLE = "jira_api_issue_changelogs"
 
+const searchApiChangelogLimit = 40
+
 var CollectIssueChangelogsMeta = plugin.SubTaskMeta{
 	Name:             "collectIssueChangelogs",
 	EntryPoint:       CollectIssueChangelogs,
@@ -69,7 +71,7 @@ func CollectIssueChangelogs(taskCtx plugin.SubTaskContext) errors.Error {
 		dal.Select("i.issue_id AS issue_id, i.updated AS update_time"),
 		dal.From("_tool_jira_board_issues bi"),
 		dal.Join("LEFT JOIN _tool_jira_issues i ON (bi.connection_id = i.connection_id AND bi.issue_id = i.issue_id)"),
-		dal.Where("bi.connection_id=? and bi.board_id = ? AND i.std_type != ? and i.changelog_total > 100", data.Options.ConnectionId, data.Options.BoardId, "Epic"),
+		dal.Where("bi.connection_id=? and bi.board_id = ? AND i.std_type != ? and i.changelog_total > ?", data.Options.ConnectionId, data.Options.BoardId, "Epic", searchApiChangelogLimit),
 	}
 	if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
 		clauses = append(clauses, dal.Where("i.updated > ?", apiCollector.GetSince()))
