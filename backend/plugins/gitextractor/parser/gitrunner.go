@@ -114,7 +114,10 @@ func (r *gitRunner) Pipe(ctx context.Context, stdin []byte, args ...string) (io.
 }
 
 func (r *gitRunner) command(ctx context.Context, args ...string) *exec.Cmd {
-	fullArgs := append([]string{"-c", "core.quotePath=false", "-c", "gc.auto=0", "-c", "maintenance.auto=false"}, args...)
+	// Clones are bare. Passing --git-dir keeps git working when
+	// safe.bareRepository=explicit is set, which forbids discovering a bare
+	// repository from the working directory.
+	fullArgs := append([]string{"--git-dir=" + r.dir, "-c", "core.quotePath=false", "-c", "gc.auto=0", "-c", "maintenance.auto=false"}, args...)
 	cmd := exec.CommandContext(ctx, "git", fullArgs...)
 	cmd.Dir = r.dir
 	cmd.Env = append(cmd.Environ(),

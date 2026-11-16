@@ -408,6 +408,10 @@ func (g *GitcliCloner) git(env []string, dir string, gitcmd string, args ...stri
 func (g *GitcliCloner) gitCommand(env []string, dir string, gitcmd string, args ...string) *exec.Cmd {
 	g.logger.Debug("git %s %v", gitcmd, sanitizeArgs(args)) // CWE-532: sanitize before logging
 	cmdArgs := append([]string{}, g.globalConfigArgs...)
+	if dir != "" {
+		// dir is always a bare clone; see gitRunner.command for why --git-dir is passed
+		cmdArgs = append(cmdArgs, "--git-dir="+dir)
+	}
 	cmdArgs = append(cmdArgs, gitcmd)
 	cmdArgs = append(cmdArgs, args...)
 	cmd := exec.CommandContext(g.ctx.GetContext(), "git", cmdArgs...)
