@@ -85,7 +85,7 @@ const renderCollapseItems = ({
           </p>
           <div>Convert a Azure Pipeline Run as a DevLake Deployment when: </div>
           <div style={{ margin: '8px 0', paddingLeft: 28 }}>
-              <span>
+            <span>
               The <strong>pipeline name</strong>, <strong>run name</strong>, or <strong>one of its jobs</strong> matches
             </span>
             <Input

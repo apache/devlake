@@ -44,12 +44,7 @@ interface Props {
   onChangeSelectedItems: (items: ScopeItem[]) => void;
 }
 
-export const RedmineDataScope = ({
-  connectionId,
-  disabledItems = [],
-  selectedItems,
-  onChangeSelectedItems,
-}: Props) => {
+export const RedmineDataScope = ({ connectionId, disabledItems = [], selectedItems, onChangeSelectedItems }: Props) => {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ScopeItem[]>([]);
   const [query, setQuery] = useState('');

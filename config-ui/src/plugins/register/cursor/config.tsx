@@ -21,11 +21,7 @@ import { IPluginConfig } from '@/types';
 import Icon from './assets/icon.svg?react';
 import { KeyTier, Token, Capabilities } from './connection-fields';
 import { renderCursorConnectionMeta } from './connection-meta';
-import {
-  formatCursorTestMessage,
-  onCursorTestSuccess,
-  renderCursorTestSummary,
-} from './connection-test-summary';
+import { formatCursorTestMessage, onCursorTestSuccess, renderCursorTestSummary } from './connection-test-summary';
 
 export const CursorConfig: IPluginConfig = {
   plugin: 'cursor',
@@ -50,9 +46,7 @@ export const CursorConfig: IPluginConfig = {
       ({ type, initialValues, values, setValues, setErrors }: any) => (
         <Token type={type} initialValues={initialValues} values={values} setValues={setValues} setErrors={setErrors} />
       ),
-      ({ type, initialValues, values }: any) => (
-        <KeyTier type={type} initialValues={initialValues} values={values} />
-      ),
+      ({ type, initialValues, values }: any) => <KeyTier type={type} initialValues={initialValues} values={values} />,
       ({ type, initialValues, values }: any) =>
         type === 'update' ? <Capabilities initialValues={initialValues} values={values} /> : null,
       'proxy',

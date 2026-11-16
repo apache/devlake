@@ -21,7 +21,7 @@ import { describe, it, expect } from 'vitest';
 // ---------------------------------------------------------------------------
 // Regex constants (mirror exactly what auth.tsx defines)
 // ---------------------------------------------------------------------------
-const JIRA_CLOUD_REGEX   = /^https:\/\/\w+\.atlassian\.net\/rest\/$/;
+const JIRA_CLOUD_REGEX = /^https:\/\/\w+\.atlassian\.net\/rest\/$/;
 const JIRA_GATEWAY_REGEX = /^https:\/\/api\.atlassian\.com\/ex\/jira\/[^/]+\/rest\/$/;
 
 // ---------------------------------------------------------------------------
@@ -44,7 +44,9 @@ function extractCloudId(endpoint: string): string | null {
 // ---------------------------------------------------------------------------
 describe('JIRA_GATEWAY_REGEX', () => {
   it('accepts a valid gateway URL with UUID Cloud ID', () => {
-    expect(JIRA_GATEWAY_REGEX.test('https://api.atlassian.com/ex/jira/a1b2c3d4-e5f6-7890-abcd-ef1234567890/rest/')).toBe(true);
+    expect(
+      JIRA_GATEWAY_REGEX.test('https://api.atlassian.com/ex/jira/a1b2c3d4-e5f6-7890-abcd-ef1234567890/rest/'),
+    ).toBe(true);
   });
 
   it('accepts a valid gateway URL with short Cloud ID', () => {
@@ -104,9 +106,7 @@ describe('buildGatewayEndpoint', () => {
   });
 
   it('builds the correct URL from a short Cloud ID', () => {
-    expect(buildGatewayEndpoint('mycloud123')).toBe(
-      'https://api.atlassian.com/ex/jira/mycloud123/rest/',
-    );
+    expect(buildGatewayEndpoint('mycloud123')).toBe('https://api.atlassian.com/ex/jira/mycloud123/rest/');
   });
 
   it('returns empty string for empty Cloud ID', () => {

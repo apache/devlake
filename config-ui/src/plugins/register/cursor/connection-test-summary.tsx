@@ -82,7 +82,7 @@ const failureTitle = (result: CursorTestResult): string => {
 };
 
 const successTitle = (result: CursorTestResult): string => {
-  const tier = result.keyTier ? tierLabel[result.keyTier] ?? result.keyTier : null;
+  const tier = result.keyTier ? (tierLabel[result.keyTier] ?? result.keyTier) : null;
   return tier ? `Detected key: ${tier}` : 'Connection test successful';
 };
 
@@ -137,7 +137,10 @@ export const renderCursorTestSummary = (result: CursorTestResult) => {
   );
 };
 
-export const onCursorTestSuccess = (result: CursorTestResult, ctx: { setValues: (patch: Record<string, any>) => void }) => {
+export const onCursorTestSuccess = (
+  result: CursorTestResult,
+  ctx: { setValues: (patch: Record<string, any>) => void },
+) => {
   const patch: Record<string, any> = {};
   if (result.keyTier) {
     patch.keyTier = result.keyTier;

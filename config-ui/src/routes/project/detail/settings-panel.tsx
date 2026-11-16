@@ -302,8 +302,8 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
             description={
               <span>
                 Split a single repository into several logical sub-projects for DORA-style metrics. Deployments are
-                matched by CI job name, pull requests by label. When a pull request carries more than one
-                sub-project's label, the first matching sub-project in the list below wins.
+                matched by CI job name, pull requests by label. When a pull request carries more than one sub-project's
+                label, the first matching sub-project in the list below wins.
                 <HelpTooltip content="Only Deployment Frequency and Lead Time for Changes are computed. Change Failure Rate and Time to Restore Service require incident data, which sub-projects do not attribute." />
               </span>
             }
@@ -347,7 +347,12 @@ export const SettingsPanel = ({ project, onRefresh }: Props) => {
             )}
           </Block>
           <Block>
-            <Button type="primary" loading={operating} disabled={!name || !!reservedSubProjectName} onClick={handleUpdate}>
+            <Button
+              type="primary"
+              loading={operating}
+              disabled={!name || !!reservedSubProjectName}
+              onClick={handleUpdate}
+            >
               Save
             </Button>
           </Block>
