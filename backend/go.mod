@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/config v1.33.18
 	github.com/aws/aws-sdk-go-v2/credentials v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.49.9
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.10
 	github.com/chainguard-dev/git-urls v1.0.2
 	github.com/cockroachdb/errors v1.14.0
@@ -19,8 +19,8 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20220707092902-b9da1f06c77e
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.12.0
-	github.com/magiconair/properties v1.18.12
+	github.com/jackc/pgx/v5 v5.13.0
+	github.com/magiconair/properties v1.18.13
 	github.com/merico-ai/graphql v0.0.0-20260206020408-b7fd267bcfac
 	github.com/panjf2000/ants/v2 v2.12.1
 	github.com/robfig/cron/v3 v3.0.1
