@@ -157,7 +157,7 @@ func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
 // value from upstream shouldn't crash a production pipeline.
 func mapStatus(status string) (mapped string, known bool) {
 	switch status {
-	case "triage", "started":
+	case "in_triage", "started":
 		return ticket.TODO, true
 	case "mitigated":
 		return ticket.IN_PROGRESS, true
