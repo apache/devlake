@@ -18,6 +18,7 @@ limitations under the License.
 package tasks
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -62,6 +63,10 @@ func ExtractIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 	if err != nil {
 		return err
 	}
+	sprintFieldId, err := getSprintFieldId(db, connectionId)
+	if err != nil {
+		return err
+	}
 	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[apiv2models.Issue]{
 		SubtaskCommonArgs: &api.SubtaskCommonArgs{
 			SubTaskContext: subtaskCtx,
@@ -97,7 +102,7 @@ func ExtractIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 			return nil
 		},
 		Extract: func(apiIssue *apiv2models.Issue, row *api.RawData) ([]interface{}, errors.Error) {
-			return extractIssues(data, mappings, apiIssue, row, userFieldMap)
+			return extractIssues(data, mappings, apiIssue, row, userFieldMap, sprintFieldId)
 		},
 	})
 	if err != nil {
@@ -106,7 +111,7 @@ func ExtractIssues(subtaskCtx plugin.SubTaskContext) errors.Error {
 	return extractor.Execute()
 }
 
-func extractIssues(data *JiraTaskData, mappings *typeMappings, apiIssue *apiv2models.Issue, row *api.RawData, userFieldMaps map[string]struct{}) ([]interface{}, errors.Error) {
+func extractIssues(data *JiraTaskData, mappings *typeMappings, apiIssue *apiv2models.Issue, row *api.RawData, userFieldMaps map[string]struct{}, sprintFieldId string) ([]interface{}, errors.Error) {
 	err := apiIssue.SetAllFields(row.Data)
 	if err != nil {
 		return nil, err
@@ -117,6 +122,12 @@ func extractIssues(data *JiraTaskData, mappings *typeMappings, apiIssue *apiv2mo
 		return results, nil
 	}
 	sprints, issue, comments, worklogs, changelogs, changelogItems, users := apiIssue.ExtractEntities(data.Options.ConnectionId, userFieldMaps)
+	// Issues collected through the search API (#8931) no longer carry
+	// fields.sprint/fields.closedSprints; sprint membership only remains in the
+	// Sprint custom field, so merge the ids parsed from it.
+	if sprintFieldId != "" {
+		sprints = mergeSprintIds(sprints, parseSprintCustomField(apiIssue.Fields.AllFields[sprintFieldId]))
+	}
 	for _, sprintId := range sprints {
 		sprintIssue := &models.JiraSprintIssue{
 			ConnectionId:     data.Options.ConnectionId,
@@ -295,4 +306,100 @@ func getTypeMappings(data *JiraTaskData, db dal.Dal) (*typeMappings, errors.Erro
 		StdTypeMappings:        stdTypeMappings,
 		StandardStatusMappings: standardStatusMappings,
 	}, nil
+}
+
+// ghSprintSchemaCustom is the schema_custom value of the GreenHopper Sprint
+// custom field. It stays stable across Jira instances even when the field is
+// renamed, so it is the reliable way to locate the field in
+// _tool_jira_issue_fields.
+const ghSprintSchemaCustom = "com.pyxis.greenhopper.jira:gh-sprint"
+
+// getSprintFieldId resolves the id (e.g. "customfield_10004") of the Sprint
+// custom field for the connection. It returns "" when the field has not been
+// collected, in which case sprint extraction keeps relying on
+// fields.sprint/fields.closedSprints only.
+func getSprintFieldId(db dal.Dal, connectionId uint64) (string, errors.Error) {
+	var sprintFields []models.JiraIssueField
+	err := db.All(&sprintFields, dal.Where("connection_id = ? AND schema_custom = ?", connectionId, ghSprintSchemaCustom))
+	if err != nil {
+		return "", err
+	}
+	if len(sprintFields) == 0 {
+		return "", nil
+	}
+	return sprintFields[0].ID, nil
+}
+
+// sprintLegacyIdPattern matches the id inside a Jira Server/DC legacy sprint
+// string such as
+// "com.atlassian.greenhopper.service.sprint.Sprint@14e33bf4[...,id=2424,...]".
+var sprintLegacyIdPattern = regexp.MustCompile(`(?:^|[,\[])id=(\d+)(?:[,\]])`)
+
+// parseSprintCustomField extracts sprint ids from the Sprint custom field
+// value found in Fields.AllFields. Jira Cloud returns an array of objects
+// with an "id" property; Jira Server/DC returns an array of legacy strings.
+func parseSprintCustomField(value interface{}) []uint64 {
+	switch v := value.(type) {
+	case nil:
+		return nil
+	case []interface{}:
+		var ids []uint64
+		for _, item := range v {
+			if id, ok := sprintIdFromValue(item); ok {
+				ids = append(ids, id)
+			}
+		}
+		return ids
+	default:
+		if id, ok := sprintIdFromValue(v); ok {
+			return []uint64{id}
+		}
+		return nil
+	}
+}
+
+func sprintIdFromValue(item interface{}) (uint64, bool) {
+	switch s := item.(type) {
+	case map[string]interface{}:
+		return toUint64(s["id"])
+	case string:
+		m := sprintLegacyIdPattern.FindStringSubmatch(s)
+		if m == nil {
+			return 0, false
+		}
+		id, err := strconv.ParseUint(m[1], 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
+func toUint64(value interface{}) (uint64, bool) {
+	switch n := value.(type) {
+	case float64:
+		return uint64(n), true
+	case string:
+		id, err := strconv.ParseUint(n, 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
+// mergeSprintIds unions two sprint id lists, keeping the first occurrence
+// order and dropping duplicates.
+func mergeSprintIds(base []uint64, extra []uint64) []uint64 {
+	seen := make(map[uint64]struct{}, len(base)+len(extra))
+	merged := make([]uint64, 0, len(base)+len(extra))
+	for _, id := range base {
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			merged = append(merged, id)
+		}
+	}
+	for _, id := range extra {
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			merged = append(merged, id)
+		}
+	}
+	return merged
 }
