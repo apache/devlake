@@ -46,12 +46,7 @@ interface Props {
 
 const entityLabel = (item: ScopeItem) => item.data?.completename || item.name || item.id;
 
-export const GlpiDataScope = ({
-  connectionId,
-  disabledItems = [],
-  selectedItems,
-  onChangeSelectedItems,
-}: Props) => {
+export const GlpiDataScope = ({ connectionId, disabledItems = [], selectedItems, onChangeSelectedItems }: Props) => {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ScopeItem[]>([]);
   const [query, setQuery] = useState('');

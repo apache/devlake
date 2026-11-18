@@ -23,7 +23,7 @@ import { Radio, Input } from 'antd';
 import { Block, ExternalLink } from '@/components';
 import { DOC_URL } from '@/release';
 
-const JIRA_CLOUD_REGEX   = /^https:\/\/\w+\.atlassian\.net\/rest\/$/;
+const JIRA_CLOUD_REGEX = /^https:\/\/\w+\.atlassian\.net\/rest\/$/;
 const JIRA_GATEWAY_REGEX = /^https:\/\/api\.atlassian\.com\/ex\/jira\/[^/]+\/rest\/$/;
 
 type JiraVersion = 'cloud' | 'gateway' | 'server';
@@ -44,7 +44,10 @@ export const Auth = ({ type, initialValues, values, setValues, setErrors }: Prop
   const [cloudId, setCloudId] = useState('');
 
   useEffect(() => {
-    if (initialValues.authMethod === 'OAuth2' || (initialValues.endpoint && JIRA_GATEWAY_REGEX.test(initialValues.endpoint))) {
+    if (
+      initialValues.authMethod === 'OAuth2' ||
+      (initialValues.endpoint && JIRA_GATEWAY_REGEX.test(initialValues.endpoint))
+    ) {
       setVersion('gateway');
       if (initialValues.cloudId) {
         setCloudId(initialValues.cloudId);

@@ -46,11 +46,7 @@ export const Error = () => {
             <Button type="primary" onClick={handleResetError}>
               Continue
             </Button>
-            <Button
-              onClick={() =>
-                window.open('https://github.com/apache/devlake', '_blank', 'noopener,noreferrer')
-              }
-            >
+            <Button onClick={() => window.open('https://github.com/apache/devlake', '_blank', 'noopener,noreferrer')}>
               Visit GitHub
             </Button>
           </Space>

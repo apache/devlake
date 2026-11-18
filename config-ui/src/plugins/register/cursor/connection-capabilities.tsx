@@ -40,10 +40,7 @@ const capabilityStatusLabel: Record<CursorCapabilityStatus, string> = {
   unavailable: 'Unavailable for this key',
 };
 
-export const getCursorCapabilityStatus = (
-  enabled: boolean | undefined,
-  available: boolean,
-): CursorCapabilityStatus => {
+export const getCursorCapabilityStatus = (enabled: boolean | undefined, available: boolean): CursorCapabilityStatus => {
   if (!available) {
     return 'unavailable';
   }
@@ -58,10 +55,7 @@ export const getCursorCapabilities = (source: CursorCapabilitySource): CursorCap
 
   const enterpriseOptional = keyTier === 'enterprise';
   const bugbotStatus = getCursorCapabilityStatus(source.hasBugbotReviews, enterpriseOptional);
-  const insightsStatus = getCursorCapabilityStatus(
-    source.hasConversationInsights,
-    enterpriseOptional,
-  );
+  const insightsStatus = getCursorCapabilityStatus(source.hasConversationInsights, enterpriseOptional);
 
   return [
     {

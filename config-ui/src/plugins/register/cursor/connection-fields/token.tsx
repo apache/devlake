@@ -33,7 +33,7 @@ interface Props {
 
 export const Token = ({ type, initialValues, values, setValues, setErrors }: Props) => {
   useEffect(() => {
-    setValues({ token: type === 'create' ? initialValues.token ?? '' : undefined });
+    setValues({ token: type === 'create' ? (initialValues.token ?? '') : undefined });
   }, [type, initialValues.token]);
 
   const error = useMemo(() => {

@@ -28,8 +28,7 @@ export const ZephyrConfig: IPluginConfig = {
   sort: 17.5,
   isBeta: true,
   connection: {
-    docLink:
-      'https://support.smartbear.com/zephyr-scale-cloud/docs/en/rest-api/generating-api-access-tokens.html',
+    docLink: 'https://support.smartbear.com/zephyr-scale-cloud/docs/en/rest-api/generating-api-access-tokens.html',
     initialValues: {
       endpoint: 'https://api.zephyrscale.smartbear.com/v2',
     },
