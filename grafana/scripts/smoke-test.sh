@@ -98,4 +98,14 @@ until api "datasources/uid/$DS_UID/health" >/dev/null 2>&1; do
   sleep 3
 done
 
+# Each mode must provision only dashboards for its own database. A dashboard kept at the
+# root of grafana/dashboards is loaded in both modes, so one written for MySQL shows up
+# broken on PostgreSQL (and the other way round).
+case "$DB_TYPE" in
+  mysql)      OTHER_DB='"(uid|type)": *"(devlake-postgres-api|grafana-postgresql-datasource|postgres)"' ;;
+  postgresql) OTHER_DB='"(uid|type)": *"(devlake-mysql-api|mysql)"|"datasource": *"mysql"' ;;
+esac
+wrong=$(docker exec "$GRAFANA" sh -c "grep -rlE '$OTHER_DB' /etc/grafana/dashboards" || true)
+[ -z "$wrong" ] || fail "dashboards for another database are provisioned in $DB_TYPE mode: $(echo $wrong)"
+
 echo "OK: $IMAGE starts and datasource $DS_UID is healthy ($DB_TYPE)"
