@@ -287,12 +287,12 @@ func blameAtHEAD(t *testing.T, dir string) map[string]map[int]string {
 	t.Helper()
 	repo := newGitFixtureAt(t, dir)
 	blames := make(map[string]map[int]string)
-	files := strings.Split(strings.TrimRight(repo.git("ls-tree", "-r", "--name-only", "-z", "HEAD"), "\x00"), "\x00")
+	files := strings.Split(strings.TrimRight(repo.git("--git-dir="+dir, "ls-tree", "-r", "--name-only", "-z", "HEAD"), "\x00"), "\x00")
 	for _, file := range files {
 		if file == "" {
 			continue
 		}
-		out := repo.git("blame", "-l", "--line-porcelain", "HEAD", "--", file)
+		out := repo.git("--git-dir="+dir, "blame", "-l", "--line-porcelain", "HEAD", "--", file)
 		lines := make(map[int]string)
 		for _, line := range strings.Split(out, "\n") {
 			// The header of the first line of each group carries the group

@@ -32,9 +32,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// runGit runs git in dir with a fixed identity (and date, if given), and returns its trimmed stdout.
+// runGit runs git in the bare repository dir (if given) with a fixed identity
+// (and date, if given), and returns its trimmed stdout.
 func runGit(t *testing.T, dir, date string, args ...string) string {
 	t.Helper()
+	if dir != "" {
+		args = append([]string{"--git-dir=" + dir}, args...)
+	}
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(),
@@ -101,7 +105,7 @@ func newTestCloner(t *testing.T, remoteDir string, since time.Time) *GitcliClone
 }
 
 func hasObject(dir, sha string) bool {
-	cmd := exec.Command("git", "cat-file", "-e", sha)
+	cmd := exec.Command("git", "--git-dir="+dir, "cat-file", "-e", sha)
 	cmd.Dir = dir
 	return cmd.Run() == nil
 }
@@ -183,4 +187,27 @@ func TestNewestShallowCommitTimeIgnoresMissingCommits(t *testing.T) {
 	newest, err = cloner.newestShallowCommitTime()
 	require.NoError(t, err)
 	assert.True(t, newest.IsZero())
+}
+
+// safe.bareRepository=explicit (git 2.38+) makes git refuse to use a bare
+// repository found from the working directory. Hardened hosts and some CI
+// runners set it; the cloner and the collector must still work on bare clones.
+func TestCloneAndCollectWithSafeBareRepositoryExplicit(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	origin, commits := buildMergeBoundaryRepo(t)
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "safe.bareRepository")
+	t.Setenv("GIT_CONFIG_VALUE_0", "explicit")
+	cloner := newTestCloner(t, origin, time.Date(2024, 1, 2, 12, 0, 0, 0, time.UTC))
+
+	require.NoError(t, cloner.CloneRepo())
+	assert.True(t, hasObject(cloner.localDir, commits["M"]))
+
+	collector, err := NewGitcliRepoCollector(cloner.localDir, "test-repo", nil, unithelper.DummyLogger())
+	require.Nil(t, err)
+	branches, e := collector.CountBranches(context.Background())
+	require.NoError(t, e)
+	assert.Positive(t, branches)
 }
