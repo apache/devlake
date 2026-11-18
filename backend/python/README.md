@@ -226,7 +226,7 @@ class MyPlugin(dl.Plugin):
 A data stream groups the logic for:
 - collecting the raw data from the datasource
 - extracting this raw data into a tool-specific model
-- converting the tool model into an equivalent [DevLake domain model](https://devlake.apache.org/docs/next/DataModels/DevLakeDomainLayerSchema)
+- converting the tool model into an equivalent [DevLake domain model](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema/)
 
 
 ### Create a tool model

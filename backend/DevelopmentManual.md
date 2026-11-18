@@ -69,8 +69,8 @@ For this tutorial, we will use the [gitlab](https://github.com/apache/incubator-
 ### Plugin package and code structure
 
 The plugins generally break down into the following packages:
-* `api`: This package contains the API endpoints (REST) that the plugin exposes. These endpoints expose CRUD operations on [connections](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/connection.go),
-[scopes](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/scope.go), [scope-configs](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/scope_config.go), and possibly more (such as [remote-scopes](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/remote.go) to fetch raw scopes from the datasource if applicable).
+* `api`: This package contains the API endpoints (REST) that the plugin exposes. These endpoints expose CRUD operations on [connections](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/connection_api.go),
+[scopes](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/scope_api.go), [scope-configs](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/scope_config_api.go), and possibly more (such as [remote-scopes](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/remote_api.go) to fetch raw scopes from the datasource if applicable).
 Note the documentation structure of the functions in these example: that's the syntax for Go-Swagger which is responsible for their Swagger documentation generation.
 
    This is where we also define the logic used by the server to run the plugin based on the constraints set by a blueprint (the user's configuration); that is,
@@ -123,7 +123,7 @@ example of an extractor.
 Convertors convert the tool models emitted by extractors to "domain models". Domain models are models agnostic in form to any data source. They are generic,
 standardized representations of various concepts. For example, a generic "commit", or a generic "issue". With respect to DevLake's dashboard queries, we
 write queries against the database tables of these domain models.
-You will need to know to what domain model(s) a given tool model should map (Read about them [here](https://DevLake.apache.org/docs/next/DataModels/DevLakeDomainLayerSchema/)).
+You will need to know to what domain model(s) a given tool model should map (Read about them [here](https://devlake.apache.org/docs/DataModels/DevLakeDomainLayerSchema/)).
 This also depends on the requirements of your plugin, of course. See [this package](https://github.com/apache/incubator-DevLake/tree/main/backend/core/models/domainlayer) for a list of all the domain models;
 they are logically distributed into packages that represent different entities (e.g. Code, Devops, Ticket, etc).
 See [here](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/tasks/issue_convertor.go) for an example of a convertor.
