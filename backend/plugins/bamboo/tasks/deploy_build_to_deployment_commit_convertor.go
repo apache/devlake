@@ -19,7 +19,6 @@ package tasks
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -86,6 +85,11 @@ func ConvertDeployBuildsToDeploymentCommits(taskCtx plugin.SubTaskContext) error
 	db := taskCtx.GetDal()
 	logger := taskCtx.GetLogger()
 	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_JOB_BUILD_TABLE)
+	endpoint, parseErr := url.Parse(data.ApiClient.GetEndpoint())
+	if parseErr != nil {
+		return errors.Default.Wrap(parseErr, "failed to parse the Bamboo endpoint")
+	}
+	baseURL := endpoint.Scheme + "://" + endpoint.Host
 	// INNER JOIN may cause loss of deploy entities here.
 	// It is not known that bamboo deploy can be associated with commits, so this is not an issue at the moment.
 	cursor, err := db.Cursor(
@@ -146,11 +150,6 @@ func ConvertDeployBuildsToDeploymentCommits(taskCtx plugin.SubTaskContext) error
 				RepoId:       strconv.Itoa(input.RepositoryId),
 				DisplayTitle: input.GenerateCICDDeploymentCommitName(),
 			}
-			u, err := url.Parse(data.ApiClient.GetEndpoint())
-			if err != nil {
-				log.Fatal(err)
-			}
-			baseURL := u.Scheme + "://" + u.Host
 			parts := strings.Split(input.EnvKey, "-")
 			if len(parts) > 1 {
 				deploymentCommit.Url = fmt.Sprintf("%s/deploy/viewEnvironment.action?id=%s", baseURL, parts[1])
