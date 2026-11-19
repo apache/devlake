@@ -213,8 +213,8 @@ func (g *GitcliCloner) CloneRepo() errors.Error {
 			return err
 		}
 		g.deepenUntilSince()
-		g.success = true
 	}
+	g.success = true
 	return nil
 }
 

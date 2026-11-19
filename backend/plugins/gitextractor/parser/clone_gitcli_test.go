@@ -26,9 +26,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/devlake/core/models"
+	"github.com/apache/devlake/helpers/pluginhelper/api"
 	"github.com/apache/devlake/helpers/unithelper"
+	mockdal "github.com/apache/devlake/mocks/core/dal"
 	mockplugin "github.com/apache/devlake/mocks/core/plugin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -128,6 +132,36 @@ func TestIncrementalCloneKeepsCommitsBehindMergeBoundary(t *testing.T) {
 	newest, err := cloner.newestShallowCommitTime()
 	require.NoError(t, err)
 	assert.True(t, newest.Before(*cloner.since), "shallow boundary %s should be older than since", newest)
+}
+
+func TestFullCloneSavesSubtaskState(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	origin, _ := buildMergeBoundaryRepo(t)
+	cloner := newTestCloner(t, origin, time.Now())
+	cloner.since = nil
+
+	db := new(mockdal.Dal)
+	db.On("First", mock.Anything, mock.Anything).Return(nil).Once()
+	db.On("CreateOrUpdate", mock.Anything, mock.Anything).Return(nil).Once()
+	taskCtx := new(mockplugin.TaskContext)
+	taskCtx.On("SyncPolicy").Return(&models.SyncPolicy{})
+	taskCtx.On("GetName").Return("gitextractor")
+	subtaskCtx := new(mockplugin.SubTaskContext)
+	subtaskCtx.On("TaskContext").Return(taskCtx)
+	subtaskCtx.On("GetName").Return("Clone Repo")
+	subtaskCtx.On("GetDal").Return(db)
+	stateManager, err := api.NewSubtaskStateManager(&api.SubtaskCommonArgs{
+		SubTaskContext: subtaskCtx,
+		Params:         "test",
+	})
+	require.NoError(t, err)
+	cloner.stateManager = stateManager
+
+	require.NoError(t, cloner.CloneRepo())
+	require.NoError(t, cloner.CloseRepo())
+	db.AssertExpectations(t)
 }
 
 // git fetch may start `git maintenance run --auto` / `git gc --auto` in the
