@@ -60,6 +60,7 @@ func All() []plugin.MigrationScript {
 		new(addExtraJQLToScopeConfig),
 		new(addSprintReportTable),
 		new(addRawDataColumnsToSprintReport),
+		new(addItemIndexToChangelogItems),
 		new(addJiraOAuth20260907),
 	}
 }
