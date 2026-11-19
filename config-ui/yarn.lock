@@ -2917,7 +2917,7 @@ __metadata:
     antd: "npm:6.7.0"
     axios: "npm:1.21.1"
     classnames: "npm:^2.5.1"
-    cron-parser: "npm:5.10.4"
+    cron-parser: "npm:5.10.5"
     cron-validate: "npm:1.5.3"
     dayjs: "npm:1.11.23"
     eslint: "npm:10.14.0"
@@ -2929,11 +2929,11 @@ __metadata:
     file-saver: "npm:^2.0.5"
     globals: "npm:^17.14.0"
     husky: "npm:9.1.7"
-    jsdom: "npm:31.0.0"
+    jsdom: "npm:31.0.1"
     lint-staged: "npm:17.6.0"
     lodash: "npm:4.18.1"
     miller-columns-select: "npm:1.4.1"
-    prettier: "npm:3.9.10"
+    prettier: "npm:3.10.1"
     react: "npm:19.3.1"
     react-copy-to-clipboard: "npm:5.1.1"
     react-dom: "npm:19.3.1"
@@ -2948,7 +2948,7 @@ __metadata:
     styled-components: "npm:6.6.0"
     typescript: "npm:6.0.3"
     typescript-eslint: "npm:^8.72.2"
-    vite: "npm:8.3.7"
+    vite: "npm:8.3.8"
     vite-plugin-svgr: "npm:5.2.0"
     vitest: "npm:5.1.0"
   languageName: unknown
@@ -2994,12 +2994,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.10.4":
-  version: 5.10.4
-  resolution: "cron-parser@npm:5.10.4"
+"cron-parser@npm:5.10.5":
+  version: 5.10.5
+  resolution: "cron-parser@npm:5.10.5"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/4d672375cab88bcb886f914b545717a675d1fcdfcac5ca362b2cbbf34c60423271ae9893b280270a945ba8ed2f1a257f674de44e175bbad522218b98a8d48bc7
+  checksum: 10c0/081d16035b9ea3b7e6e0cd16a30a8ddc1bc2c9c9944dc503c03d113316026a6b2b29260debd4aa5819157e8e0e26e986631090c054d89c3eed737005b9fd1a27
   languageName: node
   linkType: hard
 
@@ -4676,9 +4676,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsdom@npm:31.0.0":
-  version: 31.0.0
-  resolution: "jsdom@npm:31.0.0"
+"jsdom@npm:31.0.1":
+  version: 31.0.1
+  resolution: "jsdom@npm:31.0.1"
   dependencies:
     "@exodus/bytes": "npm:^1.16.0"
     bcp-47: "npm:^2.1.2"
@@ -4703,7 +4703,7 @@ __metadata:
   peerDependenciesMeta:
     "@napi-rs/canvas":
       optional: true
-  checksum: 10c0/e7240d72bfd6aab3e06ef2bcbd9656e39011707958d57b30c25caf840503a433ba56ba384f43e07938125f49e835f679856db58a9f762496a1811ec6ab580740
+  checksum: 10c0/e0f5567543401f2897984682a4139e42b8190fe8ed3f5d53f7e391333cb98b553870018685dbea5eb98549649ac8d5980800a774729a19aabca6fa0fd2b5f83d
   languageName: node
   linkType: hard
 
@@ -5846,12 +5846,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.9.10":
-  version: 3.9.10
-  resolution: "prettier@npm:3.9.10"
+"prettier@npm:3.10.1":
+  version: 3.10.1
+  resolution: "prettier@npm:3.10.1"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/0b3531593aa6fb36ac6baf629cb058bda472c59a6938774f931fe55283a07c62e6f56e621b043a82d8a3e21fc284c08c34f9e539fc70072635f79b7bae1a1067
+  checksum: 10c0/e8c03ea575a30e15afa75a3700e94609050502980d7c906374aea4cf623eef4dce0816100126207e675cc1ed54b7dfce60f02dbee8d61ec27dc69ce5df6c3723
   languageName: node
   linkType: hard
 
@@ -7204,9 +7204,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:8.3.7":
-  version: 8.3.7
-  resolution: "vite@npm:8.3.7"
+"vite@npm:8.3.8":
+  version: 8.3.8
+  resolution: "vite@npm:8.3.8"
   dependencies:
     fsevents: "npm:~2.3.3"
     lightningcss: "npm:^1.33.0"
@@ -7257,7 +7257,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/5433e9c0120edd79479e02d943bcde19ecd74be4c6e8e220bdb120693229425858620d07665baa4adafbcc3d1096a70c86ef179653fa310d777aaed8f6fe74cf
+  checksum: 10c0/21bf5b04159214fbc9f42e297afd26398a3630704959f85290e8b8eb9cac49be20a6a37a5765bfdb997b606c21ccba99f991671f81c5da5a590ae5cedad3e127
   languageName: node
   linkType: hard
 
