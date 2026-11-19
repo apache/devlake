@@ -1,0 +1,228 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package tasks
+
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"sort"
+	"time"
+
+	"github.com/apache/devlake/core/dal"
+	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/models/domainlayer"
+	"github.com/apache/devlake/core/models/domainlayer/didgen"
+	"github.com/apache/devlake/core/models/domainlayer/ticket"
+	"github.com/apache/devlake/core/plugin"
+	helper "github.com/apache/devlake/helpers/pluginhelper/api"
+	"github.com/apache/devlake/plugins/datadog/models"
+	"github.com/apache/devlake/plugins/datadog/models/raw"
+)
+
+// defaultIncidentPrefix is what Datadog names incidents of a type that
+// declares no prefix of its own.
+const defaultIncidentPrefix = "IR"
+
+var _ plugin.SubTaskEntryPoint = ConvertIncidents
+
+var ConvertIncidentsMeta = plugin.SubTaskMeta{
+	Name:             "convertIncidents",
+	EntryPoint:       ConvertIncidents,
+	EnabledByDefault: true,
+	Description:      "Convert Datadog incidents into domain-layer ticket issues",
+	DomainTypes:      []string{plugin.DOMAIN_TYPE_TICKET},
+}
+
+func ConvertIncidents(taskCtx plugin.SubTaskContext) errors.Error {
+	db := taskCtx.GetDal()
+	data := taskCtx.GetData().(*DatadogTaskData)
+	logger := taskCtx.GetLogger()
+
+	cursor, err := db.Cursor(
+		dal.From(&models.Incident{}),
+		dal.Where("connection_id = ? AND incident_type_id = ?", data.Options.ConnectionId, data.Options.IncidentTypeId),
+	)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close()
+
+	prefix := defaultIncidentPrefix
+	incidentType := &models.IncidentType{}
+	if err := db.First(incidentType, dal.Where(
+		"connection_id = ? AND id = ?", data.Options.ConnectionId, data.Options.IncidentTypeId,
+	)); err == nil && incidentType.Prefix != "" {
+		prefix = incidentType.Prefix
+	}
+
+	idGen := didgen.NewDomainIdGenerator(&models.Incident{})
+	incidentTypeIdGen := didgen.NewDomainIdGenerator(&models.IncidentType{})
+	boardId := incidentTypeIdGen.Generate(data.Options.ConnectionId, data.Options.IncidentTypeId)
+
+	converter, err := helper.NewDataConverter(helper.DataConverterArgs{
+		RawDataSubTaskArgs: helper.RawDataSubTaskArgs{
+			Ctx:     taskCtx,
+			Options: data.Options,
+			Table:   RAW_INCIDENTS_TABLE,
+		},
+		InputRowType: reflect.TypeOf(models.Incident{}),
+		Input:        cursor,
+		Convert: func(inputRow interface{}) ([]interface{}, errors.Error) {
+			incident := inputRow.(*models.Incident)
+
+			status, known := mapState(incident.State)
+			if !known {
+				logger.Warn(nil, "unknown datadog incident state: %s", incident.State)
+			}
+
+			leadTime := restoreMinutes(incident)
+			domainIssueId := idGen.Generate(data.Options.ConnectionId, incident.Id)
+
+			domainIssue := &ticket.Issue{
+				DomainEntity: domainlayer.DomainEntity{
+					Id: domainIssueId,
+				},
+				Url:             incident.Url,
+				IssueKey:        issueKeyFor(incident, prefix),
+				Title:           incident.Title,
+				Type:            ticket.INCIDENT,
+				Status:          status,
+				OriginalStatus:  incident.State,
+				CreatedDate:     &incident.CreatedDate,
+				UpdatedDate:     incident.ModifiedDate,
+				ResolutionDate:  incident.ResolvedDate,
+				LeadTimeMinutes: leadTime,
+				Severity:        incident.Severity,
+				Component:       incident.Component,
+				AssigneeId:      incident.CommanderUserId,
+				AssigneeName:    incident.CommanderName,
+			}
+
+			result := []interface{}{
+				domainIssue,
+				&ticket.BoardIssue{
+					BoardId: boardId,
+					IssueId: domainIssueId,
+				},
+			}
+			return append(result, incidentChildren(domainIssueId, incident)...), nil
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return converter.Execute()
+}
+
+// incidentChildren returns the labels and the assignee of one incident.
+func incidentChildren(domainIssueId string, incident *models.Incident) []interface{} {
+	var children []interface{}
+	for _, label := range incidentLabels(incident.CustomFields) {
+		children = append(children, &ticket.IssueLabel{IssueId: domainIssueId, LabelName: label})
+	}
+	if incident.CommanderUserId != "" {
+		children = append(children, &ticket.IssueAssignee{
+			IssueId:      domainIssueId,
+			AssigneeId:   incident.CommanderUserId,
+			AssigneeName: incident.CommanderName,
+		})
+	}
+	return children
+}
+
+// labelFieldTypes are the custom-field types that hold a value from a
+// fixed list, which is what a label is. Textbox fields hold free text.
+var labelFieldTypes = map[string]bool{"dropdown": true, "multiselect": true, "autocomplete": true}
+
+// Datadog mirrors these into `fields` too, but they already have their own
+// columns on the issue.
+var nativeFields = map[string]bool{"severity": true, "state": true, "state_category": true}
+
+// incidentLabels turns the select-type custom fields into field:value
+// labels, sorted so the output is stable across runs.
+func incidentLabels(customFields string) []string {
+	if customFields == "" {
+		return nil
+	}
+	var fields map[string]raw.FieldAttributes
+	if err := json.Unmarshal([]byte(customFields), &fields); err != nil {
+		return nil
+	}
+	var labels []string
+	for name, field := range fields {
+		if nativeFields[name] || !labelFieldTypes[field.Type] {
+			continue
+		}
+		for _, value := range field.Values() {
+			labels = append(labels, name+":"+value)
+		}
+	}
+	sort.Strings(labels)
+	return labels
+}
+
+// Datadog's incident states are a small fixed set. An unknown value falls
+// through to IN_PROGRESS with a warning rather than failing the pipeline.
+func mapState(state string) (mapped string, known bool) {
+	switch state {
+	case "active", "stable":
+		return ticket.IN_PROGRESS, true
+	case "resolved", "completed":
+		return ticket.DONE, true
+	default:
+		return ticket.IN_PROGRESS, false
+	}
+}
+
+// issueKeyFor prefers the slug Datadog shows in its own UI. Rebuilding it
+// from the incident type's prefix is the fallback for a payload that
+// carries no slug field.
+func issueKeyFor(incident *models.Incident, prefix string) string {
+	if incident.Slug != "" {
+		return incident.Slug
+	}
+	return fmt.Sprintf("%s-%d", prefix, incident.PublicId)
+}
+
+// restoreMinutes prefers Datadog's own time_to_repair: it measures when
+// service was restored, whereas created-to-resolved also counts the
+// post-incident paperwork and so overstates MTTR.
+//
+// Zero is Datadog's "not recorded", not an instant restore — an incident
+// that never passed through `stable` reports 0 here while still carrying a
+// real time_to_resolve. Taking it literally would report an MTTR of zero
+// for every such incident, so fall through to the timestamps instead. A
+// genuinely fast restore is reported in seconds and so survives.
+func restoreMinutes(incident *models.Incident) *uint {
+	if incident.TimeToRepair != nil && *incident.TimeToRepair > 0 {
+		minutes := uint(*incident.TimeToRepair / 60)
+		return &minutes
+	}
+	if incident.ResolvedDate == nil {
+		return nil
+	}
+	// A retrospectively declared incident can resolve before it was
+	// created. A naive uint cast of a negative duration wraps to garbage
+	// and silently corrupts MTTR, so drop the value instead.
+	if incident.ResolvedDate.Before(incident.CreatedDate) {
+		return nil
+	}
+	minutes := uint(incident.ResolvedDate.Sub(incident.CreatedDate) / time.Minute)
+	return &minutes
+}

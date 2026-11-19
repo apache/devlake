@@ -33,6 +33,7 @@ import (
 	clickup "github.com/apache/devlake/plugins/clickup/impl"
 	cursor "github.com/apache/devlake/plugins/cursor/impl"
 	customize "github.com/apache/devlake/plugins/customize/impl"
+	datadog "github.com/apache/devlake/plugins/datadog/impl"
 	dora "github.com/apache/devlake/plugins/dora/impl"
 	feishu "github.com/apache/devlake/plugins/feishu/impl"
 	copilot "github.com/apache/devlake/plugins/gh-copilot/impl"
@@ -83,6 +84,7 @@ func Test_GetPluginTablesInfo(t *testing.T) {
 	checker.FeedIn("argocd/models", argocd.ArgoCD{}.GetTablesInfo)
 	checker.FeedIn("asana/models", asana.Asana{}.GetTablesInfo)
 	checker.FeedIn("customize/models", customize.Customize{}.GetTablesInfo)
+	checker.FeedIn("datadog/models", datadog.Datadog{}.GetTablesInfo)
 	checker.FeedIn("dora/models", dora.Dora{}.GetTablesInfo)
 	checker.FeedIn("feishu/models", feishu.Feishu{}.GetTablesInfo)
 	checker.FeedIn("gitee/models", gitee.Gitee{}.GetTablesInfo)

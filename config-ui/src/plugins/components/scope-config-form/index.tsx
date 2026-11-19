@@ -42,6 +42,7 @@ import { YoutrackTransformation } from '@/plugins/register/youtrack';
 import { RedmineTransformation } from '@/plugins/register/redmine';
 import { ZephyrTransformation } from '@/plugins/register/zephyr';
 import { GlpiTransformation } from '@/plugins/register/glpi';
+import { DatadogTransformation } from '@/plugins/register/datadog';
 import { DOC_URL } from '@/release';
 import { operator } from '@/utils';
 
@@ -263,6 +264,14 @@ export const ScopeConfigForm = ({
 
               {plugin === 'circleci' && (
                 <CircleCITransformation
+                  entities={entities}
+                  transformation={transformation}
+                  setTransformation={setTransformation}
+                />
+              )}
+
+              {plugin === 'datadog' && (
+                <DatadogTransformation
                   entities={entities}
                   transformation={transformation}
                   setTransformation={setTransformation}
