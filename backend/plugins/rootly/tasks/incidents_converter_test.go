@@ -34,7 +34,7 @@ func TestMapStatus(t *testing.T) {
 		expectMapped  string
 		expectedKnown bool
 	}{
-		{"triage", ticket.TODO, true},
+		{"in_triage", ticket.TODO, true},
 		{"started", ticket.TODO, true},
 		{"mitigated", ticket.IN_PROGRESS, true},
 		{"resolved", ticket.DONE, true},
