@@ -102,7 +102,7 @@ services:
       - devlake
 
   authproxy:
-    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.5-amd64
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.6-amd64
     network_mode: "host"
     ports:
       - 4181:4180
