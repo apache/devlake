@@ -252,7 +252,7 @@ func postIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mod
 func CloseIssue(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.First(connection, input.Params)
-	return closeIssue(input, err, connection)
+	return closeIssue(input, err, connection, nil, "")
 }
 
 // CloseIssueByBodyRequest is the body for the body-based close endpoint
@@ -288,7 +288,7 @@ func CloseIssueByBody(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput
 		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
 	}
 	input.Params["issueKey"] = request.IssueKey
-	return closeIssue(input, err, connection)
+	return closeIssue(input, err, connection, request.ResolutionDate, request.OriginalStatus)
 }
 
 // CloseIssueByName
@@ -302,7 +302,7 @@ func CloseIssueByBody(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput
 func CloseIssueByName(input *plugin.ApiResourceInput) (*plugin.ApiResourceOutput, errors.Error) {
 	connection := &models.WebhookConnection{}
 	err := connectionHelper.FirstByName(connection, input.Params)
-	return closeIssue(input, err, connection)
+	return closeIssue(input, err, connection, nil, "")
 }
 
 // CloseIssueByBodyByName
@@ -330,10 +330,13 @@ func CloseIssueByBodyByName(input *plugin.ApiResourceInput) (*plugin.ApiResource
 		return &plugin.ApiResourceOutput{Body: err2.Error(), Status: http.StatusBadRequest}, nil
 	}
 	input.Params["issueKey"] = request.IssueKey
-	return closeIssue(input, err, connection)
+	return closeIssue(input, err, connection, request.ResolutionDate, request.OriginalStatus)
 }
 
-func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *models.WebhookConnection) (*plugin.ApiResourceOutput, errors.Error) {
+// closeIssue sets the issue (and its incident) to DONE. resolutionDate and originalStatus come from the
+// body-based close endpoints: a given resolutionDate replaces the stored one, and without it a missing
+// resolution date is set to now. originalStatus is stored as given, empty when the request has none.
+func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *models.WebhookConnection, resolutionDate *time.Time, originalStatus string) (*plugin.ApiResourceOutput, errors.Error) {
 	if err != nil {
 		return nil, err
 	}
@@ -349,13 +352,15 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 		return nil, errors.NotFound.Wrap(err, `issue not found`)
 	}
 	domainIssue.Status = ticket.DONE
-	domainIssue.OriginalStatus = ``
+	domainIssue.OriginalStatus = originalStatus
 	now := time.Now()
-	if domainIssue.ResolutionDate == nil {
+	if resolutionDate != nil {
+		domainIssue.ResolutionDate = resolutionDate
+	} else if domainIssue.ResolutionDate == nil {
 		domainIssue.ResolutionDate = &now
 	}
 	if domainIssue.LeadTimeMinutes == nil || *domainIssue.LeadTimeMinutes == 0 {
-		if domainIssue.CreatedDate != nil {
+		if domainIssue.CreatedDate != nil && !domainIssue.ResolutionDate.Before(*domainIssue.CreatedDate) {
 			temp := uint(domainIssue.ResolutionDate.Sub(*domainIssue.CreatedDate).Minutes())
 			domainIssue.LeadTimeMinutes = &temp
 		}
@@ -372,12 +377,14 @@ func closeIssue(input *plugin.ApiResourceInput, err errors.Error, connection *mo
 		err = tx.First(domainIncident, dal.Where("id = ?", incidentId))
 		if err == nil {
 			domainIncident.Status = ticket.DONE
-			domainIncident.OriginalStatus = ``
-			if domainIncident.ResolutionDate == nil {
+			domainIncident.OriginalStatus = originalStatus
+			if resolutionDate != nil {
+				domainIncident.ResolutionDate = resolutionDate
+			} else if domainIncident.ResolutionDate == nil {
 				domainIncident.ResolutionDate = &now
 			}
 			if domainIncident.LeadTimeMinutes == nil || *domainIncident.LeadTimeMinutes == 0 {
-				if domainIncident.CreatedDate != nil {
+				if domainIncident.CreatedDate != nil && !domainIncident.ResolutionDate.Before(*domainIncident.CreatedDate) {
 					temp := uint(domainIncident.ResolutionDate.Sub(*domainIncident.CreatedDate).Minutes())
 					domainIncident.LeadTimeMinutes = &temp
 				}
