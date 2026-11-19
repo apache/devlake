@@ -51,3 +51,27 @@ func TestConnectIncidentToDeploymentDataFlow(t *testing.T) {
 		IgnoreTypes: []interface{}{common.NoPKModel{}},
 	})
 }
+
+// Incidents whose component names a CI/CD scope of the project (by name or id, any case) are tied to that scope's
+// latest production deployment; any other component, or none, keeps the project-wide lookup.
+func TestConnectIncidentToDeploymentByComponentDataFlow(t *testing.T) {
+	var plugin impl.Dora
+	dataflowTester := e2ehelper.NewDataFlowTester(t, "dora", plugin)
+
+	taskData := &tasks.DoraTaskData{
+		Options: &tasks.DoraOptions{
+			ProjectName: "project1",
+		},
+	}
+	dataflowTester.ImportCsvIntoTabler("./connect_incident_to_deployment/prev_success_deployment_commit/cicd_deployment_commits_after.csv", &devops.CicdDeploymentCommit{})
+	dataflowTester.ImportCsvIntoTabler("./connect_incident_to_deployment/raw_tables/project_mapping.csv", &crossdomain.ProjectMapping{})
+	dataflowTester.ImportCsvIntoTabler("./connect_incident_to_deployment/by_component/cicd_scopes.csv", &devops.CicdScope{})
+	dataflowTester.ImportCsvIntoTabler("./connect_incident_to_deployment/by_component/incidents.csv", &ticket.Incident{})
+
+	dataflowTester.FlushTabler(&crossdomain.ProjectIncidentDeploymentRelationship{})
+	dataflowTester.Subtask(tasks.ConnectIncidentToDeploymentMeta, taskData)
+	dataflowTester.VerifyTableWithOptions(&crossdomain.ProjectIncidentDeploymentRelationship{}, e2ehelper.TableOptions{
+		CSVRelPath:  "./connect_incident_to_deployment/by_component/project_incident_deployment_relationships.csv",
+		IgnoreTypes: []interface{}{common.NoPKModel{}},
+	})
+}

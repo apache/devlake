@@ -19,6 +19,7 @@ package tasks
 
 import (
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/apache/devlake/core/dal"
@@ -99,40 +100,17 @@ func ConnectIncidentToDeployment(taskCtx plugin.SubTaskContext) errors.Error {
 				ProjectName: data.Options.ProjectName,
 			}
 			logger.Debug("get incident: %+v", incident.Id)
-			cicdDeploymentCommit := &devops.CicdDeploymentCommit{}
-			cicdDeploymentCommitClauses := []dal.Clause{
-				dal.Select("cicd_deployment_commits.cicd_deployment_id as id, cicd_deployment_commits.finished_date as finished_date"),
-				dal.From(cicdDeploymentCommit),
-				dal.Join("left join project_mapping pm on cicd_deployment_commits.cicd_scope_id = pm.row_id"),
-				dal.Where(
-					`cicd_deployment_commits.finished_date < ?
-					    and cicd_deployment_commits.result = ?
-						and cicd_deployment_commits.environment = ?
-						and pm.table = ?
-						and pm.project_name = ?`,
-					incident.CreatedDate, devops.RESULT_SUCCESS, devops.PRODUCTION, "cicd_scopes", data.Options.ProjectName,
-				),
-				dal.Orderby("finished_date DESC"),
-				dal.Limit(1),
-			}
-
-			scdc := &simpleCicdDeploymentCommit{}
-			err = db.All(scdc, cicdDeploymentCommitClauses...)
+			scdc, err := findIncidentDeployment(db, incident, data.Options.ProjectName)
 			if err != nil {
-				if db.IsErrorNotFound(err) {
-					logger.Warn(err, "deployment commit not found")
-					return nil, nil
-				} else {
-					logger.Error(err, "get all deployment commits")
-					return nil, err
-				}
+				logger.Error(err, "get all deployment commits")
+				return nil, err
 			}
-			if scdc.Id != "" {
-				projectIssueMetric.DeploymentId = scdc.Id
-				return []interface{}{projectIssueMetric}, nil
+			if scdc == nil {
+				logger.Warn(nil, "deployment commit not found for incident %s", incident.Id)
+				return nil, nil
 			}
-			logger.Debug("scdc.id is empty, incident will be ignored: %+v", incident.Id)
-			return nil, nil
+			projectIssueMetric.DeploymentId = scdc.Id
+			return []interface{}{projectIssueMetric}, nil
 		},
 	})
 	if err != nil {
@@ -140,4 +118,53 @@ func ConnectIncidentToDeployment(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return enricher.Execute()
+}
+
+// findIncidentDeployment returns the latest successful production deployment of the project that finished before
+// the incident started. When the incident names a component that matches a CI/CD scope of the project (its name,
+// such as "owner/repo", or its id, case-insensitive), only that scope's deployments are considered, so the incident
+// is tied to the release of the repository that caused it rather than to whichever repository deployed last. If the
+// component matches no scope, or that scope has no earlier production deployment, the project-wide lookup is used.
+func findIncidentDeployment(db dal.Dal, incident *ticket.Incident, projectName string) (*simpleCicdDeploymentCommit, errors.Error) {
+	component := strings.TrimSpace(incident.Component)
+	if component != "" {
+		scdc, err := latestProductionDeployment(db, incident, projectName, component)
+		if err != nil || scdc != nil {
+			return scdc, err
+		}
+	}
+	return latestProductionDeployment(db, incident, projectName, "")
+}
+
+func latestProductionDeployment(db dal.Dal, incident *ticket.Incident, projectName string, component string) (*simpleCicdDeploymentCommit, errors.Error) {
+	clauses := []dal.Clause{
+		dal.Select("cicd_deployment_commits.cicd_deployment_id as id, cicd_deployment_commits.finished_date as finished_date"),
+		dal.From(&devops.CicdDeploymentCommit{}),
+		dal.Join("left join project_mapping pm on cicd_deployment_commits.cicd_scope_id = pm.row_id"),
+	}
+	where := `cicd_deployment_commits.finished_date < ?
+		and cicd_deployment_commits.result = ?
+		and cicd_deployment_commits.environment = ?
+		and pm.table = ?
+		and pm.project_name = ?`
+	args := []interface{}{incident.CreatedDate, devops.RESULT_SUCCESS, devops.PRODUCTION, "cicd_scopes", projectName}
+	if component != "" {
+		clauses = append(clauses, dal.Join("left join cicd_scopes cs on cs.id = cicd_deployment_commits.cicd_scope_id"))
+		where += ` and (lower(cs.name) = ? or lower(cs.id) = ?)`
+		lowered := strings.ToLower(component)
+		args = append(args, lowered, lowered)
+	}
+	clauses = append(clauses, dal.Where(where, args...), dal.Orderby("finished_date DESC"), dal.Limit(1))
+	scdc := &simpleCicdDeploymentCommit{}
+	err := db.All(scdc, clauses...)
+	if err != nil {
+		if db.IsErrorNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if scdc.Id == "" {
+		return nil, nil
+	}
+	return scdc, nil
 }

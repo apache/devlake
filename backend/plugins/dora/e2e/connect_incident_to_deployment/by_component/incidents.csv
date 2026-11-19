@@ -1,0 +1,8 @@
+id,created_date,updated_date,table,scope_id,component
+incident:by-name,2022-11-13 23:37:21,2022-11-15 22:37:21,repos,repo1,owner/repo-one
+incident:by-name-other-case,2022-11-13 01:07:21,2022-11-14 00:07:21,repos,repo1,OWNER/Repo-One
+incident:by-id,2022-11-02 08:21:09,2022-11-04 07:21:09,repos,repo1,cicd1
+incident:unknown-component,2022-11-16 21:34:01,2022-11-19 20:34:01,repos,repo2,someone/else
+incident:no-component,2022-11-28 01:46:47,2022-11-29 00:46:47,repos,repo2,
+incident:scope-earlier-than-project,2022-09-14 12:00:00,2022-09-15 12:00:00,repos,repo1,owner/repo-one
+incident:scope-has-no-earlier-deploy,2022-09-13 12:00:00,2022-09-14 12:00:00,repos,repo1,owner/repo-two
