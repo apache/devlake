@@ -68,8 +68,7 @@ func ConvertTeams(taskCtx plugin.SubTaskContext) errors.Error {
 				DomainEntity: domainlayer.DomainEntity{
 					Id: accountIdGen.Generate(connectionId, team.Id),
 				},
-				Name:  team.Id,
-				Alias: team.Name,
+				Name: team.Name,
 			}
 			return []interface{}{u}, nil
 		},
