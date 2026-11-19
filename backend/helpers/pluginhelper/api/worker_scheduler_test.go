@@ -64,3 +64,21 @@ func TestWorkerSchedulerQpsControl(t *testing.T) {
 	}
 	cancel()
 }
+
+// A failed task must be reported by the WaitAsync call that waits for it, not
+// by a later one: a stateful collector saves its state when WaitAsync
+// returns nil.
+func TestWorkerSchedulerWaitAsyncReturnsTaskError(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		s, err := NewWorkerScheduler(context.Background(), 1, time.Microsecond, unithelper.DummyLogger())
+		assert.Nil(t, err)
+		s.SubmitBlocking(func() errors.Error {
+			return errors.Default.New("request failed")
+		})
+		if !assert.NotNil(t, s.WaitAsync(), "run %d: WaitAsync returned before the task error was recorded", i) {
+			s.Release()
+			return
+		}
+		s.Release()
+	}
+}
