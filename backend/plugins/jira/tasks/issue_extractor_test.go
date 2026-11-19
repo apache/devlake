@@ -82,7 +82,7 @@ func TestExtractIssuesEpicKeyField(t *testing.T) {
 					ScopeConfig:  &models.JiraScopeConfig{EpicKeyField: tt.epicKeyField},
 				},
 			}
-			results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil)
+			results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil, "")
 			if err != nil {
 				t.Fatalf("extractIssues() error = %v", err)
 			}
@@ -158,7 +158,7 @@ func TestExtractIssuesWorklog(t *testing.T) {
 		if err := json.Unmarshal(raw, &apiIssue); err != nil {
 			t.Fatalf("unmarshal issue: %v", err)
 		}
-		results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil)
+		results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil, "")
 		if err != nil {
 			t.Fatalf("extractIssues() error = %v", err)
 		}
@@ -189,7 +189,7 @@ func TestExtractIssuesWorklog(t *testing.T) {
 		if err := json.Unmarshal(raw, &apiIssue); err != nil {
 			t.Fatalf("unmarshal issue: %v", err)
 		}
-		results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil)
+		results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil, "")
 		if err != nil {
 			t.Fatalf("extractIssues() error = %v", err)
 		}
@@ -204,6 +204,107 @@ func TestExtractIssuesWorklog(t *testing.T) {
 			if _, ok := r.(*models.JiraWorklog); ok {
 				t.Errorf("unexpected JiraWorklog extracted when worklog field is absent")
 			}
+		}
+	})
+}
+
+func TestExtractIssuesSprintCustomField(t *testing.T) {
+	const sprintField = "customfield_10004"
+	mappings := &typeMappings{
+		TypeIdMappings:         map[string]string{},
+		StdTypeMappings:        map[string]string{},
+		StandardStatusMappings: map[string]models.StatusMappings{},
+	}
+	newData := func() *JiraTaskData {
+		return &JiraTaskData{
+			Options: &JiraOptions{
+				ConnectionId: 1,
+				BoardId:      1,
+			},
+		}
+	}
+	sprintIdsFromResults := func(results []interface{}) []uint64 {
+		var ids []uint64
+		for _, r := range results {
+			if si, ok := r.(*models.JiraSprintIssue); ok {
+				ids = append(ids, si.SprintId)
+			}
+		}
+		return ids
+	}
+
+	t.Run("server legacy sprint strings are parsed", func(t *testing.T) {
+		fieldsJSON := fmt.Sprintf(`"%s": [
+			"com.atlassian.greenhopper.service.sprint.Sprint@14e33bf4[activatedDate=2026-11-04T13:44:13.760+01:00,autoStartStop=false,completeDate=<null>,endDate=2026-11-18T13:30:00.000+01:00,goal=,id=2424,incompleteIssuesDestinationId=<null>,name=Team A Sprint 42,rapidViewId=148,sequence=2376,startDate=2026-11-04T13:30:00.000+01:00,state=ACTIVE,synced=false]",
+			"com.atlassian.greenhopper.service.sprint.Sprint@9f77abc1[completeDate=2026-11-04T13:30:00.000+01:00,id=2400,name=Team A Sprint 41,state=CLOSED]"
+		]`, sprintField)
+		raw := minimalIssueJSON(fieldsJSON)
+		var apiIssue apiv2models.Issue
+		if err := json.Unmarshal(raw, &apiIssue); err != nil {
+			t.Fatalf("unmarshal issue: %v", err)
+		}
+		results, err := extractIssues(newData(), mappings, &apiIssue, &api.RawData{Data: raw}, nil, sprintField)
+		if err != nil {
+			t.Fatalf("extractIssues() error = %v", err)
+		}
+		got := sprintIdsFromResults(results)
+		if len(got) != 2 || got[0] != 2424 || got[1] != 2400 {
+			t.Errorf("sprint ids = %v, want [2424 2400]", got)
+		}
+	})
+
+	t.Run("cloud sprint objects are parsed", func(t *testing.T) {
+		fieldsJSON := fmt.Sprintf(`"%s": [
+			{"id": 2424, "name": "Team A Sprint 42", "state": "active"},
+			{"id": "2400", "name": "Team A Sprint 41", "state": "closed"}
+		]`, sprintField)
+		raw := minimalIssueJSON(fieldsJSON)
+		var apiIssue apiv2models.Issue
+		if err := json.Unmarshal(raw, &apiIssue); err != nil {
+			t.Fatalf("unmarshal issue: %v", err)
+		}
+		results, err := extractIssues(newData(), mappings, &apiIssue, &api.RawData{Data: raw}, nil, sprintField)
+		if err != nil {
+			t.Fatalf("extractIssues() error = %v", err)
+		}
+		got := sprintIdsFromResults(results)
+		if len(got) != 2 || got[0] != 2424 || got[1] != 2400 {
+			t.Errorf("sprint ids = %v, want [2424 2400]", got)
+		}
+	})
+
+	t.Run("custom field is merged with structured sprint fields without duplicates", func(t *testing.T) {
+		fieldsJSON := fmt.Sprintf(`"sprint": {"id": 2424, "name": "Team A Sprint 42", "state": "active"},
+			"closedSprints": [{"id": 2399, "name": "Team A Sprint 40", "state": "closed"}],
+			"%s": [{"id": 2424, "name": "Team A Sprint 42", "state": "active"}]`, sprintField)
+		raw := minimalIssueJSON(fieldsJSON)
+		var apiIssue apiv2models.Issue
+		if err := json.Unmarshal(raw, &apiIssue); err != nil {
+			t.Fatalf("unmarshal issue: %v", err)
+		}
+		results, err := extractIssues(newData(), mappings, &apiIssue, &api.RawData{Data: raw}, nil, sprintField)
+		if err != nil {
+			t.Fatalf("extractIssues() error = %v", err)
+		}
+		got := sprintIdsFromResults(results)
+		if len(got) != 2 || got[0] != 2424 || got[1] != 2399 {
+			t.Errorf("sprint ids = %v, want [2424 2399]", got)
+		}
+	})
+
+	t.Run("empty sprint field id keeps structured behavior", func(t *testing.T) {
+		fieldsJSON := fmt.Sprintf(`"%s": [{"id": 2424, "name": "Team A Sprint 42", "state": "active"}]`, sprintField)
+		raw := minimalIssueJSON(fieldsJSON)
+		var apiIssue apiv2models.Issue
+		if err := json.Unmarshal(raw, &apiIssue); err != nil {
+			t.Fatalf("unmarshal issue: %v", err)
+		}
+		results, err := extractIssues(newData(), mappings, &apiIssue, &api.RawData{Data: raw}, nil, "")
+		if err != nil {
+			t.Fatalf("extractIssues() error = %v", err)
+		}
+		if got := sprintIdsFromResults(results); len(got) != 0 {
+			t.Errorf("sprint ids = %v, want none when the sprint field is unresolved", got)
 		}
 	})
 }

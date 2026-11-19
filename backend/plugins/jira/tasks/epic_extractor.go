@@ -52,6 +52,10 @@ func ExtractEpics(subtaskCtx plugin.SubTaskContext) errors.Error {
 	if err != nil {
 		return err
 	}
+	sprintFieldId, err := getSprintFieldId(db, connectionId)
+	if err != nil {
+		return err
+	}
 
 	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[apiv2models.Issue]{
 		SubtaskCommonArgs: &api.SubtaskCommonArgs{
@@ -87,7 +91,7 @@ func ExtractEpics(subtaskCtx plugin.SubTaskContext) errors.Error {
 			return nil
 		},
 		Extract: func(apiIssue *apiv2models.Issue, row *api.RawData) ([]interface{}, errors.Error) {
-			return extractIssues(data, mappings, apiIssue, row, userFieldMap)
+			return extractIssues(data, mappings, apiIssue, row, userFieldMap, sprintFieldId)
 		},
 	})
 	if err != nil {
