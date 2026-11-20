@@ -30,24 +30,25 @@ type CursorUsageEvent struct {
 	EventId      string    `gorm:"primaryKey;type:varchar(64)" json:"eventId"`
 	EventTime    time.Time `gorm:"index" json:"eventTime"`
 
-	UserEmail        string  `json:"userEmail" gorm:"type:varchar(255);index"`
-	Model            string  `json:"model" gorm:"type:varchar(255);index"`
-	Kind             string  `json:"kind" gorm:"type:varchar(100)"`
-	ConversationId   string  `json:"conversationId" gorm:"type:varchar(64);index"`
-	ChargedCents     float64 `json:"chargedCents"`
-	RequestsCosts    float64 `json:"requestsCosts"`
-	IsTokenBasedCall bool    `json:"isTokenBasedCall"`
-	IsChargeable     bool    `json:"isChargeable"`
-	MaxMode          bool    `json:"maxMode"`
-	IsHeadless       bool    `json:"isHeadless"`
-	InputTokens      int     `json:"inputTokens"`
-	OutputTokens     int     `json:"outputTokens"`
-	CacheReadTokens  int     `json:"cacheReadTokens"`
-	CacheWriteTokens int     `json:"cacheWriteTokens"`
-	TotalCents       float64 `json:"totalCents"`
-	CursorTokenFee   float64 `json:"cursorTokenFee"`
-	HostingType      string  `json:"hostingType" gorm:"type:varchar(50)"`
-	ServiceAccountId string  `json:"serviceAccountId" gorm:"type:varchar(255)"`
+	UserEmail          string  `json:"userEmail" gorm:"type:varchar(255);index"`
+	Model              string  `json:"model" gorm:"type:varchar(255);index"`
+	Kind               string  `json:"kind" gorm:"type:varchar(100)"`
+	ConversationId     string  `json:"conversationId" gorm:"type:varchar(64);index"`
+	ChargedCents       float64 `json:"chargedCents"`
+	RequestsCosts      float64 `json:"requestsCosts"`
+	IsTokenBasedCall   bool    `json:"isTokenBasedCall"`
+	IsChargeable       bool    `json:"isChargeable"`
+	MaxMode            bool    `json:"maxMode"`
+	IsHeadless         bool    `json:"isHeadless"`
+	InputTokens        int     `json:"inputTokens"`
+	OutputTokens       int     `json:"outputTokens"`
+	CacheReadTokens    int     `json:"cacheReadTokens"`
+	CacheWriteTokens   int     `json:"cacheWriteTokens"`
+	TotalCents         float64 `json:"totalCents"`
+	CursorTokenFee     float64 `json:"cursorTokenFee"`
+	HostingType        string  `json:"hostingType" gorm:"type:varchar(50)"`
+	ServiceAccountId   string  `json:"serviceAccountId" gorm:"type:varchar(255);index"`
+	ServiceAccountName string  `json:"serviceAccountName" gorm:"type:varchar(255)"`
 
 	common.NoPKModel
 }

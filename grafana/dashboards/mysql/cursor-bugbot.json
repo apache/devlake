@@ -26,6 +26,17 @@
       "keepTime": true,
       "tags": [],
       "targetBlank": true,
+      "title": "Cursor Member Use",
+      "type": "link",
+      "url": "/d/cursor_member_use"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
       "title": "Cursor Usage & Cost",
       "type": "link",
       "url": "/d/cursor_usage"
@@ -59,7 +70,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "- **Use case:** Automated PR review analytics from Cursor BugBot (`GET /analytics/team/bugbot-reviews`).\n- **Data source:** Cursor plugin \u2014 requires `hasBugbotReviews` on the connection.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for usage and cost; [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise) for AI code tracking and conversation insights.",
+        "content": "- **Use case:** Automated PR review analytics from Cursor BugBot (`GET /analytics/team/bugbot-reviews`).\n- **Data source:** Cursor plugin \u2014 requires `hasBugbotReviews` on the connection.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage) for usage and cost; [Cursor Member Use](/d/cursor_member_use) for per-member and service-account cost; [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise) for AI code tracking and conversation insights.",
         "mode": "markdown"
       },
       "pluginVersion": "11.0.0",

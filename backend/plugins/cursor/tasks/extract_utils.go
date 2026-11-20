@@ -24,7 +24,7 @@ import (
 
 // cursorExtractorVersion bumps when extract logic changes in a way that requires
 // a one-time full re-extract (SubtaskStateManager compares SubtaskConfig).
-const cursorExtractorVersion = 3
+const cursorExtractorVersion = 4
 
 func cursorSubtaskCommonArgs(taskCtx plugin.SubTaskContext, data *CursorTaskData, rawTable string) *helper.SubtaskCommonArgs {
 	return &helper.SubtaskCommonArgs{
