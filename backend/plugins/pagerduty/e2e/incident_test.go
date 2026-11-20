@@ -20,6 +20,7 @@ package e2e
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/ticket"
@@ -85,6 +86,19 @@ func TestIncidentDataFlow(t *testing.T) {
 			IgnoreTypes: []any{common.Model{}},
 		},
 	)
+	// another connection (a different PagerDuty account) reuses the incident
+	// numbers and has a user with the same id; none of it may leak into the
+	// issues of connection 1
+	otherConnectionAssignedAt := time.Date(2022, 11, 3, 8, 0, 0, 0, time.UTC)
+	require.NoError(t, dataflowTester.Dal.CreateOrUpdate([]*models.Assignment{
+		{ConnectionId: 2, UserId: "PCONN2A", IncidentNumber: 5, AssignedAt: otherConnectionAssignedAt},
+		{ConnectionId: 2, UserId: "PCONN2B", IncidentNumber: 6, AssignedAt: otherConnectionAssignedAt},
+	}))
+	require.NoError(t, dataflowTester.Dal.CreateOrUpdate([]*models.User{
+		{ConnectionId: 2, Id: "PCONN2A", Name: "Other Account User A"},
+		{ConnectionId: 2, Id: "PCONN2B", Name: "Other Account User B"},
+		{ConnectionId: 2, Id: "P25K520", Name: "Other Account Kian"},
+	}))
 	dataflowTester.FlushTabler(&ticket.Issue{})
 	dataflowTester.FlushTabler(&ticket.IssueAssignee{})
 	dataflowTester.FlushTabler(&ticket.BoardIssue{})
