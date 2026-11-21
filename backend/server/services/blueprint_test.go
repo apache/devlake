@@ -87,6 +87,46 @@ func TestPatchBlueprintKeepsTheScheduledPlanUnsanitized(t *testing.T) {
 	assert.Equal(t, testGitUrl, job.Blueprint.Plan[0][0].Options["url"])
 }
 
+func TestReloadBlueprintByIdSchedulesTheStoredBlueprint(t *testing.T) {
+	testDB := mockdal.NewDal(t)
+	withProjectTestDatabase(t, testDB)
+	previousLogger, previousCron, previousCronIds := logger, cronManager, bpCronIdMap
+	logger, cronManager, bpCronIdMap = logruslog.Global, cron.New(), map[uint64]cron.EntryID{}
+	t.Cleanup(func() {
+		logger, cronManager, bpCronIdMap = previousLogger, previousCron, previousCronIds
+	})
+
+	// the job scheduled before a webhook connection was attached to the blueprint
+	stale := &coreModels.Blueprint{Enable: true, CronConfig: "0 0 * * *"}
+	stale.ID = 9
+	require.NoError(t, reloadBlueprint(stale))
+
+	testDB.On("First", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		bp := args.Get(0).(*coreModels.Blueprint)
+		bp.ID = 9
+		bp.Enable = true
+		bp.CronConfig = "0 0 * * *"
+	}).Return(nil).Once()
+	testDB.On("Pluck", "name", mock.Anything, mock.Anything).Return(nil).Once()
+	testDB.On("All", mock.AnythingOfType("*[]*models.BlueprintConnection"), mock.Anything).Run(func(args mock.Arguments) {
+		*args.Get(0).(*[]*coreModels.BlueprintConnection) = []*coreModels.BlueprintConnection{
+			{BlueprintId: 9, PluginName: "webhook", ConnectionId: 7},
+		}
+	}).Return(nil).Once()
+	testDB.On("All", mock.AnythingOfType("*[]*models.BlueprintScope"), mock.Anything).Return(nil).Once()
+
+	require.NoError(t, ReloadBlueprintById(9))
+
+	// the stale job is replaced by one that holds the blueprint as it is stored now
+	entries := cronManager.Entries()
+	require.Len(t, entries, 1)
+	job, ok := entries[0].Job.(*BlueprintJob)
+	require.True(t, ok)
+	require.Len(t, job.Blueprint.Connections, 1)
+	assert.Equal(t, "webhook", job.Blueprint.Connections[0].PluginName)
+	assert.Equal(t, uint64(7), job.Blueprint.Connections[0].ConnectionId)
+}
+
 func TestParallelizePipelineTasks(t *testing.T) {
 	plan1 := coreModels.PipelinePlan{
 		{
