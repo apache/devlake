@@ -44,7 +44,6 @@ var ConvertTaskMeta = plugin.SubTaskMeta{
 func ConvertTask(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*ZentaoTaskData)
 	db := taskCtx.GetDal()
-	storyIdGen := didgen.NewDomainIdGenerator(&models.ZentaoStory{})
 	//bugIdGen := didgen.NewDomainIdGenerator(&models.ZentaoBug{})
 	boardIdGen := didgen.NewDomainIdGenerator(&models.ZentaoProject{})
 	executionIdGen := didgen.NewDomainIdGenerator(&models.ZentaoExecution{})
@@ -99,8 +98,9 @@ func ConvertTask(taskCtx plugin.SubTaskContext) errors.Error {
 			if mappingType, ok := stdTypeMappings[domainEntity.OriginalType]; ok && mappingType != "" {
 				domainEntity.Type = mappingType
 			}
-			if toolEntity.Parent != 0 {
-				domainEntity.ParentIssueId = storyIdGen.Generate(data.Options.ConnectionId, toolEntity.Parent)
+			// Parent is the id of the parent task, or -1 if this task is itself a parent task
+			if toolEntity.Parent > 0 {
+				domainEntity.ParentIssueId = taskIdGen.Generate(data.Options.ConnectionId, toolEntity.Parent)
 			}
 			if toolEntity.OpenedById != 0 {
 				domainEntity.CreatorId = accountIdGen.Generate(data.Options.ConnectionId, toolEntity.OpenedById)
