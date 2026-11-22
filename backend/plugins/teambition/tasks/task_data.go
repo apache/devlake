@@ -24,6 +24,10 @@ import (
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 )
 
+// defaultPageSize is the page size used when the task options do not set one.
+// ApiCollector only follows the next pages of a list when the page size is set.
+const defaultPageSize = 50
+
 type TeambitionOptions struct {
 	ConnectionId        uint64 `json:"connectionId"`
 	ProjectId           string `json:"projectId"`
@@ -45,6 +49,9 @@ func DecodeAndValidateTaskOptions(options map[string]interface{}) (*TeambitionOp
 	}
 	if op.ConnectionId == 0 {
 		return nil, errors.Default.New("connectionId is invalid")
+	}
+	if op.PageSize == 0 {
+		op.PageSize = defaultPageSize
 	}
 	return &op, nil
 }
