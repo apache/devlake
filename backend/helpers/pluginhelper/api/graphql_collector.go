@@ -279,7 +279,7 @@ func (collector *GraphqlCollector) fetchAsync(reqData *GraphqlRequestData, handl
 			hasNonIgnorableDataErrors := false
 			for _, dataError := range dataErrors {
 				if isIgnorableGraphqlQueryError(dataError) {
-					logger.Warn(nil, "Issue may have been transferred or deleted.")
+					logger.Warn(dataError, "skipping item that may have been transferred or deleted")
 					continue
 				}
 				hasNonIgnorableDataErrors = true
@@ -348,15 +348,16 @@ func (collector *GraphqlCollector) HasError() bool {
 	return len(collector.workerErrors) > 0
 }
 
-// isIgnorableGraphqlQueryError reports whether err means the queried issue no
-// longer exists upstream, so its children can be skipped. GitHub and Linear
-// word this differently.
+// isIgnorableGraphqlQueryError reports whether err means the queried issue or
+// pull request is no longer visible upstream, so it can be skipped. GitHub and
+// Linear word this differently.
 func isIgnorableGraphqlQueryError(err error) bool {
 	if err == nil {
 		return false
 	}
 	msg := err.Error()
 	return strings.Contains(msg, "Could not resolve to an Issue") ||
+		strings.Contains(msg, "Could not resolve to a PullRequest") ||
 		strings.Contains(msg, "Entity not found: Issue")
 }
 
