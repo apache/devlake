@@ -1,0 +1,12 @@
+issue_id,label_name
+datadog:Incident:1:inc_101,detection_method:monitor
+datadog:Incident:1:inc_101,services:api
+datadog:Incident:1:inc_101,services:worker
+datadog:Incident:1:inc_102,detection_method:monitor
+datadog:Incident:1:inc_102,services:worker
+datadog:Incident:1:inc_103,detection_method:monitor
+datadog:Incident:1:inc_103,services:search
+datadog:Incident:1:inc_104,detection_method:monitor
+datadog:Incident:1:inc_107,detection_method:monitor
+datadog:Incident:1:inc_107,services:player
+datadog:Incident:1:inc_108,detection_method:monitor

@@ -57,6 +57,7 @@ import (
 	clickup "github.com/apache/devlake/plugins/clickup/impl"
 	cursor "github.com/apache/devlake/plugins/cursor/impl"
 	customize "github.com/apache/devlake/plugins/customize/impl"
+	datadog "github.com/apache/devlake/plugins/datadog/impl"
 	dora "github.com/apache/devlake/plugins/dora/impl"
 	feishu "github.com/apache/devlake/plugins/feishu/impl"
 	copilot "github.com/apache/devlake/plugins/gh-copilot/impl"
@@ -111,6 +112,7 @@ func allGoPlugins() []plugin.PluginMeta {
 		clickup.ClickUp{},
 		cursor.Cursor{},
 		customize.Customize{},
+		datadog.Datadog{},
 		dora.Dora{},
 		feishu.Feishu{},
 		copilot.GhCopilot{},

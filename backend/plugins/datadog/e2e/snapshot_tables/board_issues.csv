@@ -1,0 +1,7 @@
+board_id,issue_id
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_101
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_102
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_103
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_104
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_107
+datadog:IncidentType:1:type_01,datadog:Incident:1:inc_108

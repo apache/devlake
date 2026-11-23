@@ -1,0 +1,8 @@
+<!-- Placeholder mark, original to this contribution: Datadog's own logo is a
+     trademark and is not bundled here. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <rect x="3" y="14" width="4" height="7" rx="1" />
+  <rect x="10" y="9" width="4" height="12" rx="1" />
+  <rect x="17" y="4" width="4" height="17" rx="1" />
+  <circle cx="19" cy="3" r="2" />
+</svg>
