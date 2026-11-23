@@ -34,7 +34,10 @@ RUN YARN="node $(sed -n 's/^yarnPath: *//p' .yarnrc.yml)" && \
     $YARN install && \
     $YARN build
 
-FROM nginxinc/nginx-unprivileged:1.31.7
+# nginxinc/nginx-unprivileged stopped publishing on 2026-10-19, and its last
+# build (1.31.7) predates the CVE-2026-123007 fixes. Use the maintained
+# official image, which ships 1.31.9.
+FROM nginx/nginx-unprivileged:1.31.9
 USER 0
 #ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 #RUN chmod +x /wait
