@@ -288,6 +288,17 @@ func ReloadBlueprints() (err errors.Error) {
 	return nil
 }
 
+// ReloadBlueprintById reloads the cronjob of a single blueprint from the database. It is for callers that
+// change the records of a blueprint directly, such as attaching a connection to it, instead of saving
+// it through PatchBlueprint: the cronjob runs the copy of the blueprint it was scheduled with.
+func ReloadBlueprintById(blueprintId uint64) errors.Error {
+	blueprint, err := GetBlueprint(blueprintId, false)
+	if err != nil {
+		return err
+	}
+	return reloadBlueprint(blueprint)
+}
+
 func reloadBlueprint(blueprint *models.Blueprint) errors.Error {
 	// preventing concurrent reloads. It would be better to use Table Lock , however, it requires massive refactor
 	// like the `bpManager` must accept transaction. Use mutex as a temporary fix.

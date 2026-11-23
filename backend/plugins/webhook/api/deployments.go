@@ -134,6 +134,13 @@ func PostDeploymentsByProjectName(input *plugin.ApiResourceInput) (*plugin.ApiRe
 	return postDeployments(input, connection, err)
 }
 
+// The server services getOrCreateConnection relies on, held in variables so that tests can replace them.
+var (
+	getProject      = services.GetProject
+	getBlueprint    = services.GetBlueprint
+	reloadBlueprint = services.ReloadBlueprintById
+)
+
 func getOrCreateConnection(input *plugin.ApiResourceInput, webhookSuffix string) (*models.WebhookConnection, errors.Error, bool) {
 	connection := &models.WebhookConnection{}
 	projectName := input.Params["projectName"]
@@ -152,8 +159,10 @@ func getOrCreateConnection(input *plugin.ApiResourceInput, webhookSuffix string)
 		logger.Debug("creating webhook connection for project %s", projectName)
 		connection.Name = webhookName
 
-		// find the project and blueprint with which we will associate this connection
-		projectOutput, err := services.GetProject(projectName)
+		// find the project and blueprint with which we will associate this connection.
+		// Assign to the outer err: the not-found error above must not outlive this block.
+		var projectOutput *coremodels.ApiOutputProject
+		projectOutput, err = getProject(projectName)
 		if err != nil {
 			logger.Error(err, "failed to find project for webhook connection", "projectName", projectName)
 			return nil, err, true
@@ -186,7 +195,8 @@ func getOrCreateConnection(input *plugin.ApiResourceInput, webhookSuffix string)
 
 		// get the blueprint
 		blueprintId := projectOutput.Blueprint.ID
-		blueprint, err := services.GetBlueprint(blueprintId, true)
+		var blueprint *coremodels.Blueprint
+		blueprint, err = getBlueprint(blueprintId, true)
 
 		if err != nil {
 			logger.Error(err, "failed to find blueprint for webhook connection", "blueprintId", blueprintId)
@@ -206,8 +216,16 @@ func getOrCreateConnection(input *plugin.ApiResourceInput, webhookSuffix string)
 			logger.Error(err, "failed to create blueprint connection for project", "projectName", projectName)
 			return nil, err, true
 		}
+
+		// the scheduled job holds a copy of the blueprint from before the connection was attached,
+		// reload it so the scheduled runs include the connection as well
+		err = reloadBlueprint(blueprint.ID)
+		if err != nil {
+			logger.Error(err, "failed to reload blueprint for project", "projectName", projectName)
+			return nil, err, true
+		}
 	}
-	return connection, err, false
+	return connection, nil, false
 }
 
 func postDeployments(input *plugin.ApiResourceInput, connection *models.WebhookConnection, err errors.Error) (*plugin.ApiResourceOutput, errors.Error) {
