@@ -95,7 +95,8 @@ func ConvertStory(taskCtx plugin.SubTaskContext) errors.Error {
 			if mappingType, ok := stdTypeMappings[domainEntity.OriginalType]; ok && mappingType != "" {
 				domainEntity.Type = mappingType
 			}
-			if toolEntity.Parent != 0 {
+			// Parent is the id of the parent story, or -1 if this story is itself a parent story
+			if toolEntity.Parent > 0 {
 				domainEntity.ParentIssueId = storyIdGen.Generate(data.Options.ConnectionId, toolEntity.Parent)
 			}
 			if toolEntity.OpenedById != 0 {
