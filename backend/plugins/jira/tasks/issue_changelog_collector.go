@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"time"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -67,15 +68,11 @@ func CollectIssueChangelogs(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	clauses := []dal.Clause{
-		dal.Select("i.issue_id AS issue_id, i.updated AS update_time"),
-		dal.From("_tool_jira_board_issues bi"),
-		dal.Join("LEFT JOIN _tool_jira_issues i ON (bi.connection_id = i.connection_id AND bi.issue_id = i.issue_id)"),
-		dal.Where("bi.connection_id=? and bi.board_id = ? AND i.std_type != ? and i.changelog_total > ?", data.Options.ConnectionId, data.Options.BoardId, "Epic", searchApiChangelogLimit),
+	var since *time.Time
+	if apiCollector.IsIncremental() {
+		since = apiCollector.GetSince()
 	}
-	if apiCollector.IsIncremental() && apiCollector.GetSince() != nil {
-		clauses = append(clauses, dal.Where("i.updated > ?", apiCollector.GetSince()))
-	}
+	clauses := BuildChangelogCollectorClauses(data.Options.ConnectionId, data.Options.BoardId, since)
 
 	if logger.IsLevelEnabled(log.LOG_DEBUG) {
 		count, err := db.Count(clauses...)
@@ -128,4 +125,25 @@ func CollectIssueChangelogs(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return apiCollector.Execute()
+}
+
+// BuildChangelogCollectorClauses selects the board issues whose full changelog has to be fetched, because the search API
+// embeds only the newest searchApiChangelogLimit histories of each issue. With since set (incremental sync) it keeps
+// the issues updated after since and also those whose stored changelog is still incomplete, so changelogs truncated
+// by earlier collections are repaired without a full sync.
+func BuildChangelogCollectorClauses(connectionId uint64, boardId uint64, since *time.Time) []dal.Clause {
+	clauses := []dal.Clause{
+		dal.Select("i.issue_id AS issue_id, i.updated AS update_time"),
+		dal.From("_tool_jira_board_issues bi"),
+		dal.Join("LEFT JOIN _tool_jira_issues i ON (bi.connection_id = i.connection_id AND bi.issue_id = i.issue_id)"),
+		dal.Where("bi.connection_id=? and bi.board_id = ? AND i.std_type != ? and i.changelog_total > ?", connectionId, boardId, "Epic", searchApiChangelogLimit),
+	}
+	if since != nil {
+		clauses = append(clauses, dal.Where(
+			"(i.updated > ? OR (SELECT COUNT(*) FROM _tool_jira_issue_changelogs c"+
+				" WHERE c.connection_id = i.connection_id AND c.issue_id = i.issue_id) < i.changelog_total)",
+			since,
+		))
+	}
+	return clauses
 }
