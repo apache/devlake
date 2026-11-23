@@ -67,20 +67,25 @@ func CollectChannel(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			return query, nil
 		},
-		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			body := &apimodels.SlackChannelApiResult{}
-			err := api.UnmarshalResponse(res, body)
-			if err != nil {
-				return nil, err
-			}
-			return body.Channels, nil
-		},
+		ResponseParser: parseChannelResponse,
 	})
 	if err != nil {
 		return err
 	}
 
 	return collector.Execute()
+}
+
+func parseChannelResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
+	body := &apimodels.SlackChannelApiResult{}
+	err := api.UnmarshalResponse(res, body)
+	if err != nil {
+		return nil, err
+	}
+	if err = checkSlackApiResult("conversations.list", body.Ok, body.Error); err != nil {
+		return nil, err
+	}
+	return body.Channels, nil
 }
 
 var CollectChannelMeta = plugin.SubTaskMeta{

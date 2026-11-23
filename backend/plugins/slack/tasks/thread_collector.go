@@ -96,20 +96,30 @@ func CollectThread(taskCtx plugin.SubTaskContext) errors.Error {
 			}
 			return query, nil
 		},
-		ResponseParser: func(res *http.Response) ([]json.RawMessage, errors.Error) {
-			body := &apimodels.SlackThreadsApiResult{}
-			err := api.UnmarshalResponse(res, body)
-			if err != nil {
-				return nil, err
-			}
-			return body.Threads, nil
-		},
+		ResponseParser: parseThreadResponse,
 	})
 	if err != nil {
 		return err
 	}
 
 	return collector.Execute()
+}
+
+func parseThreadResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
+	body := &apimodels.SlackThreadsApiResult{}
+	err := api.UnmarshalResponse(res, body)
+	if err != nil {
+		return nil, err
+	}
+	// The parent message was deleted after the channel messages were collected.
+	// Skip that thread instead of failing the whole collection.
+	if !body.Ok && body.Error == "thread_not_found" {
+		return nil, nil
+	}
+	if err = checkSlackApiResult("conversations.replies", body.Ok, body.Error); err != nil {
+		return nil, err
+	}
+	return body.Threads, nil
 }
 
 var CollectThreadMeta = plugin.SubTaskMeta{

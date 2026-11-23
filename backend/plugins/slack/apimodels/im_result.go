@@ -21,6 +21,7 @@ import "encoding/json"
 
 type SlackChannelApiResult struct {
 	Ok               bool              `json:"ok"`
+	Error            string            `json:"error"`
 	Channels         []json.RawMessage `json:"channels"`
 	ResponseMetadata struct {
 		NextCursor string `json:"next_cursor"`
@@ -29,6 +30,7 @@ type SlackChannelApiResult struct {
 
 type SlackChannelMessageApiResult struct {
 	Ok               bool              `json:"ok"`
+	Error            string            `json:"error"`
 	Messages         []json.RawMessage `json:"messages"`
 	ResponseMetadata struct {
 		NextCursor string `json:"next_cursor"`
@@ -159,6 +161,7 @@ type SlackChannelMessageResultItem struct {
 
 type SlackThreadsApiResult struct {
 	Ok               bool              `json:"ok"`
+	Error            string            `json:"error"`
 	Threads          []json.RawMessage `json:"messages"`
 	ResponseMetadata struct {
 		NextCursor string `json:"next_cursor"`

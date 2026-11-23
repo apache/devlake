@@ -18,6 +18,8 @@ limitations under the License.
 package tasks
 
 import (
+	"fmt"
+
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -39,4 +41,18 @@ func NewSlackApiClient(taskCtx plugin.TaskContext, connection *models.SlackConne
 	}
 
 	return asyncApiClient, nil
+}
+
+// checkSlackApiResult turns a failed Slack Web API call into an error. Slack
+// answers most failed calls (not_in_channel, channel_not_found, missing_scope,
+// invalid_auth, ...) with HTTP 200 and a body like {"ok": false, "error": "..."},
+// so the HTTP status alone does not tell whether the call worked.
+func checkSlackApiResult(method string, ok bool, errorCode string) errors.Error {
+	if ok {
+		return nil
+	}
+	if errorCode == "" {
+		errorCode = "unknown error"
+	}
+	return errors.Default.New(fmt.Sprintf("slack %s error: %s", method, errorCode))
 }
