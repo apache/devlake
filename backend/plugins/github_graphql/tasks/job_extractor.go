@@ -42,27 +42,24 @@ var ExtractJobsMeta = plugin.SubTaskMeta{
 
 func ExtractJobs(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*githubTasks.GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[DbCheckRun]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: githubTasks.GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_GRAPHQL_JOBS_TABLE,
+			// Type and Environment come from these patterns, so a change must re-extract every job
+			SubtaskConfig: data.RegexEnricher.PlainMap(),
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			checkRun := &DbCheckRun{}
-			err := errors.Convert(json.Unmarshal(row.Data, checkRun))
-			if err != nil {
-				return nil, err
-			}
+		Extract: func(checkRun *DbCheckRun, row *api.RawData) ([]interface{}, errors.Error) {
 			results := make([]interface{}, 0, 1)
 			// Normalize zero-date times to nil
 			checkRun.StartedAt = utils.NilIfZeroTime(checkRun.StartedAt)
 			checkRun.CompletedAt = utils.NilIfZeroTime(checkRun.CompletedAt)
 			paramsBytes, marshalError := json.Marshal(checkRun.Steps.Nodes)
-			err = errors.Convert(marshalError)
+			err := errors.Convert(marshalError)
 			if err != nil {
 				taskCtx.GetLogger().Error(err, `Marshal checkRun.Steps.Nodes failed`)
 			}
