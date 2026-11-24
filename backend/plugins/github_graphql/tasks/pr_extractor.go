@@ -18,9 +18,9 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"regexp"
 
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
@@ -57,22 +57,35 @@ func ExtractPrs(taskCtx plugin.SubTaskContext) errors.Error {
 			return errors.Default.Wrap(err, "regexp Compile prComponent failed")
 		}
 	}
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	subtaskConfig := map[string]string{}
+	if config != nil {
+		subtaskConfig["prType"] = config.PrType
+		subtaskConfig["prComponent"] = config.PrComponent
+	}
+	db := taskCtx.GetDal()
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[GraphqlQueryPr]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: githubTasks.GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_PRS_TABLE,
+			// Type and Component come from these patterns, so a change must re-extract every pull request
+			SubtaskConfig: subtaskConfig,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			rawL := &GraphqlQueryPr{}
-			err := errors.Convert(json.Unmarshal(row.Data, rawL))
-			if err != nil {
-				return nil, err
+		BeforeExtract: func(rawL *GraphqlQueryPr, stateManager *api.SubtaskStateManager) errors.Error {
+			if stateManager.IsIncremental() {
+				// an incremental run keeps the rows of the previous runs, so the labels
+				// of a pull request that is extracted again have to make room for the new ones
+				return db.Delete(
+					&models.GithubPrLabel{},
+					dal.Where("connection_id = ? AND pull_id = ?", data.Options.ConnectionId, rawL.DatabaseId),
+				)
 			}
-
+			return nil
+		},
+		Extract: func(rawL *GraphqlQueryPr, row *api.RawData) ([]interface{}, errors.Error) {
 			results := make([]interface{}, 0, 1)
 			githubPr, err := convertGithubPullRequest(rawL, data.Options.ConnectionId, data.Options.GithubId)
 			if err != nil {

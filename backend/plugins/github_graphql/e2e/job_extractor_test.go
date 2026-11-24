@@ -18,7 +18,6 @@ limitations under the License.
 package e2e
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -26,10 +25,8 @@ import (
 	coreModels "github.com/apache/devlake/core/models"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/devops"
-	"github.com/apache/devlake/core/runner"
 	"github.com/apache/devlake/helpers/e2ehelper"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
-	contextimpl "github.com/apache/devlake/impls/context"
 	"github.com/apache/devlake/plugins/github/models"
 	"github.com/apache/devlake/plugins/github/tasks"
 	"github.com/apache/devlake/plugins/github_graphql/impl"
@@ -110,19 +107,9 @@ func TestGithubGraphqlJobExtractorIncremental(t *testing.T) {
 	assert.Equal(t, "COMPLETED", fullSyncRun[updatedJob].Status, "the newest raw row must win")
 }
 
-// runExtractJobs runs "Extract Jobs" and keeps the subtask state, which DataFlowTester.Subtask
-// does not: it removes the state and forces a full sync on every call.
 func runExtractJobs(t *testing.T, dataflowTester *e2ehelper.DataFlowTester, taskData *tasks.GithubTaskData, fullSync bool) {
 	t.Helper()
-	subtaskCtx := contextimpl.NewStandaloneSubTaskContext(
-		context.Background(),
-		runner.CreateBasicRes(dataflowTester.Cfg, dataflowTester.Log, dataflowTester.Db),
-		githubGraphQLTasks.ExtractJobsMeta.Name,
-		taskData,
-		dataflowTester.Name,
-		&coreModels.SyncPolicy{TriggerSyncPolicy: coreModels.TriggerSyncPolicy{FullSync: fullSync}},
-	)
-	require.NoError(t, githubGraphQLTasks.ExtractJobsMeta.EntryPoint(subtaskCtx))
+	runSubtaskKeepingState(t, dataflowTester, githubGraphQLTasks.ExtractJobsMeta, taskData, fullSync)
 }
 
 // appendFinishedRawJob adds a raw row, created now, with the finished state of a job that
