@@ -33,5 +33,6 @@ func All() []plugin.MigrationScript {
 		new(addCursorAiCodeCommitDetails),
 		new(ensureCursorAiCodeRangeAnnotations),
 		new(widenCursorAiCodeConversationId),
+		new(addUsageEventServiceAccountName),
 	}
 }

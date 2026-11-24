@@ -1,0 +1,1673 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Per-member and per\u2013service-account Cursor cost and usage. Members from /teams/members; service accounts from usage events (service_account_id).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Usage & Cost",
+      "type": "link",
+      "url": "/d/cursor_usage-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor Enterprise AI Code & Insights",
+      "type": "link",
+      "url": "/d/cursor_enterprise-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Cursor BugBot Review Analytics",
+      "type": "link",
+      "url": "/d/cursor_bugbot-pg"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 99,
+      "options": {
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "- **Use case:** Cost and usage for one team member or service account (e.g. cloud agents).\n- **Data source:** Cursor plugin \u2014 `_tool_cursor_usage_events`, `_tool_cursor_user_spend`, `_tool_cursor_members`.\n- **Related:** [Cursor Usage & Cost](/d/cursor_usage-pg); [Cursor Enterprise AI Code & Insights](/d/cursor_enterprise-pg); [Cursor BugBot Review Analytics](/d/cursor_bugbot-pg).",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "Dashboard Introduction",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Selected Period",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Total charged amount for billable usage events for the selected member in the selected time range (event_time).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(COALESCE(SUM(charged_cents), 0) AS NUMERIC) / NULLIF(100, 0) AS \"Charged Amount\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Charged Amount",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "On-demand (Usage-based) charged amount for the selected member in the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(COALESCE(SUM(CASE WHEN kind = 'Usage-based' THEN charged_cents ELSE 0 END), 0) AS NUMERIC) / NULLIF(100, 0) AS \"On-Demand Amount\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "On-Demand Amount",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Average charged cost per usage event for the selected member in the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(COALESCE(CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(NULLIF(COUNT(*), 0), 0), 0) AS NUMERIC) / NULLIF(100, 0) AS \"Avg Cost / Event\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Cost / Event",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Days since the selected member's most recent usage event; green < 2d, yellow 2-6d, red >= 7d.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "locale",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 7
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE((EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(event_time)))/86400), 9999) AS \"Days Since Latest Event\" FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Freshness",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 110,
+      "panels": [],
+      "title": "Billing Period",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Total charged usage for the selected member or service account since the current billing cycle start (sum of charged_cents on usage events). Compare to Cursor dashboard figures.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(COALESCE(SUM(charged_cents), 0) AS NUMERIC) / NULLIF(100, 0) AS \"Charged Since Cycle Start\" FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' AND event_time >= (SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}'))",
+          "refId": "A"
+        }
+      ],
+      "title": "Charged Since Cycle Start",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Current billing-cycle on-demand spend for the selected member from /teams/spend (not filtered by dashboard time range).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE WHEN '${member}' LIKE 'sa:%' THEN (SELECT CAST(COALESCE(SUM(CASE WHEN kind = 'Usage-based' THEN charged_cents ELSE 0 END), 0) AS NUMERIC) / NULLIF(100, 0) FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' AND event_time >= (SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}'))) ELSE (SELECT CAST(COALESCE(SUM(spend_cents), 0) AS NUMERIC) / NULLIF(100, 0) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND email = '${member}' AND billing_cycle_start = (SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}'))) END AS \"On-Demand Amount\"",
+          "refId": "A"
+        }
+      ],
+      "title": "On-Demand Amount",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Count of usage events for the selected member since the current billing cycle start (not filtered by dashboard time range).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 9
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Used Events\" FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' AND event_time >= (SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}'))",
+          "refId": "A"
+        }
+      ],
+      "title": "Used Events",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Sum of input, output, cache-read, and cache-write tokens for the selected member since the current billing cycle start (not filtered by dashboard time range).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens), 0) AS \"Used Tokens\" FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' AND event_time >= (SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}'))",
+          "refId": "A"
+        }
+      ],
+      "title": "Used Tokens",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Days until the next Cursor billing cycle starts (one month after the current billing cycle start from /teams/spend). Not filtered by dashboard time range.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: days left",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 9
+      },
+      "id": 33,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT GREATEST(0, FLOOR(EXTRACT(EPOCH FROM ((SELECT MAX(billing_cycle_start) FROM _tool_cursor_user_spend WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND ('${member}' LIKE 'sa:%' OR email = '${member}')) + INTERVAL '1 MONTH' - NOW()))/86400))) AS \"Billing Period Remaining\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Billing Period Remaining",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Daily Spend",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Daily charged spend for the selected member, split by billing kind: on-demand (Usage-based) vs included (Included in Business).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisLabel": "USD",
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "decimals": 2,
+          "unit": "currencyUSD"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "On-Demand"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Included"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(event_time AS DATE) AS time, CAST(SUM(CASE WHEN kind = 'Usage-based' THEN charged_cents ELSE 0 END) AS NUMERIC) / NULLIF(100, 0) AS \"On-Demand\", CAST(SUM(CASE WHEN kind = 'Included in Business' THEN charged_cents ELSE 0 END) AS NUMERIC) / NULLIF(100, 0) AS \"Included\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' GROUP BY CAST(event_time AS DATE) ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Spend",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Breakdowns",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Average cost per event, total charged, event count, tokens, and share of total events by model for the selected member.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Model"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 280
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Cost"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "decimals",
+                "value": 4
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Charged"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tokens"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usage %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 14,
+        "x": 0,
+        "y": 23
+      },
+      "id": 21,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT model AS \"Model\", CAST(CAST(SUM(total_cents) AS NUMERIC) / NULLIF(COUNT(*), 0) AS NUMERIC) / NULLIF(100, 0) AS \"Avg Cost\", CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(100, 0) AS \"Charged\", COUNT(*) AS \"Events\", SUM(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens) AS \"Tokens\", CAST(COUNT(*) * 100.0 AS NUMERIC) / NULLIF(SUM(COUNT(*)) OVER (), 0) AS \"Usage %\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' GROUP BY \"model\" ORDER BY SUM(charged_cents) DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Model",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Total charged spend by billing kind for the selected member in the selected period.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usage-based"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Included in Business"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Free"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Errored, Not Charged"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Aborted, Not Charged"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "User API Key"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 14,
+        "y": 23
+      },
+      "id": 22,
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": false,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "text": {}
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT kind AS \"Kind\", CAST(SUM(charged_cents) AS NUMERIC) / NULLIF(100, 0) AS \"Charged\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' GROUP BY \"kind\" ORDER BY SUM(charged_cents) DESC NULLS LAST",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Kind",
+      "type": "bargauge",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Kind",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Charged",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Charged usage for the selected member or service account grouped by repository, using conversation \u2192 AI code range annotation \u2192 commit repo (same join as Cursor Enterprise). Events with no conversation, no linked commit, or empty repo_name roll up to Unknown.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chats"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 72
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Charged (USD)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 118
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Share"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH member_events AS (SELECT conversation_id, charged_cents FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'), conv_repo AS (SELECT DISTINCT rann.conversation_id, COALESCE(NULLIF(c.repo_name, ''), 'Unknown') AS repo_name FROM _tool_cursor_ai_code_range_annotations AS rann JOIN _tool_cursor_ai_code_commits AS c ON c.commit_hash = rann.commit_hash AND c.connection_id = rann.connection_id AND c.scope_id = rann.scope_id WHERE ('${connection_id}' = '' OR rann.connection_id::text = '${connection_id}') AND rann.scope_id = '${scope_id}' AND rann.conversation_id <> ''), by_repo AS (SELECT COALESCE(cr.repo_name, 'Unknown') AS repo_name, COUNT(DISTINCT NULLIF(e.conversation_id, '')) AS conversations, SUM(e.charged_cents) AS cost_cents FROM member_events AS e LEFT JOIN conv_repo AS cr ON cr.conversation_id = e.conversation_id GROUP BY COALESCE(cr.repo_name, 'Unknown')) SELECT repo_name AS \"Repo\", conversations AS \"Chats\", ROUND(CAST(CAST(cost_cents AS NUMERIC) / NULLIF(100, 0) AS DECIMAL), 2) AS \"Charged (USD)\", ROUND(CAST(cost_cents * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(cost_cents) OVER (), 0), 0), 1) AS \"Share\" FROM by_repo ORDER BY cost_cents DESC NULLS LAST LIMIT 25",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Repo",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Recent chat sessions for the selected member or service account, most recent first. Chat shows the session's latest model; Last Event is the latest usage time (24-hour, local DB timezone). Events with no conversation_id are grouped into (no session).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chat"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Charged"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tokens"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last Event"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 158
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 140
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "id": 23,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE WHEN t.session_id = '' THEN '(no session)' ELSE t.latest_model END AS \"Chat\", CAST(t.charged_cents AS NUMERIC) / NULLIF(100, 0) AS \"Charged\", t.events AS \"Events\", t.tokens AS \"Tokens\", TO_CHAR(CAST(t.last_event AS TIMESTAMP), 'YYYY-MM-DD HH24:MI') AS \"Last Event\" FROM (SELECT COALESCE(NULLIF(TRIM(conversation_id), ''), '') AS session_id, SUM(charged_cents) AS charged_cents, COUNT(*) AS events, SUM(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens) AS tokens, MAX(event_time) AS last_event, SPLIT_PART(STRING_AGG(model, '||' ORDER BY event_time DESC NULLS LAST), '||', 1) AS latest_model FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' GROUP BY COALESCE(NULLIF(TRIM(conversation_id), ''), '')) AS t ORDER BY t.last_event DESC NULLS LAST LIMIT 25",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Chat Session",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 103,
+      "panels": [],
+      "title": "Member Insights",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Daily token volume for the selected member, broken into input, output, cache-read, and cache-write.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(event_time AS DATE) AS time, SUM(input_tokens) AS \"Input\", SUM(output_tokens) AS \"Output\", SUM(cache_read_tokens) AS \"Cache Read\", SUM(cache_write_tokens) AS \"Cache Write\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}' GROUP BY CAST(event_time AS DATE) ORDER BY 1 NULLS FIRST",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Token Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Share of total tokens that came from cache reads for the selected member in the selected period. Higher cache-read share often means lower marginal cost.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 42
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(CAST(SUM(cache_read_tokens) * 100.0 AS NUMERIC) / NULLIF(NULLIF(SUM(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens), 0), 0), 0) AS \"Cache Read Share\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Cache Read Share",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "devlake-postgres-api"
+      },
+      "description": "Share of usage events with Max Mode enabled for the selected member in the selected period.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 42
+      },
+      "id": 32,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "devlake-postgres-api"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(CAST(SUM(CASE WHEN max_mode = 1 THEN 1 ELSE 0 END) * 100.0 AS NUMERIC) / NULLIF(NULLIF(COUNT(*), 0), 0), 0) AS \"Max Mode Share\" FROM _tool_cursor_usage_events WHERE $__timeFilter(event_time) AND ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND CASE WHEN service_account_id <> '' THEN 'sa:' || service_account_id ELSE user_email END = '${member}'",
+          "refId": "A"
+        }
+      ],
+      "title": "Max Mode Share",
+      "type": "stat"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "cursor",
+    "devlake",
+    "ai",
+    "member"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "1",
+          "value": "1"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Connection ID",
+        "name": "connection_id",
+        "options": [],
+        "query": "SELECT DISTINCT connection_id FROM _tool_cursor_scopes ORDER BY connection_id NULLS FIRST",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "team",
+          "value": "team"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Scope ID",
+        "name": "scope_id",
+        "options": [],
+        "query": "SELECT id AS scope_id FROM _tool_cursor_scopes WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') ORDER BY id NULLS FIRST",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "${__user.email}",
+          "value": "${__user.email}"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "devlake-postgres-api"
+        },
+        "definition": "SELECT __value, __text FROM (SELECT email AS __value, COALESCE(NULLIF(TRIM(name), ''), email) || ' <' || email || '>' AS __text, 0 AS sort_group, CASE WHEN LOWER(email) = LOWER('${__user.email}') THEN 0 ELSE 1 END AS sort_ord, name AS sort_name FROM _tool_cursor_members WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND is_removed = FALSE AND email <> '' UNION ALL SELECT 'sa:' || service_account_id AS __value, COALESCE(NULLIF(MAX(service_account_name), ''), service_account_id) || ' (Service Account)' AS __text, 1 AS sort_group, 2 AS sort_ord, MAX(service_account_name) AS sort_name FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND service_account_id <> '' GROUP BY service_account_id) AS actors ORDER BY sort_group NULLS FIRST, sort_ord NULLS FIRST, sort_name NULLS FIRST, __text NULLS FIRST",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Member or service account",
+        "multi": false,
+        "name": "member",
+        "options": [],
+        "query": "SELECT __value, __text FROM (SELECT email AS __value, COALESCE(NULLIF(TRIM(name), ''), email) || ' <' || email || '>' AS __text, 0 AS sort_group, CASE WHEN LOWER(email) = LOWER('${__user.email}') THEN 0 ELSE 1 END AS sort_ord, name AS sort_name FROM _tool_cursor_members WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND is_removed = FALSE AND email <> '' UNION ALL SELECT 'sa:' || service_account_id AS __value, COALESCE(NULLIF(MAX(service_account_name), ''), service_account_id) || ' (Service Account)' AS __text, 1 AS sort_group, 2 AS sort_ord, MAX(service_account_name) AS sort_name FROM _tool_cursor_usage_events WHERE ('${connection_id}' = '' OR connection_id::text = '${connection_id}') AND scope_id = '${scope_id}' AND service_account_id <> '' GROUP BY service_account_id) AS actors ORDER BY sort_group NULLS FIRST, sort_ord NULLS FIRST, sort_name NULLS FIRST, __text NULLS FIRST",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Cursor Member Use",
+  "uid": "cursor_member_use-pg",
+  "version": 1,
+  "weekStart": ""
+}

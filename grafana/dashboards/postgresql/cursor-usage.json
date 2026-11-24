@@ -26,6 +26,17 @@
       "keepTime": true,
       "tags": [],
       "targetBlank": true,
+      "title": "Cursor Member Use",
+      "type": "link",
+      "url": "/d/cursor_member_use-pg"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
       "title": "Cursor Enterprise AI Code & Insights",
       "type": "link",
       "url": "/d/cursor_enterprise-pg"
