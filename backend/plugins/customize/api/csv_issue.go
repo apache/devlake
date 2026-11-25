@@ -60,11 +60,7 @@ func (h *Handlers) ImportIssue(input *plugin.ApiResourceInput) (*plugin.ApiResou
 	if boardName == "" {
 		return nil, errors.BadInput.New("empty boardName")
 	}
-	err = h.svc.SaveBoard(boardId, boardName)
-	if err != nil {
-		return nil, err
-	}
-	return nil, h.svc.ImportIssue(boardId, file, incremental)
+	return nil, h.svc.ImportIssueToBoard(boardId, boardName, file, incremental)
 }
 
 // ImportIssueCommit accepts a CSV file, parses and saves it to the database

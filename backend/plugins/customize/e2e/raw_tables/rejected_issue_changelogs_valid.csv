@@ -1,0 +1,4 @@
+id,issue_id,author_name,field_name,original_from_value,original_to_value,created_date
+changelog1,csv:1,alice,status,Open,Done,2024-01-01 00:00:00
+changelog2,csv:2,alice,status,Open,Done,2024-01-01 00:00:00
+changelog3,csv:3,alice,status,Open,Done,2024-01-01 00:00:00

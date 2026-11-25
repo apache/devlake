@@ -1,0 +1,5 @@
+id,name,create_time,creator_name,type,qa_api_id
+tc-1,Changed,2024-01-01T00:00:00.000+00:00,carol,functional,
+tc-4,Short
+tc-2,Test Case 2,2024-01-01T00:00:00.000+00:00,alice,api,api-1
+tc-3,Test Case 3,2024-01-01T00:00:00.000+00:00,alice,functional,
