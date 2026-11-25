@@ -84,11 +84,7 @@ func (h *Handlers) CreateTeam(input *plugin.ApiResourceInput) (*plugin.ApiResour
 	for _, tm := range (&team{}).toDomainLayer(tt) {
 		items = append(items, tm)
 	}
-	err = h.store.deleteAll(&crossdomain.Team{})
-	if err != nil {
-		return nil, err
-	}
-	err = h.store.save(items)
+	err = h.store.replace([]deletion{allRows(&crossdomain.Team{})}, items)
 	if err != nil {
 		return nil, err
 	}

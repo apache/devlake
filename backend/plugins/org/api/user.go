@@ -87,15 +87,7 @@ func (h *Handlers) CreateUser(input *plugin.ApiResourceInput) (*plugin.ApiResour
 	for _, teamUser := range teamUsers {
 		items = append(items, teamUser)
 	}
-	err = h.store.deleteAll(&crossdomain.User{})
-	if err != nil {
-		return nil, err
-	}
-	err = h.store.deleteAll(&crossdomain.TeamUser{})
-	if err != nil {
-		return nil, err
-	}
-	err = h.store.save(items)
+	err = h.store.replace([]deletion{allRows(&crossdomain.User{}), allRows(&crossdomain.TeamUser{})}, items)
 	if err != nil {
 		return nil, err
 	}
