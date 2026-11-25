@@ -35,7 +35,6 @@ type store interface {
 	findAllUserAccounts() ([]userAccount, errors.Error)
 	findAllProjectMapping() ([]projectMapping, errors.Error)
 	replace(deletions []deletion, items []interface{}) errors.Error
-	save(items []interface{}) errors.Error
 }
 
 // deletion selects the rows of one table that replace deletes.
@@ -162,9 +161,4 @@ func (d *dbStore) replace(deletions []deletion, items []interface{}) (err errors
 	}
 	err = divider.Close()
 	return err
-}
-
-// save saves items without deleting any rows, in one transaction.
-func (d *dbStore) save(items []interface{}) errors.Error {
-	return d.replace(nil, items)
 }
