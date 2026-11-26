@@ -66,7 +66,8 @@ func ConvertPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 					Id: prIdGen.Generate(data.Options.ConnectionId, pr.GiteeId),
 				},
 				BaseRepoId:     repoIdGen.Generate(data.Options.ConnectionId, pr.RepoId),
-				Status:         pr.State,
+				Status:         convertGiteePrStatus(pr.State),
+				OriginalStatus: pr.State,
 				Title:          pr.Title,
 				Url:            pr.Url,
 				AuthorId:       accountIdGen.Generate(data.Options.ConnectionId, pr.AuthorId),
@@ -94,4 +95,19 @@ func ConvertPullRequests(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
+}
+
+// convertGiteePrStatus maps a Gitee pull request state (open, closed, merged)
+// to the domain values code.OPEN, code.CLOSED and code.MERGED.
+func convertGiteePrStatus(state string) string {
+	switch state {
+	case "open":
+		return code.OPEN
+	case "merged":
+		return code.MERGED
+	case "closed":
+		return code.CLOSED
+	default:
+		return state
+	}
 }
