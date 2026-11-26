@@ -18,6 +18,8 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
+
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -80,11 +82,24 @@ func (connApi *DsScopeConfigApiHelper[C, S, SC]) Post(input *plugin.ApiResourceI
 }
 
 func (connApi *DsScopeConfigApiHelper[C, S, SC]) Patch(input *plugin.ApiResourceInput) (out *plugin.ApiResourceOutput, err errors.Error) {
-	// fix connectionId
 	connectionId, err := extractConnectionId(input)
 	if err != nil {
 		return nil, err
 	}
+	// The scope config is looked up by its own id, so the connection in the URL is not
+	// implied by the lookup. Verify the ownership before writing anything, otherwise a
+	// PATCH aimed at the wrong connection would silently reassign the scope config to it.
+	var scopeConfig *SC
+	scopeConfig, err = connApi.FindByPk(input)
+	if err != nil {
+		return nil, err
+	}
+	if (*scopeConfig).ScopeConfigConnectionId() != connectionId {
+		return nil, errors.NotFound.New(fmt.Sprintf(
+			"scope config %d does not belong to connection %d",
+			(*scopeConfig).ScopeConfigId(), connectionId))
+	}
+	// fix connectionId
 	input.Body["connectionId"] = connectionId
 	return connApi.ModelApiHelper.Patch(input)
 }
