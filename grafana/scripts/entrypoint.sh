@@ -165,6 +165,20 @@ fi
 /run.sh "$@" &
 GRAFANA_PID=$!
 
+# This script stays PID 1 while it sets up the datasource and then waits for
+# Grafana. The kernel drops SIGTERM to a PID 1 that has no handler, so without
+# this trap `docker stop` never reaches Grafana and kills it after the grace
+# period. Forward the signal and wait for Grafana's graceful shutdown.
+stop_grafana() {
+  echo "Signal received; stopping Grafana (pid ${GRAFANA_PID})"
+  kill -TERM "$GRAFANA_PID" 2>/dev/null || true
+  while kill -0 "$GRAFANA_PID" 2>/dev/null; do
+    wait "$GRAFANA_PID" 2>/dev/null || true
+  done
+  exit 0
+}
+trap stop_grafana TERM INT
+
 # Wait for Grafana API
 echo "Waiting for Grafana API..."
 for i in $(seq 1 60); do
