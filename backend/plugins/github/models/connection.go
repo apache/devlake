@@ -308,7 +308,11 @@ func (conn *GithubConn) SanitizeSecret() GithubConn {
 	}
 	secretKey := conn.SecretKey
 	showPrefixLen, showSuffixLen := 50, 50
-	hiddenLen := len(secretKey) - showSuffixLen - showSuffixLen
+	if len(secretKey) <= showPrefixLen+showSuffixLen {
+		conn.SecretKey = utils.SanitizeString(secretKey)
+		return *conn
+	}
+	hiddenLen := len(secretKey) - showPrefixLen - showSuffixLen
 	secret := strings.Repeat("*", hiddenLen)
 	conn.SecretKey = strings.Replace(secretKey, conn.SecretKey[showPrefixLen:showPrefixLen+hiddenLen], secret, -1)
 	return *conn
@@ -318,7 +322,6 @@ func (conn *GithubConn) SanitizeToken(token string) string {
 	if token == "" {
 		return token
 	}
-	sanitizedToken := token
 	var prefixLen, showPrefixLen, hiddenLen int
 
 	tokenType := conn.typeIs(token)
@@ -330,12 +333,13 @@ func (conn *GithubConn) SanitizeToken(token string) string {
 	case GithubTokenTypeUnknown:
 		return utils.SanitizeString(token)
 	}
-	tokenLen := len(token)
-	if tokenLen >= prefixLen && prefixLen != 0 && hiddenLen != 0 {
-		secret := strings.Repeat("*", hiddenLen)
-		sanitizedToken = strings.Replace(token, token[prefixLen+showPrefixLen:prefixLen+showPrefixLen+hiddenLen], secret, -1)
+	// A token shorter than the masked range is not a valid GitHub token.
+	// Mask it as a generic string, so that reading it does not panic.
+	if len(token) < prefixLen+showPrefixLen+hiddenLen {
+		return utils.SanitizeString(token)
 	}
-	return sanitizedToken
+	secret := strings.Repeat("*", hiddenLen)
+	return strings.Replace(token, token[prefixLen+showPrefixLen:prefixLen+showPrefixLen+hiddenLen], secret, -1)
 }
 
 func (conn *GithubConn) SanitizeTokens() GithubConn {

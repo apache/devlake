@@ -24,6 +24,7 @@ import (
 	"encoding/pem"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/helpers/pluginhelper/api"
+	"strings"
 	"testing"
 	"time"
 
@@ -224,6 +225,174 @@ func TestGithubConnection_Sanitize(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "classic-prefix-only",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "g**_",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "classic-too-short",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_short",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "gh*****rt",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "classic-one-below-masked-length",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_wFxrXqjCiAf9PQg8DL7tCQX8uom",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "gh***************************om",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "classic-exact-masked-length",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_wFxrXqjCiAf9PQg8DL7tCQX8uomb",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_wFxrXqjC********************",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "fine-grained-too-short",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "github_pat_11ABCDEFG0123456789",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "gi**************************89",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "fine-grained-one-below-masked-length",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "github_pat_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijk",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "gi********************************************************************************jk",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "fine-grained-exact-masked-length",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "github_pat_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijkl",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "github_pat_abcdefgh******************************************************************",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "valid-and-too-short",
+			fields: fields{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "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,ghp_short",
+						},
+					},
+				},
+			},
+			want: GithubConnection{
+				GithubConn: GithubConn{
+					GithubAccessToken: GithubAccessToken{
+						AccessToken: api.AccessToken{
+							Token: "ghp_wFxrXqjC********************bL2WGpTP,gh*****rt",
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -307,4 +476,40 @@ func TestGithubAppKey_CreateJwtToleratesClockDrift(t *testing.T) {
 	assert.LessOrEqual(t, iat.Unix(), after-60)
 	assert.GreaterOrEqual(t, iat.Unix(), before-60)
 	assert.LessOrEqual(t, exp.Unix(), after+540)
+}
+
+func TestGithubConn_SanitizeSecret(t *testing.T) {
+	tests := []struct {
+		name      string
+		secretKey string
+		want      string
+	}{
+		{
+			name:      "too-short",
+			secretKey: "short",
+			want:      "s***t",
+		},
+		{
+			name:      "one-below-masked-length",
+			secretKey: "ab" + strings.Repeat("c", 95) + "yz",
+			want:      "ab" + strings.Repeat("*", 95) + "yz",
+		},
+		{
+			name:      "exact-masked-length",
+			secretKey: "ab" + strings.Repeat("c", 96) + "yz",
+			want:      "ab" + strings.Repeat("*", 96) + "yz",
+		},
+		{
+			name:      "one-above-masked-length",
+			secretKey: strings.Repeat("a", 50) + "c" + strings.Repeat("b", 50),
+			want:      strings.Repeat("a", 50) + "*" + strings.Repeat("b", 50),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			conn := &GithubConn{}
+			conn.SecretKey = tt.secretKey
+			assert.Equalf(t, tt.want, conn.SanitizeSecret().SecretKey, "SanitizeSecret()")
+		})
+	}
 }
