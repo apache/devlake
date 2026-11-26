@@ -1,0 +1,5 @@
+id,url,status,name
+SPRINT-1,https://example.com/sprints/1,ACTIVE,Changed
+SPRINT-4,https://example.com/sprints/4
+SPRINT-2,https://example.com/sprints/2,ACTIVE,Sprint 2
+SPRINT-3,https://example.com/sprints/3,ACTIVE,Sprint 3

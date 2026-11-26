@@ -1,0 +1,4 @@
+id,name,path,method,create_time,creator_name
+api-1,Changed,/users/{id},GET,2024-01-01T00:00:00.000+00:00,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+api-2,Create Order,/orders,POST,2024-01-01T00:00:00.000+00:00,alice
+api-3,Delete Item,/items/{id},DELETE,2024-01-01T00:00:00.000+00:00,alice

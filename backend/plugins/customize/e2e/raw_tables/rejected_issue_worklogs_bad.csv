@@ -1,0 +1,5 @@
+id,issue_id,author_name,time_spent_minutes,started_date,logged_date
+worklog1,csv:1,alice,99,2024-01-01 00:00:00,2024-01-01 00:00:00
+worklog4,csv:4
+worklog2,csv:2,alice,30,2024-01-01 00:00:00,2024-01-01 00:00:00
+worklog3,csv:3,alice,30,2024-01-01 00:00:00,2024-01-01 00:00:00

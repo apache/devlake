@@ -22,6 +22,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/apache/devlake/core/dal"
@@ -153,31 +154,99 @@ func (s *Service) getCustomizedFields(table string) ([]customizeModels.Customize
 	return result, err
 }
 
+// importLock makes imports run one at a time. Two imports that share an issue could otherwise
+// delete it while the other import adds it to its board, and two imports that save the same
+// accounts in a different order could deadlock. A process-local lock is enough because DevLake
+// runs a single server instance: lockDatabase in backend/server/services/locking.go holds an
+// exclusive table lock for the lifetime of the process.
+var importLock sync.Mutex
+
+// inTx runs fn with a Service that uses one transaction.
+// It commits when fn returns nil. Otherwise it rolls back, so a rejected file changes nothing.
+func (s *Service) inTx(fn func(txSvc *Service) errors.Error) (err errors.Error) {
+	importLock.Lock()
+	defer importLock.Unlock()
+	tx := s.dal.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			panic(r)
+		}
+		if err != nil {
+			_ = tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
+	return fn(&Service{dal: tx, nameChecker: s.nameChecker})
+}
+
+// boardOnlyIssueIds returns the ids of the issues that belong to the board and to no other board.
+func (s *Service) boardOnlyIssueIds(boardId string) ([]string, errors.Error) {
+	var ids []string
+	err := s.dal.Pluck("issue_id", &ids,
+		dal.From(&ticket.BoardIssue{}),
+		dal.Where("board_id = ? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id != ?)", boardId, boardId),
+	)
+	return ids, err
+}
+
+// deleteRows deletes the rows of model whose column value is in values, 1000 values per statement.
+// Optional clauses narrow the delete.
+func (s *Service) deleteRows(model dal.Tabler, column string, values []string, clauses ...dal.Clause) errors.Error {
+	for start := 0; start < len(values); start += 1000 {
+		where := dal.Where(column+" IN ?", values[start:min(start+1000, len(values))])
+		err := s.dal.Delete(model, append([]dal.Clause{where}, clauses...)...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ImportIssue import csv file to the table `issues`, and create relations to boards
 // issue could exist in multiple boards, so we should only delete an old records when it doesn't belong to another board
 func (s *Service) ImportIssue(boardId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importIssue(boardId, file, incremental)
+	})
+}
+
+// ImportIssueToBoard saves the board and imports the issues file in one transaction, so a
+// rejected file neither creates nor renames the board.
+func (s *Service) ImportIssueToBoard(boardId, boardName string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		err := txSvc.SaveBoard(boardId, boardName)
+		if err != nil {
+			return err
+		}
+		return txSvc.importIssue(boardId, file, incremental)
+	})
+}
+
+func (s *Service) importIssue(boardId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
 		// not delete accounts data since account may be referenced by others
-		err := s.dal.Delete(
-			&ticket.Issue{},
-			dal.Where("id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		issueIds, err := s.boardOnlyIssueIds(boardId)
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&ticket.Issue{}, "id", issueIds)
 		if err != nil {
 			return err
 		}
 
-		err = s.dal.Delete(
-			&ticket.IssueLabel{},
-			dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		err = s.deleteRows(&ticket.IssueLabel{}, "issue_id", issueIds)
 		if err != nil {
 			return err
 		}
 
-		err = s.dal.Delete(
-			&ticket.BoardIssue{},
-			dal.Where("board_id = ?", boardId),
-		)
+		var boardIssueIds []string
+		err = s.dal.Pluck("issue_id", &boardIssueIds, dal.From(&ticket.BoardIssue{}), dal.Where("board_id = ?", boardId))
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&ticket.BoardIssue{}, "issue_id", boardIssueIds, dal.Where("board_id = ?", boardId))
 		if err != nil {
 			return err
 		}
@@ -198,10 +267,17 @@ func (s *Service) SaveBoard(boardId, boardName string) errors.Error {
 
 // ImportIssueCommit imports csv file into the table `issue_commits`
 func (s *Service) ImportIssueCommit(boardId string, file io.ReadCloser) errors.Error {
-	err := s.dal.Delete(
-		&crossdomain.IssueCommit{},
-		dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-	)
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importIssueCommit(boardId, file)
+	})
+}
+
+func (s *Service) importIssueCommit(boardId string, file io.ReadCloser) errors.Error {
+	issueIds, err := s.boardOnlyIssueIds(boardId)
+	if err != nil {
+		return err
+	}
+	err = s.deleteRows(&crossdomain.IssueCommit{}, "issue_id", issueIds)
 	if err != nil {
 		return err
 	}
@@ -210,19 +286,23 @@ func (s *Service) ImportIssueCommit(boardId string, file io.ReadCloser) errors.E
 
 // ImportIssueRepoCommit imports data to the table `issue_repo_commits` and `issue_commits`
 func (s *Service) ImportIssueRepoCommit(boardId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importIssueRepoCommit(boardId, file, incremental)
+	})
+}
+
+func (s *Service) importIssueRepoCommit(boardId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
 		// delete old records of the table `issue_repo_commit` and `issue_commit`
-		err := s.dal.Delete(
-			&crossdomain.IssueRepoCommit{},
-			dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		issueIds, err := s.boardOnlyIssueIds(boardId)
 		if err != nil {
 			return err
 		}
-		err = s.dal.Delete(
-			&crossdomain.IssueCommit{},
-			dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		err = s.deleteRows(&crossdomain.IssueRepoCommit{}, "issue_id", issueIds)
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&crossdomain.IssueCommit{}, "issue_id", issueIds)
 		if err != nil {
 			return err
 		}
@@ -440,6 +520,12 @@ func (s *Service) issueCommitHandler(record map[string]interface{}) errors.Error
 
 // ImportQaApis imports csv file to the table `qa_apis`
 func (s *Service) ImportQaApis(qaProjectId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importQaApis(qaProjectId, file, incremental)
+	})
+}
+
+func (s *Service) importQaApis(qaProjectId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
 		// delete old data associated with this qaProjectId
 		err := s.dal.Delete(&qa.QaApi{}, dal.Where("qa_project_id = ?", qaProjectId))
@@ -458,10 +544,11 @@ func (s *Service) qaApiHandler(qaProjectId string) func(record map[string]interf
 			return err
 		}
 		if creatorName != "" {
-			creatorId, _ := s.createOrUpdateAccount(creatorName, qaProjectId)
-			if creatorId != "" {
-				record["creator_id"] = creatorId
+			creatorId, err := s.createOrUpdateAccount(creatorName, qaProjectId)
+			if err != nil {
+				return err
 			}
+			record["creator_id"] = creatorId
 		}
 		delete(record, "creator_name")
 		record["qa_project_id"] = qaProjectId
@@ -471,6 +558,12 @@ func (s *Service) qaApiHandler(qaProjectId string) func(record map[string]interf
 
 // ImportQaTestCases imports csv file to the table `qa_test_cases`
 func (s *Service) ImportQaTestCases(qaProjectId, qaProjectName string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importQaTestCases(qaProjectId, qaProjectName, file, incremental)
+	})
+}
+
+func (s *Service) importQaTestCases(qaProjectId, qaProjectName string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
 		// delete old data associated with this qaProjectId
 		// delete qa_test_cases
@@ -508,7 +601,10 @@ func (s *Service) qaTestCaseHandler(qaProjectId string) func(record map[string]i
 	return func(record map[string]interface{}) errors.Error {
 		creatorName, _ := getStringField(record, "creator_name", false)
 		if creatorName != "" {
-			creatorId, _ := s.createOrUpdateAccount(creatorName, qaProjectId)
+			creatorId, err := s.createOrUpdateAccount(creatorName, qaProjectId)
+			if err != nil {
+				return err
+			}
 			record["creator_id"] = creatorId
 		}
 		// remove fields
@@ -520,6 +616,12 @@ func (s *Service) qaTestCaseHandler(qaProjectId string) func(record map[string]i
 
 // ImportQaTestCaseExecutions imports csv file to the table `qa_test_case_executions`
 func (s *Service) ImportQaTestCaseExecutions(qaProjectId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importQaTestCaseExecutions(qaProjectId, file, incremental)
+	})
+}
+
+func (s *Service) importQaTestCaseExecutions(qaProjectId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
 		// delete old data associated with this qaProjectId
 		err := s.dal.Delete(&qa.QaTestCaseExecution{}, dal.Where("qa_project_id = ?", qaProjectId))
@@ -536,7 +638,10 @@ func (s *Service) qaTestCaseExecutionHandler(qaProjectId string) func(record map
 	return func(record map[string]interface{}) errors.Error {
 		creatorName, _ := getStringField(record, "creator_name", false)
 		if creatorName != "" {
-			creatorId, _ := s.createOrUpdateAccount(creatorName, qaProjectId)
+			creatorId, err := s.createOrUpdateAccount(creatorName, qaProjectId)
+			if err != nil {
+				return err
+			}
 			record["creator_id"] = creatorId
 		}
 		delete(record, "creator_name")
@@ -566,18 +671,31 @@ func (s *Service) issueRepoCommitHandler(record map[string]interface{}) errors.E
 
 // ImportSprint imports csv file into the table `sprints`
 func (s *Service) ImportSprint(boardId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importSprint(boardId, file, incremental)
+	})
+}
+
+func (s *Service) importSprint(boardId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
-		err := s.dal.Delete(
-			&ticket.Sprint{},
-			dal.Where("id IN (SELECT sprint_id FROM board_sprints WHERE board_id=? AND sprint_id NOT IN (SELECT sprint_id FROM board_sprints WHERE board_id!=?))", boardId, boardId),
+		var sprintIds []string
+		err := s.dal.Pluck("sprint_id", &sprintIds,
+			dal.From(&ticket.BoardSprint{}),
+			dal.Where("board_id = ? AND sprint_id NOT IN (SELECT sprint_id FROM board_sprints WHERE board_id != ?)", boardId, boardId),
 		)
 		if err != nil {
 			return err
 		}
-		err = s.dal.Delete(
-			&ticket.BoardSprint{},
-			dal.Where("board_id = ?", boardId),
-		)
+		err = s.deleteRows(&ticket.Sprint{}, "id", sprintIds)
+		if err != nil {
+			return err
+		}
+		var boardSprintIds []string
+		err = s.dal.Pluck("sprint_id", &boardSprintIds, dal.From(&ticket.BoardSprint{}), dal.Where("board_id = ?", boardId))
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&ticket.BoardSprint{}, "sprint_id", boardSprintIds, dal.Where("board_id = ?", boardId))
 		if err != nil {
 			return err
 		}
@@ -608,11 +726,18 @@ func (s *Service) sprintHandler(boardId string) func(record map[string]interface
 
 // ImportIssueChangelog imports csv file into the table `issue_changelogs`
 func (s *Service) ImportIssueChangelog(boardId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importIssueChangelog(boardId, file, incremental)
+	})
+}
+
+func (s *Service) importIssueChangelog(boardId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
-		err := s.dal.Delete(
-			&ticket.IssueChangelogs{},
-			dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		issueIds, err := s.boardOnlyIssueIds(boardId)
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&ticket.IssueChangelogs{}, "issue_id", issueIds)
 		if err != nil {
 			return err
 		}
@@ -670,11 +795,18 @@ func (s *Service) issueChangelogHandler(record map[string]interface{}) errors.Er
 
 // ImportIssueWorklog imports csv file into the table `issue_worklogs`
 func (s *Service) ImportIssueWorklog(boardId string, file io.ReadCloser, incremental bool) errors.Error {
+	return s.inTx(func(txSvc *Service) errors.Error {
+		return txSvc.importIssueWorklog(boardId, file, incremental)
+	})
+}
+
+func (s *Service) importIssueWorklog(boardId string, file io.ReadCloser, incremental bool) errors.Error {
 	if !incremental {
-		err := s.dal.Delete(
-			&ticket.IssueWorklog{},
-			dal.Where("issue_id IN (SELECT issue_id FROM board_issues WHERE board_id=? AND issue_id NOT IN (SELECT issue_id FROM board_issues WHERE board_id!=?))", boardId, boardId),
-		)
+		issueIds, err := s.boardOnlyIssueIds(boardId)
+		if err != nil {
+			return err
+		}
+		err = s.deleteRows(&ticket.IssueWorklog{}, "issue_id", issueIds)
 		if err != nil {
 			return err
 		}

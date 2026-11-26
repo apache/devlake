@@ -1,0 +1,4 @@
+id,url,issue_key,title,original_type,original_status,created_date,creator_name,assignee_name,labels
+csv:1,https://example.com/issues/1,1,first,BUG,new,2024-01-01 00:00:00,alice,bob,bug
+csv:2,https://example.com/issues/2,2,second,BUG,new,2024-01-01 00:00:00,alice,bob,bug
+csv:3,https://example.com/issues/3,3,third,BUG,new,2024-01-01 00:00:00,alice,bob,feature
