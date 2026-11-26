@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/models/domainlayer/devops"
@@ -79,18 +77,23 @@ var ExtractApiPipelinesMeta = plugin.SubTaskMeta{
 }
 
 func ExtractApiPipelines(taskCtx plugin.SubTaskContext) errors.Error {
-	rawDataSubTaskArgs, data := CreateRawDataSubTaskArgs(taskCtx, RAW_PIPELINE_TABLE)
+	data := taskCtx.GetData().(*BitbucketTaskData)
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: *rawDataSubTaskArgs,
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			// create bitbucket commit
-			bitbucketApiPipeline := &BitbucketApiPipeline{}
-			err := errors.Convert(json.Unmarshal(row.Data, bitbucketApiPipeline))
-			if err != nil {
-				return nil, err
-			}
-
+	// The collector appends a full copy of every pipeline on each run, because
+	// Bitbucket ignores the updated_on filter on /pipelines. Extract only the raw
+	// rows added since the last run; the deployment/production patterns are part
+	// of the config, so changing them triggers a full re-extract.
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[BitbucketApiPipeline]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
+			Table:          RAW_PIPELINE_TABLE,
+			Params: BitbucketApiParams{
+				ConnectionId: data.Options.ConnectionId,
+				FullName:     data.Options.FullName,
+			},
+			SubtaskConfig: data.RegexEnricher.PlainMap(),
+		},
+		Extract: func(bitbucketApiPipeline *BitbucketApiPipeline, row *api.RawData) ([]any, errors.Error) {
 			bitbucketPipeline := &models.BitbucketPipeline{
 				ConnectionId:        data.Options.ConnectionId,
 				BitbucketId:         bitbucketApiPipeline.Uuid,
@@ -112,10 +115,7 @@ func ExtractApiPipelines(taskCtx plugin.SubTaskContext) errors.Error {
 				bitbucketPipeline.Result = bitbucketApiPipeline.State.Stage.Name
 			}
 
-			results := make([]interface{}, 0, 2)
-			results = append(results, bitbucketPipeline)
-
-			return results, nil
+			return []any{bitbucketPipeline}, nil
 		},
 	})
 
