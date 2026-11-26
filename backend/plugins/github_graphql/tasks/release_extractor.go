@@ -18,8 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/models/common"
 	"github.com/apache/devlake/core/plugin"
@@ -41,21 +39,16 @@ var ExtractReleasesMeta = plugin.SubTaskMeta{
 
 func ExtractReleases(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*githubTasks.GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[GraphqlQueryRelease]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: githubTasks.GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_RELEASE_TABLE,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			release := &GraphqlQueryRelease{}
-			err := errors.Convert(json.Unmarshal(row.Data, release))
-			if err != nil {
-				return nil, err
-			}
+		Extract: func(release *GraphqlQueryRelease, row *api.RawData) ([]interface{}, errors.Error) {
 			release.PublishedAt = utils.NilIfZeroTime(release.PublishedAt)
 			var results []interface{}
 			githubRelease, err := convertGitHubRelease(release, data.Options.ConnectionId, data.Options.GithubId)

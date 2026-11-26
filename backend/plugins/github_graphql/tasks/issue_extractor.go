@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/apache/devlake/core/dal"
@@ -54,21 +53,44 @@ func ExtractIssues(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	subtaskConfig := map[string]string{}
+	if config != nil {
+		subtaskConfig["issueSeverity"] = config.IssueSeverity
+		subtaskConfig["issueComponent"] = config.IssueComponent
+		subtaskConfig["issuePriority"] = config.IssuePriority
+		subtaskConfig["issueTypeBug"] = config.IssueTypeBug
+		subtaskConfig["issueTypeRequirement"] = config.IssueTypeRequirement
+		subtaskConfig["issueTypeIncident"] = config.IssueTypeIncident
+	}
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[GraphqlQueryIssue]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: githubTasks.GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_ISSUES_TABLE,
+			// severity, component, priority and type come from these patterns, so a change must re-extract every issue
+			SubtaskConfig: subtaskConfig,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			issue := &GraphqlQueryIssue{}
-			err := errors.Convert(json.Unmarshal(row.Data, issue))
-			if err != nil {
-				return nil, err
+		BeforeExtract: func(issue *GraphqlQueryIssue, stateManager *api.SubtaskStateManager) errors.Error {
+			if stateManager.IsIncremental() {
+				// an incremental run keeps the rows of the previous runs, so the labels and
+				// assignees of an issue that is extracted again have to make room for the new ones
+				if err := db.Delete(
+					&models.GithubIssueLabel{},
+					dal.Where("connection_id = ? AND issue_id = ?", data.Options.ConnectionId, issue.DatabaseId),
+				); err != nil {
+					return err
+				}
+				return db.Delete(
+					&models.GithubIssueAssignee{},
+					dal.Where("connection_id = ? AND issue_id = ?", data.Options.ConnectionId, issue.DatabaseId),
+				)
 			}
+			return nil
+		},
+		Extract: func(issue *GraphqlQueryIssue, row *api.RawData) ([]interface{}, errors.Error) {
 			// Normalize zero-date to nil for closedAt
 			issue.ClosedAt = utils.NilIfZeroTime(issue.ClosedAt)
 			results := make([]interface{}, 0, 1)

@@ -18,7 +18,6 @@ limitations under the License.
 package tasks
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -42,22 +41,16 @@ var ExtractDeploymentsMeta = plugin.SubTaskMeta{
 
 func ExtractDeployments(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*githubTasks.GithubTaskData)
-	extractor, err := api.NewApiExtractor(api.ApiExtractorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
-			Ctx: taskCtx,
+	extractor, err := api.NewStatefulApiExtractor(&api.StatefulApiExtractorArgs[GraphqlQueryDeploymentDeployment]{
+		SubtaskCommonArgs: &api.SubtaskCommonArgs{
+			SubTaskContext: taskCtx,
 			Params: githubTasks.GithubApiParams{
 				ConnectionId: data.Options.ConnectionId,
 				Name:         data.Options.Name,
 			},
 			Table: RAW_DEPLOYMENT,
 		},
-		Extract: func(row *api.RawData) ([]interface{}, errors.Error) {
-			deployment := &GraphqlQueryDeploymentDeployment{}
-			err := errors.Convert(json.Unmarshal(row.Data, deployment))
-			if err != nil {
-				return nil, err
-			}
-
+		Extract: func(deployment *GraphqlQueryDeploymentDeployment, row *api.RawData) ([]interface{}, errors.Error) {
 			var results []interface{}
 			githubDeployment, err := convertGithubDeployment(deployment, data.Options.ConnectionId, data.Options.GithubId)
 			if err != nil {
