@@ -202,11 +202,11 @@
 
 --------------------------------------------------------------------------------
 
-The following icon is using Feather Icons with the MIT license:
-devlake/config-ui/src/images/icons/api.svg
-devlake/config-ui/src/images/icons/dashboard.svg
-devlake/config-ui/src/images/icons/file.svg
-devlake/config-ui/src/images/icons/clear.svg
+The following icons use Feather Icons under the MIT license:
+config-ui/src/images/icons/api.svg
+config-ui/src/images/icons/dashboard.svg
+config-ui/src/images/icons/file.svg
+config-ui/src/images/icons/clear.svg
 
 https://feathericons.com/
 
@@ -234,7 +234,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-./config-ui/.yarn/releases/yarn-3.4.1.cjs is licensed under the following terms:
+config-ui/.yarn/releases/yarn-4.18.1.cjs is licensed under the following terms:
 
 BSD 2-Clause License
 
