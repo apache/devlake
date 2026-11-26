@@ -269,7 +269,7 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					ConnectionId: data.Options.ConnectionId,
 					ScopeId:      data.Options.ScopeId,
 					Day:          day,
-					Ide:          ide.Ide,
+					Ide:          fitColumn(taskCtx.GetLogger(), "ide", ide.Ide),
 					CopilotActivityMetrics: models.CopilotActivityMetrics{
 						UserInitiatedInteractionCount: ide.UserInitiatedInteractionCount,
 						CodeGenerationActivityCount:   ide.CodeGenerationActivityCount,
@@ -307,7 +307,7 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					ConnectionId: data.Options.ConnectionId,
 					ScopeId:      data.Options.ScopeId,
 					Day:          day,
-					Language:     lf.Language,
+					Language:     fitColumn(taskCtx.GetLogger(), "language", lf.Language),
 					Feature:      lf.Feature,
 					CopilotCodeMetrics: models.CopilotCodeMetrics{
 						CodeGenerationActivityCount: lf.CodeGenerationActivityCount,
@@ -326,7 +326,7 @@ func ExtractEnterpriseMetrics(taskCtx plugin.SubTaskContext) errors.Error {
 					ConnectionId: data.Options.ConnectionId,
 					ScopeId:      data.Options.ScopeId,
 					Day:          day,
-					Language:     lm.Language,
+					Language:     fitColumn(taskCtx.GetLogger(), "language", lm.Language),
 					Model:        lm.Model,
 					CopilotCodeMetrics: models.CopilotCodeMetrics{
 						CodeGenerationActivityCount: lm.CodeGenerationActivityCount,
