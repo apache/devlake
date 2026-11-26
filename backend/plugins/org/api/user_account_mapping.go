@@ -77,11 +77,7 @@ func (h *Handlers) CreateUserAccountMapping(input *plugin.ApiResourceInput) (*pl
 	for _, userAccount := range userAccounts {
 		items = append(items, userAccount)
 	}
-	err = h.store.deleteAll(&crossdomain.UserAccount{})
-	if err != nil {
-		return nil, err
-	}
-	err = h.store.save(items)
+	err = h.store.replace([]deletion{allRows(&crossdomain.UserAccount{})}, items)
 	if err != nil {
 		return nil, err
 	}

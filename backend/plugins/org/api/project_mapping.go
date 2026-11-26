@@ -18,9 +18,13 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
+	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/models/domainlayer/crossdomain"
 	"github.com/apache/devlake/core/plugin"
 	"net/http"
+	"strings"
 
 	"github.com/gocarina/gocsv"
 )
@@ -78,14 +82,52 @@ func (h *Handlers) CreateProjectMapping(input *plugin.ApiResourceInput) (*plugin
 	if err != nil {
 		return nil, err
 	}
+	err = checkProjectMappings(mapping)
+	if err != nil {
+		return nil, err
+	}
 	var pm *projectMapping
 	var items []interface{}
 	for _, tm := range pm.toDomainLayer(mapping) {
 		items = append(items, tm)
 	}
-	err = h.store.save(items)
+	err = h.store.replace(projectMappingDeletions(mapping), items)
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.ApiResourceOutput{Status: http.StatusOK}, nil
+}
+
+// checkProjectMappings rejects a file with an empty ProjectName, Table or RowId in any row.
+// An empty field usually means a wrong header, such as RowID. Saving such a file would
+// delete the real mappings of the project.
+func checkProjectMappings(mapping []projectMapping) errors.Error {
+	for i, m := range mapping {
+		if strings.TrimSpace(m.ProjectName) == "" || strings.TrimSpace(m.Table) == "" || strings.TrimSpace(m.RowId) == "" {
+			return errors.BadInput.New(fmt.Sprintf("row %d: ProjectName, Table and RowId must not be empty", i+1))
+		}
+	}
+	return nil
+}
+
+// projectMappingDeletions selects the existing mappings of the projects named in mapping,
+// 1000 project names per deletion. Mappings of other projects are kept, because blueprints
+// also write this table.
+func projectMappingDeletions(mapping []projectMapping) []deletion {
+	var projectNames []string
+	seen := make(map[string]bool)
+	for _, m := range mapping {
+		if !seen[m.ProjectName] {
+			seen[m.ProjectName] = true
+			projectNames = append(projectNames, m.ProjectName)
+		}
+	}
+	var deletions []deletion
+	for start := 0; start < len(projectNames); start += 1000 {
+		deletions = append(deletions, deletion{
+			table: &crossdomain.ProjectMapping{},
+			where: dal.Where("project_name IN ?", projectNames[start:min(start+1000, len(projectNames))]),
+		})
+	}
+	return deletions
 }

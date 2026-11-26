@@ -21,7 +21,9 @@ import (
 	"github.com/apache/devlake/core/context"
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
+	"github.com/apache/devlake/core/log"
 	"github.com/apache/devlake/core/models/domainlayer/crossdomain"
+	"github.com/apache/devlake/helpers/dbhelper"
 	helper "github.com/apache/devlake/helpers/pluginhelper/api"
 	"reflect"
 )
@@ -32,18 +34,45 @@ type store interface {
 	findAllAccounts() ([]account, errors.Error)
 	findAllUserAccounts() ([]userAccount, errors.Error)
 	findAllProjectMapping() ([]projectMapping, errors.Error)
-	deleteAll(i interface{}) errors.Error
-	save(items []interface{}) errors.Error
+	replace(deletions []deletion, items []interface{}) errors.Error
+}
+
+// deletion selects the rows of one table that replace deletes.
+type deletion struct {
+	table interface{}
+	where dal.Clause
+}
+
+// allRows selects every row of table.
+func allRows(table interface{}) deletion {
+	return deletion{table: table, where: dal.Where("1=1")}
 }
 
 type dbStore struct {
-	db     dal.Dal
-	driver *helper.BatchSaveDivider
+	db       dal.Dal
+	basicRes context.BasicRes
 }
 
 func NewDbStore(db dal.Dal, basicRes context.BasicRes) *dbStore {
-	driver := helper.NewBatchSaveDivider(basicRes, 1000, "", "")
-	return &dbStore{db: db, driver: driver}
+	return &dbStore{db: db, basicRes: basicRes}
+}
+
+// txBasicRes gives a BatchSaveDivider the transaction as its Dal.
+type txBasicRes struct {
+	context.BasicRes
+	tx dal.Dal
+}
+
+func (r txBasicRes) GetDal() dal.Dal {
+	return r.tx
+}
+
+func (r txBasicRes) NestedLogger(name string) context.BasicRes {
+	return txBasicRes{BasicRes: r.BasicRes.NestedLogger(name), tx: r.tx}
+}
+
+func (r txBasicRes) ReplaceLogger(logger log.Logger) context.BasicRes {
+	return txBasicRes{BasicRes: r.BasicRes.ReplaceLogger(logger), tx: r.tx}
 }
 
 func (d *dbStore) findAllUsers() ([]user, errors.Error) {
@@ -104,13 +133,24 @@ func (d *dbStore) findAllProjectMapping() ([]projectMapping, errors.Error) {
 	var pm *projectMapping
 	return pm.fromDomainLayer(mapping), nil
 }
-func (d *dbStore) deleteAll(i interface{}) errors.Error {
-	return d.db.Delete(i, dal.Where("1=1"))
-}
 
-func (d *dbStore) save(items []interface{}) errors.Error {
+// replace deletes the rows that deletions select, then saves items, in one transaction.
+// If any step fails, nothing changes. Each call uses a new BatchSaveDivider, because a
+// BatchSave keeps its first error and rejects every later row.
+func (d *dbStore) replace(deletions []deletion, items []interface{}) (err errors.Error) {
+	txHelper := dbhelper.NewTxHelper(d.basicRes, &err)
+	defer txHelper.End()
+	tx := txHelper.Begin()
+	for _, del := range deletions {
+		err = tx.Delete(del.table, del.where)
+		if err != nil {
+			return err
+		}
+	}
+	divider := helper.NewBatchSaveDivider(txBasicRes{BasicRes: d.basicRes, tx: tx}, 1000, "", "")
+	var batch *helper.BatchSave
 	for _, item := range items {
-		batch, err := d.driver.ForType(reflect.TypeOf(item))
+		batch, err = divider.ForType(reflect.TypeOf(item))
 		if err != nil {
 			return err
 		}
@@ -119,6 +159,6 @@ func (d *dbStore) save(items []interface{}) errors.Error {
 			return err
 		}
 	}
-	d.driver.Close()
-	return nil
+	err = divider.Close()
+	return err
 }
