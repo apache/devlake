@@ -19,6 +19,9 @@ package tasks
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -55,4 +58,47 @@ func checkSlackApiResult(method string, ok bool, errorCode string) errors.Error 
 		errorCode = "unknown error"
 	}
 	return errors.Default.New(fmt.Sprintf("slack %s error: %s", method, errorCode))
+}
+
+// slackCollectorPageSize is the PageSize given to the ApiCollector of the
+// cursor-paginated Slack collectors. It is not the number of items requested
+// per call: that is the `limit` query parameter (see setSlackCursorQuery).
+//
+// With GetNextPageCustomData set, ApiCollector stops as soon as a page has
+// fewer items than PageSize. Slack can return fewer items than `limit` while
+// more remain ("It's possible to receive fewer results than your specified
+// limit, even when there are additional results to retrieve",
+// https://docs.slack.dev/apis/web-api/pagination), so only an empty
+// response_metadata.next_cursor may end the collection. A PageSize of 1 keeps
+// ApiCollector from stopping on a short page.
+const slackCollectorPageSize = 1
+
+// slackCursorPage is the part of a Slack Web API response used for pagination.
+type slackCursorPage struct {
+	ResponseMetadata struct {
+		NextCursor string `json:"next_cursor"`
+	} `json:"response_metadata"`
+}
+
+// getSlackNextCursor returns the cursor of the next page, or ErrFinishCollect
+// when response_metadata.next_cursor is empty.
+func getSlackNextCursor(_ *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
+	res := slackCursorPage{}
+	err := api.UnmarshalResponse(prevPageResponse, &res)
+	if err != nil {
+		return nil, err
+	}
+	if res.ResponseMetadata.NextCursor == "" {
+		return nil, api.ErrFinishCollect
+	}
+	return res.ResponseMetadata.NextCursor, nil
+}
+
+// setSlackCursorQuery sets the page size and, after the first page, the
+// cursor returned by getSlackNextCursor.
+func setSlackCursorQuery(query url.Values, reqData *api.RequestData, limit int) {
+	query.Set("limit", strconv.Itoa(limit))
+	if cursor, ok := reqData.CustomData.(string); ok && cursor != "" {
+		query.Set("cursor", cursor)
+	}
 }

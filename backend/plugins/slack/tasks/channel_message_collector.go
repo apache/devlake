@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/apache/devlake/core/errors"
 	"github.com/apache/devlake/core/plugin"
@@ -43,46 +42,41 @@ func CollectChannelMessage(taskCtx plugin.SubTaskContext) errors.Error {
 	iterator := api.NewQueueIterator()
 	iterator.Push(&ChannelInput{ChannelId: data.Options.ChannelId})
 
-	pageSize := 100
-	collector, err := api.NewApiCollector(api.ApiCollectorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
+	collector, err := api.NewApiCollector(newChannelMessageCollectorArgs(
+		api.RawDataSubTaskArgs{
 			Ctx:     taskCtx,
 			Options: data.Options,
 			Table:   RAW_CHANNEL_MESSAGE_TABLE,
 		},
-		ApiClient:   data.ApiClient,
-		Incremental: false,
-		Input:       iterator,
-		UrlTemplate: "conversations.history",
-		PageSize:    pageSize,
-		GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-			res := apimodels.SlackChannelMessageApiResult{}
-			err := api.UnmarshalResponse(prevPageResponse, &res)
-			if err != nil {
-				return nil, err
-			}
-			if res.ResponseMetadata.NextCursor == "" {
-				return nil, api.ErrFinishCollect
-			}
-			return res.ResponseMetadata.NextCursor, nil
-		},
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			input := reqData.Input.(*ChannelInput)
-			query := url.Values{}
-			query.Set("channel", input.ChannelId)
-			query.Set("limit", strconv.Itoa(pageSize))
-			if pageToken, ok := reqData.CustomData.(string); ok && pageToken != "" {
-				query.Set("cursor", reqData.CustomData.(string))
-			}
-			return query, nil
-		},
-		ResponseParser: parseChannelMessageResponse,
-	})
+		data.ApiClient,
+		iterator,
+	))
 	if err != nil {
 		return err
 	}
 
 	return collector.Execute()
+}
+
+func newChannelMessageCollectorArgs(rawArgs api.RawDataSubTaskArgs, apiClient api.RateLimitedApiClient, input api.Iterator) api.ApiCollectorArgs {
+	limit := 100
+	return api.ApiCollectorArgs{
+		RawDataSubTaskArgs:    rawArgs,
+		ApiClient:             apiClient,
+		Incremental:           false,
+		Input:                 input,
+		UrlTemplate:           "conversations.history",
+		PageSize:              slackCollectorPageSize,
+		GetNextPageCustomData: getSlackNextCursor,
+		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
+			input := reqData.Input.(*ChannelInput)
+			query := url.Values{}
+			query.Set("channel", input.ChannelId)
+			setSlackCursorQuery(query, reqData, limit)
+			return query, nil
+		},
+		ResponseParser: parseChannelMessageResponse,
+	}
 }
 
 func parseChannelMessageResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
