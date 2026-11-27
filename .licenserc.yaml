@@ -39,8 +39,6 @@ header:
     - "**/.gitignore"
     - "**/.helmignore"
     - "**/.dockerignore"
-    - "DISCLAIMER-WIP"
-    - "DISCLAIMER"
     - "go.mod"
     - "go.sum"
     - "requirements.txt"

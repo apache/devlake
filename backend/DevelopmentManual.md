@@ -64,35 +64,35 @@ them in the DevLake database. There are other types of plugins as well, such `gi
 in conjunction with these datasource plugins and often perform additional post-processing. An important "helper" plugin is the `dora` plugin which is responsible
 for DORA metric calculations on the collected data.
 
-For this tutorial, we will use the [gitlab](https://github.com/apache/incubator-DevLake/tree/main/backend/plugins/gitlab) plugin as reference.
+For this tutorial, we will use the [gitlab](https://github.com/apache/devlake/tree/main/backend/plugins/gitlab) plugin as reference.
 
 ### Plugin package and code structure
 
 The plugins generally break down into the following packages:
-* `api`: This package contains the API endpoints (REST) that the plugin exposes. These endpoints expose CRUD operations on [connections](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/connection.go),
-[scopes](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/scope.go), [scope-configs](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/scope_config.go), and possibly more (such as [remote-scopes](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/remote.go) to fetch raw scopes from the datasource if applicable).
+* `api`: This package contains the API endpoints (REST) that the plugin exposes. These endpoints expose CRUD operations on [connections](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/connection.go),
+[scopes](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/scope.go), [scope-configs](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/scope_config.go), and possibly more (such as [remote-scopes](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/remote.go) to fetch raw scopes from the datasource if applicable).
 Note the documentation structure of the functions in these example: that's the syntax for Go-Swagger which is responsible for their Swagger documentation generation.
 
    This is where we also define the logic used by the server to run the plugin based on the constraints set by a blueprint (the user's configuration); that is,
 a "pipeline plan", which defines what input data to feed into the plugin, which subtasks (see `tasks` package) to execute, and which other plugins to run after this plugin's execution and the input to each of them (typically "helper" plugins).
-See [this](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/api/blueprint_v200.go) for reference.
+See [this](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/api/blueprint_v200.go) for reference.
 
    If plan generation returns an error during a scheduled blueprint run, DevLake records a failed pipeline with the planning error, start/end timestamps, and blueprint labels, then invokes the configured pipeline-status notification service after the record is committed. This pipeline has no tasks because planning did not complete. Fix the blueprint or connection and trigger a new run; rerunning tasks from this failed record cannot regenerate its plan. Manual triggers continue to return planning errors directly to the caller without creating a pipeline. If saving the failed record or sending its notification fails, check the lake logs for the additional error.
 
 * `e2e`: This package contains "pseudo-integration-tests" for plugins; tests that use mocked data and test the plugin's extraction and conversion logic of that data against an actual database. The test data is formatted in CSV files structured based on the expected database table structures.
-* `impl`: This package is where the plugin is actually defined, and is the "entrypoint": it is the implementation of multiple interfaces. See [this](https://github.com/apache/incubator-DevLake/tree/main/backend/plugins/gitlab/impl) for example.
-  * At a minimum, a plugin must implement [PluginMeta](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_meta.go).
-  * Bootstrap logic for the plugin (on server startup) is defined by implementing [PluginInit](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_init.go).Init(). This will typically initialize global variables accessible by the plugin.
-  * APIs exposed by the plugin in the `api` package are also registered here by implementing [PluginApi](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_api.go).ApiResources(). You will nearly almost need this.
-  * The plugin's core execution logic is defined by implementing the methods on [PluginTask](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_task.go). You will nearly almost need this.
-  * The plugin's database migration logic (table definitions and their alterations) is registered via implementing [PluginMigration](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_migration.go).MigrationScripts(). You will nearly almost need this.
-  * The plugin's Pipeline-Plan definition logic is registered by implementing [DataSourcePluginBlueprintV200](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_blueprint.go). You will need this if you're writing a datasource-based plugin.
-  * You will need to implement [PluginSource](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_meta.go) if your plugin has APIs for one or more of Connections, Scopes and ScopeConfigs. If one or more is not applicable, the respective method should return `nil`.
-  * You will need to implement [PluginModel](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_model.go) if your plugin has any database-based models (practically always the case). You will have to explicitly list out such models, which will be defined in the `models` package. We have an automated test `plugins/table_info_test.go` to
+* `impl`: This package is where the plugin is actually defined, and is the "entrypoint": it is the implementation of multiple interfaces. See [this](https://github.com/apache/devlake/tree/main/backend/plugins/gitlab/impl) for example.
+  * At a minimum, a plugin must implement [PluginMeta](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_meta.go).
+  * Bootstrap logic for the plugin (on server startup) is defined by implementing [PluginInit](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_init.go).Init(). This will typically initialize global variables accessible by the plugin.
+  * APIs exposed by the plugin in the `api` package are also registered here by implementing [PluginApi](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_api.go).ApiResources(). You will nearly almost need this.
+  * The plugin's core execution logic is defined by implementing the methods on [PluginTask](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_task.go). You will nearly almost need this.
+  * The plugin's database migration logic (table definitions and their alterations) is registered via implementing [PluginMigration](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_migration.go).MigrationScripts(). You will nearly almost need this.
+  * The plugin's Pipeline-Plan definition logic is registered by implementing [DataSourcePluginBlueprintV200](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_blueprint.go). You will need this if you're writing a datasource-based plugin.
+  * You will need to implement [PluginSource](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_meta.go) if your plugin has APIs for one or more of Connections, Scopes and ScopeConfigs. If one or more is not applicable, the respective method should return `nil`.
+  * You will need to implement [PluginModel](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_model.go) if your plugin has any database-based models (practically always the case). You will have to explicitly list out such models, which will be defined in the `models` package. We have an automated test `plugins/table_info_test.go` to
    detect if any models are missing from this list (and will fail the CICD execution).
 * `models`: This is where all the database models for the plugin are used. These are called "tool" models, and their respective table-names are to be prefixed with `_tool_`. A subpackage, `migrationscripts` defines the    database DDL logic for setting and altering the tables for these models. These are called migrations, and they are applied sequentially based on their `Version()` on server startup, since the last successful migration.
-   See [gitlab's migrations](https://github.com/apache/incubator-DevLake/tree/main/backend/plugins/gitlab/models/migrationscripts).
-* `tasks`: This package contains all the functions needed by [PluginTask](https://github.com/apache/incubator-DevLake/blob/main/backend/core/plugin/plugin_task.go).SubTaskMetas():
+   See [gitlab's migrations](https://github.com/apache/devlake/tree/main/backend/plugins/gitlab/models/migrationscripts).
+* `tasks`: This package contains all the functions needed by [PluginTask](https://github.com/apache/devlake/blob/main/backend/core/plugin/plugin_task.go).SubTaskMetas():
 These are the collectors, extractors and convertors of each datasource entity that you want to support. More will be said about these below.
 
 ### Collectors
@@ -104,8 +104,8 @@ more involved than it sounds, and is greatly influenced by the quality of the AP
 defined. This allows us to refresh only newer data and not have to fetch everything from scratch. But again, the API needs to honor fetching data on
 such a basis.
 
-See [this](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/tasks/issue_collector.go) for an example of a stateful collector.
-Here's [one](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/tasks/account_collector.go) for a stateless collector. Be sure to
+See [this](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/tasks/issue_collector.go) for an example of a stateful collector.
+Here's [one](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/tasks/account_collector.go) for a stateless collector. Be sure to
 read the in-code documentation of the api-clients used in these examples to familiarize yourself with their technicalities, capabilities and/or limitations.
 
 
@@ -114,7 +114,7 @@ read the in-code documentation of the api-clients used in these examples to fami
 Extractors are called after the collectors are done. They convert the raw data from collectors to "tool" models. Tool Models are DevLake's representation of
 a data-source's data. They need not have 1:1 correspondence with them as we are usually interested in a subset of the fields. This is also where the settings of the
 configured `ScopeConfig` (if applicable) get applied: that is, this is where user-defined transformations get applied to the certain fields on the raw data to set
-certain fields on the target tool model. [Here's](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/tasks/issue_extractor.go) an
+certain fields on the target tool model. [Here's](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/tasks/issue_extractor.go) an
 example of an extractor.
 
 
@@ -124,9 +124,9 @@ Convertors convert the tool models emitted by extractors to "domain models". Dom
 standardized representations of various concepts. For example, a generic "commit", or a generic "issue". With respect to DevLake's dashboard queries, we
 write queries against the database tables of these domain models.
 You will need to know to what domain model(s) a given tool model should map (Read about them [here](https://DevLake.apache.org/docs/next/DataModels/DevLakeDomainLayerSchema/)).
-This also depends on the requirements of your plugin, of course. See [this package](https://github.com/apache/incubator-DevLake/tree/main/backend/core/models/domainlayer) for a list of all the domain models;
+This also depends on the requirements of your plugin, of course. See [this package](https://github.com/apache/devlake/tree/main/backend/core/models/domainlayer) for a list of all the domain models;
 they are logically distributed into packages that represent different entities (e.g. Code, Devops, Ticket, etc).
-See [here](https://github.com/apache/incubator-DevLake/blob/main/backend/plugins/gitlab/tasks/issue_convertor.go) for an example of a convertor.
+See [here](https://github.com/apache/devlake/blob/main/backend/plugins/gitlab/tasks/issue_convertor.go) for an example of a convertor.
 
 <br>
 <br>
