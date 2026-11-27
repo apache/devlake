@@ -94,11 +94,8 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 			if issue.AuthorId != 0 {
 				domainIssue.CreatorId = accountIdGen.Generate(data.Options.ConnectionId, issue.AuthorId)
 			}
-			if issue.State == "closed" {
-				domainIssue.Status = ticket.DONE
-			} else {
-				domainIssue.Status = ticket.TODO
-			}
+			domainIssue.Status = convertGiteeIssueStatus(issue.State)
+			domainIssue.OriginalStatus = issue.State
 			result = append(result, domainIssue)
 			boardIssue := &ticket.BoardIssue{
 				BoardId: boardIdGen.Generate(data.Options.ConnectionId, repoId),
@@ -113,4 +110,17 @@ func ConvertIssues(taskCtx plugin.SubTaskContext) errors.Error {
 	}
 
 	return converter.Execute()
+}
+
+// convertGiteeIssueStatus maps a Gitee issue state (open, progressing,
+// closed, rejected) to a domain ticket status.
+func convertGiteeIssueStatus(state string) string {
+	switch state {
+	case "closed", "rejected":
+		return ticket.DONE
+	case "progressing":
+		return ticket.IN_PROGRESS
+	default:
+		return ticket.TODO
+	}
 }
