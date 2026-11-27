@@ -91,13 +91,45 @@ func ExtractEpics(subtaskCtx plugin.SubTaskContext) errors.Error {
 			return nil
 		},
 		Extract: func(apiIssue *apiv2models.Issue, row *api.RawData) ([]interface{}, errors.Error) {
-			return extractIssues(data, mappings, apiIssue, row, userFieldMap, sprintFieldId)
+			results, err := extractIssues(data, mappings, apiIssue, row, userFieldMap, sprintFieldId)
+			if err != nil {
+				return nil, err
+			}
+			return dropOutdatedIssue(db, results)
 		},
 	})
 	if err != nil {
 		return err
 	}
 	return extractor.Execute()
+}
+
+// dropOutdatedIssue removes the issue from the extracted records when _tool_jira_issues already holds a more
+// recently updated version of it.
+// An epic that belongs to the board is extracted by extractIssues as well, while its responses in the epics raw
+// table are refreshed only as long as board issues refer to it. In full-sync mode all responses of the epics raw
+// table are replayed after extractIssues, so an outdated one would replace the up-to-date issue.
+// The other records are kept: changelogs, comments and worklogs have their own ids, and an older response may be
+// the only one that carries them.
+func dropOutdatedIssue(db dal.Dal, results []interface{}) ([]interface{}, errors.Error) {
+	for i, result := range results {
+		issue, ok := result.(*models.JiraIssue)
+		if !ok {
+			continue
+		}
+		newer, err := db.Count(
+			dal.From(&models.JiraIssue{}),
+			dal.Where("connection_id = ? AND issue_id = ? AND updated > ?", issue.ConnectionId, issue.IssueId, issue.Updated),
+		)
+		if err != nil {
+			return nil, err
+		}
+		if newer > 0 {
+			results = append(results[:i], results[i+1:]...)
+		}
+		break
+	}
+	return results, nil
 }
 
 func getIssueFieldMap(db dal.Dal, connectionId uint64, logger log.Logger) (map[string]models.JiraIssueField, errors.Error) {
