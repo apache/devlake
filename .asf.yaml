@@ -75,6 +75,9 @@ github:
 
 notifications:
   commits: commits@devlake.apache.org
-  issues:  dev@devlake.apache.org
+  # Keep dev@ for human discussion. Routing issue and discussion activity
+  # there filled the list with GitHub notifications (131 messages in
+  # 2026-11, nearly all of them automated).
+  issues: commits@devlake.apache.org
   pullrequests: commits@devlake.apache.org
-  discussions: dev@devlake.apache.org
+  discussions: commits@devlake.apache.org
