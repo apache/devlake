@@ -25,7 +25,6 @@ import (
 	"github.com/apache/devlake/plugins/slack/apimodels"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 const RAW_CHANNEL_TABLE = "slack_channel"
@@ -35,45 +34,39 @@ var _ plugin.SubTaskEntryPoint = CollectChannel
 // CollectChannel collect all channels that bot is in
 func CollectChannel(taskCtx plugin.SubTaskContext) errors.Error {
 	data := taskCtx.GetData().(*SlackTaskData)
-	pageSize := 100
-	collector, err := api.NewApiCollector(api.ApiCollectorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
+	collector, err := api.NewApiCollector(newChannelCollectorArgs(
+		api.RawDataSubTaskArgs{
 			Ctx: taskCtx,
 			Params: SlackApiParams{
 				ConnectionId: data.Options.ConnectionId,
 			},
 			Table: RAW_CHANNEL_TABLE,
 		},
-		ApiClient:   data.ApiClient,
-		Incremental: false,
-		UrlTemplate: "conversations.list",
-		PageSize:    pageSize,
-		GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-			res := apimodels.SlackChannelMessageApiResult{}
-			err := api.UnmarshalResponse(prevPageResponse, &res)
-			if err != nil {
-				return nil, err
-			}
-			if res.ResponseMetadata.NextCursor == "" {
-				return nil, api.ErrFinishCollect
-			}
-			return res.ResponseMetadata.NextCursor, nil
-		},
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			query := url.Values{}
-			query.Set("limit", strconv.Itoa(pageSize))
-			if pageToken, ok := reqData.CustomData.(string); ok && pageToken != "" {
-				query.Set("cursor", reqData.CustomData.(string))
-			}
-			return query, nil
-		},
-		ResponseParser: parseChannelResponse,
-	})
+		data.ApiClient,
+	))
 	if err != nil {
 		return err
 	}
 
 	return collector.Execute()
+}
+
+func newChannelCollectorArgs(rawArgs api.RawDataSubTaskArgs, apiClient api.RateLimitedApiClient) api.ApiCollectorArgs {
+	limit := 100
+	return api.ApiCollectorArgs{
+		RawDataSubTaskArgs:    rawArgs,
+		ApiClient:             apiClient,
+		Incremental:           false,
+		UrlTemplate:           "conversations.list",
+		PageSize:              slackCollectorPageSize,
+		GetNextPageCustomData: getSlackNextCursor,
+		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
+			query := url.Values{}
+			setSlackCursorQuery(query, reqData, limit)
+			return query, nil
+		},
+		ResponseParser: parseChannelResponse,
+	}
 }
 
 func parseChannelResponse(res *http.Response) ([]json.RawMessage, errors.Error) {

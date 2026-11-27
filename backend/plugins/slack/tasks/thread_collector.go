@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 
 	"github.com/apache/devlake/core/dal"
 	"github.com/apache/devlake/core/errors"
@@ -61,48 +60,42 @@ func CollectThread(taskCtx plugin.SubTaskContext) errors.Error {
 		return err
 	}
 
-	pageSize := 50
-	collector, err := api.NewApiCollector(api.ApiCollectorArgs{
-		RawDataSubTaskArgs: api.RawDataSubTaskArgs{
+	collector, err := api.NewApiCollector(newThreadCollectorArgs(
+		api.RawDataSubTaskArgs{
 			Ctx:     taskCtx,
 			Options: data.Options,
 			Table:   RAW_THREAD_TABLE,
 		},
-		ApiClient:   data.ApiClient,
-		Incremental: false,
-		Input:       iterator,
-		UrlTemplate: "conversations.replies",
-		PageSize:    pageSize,
-		GetNextPageCustomData: func(prevReqData *api.RequestData, prevPageResponse *http.Response) (interface{}, errors.Error) {
-			res := apimodels.SlackThreadsApiResult{}
-			err := api.UnmarshalResponse(prevPageResponse, &res)
-			if err != nil {
-				return nil, err
-			}
-			if res.ResponseMetadata.NextCursor == "" {
-				return nil, api.ErrFinishCollect
-			}
-			return res.ResponseMetadata.NextCursor, nil
-		},
-		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
-			input := reqData.Input.(*ThreadInput)
-			query := url.Values{}
-			query.Set("channel", input.ChannelId)
-			query.Set("ts", input.ThreadTs)
-			query.Set("offset", strconv.Itoa(reqData.Pager.Skip))
-			query.Set("limit", strconv.Itoa(pageSize))
-			if pageToken, ok := reqData.CustomData.(string); ok && pageToken != "" {
-				query.Set("cursor", reqData.CustomData.(string))
-			}
-			return query, nil
-		},
-		ResponseParser: parseThreadResponse,
-	})
+		data.ApiClient,
+		iterator,
+	))
 	if err != nil {
 		return err
 	}
 
 	return collector.Execute()
+}
+
+func newThreadCollectorArgs(rawArgs api.RawDataSubTaskArgs, apiClient api.RateLimitedApiClient, input api.Iterator) api.ApiCollectorArgs {
+	limit := 50
+	return api.ApiCollectorArgs{
+		RawDataSubTaskArgs:    rawArgs,
+		ApiClient:             apiClient,
+		Incremental:           false,
+		Input:                 input,
+		UrlTemplate:           "conversations.replies",
+		PageSize:              slackCollectorPageSize,
+		GetNextPageCustomData: getSlackNextCursor,
+		Query: func(reqData *api.RequestData) (url.Values, errors.Error) {
+			input := reqData.Input.(*ThreadInput)
+			query := url.Values{}
+			query.Set("channel", input.ChannelId)
+			query.Set("ts", input.ThreadTs)
+			setSlackCursorQuery(query, reqData, limit)
+			return query, nil
+		},
+		ResponseParser: parseThreadResponse,
+	}
 }
 
 func parseThreadResponse(res *http.Response) ([]json.RawMessage, errors.Error) {
