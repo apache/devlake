@@ -97,6 +97,88 @@ func TestExtractIssuesEpicKeyField(t *testing.T) {
 	}
 }
 
+func TestExtractIssuesEpicKeyFromParent(t *testing.T) {
+	const customField = "customfield_10014"
+	const epicParent = `"parent": {"id": "10002", "key": "EPIC-3", "fields": {"issuetype": {"name": "Epic", "hierarchyLevel": 1}}}`
+	mappings := &typeMappings{
+		TypeIdMappings:         map[string]string{},
+		StdTypeMappings:        map[string]string{},
+		StandardStatusMappings: map[string]models.StatusMappings{},
+	}
+
+	tests := []struct {
+		name         string
+		epicKeyField string
+		fieldsJSON   string
+		wantEpicKey  string
+		wantParent   string
+	}{
+		{
+			name:        "parent of the epic level",
+			fieldsJSON:  epicParent,
+			wantEpicKey: "EPIC-3",
+			wantParent:  "EPIC-3",
+		},
+		{
+			name:        "parent of a sub-task is a standard issue",
+			fieldsJSON:  `"parent": {"id": "10003", "key": "STORY-1", "fields": {"issuetype": {"name": "Story", "hierarchyLevel": 0}}}`,
+			wantEpicKey: "",
+			wantParent:  "STORY-1",
+		},
+		{
+			name:        "parent without a hierarchy level",
+			fieldsJSON:  `"parent": {"id": "10003", "key": "STORY-1", "fields": {"issuetype": {"name": "Story"}}}`,
+			wantEpicKey: "",
+			wantParent:  "STORY-1",
+		},
+		{
+			name:        "legacy epic wins over parent",
+			fieldsJSON:  `"epic": {"key": "LEGACY-1"}, ` + epicParent,
+			wantEpicKey: "LEGACY-1",
+			wantParent:  "EPIC-3",
+		},
+		{
+			name:         "configured custom field wins over parent",
+			epicKeyField: customField,
+			fieldsJSON:   fmt.Sprintf(`"%s": "EPIC-1", `, customField) + epicParent,
+			wantEpicKey:  "EPIC-1",
+			wantParent:   "EPIC-3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := minimalIssueJSON(tt.fieldsJSON)
+			var apiIssue apiv2models.Issue
+			if err := json.Unmarshal(raw, &apiIssue); err != nil {
+				t.Fatalf("unmarshal issue: %v", err)
+			}
+
+			data := &JiraTaskData{
+				Options: &JiraOptions{
+					ConnectionId: 1,
+					BoardId:      1,
+					ScopeConfig:  &models.JiraScopeConfig{EpicKeyField: tt.epicKeyField},
+				},
+			}
+			results, err := extractIssues(data, mappings, &apiIssue, &api.RawData{Data: raw}, nil, "")
+			if err != nil {
+				t.Fatalf("extractIssues() error = %v", err)
+			}
+			issue := jiraIssueFromResults(results)
+			if issue == nil {
+				t.Fatal("extractIssues() did not return a JiraIssue")
+			}
+			if issue.EpicKey != tt.wantEpicKey {
+				t.Errorf("EpicKey = %q, want %q", issue.EpicKey, tt.wantEpicKey)
+			}
+			if issue.ParentKey != tt.wantParent {
+				t.Errorf("ParentKey = %q, want %q", issue.ParentKey, tt.wantParent)
+			}
+		})
+	}
+}
+
 func minimalIssueJSON(fieldsExtra string) []byte {
 	if fieldsExtra != "" {
 		fieldsExtra = "," + fieldsExtra

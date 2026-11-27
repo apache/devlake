@@ -172,8 +172,13 @@ type Issue struct {
 			AvatarID    int    `json:"avatarId"`
 		} `json:"issuetype"`
 		Parent *struct {
-			ID  uint64 `json:"id,string"`
-			Key string `json:"key"`
+			ID     uint64 `json:"id,string"`
+			Key    string `json:"key"`
+			Fields struct {
+				Issuetype struct {
+					HierarchyLevel int `json:"hierarchyLevel"`
+				} `json:"issuetype"`
+			} `json:"fields"`
 		} `json:"parent"`
 		Timespent     *int64   `json:"timespent"`
 		Sprint        *Sprint  `json:"sprint"`
@@ -350,6 +355,10 @@ type IssueLink struct {
 	OutwardIssue InOutwardIssue `json:"outwardIssue"`
 }
 
+// epicHierarchyLevel is the hierarchyLevel Jira Cloud reports for the issue types of the epic level, whatever
+// they are named: -1 stands for sub-tasks, 0 for standard issue types and 1 for epics.
+const epicHierarchyLevel = 1
+
 func (i Issue) toToolLayer(connectionId uint64) *models.JiraIssue {
 	var workload float64
 	result := &models.JiraIssue{
@@ -380,6 +389,9 @@ func (i Issue) toToolLayer(connectionId uint64) *models.JiraIssue {
 	}
 	if i.Fields.Epic != nil {
 		result.EpicKey = i.Fields.Epic.Key
+	} else if i.Fields.Parent != nil && i.Fields.Parent.Fields.Issuetype.HierarchyLevel == epicHierarchyLevel {
+		// The search API (#8931) does not return fields.epic: there, the epic of an issue is its parent.
+		result.EpicKey = i.Fields.Parent.Key
 	}
 	if i.Fields.Assignee != nil {
 		result.AssigneeAccountId = i.Fields.Assignee.getAccountId()
